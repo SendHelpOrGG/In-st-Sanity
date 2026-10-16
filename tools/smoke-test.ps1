@@ -3,26 +3,37 @@
     Boots the published app and verifies that it serves the web layer.
 
 .DESCRIPTION
-    Proves the port came up end to end on a machine: the loopback host is listening,
-    the web app document is served, and an /api/* route answers through the API
-    pipeline. Runs the same way locally and in CI.
+    Two phases:
 
-    The app under test is launched normally (a window will appear briefly) and is
-    stopped again when the checks finish.
+    1. Backend (always). Launches the app with INSTSANITY_HEADLESS=1 — no WebView, no
+       desktop session needed — and asserts that the loopback host answers, that the web
+       document is served with the expected markers, that range requests work (media
+       playback depends on them) and that the /api/* pipeline responds. This is fully
+       deterministic and is what CI gates on.
+
+    2. UI (optional, -IncludeUi). Launches the app normally and checks that it stays alive
+       while still answering /__health, which is as far as a headless runner can go without
+       inspecting pixels. Needs the Evergreen WebView2 runtime.
+
+    Failures are reported with ::error::/::warning:: workflow commands so they surface as
+    GitHub annotations, in addition to the log file.
 
 .PARAMETER Exe
     Path to InStSanity.exe (the published, unpackaged build).
 
 .PARAMETER Port
     Port the host is expected to listen on. Defaults to 8000, the port the web layer
-    prefers; if it was busy the app serves on the next free port and this check fails
-    fast with a clear message.
+    prefers; if that port was busy the app serves on the next free one and these checks
+    fail fast.
 
 .PARAMETER TimeoutSeconds
-    How long to wait for the host to answer /__health.
+    How long to wait for the host to answer /__health in each phase.
+
+.PARAMETER IncludeUi
+    Also run the WebView phase.
 
 .EXAMPLE
-    pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe
+    pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe -IncludeUi
 #>
 [CmdletBinding()]
 param(
@@ -31,11 +42,14 @@ param(
 
     [int] $Port = 8000,
 
-    [int] $TimeoutSeconds = 90
+    [int] $TimeoutSeconds = 90,
+
+    [switch] $IncludeUi
 )
 
 $ErrorActionPreference = 'Stop'
 $logPath = 'smoke-test.log'
+$baseUrl = "http://localhost:$Port"
 
 function Write-Step {
     param([string] $Message, [string] $Colour = 'Cyan')
@@ -49,57 +63,81 @@ function Write-Detail {
     Add-Content -Path $logPath -Value "    $Message"
 }
 
-Set-Content -Path $logPath -Value "smoke test $(Get-Date -Format o)"
-
-if (-not (Test-Path -LiteralPath $Exe)) {
-    throw "Executable not found: $Exe"
+function Write-Annotation {
+    param([string] $Level, [string] $Title, [string] $Message)
+    # Workflow command: readable from the check run's annotations even when job logs are
+    # not reachable (self-hosted/proxied environments).
+    $flat = ($Message -replace "`r?`n", ' ').Trim()
+    Write-Host "::$Level title=$Title::$flat"
 }
 
-$Exe = (Resolve-Path -LiteralPath $Exe).Path
-$baseUrl = "http://localhost:$Port"
-Write-Step "launching $Exe"
+function Wait-ForHost {
+    param([System.Diagnostics.Process] $Process)
 
-$process = Start-Process -FilePath $Exe -PassThru
-
-try {
-    # ── 1. the host answers ────────────────────────────────────────────────────
-    Write-Step "waiting for $baseUrl/__health"
-    $health = $null
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
 
     while ((Get-Date) -lt $deadline) {
-        if ($process.HasExited) {
-            throw "The app exited early with code $($process.ExitCode)."
+        if ($Process.HasExited) {
+            throw "The app exited early with code $($Process.ExitCode) (see the log above)."
         }
 
         try {
-            $health = Invoke-RestMethod -Uri "$baseUrl/__health" -TimeoutSec 5
-            break
+            return Invoke-RestMethod -Uri "$baseUrl/__health" -TimeoutSec 5
         }
         catch {
             Start-Sleep -Milliseconds 750
         }
     }
 
-    if (-not $health) {
-        throw "No answer from $baseUrl/__health within $TimeoutSeconds s."
-    }
+    throw "No answer from $baseUrl/__health within $TimeoutSeconds s."
+}
 
-    Write-Detail "ok        host reports ok=$($health.ok), port=$($health.port), uptime=$($health.uptimeSeconds)s"
+function Start-App {
+    param([bool] $Headless)
+
+    $environment = @{}
+    if ($Headless) { $environment['INSTSANITY_HEADLESS'] = '1' }
+
+    # Set for this process so the child inherits it; Start-Process -Environment needs PS 7.4.
+    $env:INSTSANITY_HEADLESS = if ($Headless) { '1' } else { $null }
+
+    $process = Start-Process -FilePath $Exe -PassThru
+
+    if (-not $Headless) { Remove-Item Env:\INSTSANITY_HEADLESS -ErrorAction SilentlyContinue }
+
+    return $process
+}
+
+Set-Content -Path $logPath -Value "smoke test $(Get-Date -Format o)"
+
+if (-not (Test-Path -LiteralPath $Exe)) {
+    Write-Annotation 'error' 'smoke-test' "Executable not found: $Exe"
+    throw "Executable not found: $Exe"
+}
+
+$Exe = (Resolve-Path -LiteralPath $Exe).Path
+
+# ── phase 1: backend, deterministic ────────────────────────────────────────────
+$process = $null
+try {
+    Write-Step "phase 1: launching $Exe (headless)"
+    $process = Start-App -Headless $true
+
+    Write-Step "waiting for $baseUrl/__health"
+    $health = Wait-ForHost -Process $process
+
+    Write-Detail "host      ok=$($health.ok), port=$($health.port), uptime=$($health.uptimeSeconds)s"
     Write-Detail "web root  $($health.webRoot) (exists=$($health.webRootExists))"
     Write-Detail "endpoints $($health.endpoints -join ', ')"
 
     if (-not $health.webRootExists) {
-        throw "The app is running but the web layer was not found next to the executable."
+        throw "The app is running but the web layer was not found next to the executable (looked in $($health.webRoot))."
     }
 
-    # ── 2. the web app document is served ─────────────────────────────────────
     Write-Step 'fetching the web app document'
     $document = Invoke-WebRequest -Uri "$baseUrl/" -TimeoutSec 15 -UseBasicParsing
 
-    if ($document.StatusCode -ne 200) {
-        throw "GET / returned $($document.StatusCode)."
-    }
+    if ($document.StatusCode -ne 200) { throw "GET / returned $($document.StatusCode)." }
 
     foreach ($marker in @('In[st]Sanity', 'lsBoot')) {
         if ($document.Content -notlike "*$marker*") {
@@ -107,29 +145,75 @@ try {
         }
     }
 
-    Write-Detail "ok        GET / -> 200, $($document.RawContentLength) bytes, markers present"
+    Write-Detail "document  GET / -> 200, $($document.RawContentLength) bytes, markers present"
 
-    # ── 3. range requests work (video/audio playback depends on them) ─────────
-    Write-Step 'checking range support'
+    Write-Step 'checking range support (media playback depends on it)'
     $range = Invoke-WebRequest -Uri "$baseUrl/" -Headers @{ Range = 'bytes=0-99' } -TimeoutSec 15 -UseBasicParsing
 
-    if ($range.StatusCode -ne 206) {
-        throw "A range request returned $($range.StatusCode), expected 206."
-    }
+    if ($range.StatusCode -ne 206) { throw "A range request returned $($range.StatusCode), expected 206." }
 
-    Write-Detail "ok        Range: bytes=0-99 -> 206 ($($range.RawContentLength) bytes)"
+    Write-Detail "range     bytes=0-99 -> 206 ($($range.RawContentLength) bytes)"
 
-    # ── 4. the /api/* pipeline answers ────────────────────────────────────────
-    Write-Step 'exercising the API pipeline'
+    Write-Step 'exercising the /api/* pipeline'
     $api = Invoke-WebRequest -Uri "$baseUrl/api/image" -TimeoutSec 15 -UseBasicParsing -SkipHttpErrorCheck
 
-    if ($api.StatusCode -ne 400) {
-        throw "/api/image without a url returned $($api.StatusCode), expected 400."
+    if ($api.StatusCode -ne 400) { throw "/api/image without a url returned $($api.StatusCode), expected 400." }
+
+    Write-Detail "api       GET /api/image -> 400 ($($api.Content))"
+
+    Write-Step 'phase 1 passed' 'Green'
+}
+catch {
+    Write-Annotation 'error' 'smoke-test-backend' $_.Exception.Message
+
+    if (Test-Path -LiteralPath $logPath) {
+        Get-Content -LiteralPath $logPath | Select-Object -Last 15 | ForEach-Object {
+            Write-Annotation 'warning' 'smoke-test-log' $_
+        }
     }
 
-    Write-Detail "ok        GET /api/image -> 400 ($($api.Content))"
+    throw
+}
+finally {
+    if ($process -and -not $process.HasExited) {
+        Write-Step "stopping pid $($process.Id)"
+        Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 2
+    }
+}
 
+# ── phase 2: the WebView actually loads (best effort, needs a desktop session) ──
+if (-not $IncludeUi) {
+    Write-Step 'phase 2 skipped (-IncludeUi not set)'
     Write-Step 'all checks passed' 'Green'
+    return
+}
+
+$process = $null
+try {
+    Write-Step 'phase 2: launching with the WebView'
+    $process = Start-App -Headless $false
+
+    $health = Wait-ForHost -Process $process
+    Write-Detail "host      ok=$($health.ok), port=$($health.port)"
+
+    # Let the WebView initialise; a crash here (missing runtime, no desktop) shows up as
+    # the process going away.
+    Start-Sleep -Seconds 10
+
+    if ($process.HasExited) {
+        throw "The app exited (code $($process.ExitCode)) after the host came up — the WebView phase did not survive."
+    }
+
+    $stillAlive = Invoke-RestMethod -Uri "$baseUrl/__health" -TimeoutSec 5
+    Write-Detail "ui        process alive after 10s, host still answering (uptime=$($stillAlive.uptimeSeconds)s)"
+
+    Write-Step 'phase 2 passed' 'Green'
+    Write-Step 'all checks passed' 'Green'
+}
+catch {
+    Write-Annotation 'error' 'smoke-test-ui' $_.Exception.Message
+    throw
 }
 finally {
     if ($process -and -not $process.HasExited) {

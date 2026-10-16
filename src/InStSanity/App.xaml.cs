@@ -25,9 +25,20 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(_services.GetRequiredService<MainPage>())
+		// INSTSANITY_HEADLESS=1 boots the backend without a WebView, so the HTTP surface can
+		// be verified where the WebView2 runtime or a desktop session is unavailable.
+		var headless = string.Equals(
+			Environment.GetEnvironmentVariable("INSTSANITY_HEADLESS"),
+			"1",
+			StringComparison.Ordinal);
+
+		Page root = headless
+			? new HeadlessPage()
+			: _services.GetRequiredService<MainPage>();
+
+		return new Window(root)
 		{
-			Title = "In-st-Sanity",
+			Title = headless ? "In-st-Sanity (headless)" : "In-st-Sanity",
 			Width = 1440,
 			Height = 900,
 			MinimumWidth = 1024,

@@ -39,11 +39,20 @@ The app is **unpackaged** (`<WindowsPackageType>None</WindowsPackageType>`), so 
 Verify a build without watching the window:
 
 ```powershell
-pwsh -File tools/smoke-test.ps1 -Exe src/InStSanity/bin/Debug/net10.0-windows10.0.19041.0/win-x64/InStSanity.exe
+# backend only (no WebView, no desktop session needed)
+pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe
+
+# also check that the WebView comes up and the app survives it
+pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe -IncludeUi
 ```
 
-It launches the app, waits for the host to answer `/__health`, then asserts that the web document is
-served, that range requests work (playback needs them) and that the `/api/*` pipeline responds.
+The script launches the app, waits for the host to answer `/__health`, then asserts that the web
+document is served, that range requests work (playback needs them) and that the `/api/*` pipeline
+responds. With `-IncludeUi` it launches a second time *with* the WebView and checks the app stays
+alive while still serving.
+
+Setting `INSTSANITY_HEADLESS=1` runs the app itself that way: backend up, no WebView. It is how the
+native side is verified on a machine (or runner) where WebView2 or a desktop session is unavailable.
 
 ## How it fits together
 

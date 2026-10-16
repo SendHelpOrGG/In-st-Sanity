@@ -74,7 +74,7 @@ jobs:
 
       - name: Run smoke test
         shell: pwsh
-        run: pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe
+        run: pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe -IncludeUi
 
       - name: Upload smoke test log
         if: always()
