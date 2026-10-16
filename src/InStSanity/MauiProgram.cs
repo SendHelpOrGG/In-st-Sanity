@@ -1,3 +1,4 @@
+using InStSanity.Platforms.Windows;
 using InStSanity.Services.Api;
 using InStSanity.Services.Instagram;
 using InStSanity.Services.WebHost;
@@ -12,7 +13,7 @@ public static class MauiProgram
 	{
 #if WINDOWS
 		// Must run before the first WebView2 is created.
-		Platforms.Windows.WindowsWebViewEnvironment.Configure();
+		WindowsWebViewEnvironment.Configure();
 #endif
 
 		var builder = MauiApp.CreateBuilder();

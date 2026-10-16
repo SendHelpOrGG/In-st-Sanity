@@ -1,3 +1,4 @@
+using InStSanity.Platforms.Windows;
 using InStSanity.ViewModels;
 
 namespace InStSanity;
@@ -13,7 +14,7 @@ public partial class MainPage : ContentPage
 		// Links the web layer opens in a new tab belong in the system browser (Windows only;
 		// the project targets Windows, the guard keeps the intent explicit).
 #if WINDOWS
-		Platforms.Windows.WebViewBootstrapper.Attach(WebAppView);
+		WebViewBootstrapper.Attach(WebAppView);
 #endif
 	}
 

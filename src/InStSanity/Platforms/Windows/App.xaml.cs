@@ -20,12 +20,12 @@ public partial class App : MauiWinUIApplication
 		this.InitializeComponent();
 
 		// Claim the single-instance mutex before any window, WebView or socket is created.
-		Platforms.Windows.SingleInstance.Acquire();
+		SingleInstance.Acquire();
 	}
 
 	protected override void OnLaunched(LaunchActivatedEventArgs args)
 	{
-		if (!Platforms.Windows.SingleInstance.IsPrimaryInstance)
+		if (!SingleInstance.IsPrimaryInstance)
 		{
 			// Another instance owns the loopback port and the WebView2 profile.
 			// (Focusing the existing window is planned for a later phase.)

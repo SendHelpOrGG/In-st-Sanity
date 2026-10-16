@@ -30,11 +30,14 @@ jobs:
       - name: Install MAUI workload
         run: dotnet workload install maui-windows
 
+      # The MAUI SDK gives SingleProject Windows apps a concrete RuntimeIdentifier
+      # (win-x64 here), so restore must be told the same RID or the runtime pack is
+      # missing at build time.
       - name: Restore
-        run: dotnet restore ${{ env.PROJECT }}
+        run: dotnet restore ${{ env.PROJECT }} -r win-x64
 
       - name: Build
-        run: dotnet build ${{ env.PROJECT }} -c Release --no-restore
+        run: dotnet build ${{ env.PROJECT }} -c Release -r win-x64 --no-restore
 
       - name: Publish (self-contained win-x64)
         run: >
