@@ -20,6 +20,19 @@ It contains no features — only the structure you build on top of:
 └────────────────────┴───────────────────────────────────────────────┘
 ```
 
+## Preview without building
+
+`preview/index.html` is a static HTML/CSS mock-up of the shell (side panel, main page, Windows title bar).
+It needs no toolchain — just open it in a browser:
+
+```powershell
+start preview/index.html            # Windows
+# or serve it:  python -m http.server 8080 --directory preview
+```
+
+Every colour and dimension in the mock-up mirrors `Resources/Styles/Colors.xaml`, `AppShell.xaml`
+(`FlyoutWidth="264"`, brand block, footer) and `MainPage.xaml`, so it doubles as a quick design reference.
+
 ## Requirements
 
 | Tool | Version |
@@ -53,6 +66,7 @@ In Visual Studio: open `InStSanity.sln`, select the **Windows Machine** launch p
 
 ```
 InStSanity.sln
+preview/index.html                 static HTML/CSS mock-up of the shell (no toolchain needed)
 src/InStSanity/
 ├─ InStSanity.csproj              Windows-only TFM, app id, unpackaged, icons
 ├─ MauiProgram.cs                 DI container: view models + views
