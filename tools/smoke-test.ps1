@@ -139,8 +139,10 @@ try {
 
     if ($document.StatusCode -ne 200) { throw "GET / returned $($document.StatusCode)." }
 
+    # String.Contains, not -like: the marker contains brackets, which PowerShell wildcards
+    # would read as a character class.
     foreach ($marker in @('In[st]Sanity', 'lsBoot')) {
-        if ($document.Content -notlike "*$marker*") {
+        if (-not $document.Content.Contains($marker)) {
             throw "The served document does not contain the expected marker '$marker'."
         }
     }
@@ -167,7 +169,7 @@ catch {
     Write-Annotation 'error' 'smoke-test-backend' $_.Exception.Message
 
     if (Test-Path -LiteralPath $logPath) {
-        Get-Content -LiteralPath $logPath | Select-Object -Last 15 | ForEach-Object {
+        Get-Content -LiteralPath $logPath | Select-Object -Last 8 | ForEach-Object {
             Write-Annotation 'warning' 'smoke-test-log' $_
         }
     }
