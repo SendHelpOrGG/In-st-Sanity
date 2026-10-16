@@ -1,3 +1,4 @@
+using InStSanity.Services.WebHost;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace InStSanity;
@@ -6,29 +7,31 @@ public partial class App : Application
 {
 	readonly IServiceProvider _services;
 
-	public App(IServiceProvider services)
+	public App(IServiceProvider services, LoopbackHost webHost)
 	{
 		InitializeComponent();
 
 		_services = services;
 
 		// In-st-Sanity is a single-theme (dark) desktop app. Forcing the theme here keeps
-		// the native Windows chrome (title bar, scrollbars, fly-out pane, text boxes)
-		// in sync with the colours in Resources/Styles/Colors.xaml.
+		// the native Windows chrome (title bar, scrollbars, dialogs) dark so it does not
+		// flash light while the web layer loads.
 		UserAppTheme = AppTheme.Dark;
+
+		// Start serving before the window exists: the WebView navigates to this host as
+		// soon as MainPage is created.
+		webHost.Start();
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		// The shell (side panel + main area) comes from the DI container,
-		// so it can be given view models and services through its constructor.
-		return new Window(_services.GetRequiredService<AppShell>())
+		return new Window(_services.GetRequiredService<MainPage>())
 		{
 			Title = "In-st-Sanity",
-			Width = 1280,
-			Height = 820,
-			MinimumWidth = 1000,
-			MinimumHeight = 640,
+			Width = 1440,
+			Height = 900,
+			MinimumWidth = 1024,
+			MinimumHeight = 680,
 		};
 	}
 }

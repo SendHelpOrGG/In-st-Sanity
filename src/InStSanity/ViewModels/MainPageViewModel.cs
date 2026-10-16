@@ -1,18 +1,20 @@
+using InStSanity.Services.WebHost;
+
 namespace InStSanity.ViewModels;
 
 /// <summary>
-/// View model for <see cref="MainPage"/>.
+/// View model for <see cref="MainPage"/>, the native frame around the web layer.
 /// </summary>
 public sealed class MainPageViewModel : BaseViewModel
 {
-	public MainPageViewModel()
+	public MainPageViewModel(LoopbackHost webHost)
 	{
-		Title = "Home";
+		Title = "In-st-Sanity";
+
+		// The host is started before this view model is resolved, so the port is final.
+		AppUrl = webHost.Url;
 	}
 
-	/// <summary>Placeholder text — remove together with the placeholder in MainPage.xaml.</summary>
-	public string EmptyStateTitle { get; } = "Nothing here yet";
-
-	/// <summary>Placeholder text — remove together with the placeholder in MainPage.xaml.</summary>
-	public string EmptyStateMessage { get; } = "The shell is ready. Build your content here.";
+	/// <summary>Loopback URL of the web layer hosted in the WebView.</summary>
+	public string AppUrl { get; }
 }

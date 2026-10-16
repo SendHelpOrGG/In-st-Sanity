@@ -1,5 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
+using InStSanity.Services.Api;
+using InStSanity.Services.Instagram;
+using InStSanity.Services.WebHost;
 using InStSanity.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace InStSanity;
 
@@ -7,20 +10,50 @@ public static class MauiProgram
 {
 	public static MauiApp CreateMauiApp()
 	{
+#if WINDOWS
+		// Must run before the first WebView2 is created.
+		Platforms.Windows.WindowsWebViewEnvironment.Configure();
+#endif
+
 		var builder = MauiApp.CreateBuilder();
 
 		builder.UseMauiApp<App>();
 
-		// ── MVVM service registration ────────────────────────────────────────
-		// Views and view models are resolved through the built-in DI container,
-		// so both can take their dependencies through the constructor.
+		// ── Web layer hosting (see docs/hybrid-port-plan.md) ────────────────────
+		// The ported UI is the original web app served by an in-process loopback host.
+		// It talks to that host exactly as it talked to its own local backend, so its
+		// /api/* calls never leave the machine.
+		builder.Services.AddSingleton<InstagramHttp>();
+		builder.Services.AddSingleton<MediaCache>();
+
+		// /api/image and /api/download-photo share one implementation, differing only in
+		// how the payload is presented.
+		builder.Services.AddSingleton<IApiEndpoint>(services => new MediaProxyEndpoint(
+			services.GetRequiredService<InstagramHttp>(),
+			services.GetRequiredService<MediaCache>(),
+			services.GetRequiredService<ILogger<MediaProxyEndpoint>>(),
+			"/api/image"));
+
+		builder.Services.AddSingleton<IApiEndpoint>(services => new MediaProxyEndpoint(
+			services.GetRequiredService<InstagramHttp>(),
+			services.GetRequiredService<MediaCache>(),
+			services.GetRequiredService<ILogger<MediaProxyEndpoint>>(),
+			"/api/download-photo",
+			asAttachment: true));
+
+		// Routes that are not registered yet answer 501, which the web layer handles
+		// gracefully. Remaining phases: resolve-post / resolve-batch / resolve-owners /
+		// cached-posts / download-selected / save-imported-list / browser-*.
+
+		builder.Services.AddSingleton<LoopbackHost>();
+
+		// ── MVVM ────────────────────────────────────────────────────────────────
+		//   App ← MainPage ← MainPageViewModel ← LoopbackHost
 		//
-		//   App            ← AppShell ← MainPage ← MainPageViewModel
-		//
-		// Add services, repositories and further pages/view models here.
+		// AppShell.xaml (the native side-panel shell built earlier) is intentionally not
+		// registered: the web layer draws its own shell. See the note in AppShell.xaml.
 		builder.Services.AddSingleton<MainPageViewModel>();
 		builder.Services.AddSingleton<MainPage>();
-		builder.Services.AddSingleton<AppShell>();
 
 		return builder.Build();
 	}

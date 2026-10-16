@@ -1,0 +1,89 @@
+name: build
+
+# Windows MAUI targets cannot be compiled outside Windows, so this workflow is the
+# compiler of record for the port (see docs/hybrid-port-plan.md §8).
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  PROJECT: src/InStSanity/InStSanity.csproj
+
+jobs:
+  build:
+    name: Build (net10.0-windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui-windows
+
+      - name: Restore
+        run: dotnet restore ${{ env.PROJECT }}
+
+      - name: Build
+        run: dotnet build ${{ env.PROJECT }} -c Release --no-restore
+
+      - name: Publish (self-contained win-x64)
+        run: >
+          dotnet publish ${{ env.PROJECT }} -c Release
+          -r win-x64 --self-contained true
+          -p:WindowsPackageType=None
+          -o artifacts/InStSanity-win-x64
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: InStSanity-win-x64
+          path: artifacts/InStSanity-win-x64
+          if-no-files-found: error
+          retention-days: 14
+
+  smoke:
+    name: Smoke test (host boots and serves the web layer)
+    runs-on: windows-latest
+    needs: build
+    # Experimental: launching a WinUI app on a hosted runner works, but WebView2 runtime
+    # availability and desktop-session behaviour are outside our control. Flip to blocking
+    # once it has a track record (plan Phase 5).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui-windows
+
+      - name: Publish
+        run: >
+          dotnet publish ${{ env.PROJECT }} -c Release
+          -r win-x64 --self-contained true
+          -p:WindowsPackageType=None
+          -o artifacts/InStSanity-win-x64
+
+      - name: Run smoke test
+        shell: pwsh
+        run: pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe
+
+      - name: Upload smoke test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-log
+          path: smoke-test.log
+          if-no-files-found: ignore

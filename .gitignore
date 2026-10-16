@@ -6,6 +6,7 @@
 [Rr]elease/
 x64/
 x86/
+artifacts/
 *.binlog
 *.tlog
 *.log

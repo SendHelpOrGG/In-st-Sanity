@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    ════════════════════════════════════════════════════════════════════════════
+    Native side-panel shell — NOT part of the boot path while the web layer is
+    hosted (see docs/hybrid-port-plan.md §2).
+
+    The ported app is the original web UI, which draws its own side panel, so the
+    window now hosts MainPage's WebView directly (App.CreateWindow). This shell is
+    kept for the alternative: native chrome around the web layer, or native pages
+    alongside it. To switch back, register AppShell in MauiProgram and return
+    `new Window(shell)` from App.CreateWindow — the fly-out below already carries
+    the side-panel branding, nav entry and footer.
+    ════════════════════════════════════════════════════════════════════════════
+-->
 <Shell x:Class="InStSanity.AppShell"
        xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -6,15 +19,6 @@
        FlyoutBackgroundColor="{StaticResource SideBarBackground}"
        FlyoutBehavior="Locked"
        FlyoutWidth="264">
-
-    <!--
-        ════════════════════════════════════════════════════════════════════
-        Side panel (fly-out)
-        FlyoutBehavior="Locked" => the panel is always visible and cannot be
-        collapsed (it sits in the Windows NavigationView's left pane, so no
-        hamburger button is shown).
-        ════════════════════════════════════════════════════════════════════
-    -->
 
     <Shell.FlyoutHeader>
         <Grid RowDefinitions="Auto,Auto">
@@ -45,13 +49,6 @@
         </Grid>
     </Shell.FlyoutHeader>
 
-    <!--
-        ════════════════════════════════════════════════════════════════════
-        Main area
-        Each ShellContent becomes a side-panel entry. The page instance is
-        supplied by the DI container in AppShell.xaml.cs.
-        ════════════════════════════════════════════════════════════════════
-    -->
     <ShellContent x:Name="HomeShellContent"
                   Title="Home"
                   Icon="icon_home.png"
