@@ -2,6 +2,11 @@
 
 A **.NET MAUI desktop shell for Windows**, built with the **MVVM** pattern and a **dark theme**.
 
+> **Roadmap:** the target product is the In[st]Sanity Instagram post saver UI ported into this
+> desktop app. The approach, API contract and phased plan are in
+> **[docs/hybrid-port-plan.md](docs/hybrid-port-plan.md)** — native MAUI host + WebView2 running
+> the existing web UI unchanged, with an in-app loopback backend on `127.0.0.1:8000`.
+
 It contains no features — only the structure you build on top of:
 
 - **Side panel** — a permanently visible fly-out (`FlyoutBehavior="Locked"`) with a brand block, the navigation entry, and a footer.
