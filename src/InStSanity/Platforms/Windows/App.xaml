@@ -1,0 +1,15 @@
+﻿<maui:MauiWinUIApplication
+    x:Class="InStSanity.WinUI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:maui="using:Microsoft.Maui"
+    xmlns:local="using:InStSanity.WinUI"
+    RequestedTheme="Dark">
+
+    <!--
+        RequestedTheme="Dark" puts the native Windows controls (fly-out pane,
+        text boxes, scrollbars, window title bar) in dark mode so they match
+        Resources/Styles/Colors.xaml.
+    -->
+
+</maui:MauiWinUIApplication>

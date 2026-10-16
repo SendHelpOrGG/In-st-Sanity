@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!--
+        ════════════════════════════════════════════════════════════════════════
+        In-st-Sanity — colour palette (dark theme only).
+
+        This is the only file you need to touch to re-skin the app: every style
+        in Styles.xaml / SideBar.xaml and every view references these keys.
+        ════════════════════════════════════════════════════════════════════════
+    -->
+
+    <!-- ── Brand / accent ──────────────────────────────────────────────────── -->
+    <Color x:Key="Primary">#5B8DEF</Color>
+    <Color x:Key="PrimaryDark">#3F6FD0</Color>
+    <Color x:Key="PrimaryLight">#8FB1F7</Color>
+    <Color x:Key="PrimaryDarkText">#0E1420</Color>
+    <Color x:Key="Secondary">#8B93A1</Color>
+    <Color x:Key="SecondaryDarkText">#5B8DEF</Color>
+    <Color x:Key="Tertiary">#39404D</Color>
+
+    <!-- ── Neutrals ────────────────────────────────────────────────────────── -->
+    <Color x:Key="White">#FFFFFF</Color>
+    <Color x:Key="Black">#000000</Color>
+    <Color x:Key="OffBlack">#101216</Color>
+
+    <Color x:Key="Gray100">#F7F8FA</Color>
+    <Color x:Key="Gray200">#E4E7EC</Color>
+    <Color x:Key="Gray300">#C6CBD4</Color>
+    <Color x:Key="Gray400">#A3ABB8</Color>
+    <Color x:Key="Gray500">#7C8494</Color>
+    <Color x:Key="Gray600">#5A6273</Color>
+    <Color x:Key="Gray700">#39404D</Color>
+    <Color x:Key="Gray800">#262B33</Color>
+    <Color x:Key="Gray900">#1B1F25</Color>
+    <Color x:Key="Gray950">#12151A</Color>
+
+    <!-- ── App surfaces ────────────────────────────────────────────────────── -->
+    <Color x:Key="AppBackground">#111318</Color>
+    <Color x:Key="Surface">#191C22</Color>
+    <Color x:Key="SurfaceElevated">#20242B</Color>
+    <Color x:Key="SurfaceHover">#262B33</Color>
+    <Color x:Key="Stroke">#2C313A</Color>
+
+    <!-- ── Side panel ──────────────────────────────────────────────────────── -->
+    <Color x:Key="SideBarBackground">#15181D</Color>
+    <Color x:Key="SideBarStroke">#23272E</Color>
+    <Color x:Key="SideBarItemSelected">#232B38</Color>
+
+    <!-- ── Text ────────────────────────────────────────────────────────────── -->
+    <Color x:Key="TextPrimary">#E9ECF1</Color>
+    <Color x:Key="TextSecondary">#A3ABB8</Color>
+    <Color x:Key="TextMuted">#6E7683</Color>
+
+    <!-- ── Status ──────────────────────────────────────────────────────────── -->
+    <Color x:Key="Success">#3DD68C</Color>
+    <Color x:Key="Warning">#F2B544</Color>
+    <Color x:Key="Danger">#F0616D</Color>
+
+    <!-- ── Brushes (for Border / Shape fills) ──────────────────────────────── -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}" />
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}" />
+    <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}" />
+    <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}" />
+    <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}" />
+    <SolidColorBrush x:Key="StrokeBrush" Color="{StaticResource Stroke}" />
+    <SolidColorBrush x:Key="SideBarBrush" Color="{StaticResource SideBarBackground}" />
+
+</ResourceDictionary>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="InStSanity.MainPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:InStSanity.ViewModels"
+             x:DataType="vm:MainPageViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="{StaticResource AppBackground}"
+             Shell.BackgroundColor="{StaticResource AppBackground}"
+             Shell.TitleColor="{StaticResource TextPrimary}">
+
+    <!--
+        ════════════════════════════════════════════════════════════════════
+        Main page — intentionally empty.
+        Replace the placeholder below with your content; everything the page
+        needs should come from MainPageViewModel (MVVM), never from code-behind
+        event handlers.
+        ════════════════════════════════════════════════════════════════════
+    -->
+    <Grid Padding="40">
+
+        <!-- Placeholder: delete once this page has real content. -->
+        <VerticalStackLayout HorizontalOptions="Center"
+                             VerticalOptions="Center"
+                             Spacing="8">
+            <Label Text="{Binding EmptyStateTitle}"
+                   Style="{StaticResource EmptyStateTitle}" />
+            <Label Text="{Binding EmptyStateMessage}"
+                   Style="{StaticResource EmptyStateMessage}" />
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>

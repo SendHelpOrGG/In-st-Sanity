@@ -1,0 +1,8 @@
+Any raw assets you want to be deployed with your application can be placed in this folder.
+They are included in the app package through the MauiAsset item group in InStSanity.csproj.
+
+Example:
+  ./Resources/Raw/AboutAssets.txt
+
+Raw assets are read with:
+  await FileSystem.OpenAppPackageFileAsync("AboutAssets.txt");

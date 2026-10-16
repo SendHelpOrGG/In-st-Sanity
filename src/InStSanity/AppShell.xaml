@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell x:Class="InStSanity.AppShell"
+       xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       Title="In-st-Sanity"
+       FlyoutBackgroundColor="{StaticResource SideBarBackground}"
+       FlyoutBehavior="Locked"
+       FlyoutWidth="264">
+
+    <!--
+        ════════════════════════════════════════════════════════════════════
+        Side panel (fly-out)
+        FlyoutBehavior="Locked" => the panel is always visible and cannot be
+        collapsed (it sits in the Windows NavigationView's left pane, so no
+        hamburger button is shown).
+        ════════════════════════════════════════════════════════════════════
+    -->
+
+    <Shell.FlyoutHeader>
+        <Grid RowDefinitions="Auto,Auto">
+
+            <!-- Brand block -->
+            <Grid Grid.Row="0"
+                  Padding="20,22,20,18"
+                  ColumnDefinitions="40,*"
+                  ColumnSpacing="12">
+
+                <Border Style="{StaticResource SideBarBrandMark}">
+                    <Label Text="IS" Style="{StaticResource SideBarBrandMarkText}" />
+                </Border>
+
+                <VerticalStackLayout Grid.Column="1"
+                                     Spacing="2"
+                                     VerticalOptions="Center">
+                    <Label Text="In-st-Sanity" Style="{StaticResource SideBarBrandTitle}" />
+                    <Label Text="Desktop workspace" Style="{StaticResource SideBarBrandSubtitle}" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Divider -->
+            <BoxView Grid.Row="1"
+                     HeightRequest="1"
+                     Color="{StaticResource SideBarStroke}"
+                     HorizontalOptions="Fill" />
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <!--
+        ════════════════════════════════════════════════════════════════════
+        Main area
+        Each ShellContent becomes a side-panel entry. The page instance is
+        supplied by the DI container in AppShell.xaml.cs.
+        ════════════════════════════════════════════════════════════════════
+    -->
+    <ShellContent x:Name="HomeShellContent"
+                  Title="Home"
+                  Icon="icon_home.png"
+                  Route="home" />
+
+    <Shell.FlyoutFooter>
+        <Grid Padding="20,16,20,18" RowDefinitions="Auto,*" RowSpacing="10">
+            <BoxView Grid.Row="0"
+                     HeightRequest="1"
+                     Color="{StaticResource SideBarStroke}"
+                     HorizontalOptions="Fill" />
+            <Label Grid.Row="1"
+                   Text="v1.0.0  ·  Dark theme"
+                   Style="{StaticResource SideBarFooterText}" />
+        </Grid>
+    </Shell.FlyoutFooter>
+
+</Shell>
