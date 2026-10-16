@@ -65,19 +65,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v4
+      # Reuse what the build job produced instead of publishing a second time.
+      - name: Download app
+        uses: actions/download-artifact@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Install MAUI workload
-        run: dotnet workload install maui-windows
-
-      - name: Publish
-        run: >
-          dotnet publish ${{ env.PROJECT }} -c Release
-          -r win-x64 --self-contained true
-          -p:WindowsPackageType=None
-          -o artifacts/InStSanity-win-x64
+          name: InStSanity-win-x64
+          path: artifacts/InStSanity-win-x64
 
       - name: Run smoke test
         shell: pwsh

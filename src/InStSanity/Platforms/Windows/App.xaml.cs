@@ -1,3 +1,4 @@
+using InStSanity.Platforms.Windows;
 using Microsoft.Maui.Hosting;
 using Microsoft.UI.Xaml;
 

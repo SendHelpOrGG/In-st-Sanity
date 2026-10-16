@@ -56,7 +56,9 @@ internal static class WebViewBootstrapper
 
 	static void Configure(CoreWebView2 core)
 	{
-		core.NewWindowRequested += (_, args) =>
+		// Note: the lambda parameters are named (not "_") because a parameter called "_"
+		// would shadow the discard used for the fire-and-forget launch below.
+		core.NewWindowRequested += (sender, args) =>
 		{
 			args.Handled = true;
 

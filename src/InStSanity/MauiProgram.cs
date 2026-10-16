@@ -4,6 +4,7 @@ using InStSanity.Services.Instagram;
 using InStSanity.Services.WebHost;
 using InStSanity.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace InStSanity;
 
