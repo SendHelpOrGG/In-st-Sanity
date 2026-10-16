@@ -7,9 +7,14 @@ web layer, served by an in-app loopback host and rendered in WebView2. Native C#
 backend that layer expects: media proxying, Instagram resolution, downloads and the Windows
 integration. Nothing is fetched through a third-party proxy.
 
-> **Status: Phase 1 of 5.** The native host boots the web layer and serves it end to end.
-> Media proxying works; post resolution, downloads and the embedded Instagram session are
-> Phase 2/3. See **[docs/hybrid-port-plan.md](docs/hybrid-port-plan.md)** for the full plan.
+> **Status: Phase 1 of 5 — verified green in CI.** The native host boots, serves the web layer
+> (document, range requests, `/api/*`), and the WebView phase survives startup. Media proxying
+> works; post resolution, downloads and the embedded Instagram session are Phase 2/3.
+> See **[docs/hybrid-port-plan.md](docs/hybrid-port-plan.md)** for the plan and
+> **[docs/web-layer.md](docs/web-layer.md)** for what was changed in the web layer.
+
+What has **not** been verified yet, because it needs eyes on a desktop: themes switching, the
+sticker animating and the synthesised sounds playing. Run the app locally to confirm those.
 
 ## Requirements
 

@@ -209,14 +209,17 @@ Exhaustive — this is everything that changes before the app is considered "por
 
 1. **Neutralise the dead backend constant**: `const SERVER_API_BASE=""` (removes `*.lhr.life`
    calls). *1 line.*
-2. **Route scraping through the backend**: drop `resolveViaMicrolink()` / `resolveViaJina()` calls
-   and the `wrapProxiedImageUrl()` wsrv path (`apiImgPath`/`dlPath` fallbacks). Keep the functions
-   in place, unused, or delete them — behaviour is identical once `/api/*` always answers.
-   *~6 call sites.*
-3. **Assets**: split the single 2.85 MB file into `index.html` + `app.css` + `app.js`, and move the
+2. **Route scraping through the backend**: drop the `resolveViaMicrolink()` / `resolveViaJina()`
+   call sites and rewrite `wrapProxiedImageUrl()` to use `/api/image`. *2 call sites + 1 helper.*
+3. **Remove the remaining `wsrv.nl` image URLs** (detail fallback, built-in browser thumbnails) and
+   the `<link rel="preconnect">` hints for that host. *4 lines.*
+4. **Assets**: split the single 2.85 MB file into `index.html` + `app.css` + `app.js`, and move the
    12 base64 blobs to `assets/*.jpg`. Startup/parse win, and it makes the web layer diffable.
-   *Mechanical, script-assisted.*
-4. Nothing else. No CSS edits, no animation edits, no function rewrites.
+   *Mechanical, script-assisted — still open.*
+
+Actually applied: **six transformations, seven lines** (`tools/patch-webapp.py`, documented in
+`docs/web-layer.md`). Line count is unchanged and the result passes `node --check`. The two scraper
+helpers remain defined but uncalled; the tool asserts no call site survives.
 
 ---
 
@@ -225,13 +228,26 @@ Exhaustive — this is everything that changes before the app is considered "por
 Each phase is independently buildable and testable on your Windows machine, and shippable on its
 own. Sizes are relative effort, not calendar time.
 
-### Phase 1 — Native host boots the app · `M`
+### Phase 1 — Native host boots the app · ✅ done
 - `MainPage` hosts a `WebView`; loopback micro-server serves `wwwroot` statics with ranges + MIME.
-- Window: dark chrome, 1280×820 default, min size, title, icon; single-instance guard.
+- Window: dark chrome, 1440×900 default, min size, title, icon; single-instance guard.
 - WebView2 user-data folder pinned to `%LOCALAPPDATA%\InStSanity\WebView2` (keeps localStorage/IndexedDB).
 - `NewWindowRequested` → system browser; Debug builds enable dev tools.
-- **Done when:** `dotnet run` opens the window and the full web app boots, themes switch, the
-  sticker animates and sounds play — with no network access to any third-party proxy.
+- **Verified in CI** (`build` + `smoke` jobs green): the app compiles, publishes self-contained,
+  boots, serves the web document with range support, answers the `/api/*` pipeline, and the
+  WebView phase survives startup while the host keeps serving.
+- **Still to confirm by hand** (needs eyes on a desktop): themes switching, the sticker animating
+  and sounds playing. Static analysis proves no reachable third-party call site, but a packet-level
+  check is a manual step.
+
+Implementation notes that came out of building it:
+- Windows SingleProject apps are assigned a concrete `RuntimeIdentifier` (win-x64), so **restore must
+  be given the same RID** or the runtime pack is missing at build time.
+- `INSTSANITY_HEADLESS=1` boots the backend with no WebView. Rendering needs the Evergreen runtime
+  and a desktop session; the HTTP surface needs neither, which is what makes CI verification possible.
+- CI job logs redirect to blob storage, so the smoke test reports failures through
+  `::error::`/`::warning::` workflow commands — they surface as check-run annotations that are
+  readable from anywhere.
 
 ### Phase 2 — Files & downloads · `M`
 - `/api/image`, `/api/download-photo`, `/api/download-selected`, `/api/save-imported-list`, `/api/cached-posts`.
