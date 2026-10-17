@@ -167,32 +167,50 @@ already white.
 ## The black-hole boot screen (v5) is the Remastered cut
 
 `v5` is the loading screen with the sticker, the arms and the black hole. It was
-replaced wholesale by the gallery's concept 1, at the same beats and the same
-length: the imp leans in, his arms rise out of the sticker's own bottom corners
-(`imp-outer-frame` is `x14 y14 w132 h132`, so the shoulders sit at `14,146` /
-`146,146` in the card's art space), one orb per saved-post pip spirals in, a
-filament ignites between the palms, the core punches open, he drags the disk
-wide, and the clap pulls the frame into the hole.
+replaced wholesale by the gallery's concept 1: the imp reaches out, his arms rise
+out of the sticker's own bottom corners (`imp-outer-frame` is `x14 y14 w132 h132`,
+so the shoulders sit at `14,146` / `146,146` in the card's art space), one orb per
+saved-post pip spirals in, a filament ignites between the palms, the core is born
+at his mouth, he drags the hole wide with both hands and then claps.
+
+**The framing is the shipped one, not a camera move.** The card is drawn at
+`translate(CX, CY) scale(0.95)` — the same centre and the same 0.95 that `v2` and
+`v4` use — and the wordmark is `brandName(u, CX, CY+95, 14)`, again `v2`'s. The
+whole frame is never scaled, rotated or offset: the only motion applied to the
+stage is the shipped screen-space shake/zoom on `sp.style.transform`, which is
+pivoted on the stage centre and cannot move the sticker off it. (The first cut of
+this rewrite wrapped the card in a `<g id="cam…">` push/dolly group; the card rode
+the camera, so it grew and drifted. That is why the card is now outside any world
+transform — the world is only allowed to move what is behind and around it.)
+
+Beats (`T1=6.8`, `NP=28`): `ORBS=[0.39,0.68,0.98,1.27]`, `CUP=0.82`,
+`OPEN=1.40`, ignition `IGNITE=1.46` (the hole is born at `IGNITE+0.10…+0.50`),
+`SPIN=2.31`, `WARP=2.87`, `CLAP=3.55`, `COL=3.81`, fade `FA=3.55 → FB=4.00`.
+The hole sits at `HX=CX, HY=CY+14` (the mouth) and its radius is `56·size`;
+`size` runs from 0 at the ignition to ~0.9 at the clap — it never plateaus and it
+never exists before the spark. The palms are pinned to the growing rim
+(`gap ≈ rimR + 22…26`), so he visibly drags it wider, and they slam to `6` on the
+clap.
 
 What the Remastered cut adds on top of the shipped screen:
 
-- **A camera.** The world lives in `<g id="cam…">`, so the scene pushes,
-  dollies, shakes and punches as one unit. Flashes stay outside it, in screen
-  space.
 - **Depth.** A seeded star field (the same boot always looks alike) and two
   parallax dust layers, drawn with a soft radial gradient rather than a blur
   filter — the filters cost more than they gave and clouded the small card.
-- **The impact kit.** Swirl lines around the disk, radial speed streaks, an
-  RGB-split chroma ring and debris on the clap.
+- **The impact kit.** Swirl lines around the disk, radial speed streaks on the
+  ignition, an RGB-split chroma ring and debris on the clap.
+- **An opaque base.** The stage paints `<rect fill="T().solid">` under the
+  vignette, so the app UI can never show through the boot screen.
 
-The timing is compressed 0.775× from the gallery so the clap still lands on the
-3.55 s frame the shell's fade is written for (`FA=3.55`, `FB=4.00`), which is
-why `FADE_A`, `SCORE_END` and `SCORE_TAIL` did not have to move.
-
-The replacement is an authored module, `tools/boot-v5-remastered.js`, swapped
-in by `tools/patch-webapp.py` (step 5c), the same way the JSON-devour
-cinematics are kept in `tools/imp-throw-variants.js`. Regenerating from the
-pristine upload reproduces the served file byte for byte.
+The replacement is an authored module, `tools/boot-v5-remastered.js`, swapped in
+by `tools/patch-webapp.py` (step 5c), the same way the JSON-devour cinematics are
+kept in `tools/imp-throw-variants.js`. Regenerating from the pristine upload
+reproduces the served file byte for byte. The stage also carries
+`data-ls-cut="v5-remastered-2"`: if the running app still shows the old screen,
+that attribute (or its absence) says whether the app loaded the new document at
+all. `LoopbackHost.ResolveWebRoot` serves whichever of the two possible
+`index.html` copies is newest, so a stale copy left behind by an earlier build
+cannot win.
 
 ## Loading-screen concepts (not shipped)
 
