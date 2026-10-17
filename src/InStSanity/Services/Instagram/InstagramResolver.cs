@@ -48,7 +48,12 @@ public sealed class ResolvedPost
 	public string Likes { get; init; } = string.Empty;
 
 	/// <summary>Unix seconds; the web layer formats the relative age itself.</summary>
-	public double? Timestamp { get; init; }
+	/// <remarks>
+	/// Settable rather than <c>init</c> for one reason: when the public page carries no
+	/// date, the shortcode itself still encodes it, and filling it in after parsing is
+	/// cheaper than rebuilding the object field by field.
+	/// </remarks>
+	public double? Timestamp { get; set; }
 
 	public int PhotoCount { get; init; }
 
@@ -175,6 +180,13 @@ public sealed class InstagramResolver
 
 		foreach (var pair in _cache)
 		{
+			// Summary entries are cached under "sum:" + shortcode; the web layer wants the
+			// full posts only, keyed by the bare shortcode.
+			if (pair.Key.StartsWith("sum:", StringComparison.OrdinalIgnoreCase))
+			{
+				continue;
+			}
+
 			if (pair.Value.Post is { Ok: true } post && pair.Value.Expires > now)
 			{
 				result[pair.Key] = post;
@@ -206,7 +218,20 @@ public sealed class InstagramResolver
 	/// The result always contains every slide; callers that only need the summary can
 	/// project it.
 	/// </summary>
-	public async Task<ResolvedPost?> ResolveAsync(string? url, CancellationToken cancellationToken)
+	public Task<ResolvedPost?> ResolveAsync(string? url, CancellationToken cancellationToken) =>
+		ResolveAsync(url, summaryOnly: false, cancellationToken);
+
+	/// <summary>
+	/// Card-sized resolve: the cover, the counts and the owner, without the carousel.
+	/// This is what a grid of 1139 posts asks for, so it is the path that has to be cheap.
+	/// </summary>
+	public Task<ResolvedPost?> ResolveSummaryAsync(string? url, CancellationToken cancellationToken) =>
+		ResolveAsync(url, summaryOnly: true, cancellationToken);
+
+	async Task<ResolvedPost?> ResolveAsync(
+		string? url,
+		bool summaryOnly,
+		CancellationToken cancellationToken)
 	{
 		var shortcode = TryGetShortcode(url);
 		if (shortcode is null)
@@ -214,7 +239,9 @@ public sealed class InstagramResolver
 			return null;
 		}
 
-		if (_cache.TryGetValue(shortcode, out var cached) && cached.Expires > DateTimeOffset.UtcNow)
+		var cacheKey = summaryOnly ? "sum:" + shortcode : shortcode;
+
+		if (_cache.TryGetValue(cacheKey, out var cached) && cached.Expires > DateTimeOffset.UtcNow)
 		{
 			return cached.Post;
 		}
@@ -225,7 +252,7 @@ public sealed class InstagramResolver
 		var reason = "exception";
 		try
 		{
-			(post, reason) = await ResolveCoreAsync(shortcode, cancellationToken).ConfigureAwait(false);
+			(post, reason) = await ResolveCoreAsync(shortcode, summaryOnly, cancellationToken).ConfigureAwait(false);
 		}
 		catch (OperationCanceledException)
 		{
@@ -248,7 +275,7 @@ public sealed class InstagramResolver
 		}
 
 		var written = DateTimeOffset.UtcNow;
-		_cache[shortcode] = new CacheEntry(
+		_cache[cacheKey] = new CacheEntry(
 			post,
 			written + (post is { Ok: true } ? CacheLifetime : FailureLifetime));
 
@@ -256,22 +283,30 @@ public sealed class InstagramResolver
 	}
 
 	/// <summary>
+	/// The alphabet Instagram writes media ids in.
+	/// </summary>
+	const string ShortcodeAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+	/// <summary>
 	/// Turns a shortcode into the numeric media id Instagram's JSON API expects.
 	/// The shortcode is the id written in base 64 with Instagram's own alphabet.
 	/// </summary>
 	static string? ShortcodeToMediaId(string shortcode)
 	{
-		const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-
 		if (shortcode.Length is 0 or > 20)
 		{
 			return null;
 		}
 
+		return ParseShortcode(shortcode)?.ToString(CultureInfo.InvariantCulture);
+	}
+
+	static BigInteger? ParseShortcode(string shortcode)
+	{
 		var id = BigInteger.Zero;
 		foreach (var character in shortcode)
 		{
-			var index = alphabet.IndexOf(character, StringComparison.Ordinal);
+			var index = ShortcodeAlphabet.IndexOf(character, StringComparison.Ordinal);
 			if (index < 0)
 			{
 				return null;
@@ -280,7 +315,45 @@ public sealed class InstagramResolver
 			id = (id * 64) + index;
 		}
 
-		return id.ToString(CultureInfo.InvariantCulture);
+		return id;
+	}
+
+	/// <summary>
+	/// When the post was created, recovered from the shortcode itself. Instagram puts
+	/// the creation time in the media id's high bits, and the shortcode is that id in
+	/// base 64 — so the date needs no request at all.
+	/// </summary>
+	/// <remarks>
+	/// This is the same arithmetic as <c>shortcode_to_timestamp</c> in the original
+	/// <c>server.py</c>. It is what keeps a card from claiming "8 days ago" for a post
+	/// whose page no longer carries <c>taken_at</c>.
+	/// </remarks>
+	static double? ShortcodeTimestamp(string shortcode)
+	{
+		if (shortcode.Length < 10)
+		{
+			return null;
+		}
+
+		var id = ParseShortcode(shortcode.Length > 11 ? shortcode[..11] : shortcode);
+		if (id is null)
+		{
+			return null;
+		}
+
+		var seconds = (double)((id.Value >> 23) + 1314220021721) / 1000.0;
+		return seconds is > 1286323200 and < 2200000000 ? seconds : null;
+	}
+
+	/// <summary>Fills the date in when the page did not carry one.</summary>
+	static ResolvedPost WithShortcodeTimestamp(ResolvedPost post, string shortcode)
+	{
+		if (post.Timestamp is null && ShortcodeTimestamp(shortcode) is { } seconds)
+		{
+			post.Timestamp = seconds;
+		}
+
+		return post;
 	}
 
 	/// <summary>
@@ -355,71 +428,77 @@ public sealed class InstagramResolver
 		}
 	}
 
+	/// <summary>
+	/// One resolve: fetch, parse, fall back. Summary mode stops at the page HTML.
+	/// </summary>
 	async Task<(ResolvedPost? Post, string Reason)> ResolveCoreAsync(
 		string shortcode,
+		bool summaryOnly,
 		CancellationToken cancellationToken)
 	{
-		// 1. The media-info endpoint: one small JSON response, no HTML.
+		// Both pages at once. They answer different things — the embed carries the
+		// carousel JSON, the post page carries the Open Graph tags — and asking for them
+		// in sequence doubles the time a failing post costs the batch.
+		var embedTask = FetchHtmlAsync(
+			$"https://www.instagram.com/p/{shortcode}/embed/captioned/",
+			InstagramHttp.BotUserAgent,
+			cancellationToken);
+
+		var pageTask = FetchHtmlAsync(
+			$"https://www.instagram.com/p/{shortcode}/",
+			InstagramHttp.BotUserAgent,
+			cancellationToken);
+
+		var embed = await embedTask.ConfigureAwait(false);
+		var page = await pageTask.ConfigureAwait(false);
+
+		var reason = page.Reason.Length > 0 ? page.Reason : embed.Reason;
+
+		// 1. The captioned embed's own JSON: every slide, exact counts, the caption.
+		var fromEmbed = ParseFromPageJson(embed.Html ?? string.Empty, shortcode);
+		if (fromEmbed is not null)
+		{
+			return (WithShortcodeTimestamp(fromEmbed, shortcode), string.Empty);
+		}
+
+		// 2. The post page's JSON — the newer Polaris shape, and the shape Instagram
+		//    serves to a crawler when the embed is throttled.
+		var fromPage = ParseFromPageJson(page.Html ?? string.Empty, shortcode);
+		if (fromPage is not null)
+		{
+			return (WithShortcodeTimestamp(fromPage, shortcode), string.Empty);
+		}
+
+		// 3. Open Graph: one cover, the owner, the likes, the caption. Enough for a card,
+		//    and often the only thing a throttled request returns.
+		var fromOpenGraph = ParseFromOpenGraph(page.Html ?? string.Empty, shortcode)
+			?? ParseFromOpenGraph(embed.Html ?? string.Empty, shortcode);
+
+		if (fromOpenGraph is not null)
+		{
+			return (WithShortcodeTimestamp(fromOpenGraph, shortcode), string.Empty);
+		}
+
+		if (summaryOnly)
+		{
+			return (null, reason.Length > 0 ? reason : "no_media");
+		}
+
+		// 4. Last resort: the JSON media endpoint, which sometimes answers when both HTML
+		//    paths were refused.
 		var info = await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
 		if (info.Post is not null)
 		{
-			return info;
+			return (WithShortcodeTimestamp(info.Post, shortcode), string.Empty);
 		}
 
-		// If the transport itself is down there is no point asking two more times.
-		if (info.Reason is "timeout" or "unreachable")
-		{
-			return info;
-		}
-
-		// 2. The captioned embed is the one public page that carries the media, the owner
-		//    and the caption without a session. The normal post page is the last try.
-		var embed = await FetchHtmlAsync(
-			$"https://www.instagram.com/p/{shortcode}/embed/captioned/?cr=1&v=14",
-			cancellationToken).ConfigureAwait(false);
-
-		var html = embed.Html;
-		var reason = embed.Reason;
-
-		// Only fall back to the post page when the embed answered but had nothing usable
-		// in it. If the transport itself failed (timeout / unreachable / blocked), the
-		// second request fails the same way and only doubles the time the caller waits.
-		var transportFailed = reason is "timeout" or "unreachable" or "login_wall" || reason.StartsWith("http_", StringComparison.Ordinal);
-		if (!transportFailed &&
-			(string.IsNullOrEmpty(html) || html.Contains("Page Not Found", StringComparison.OrdinalIgnoreCase)))
-		{
-			var page = await FetchHtmlAsync(
-				$"https://www.instagram.com/p/{shortcode}/",
-				cancellationToken).ConfigureAwait(false);
-
-			if (!string.IsNullOrEmpty(page.Html))
-			{
-				html = page.Html;
-				reason = page.Reason;
-			}
-		}
-
-		if (string.IsNullOrEmpty(html))
-		{
-			return (null, reason);
-		}
-
-		var fromJson = ParseFromPageJson(html, shortcode);
-		if (fromJson is not null)
-		{
-			return (fromJson, string.Empty);
-		}
-
-		var fromOpenGraph = ParseFromOpenGraph(html, shortcode);
-		if (fromOpenGraph is null)
-		{
-			return (null, "no_media");
-		}
-
-		return (fromOpenGraph, string.Empty);
+		return (null, reason.Length > 0 ? reason : info.Reason.Length > 0 ? info.Reason : "no_media");
 	}
 
-	async Task<(string? Html, string Reason)> FetchHtmlAsync(string url, CancellationToken cancellationToken)
+	async Task<(string? Html, string Reason)> FetchHtmlAsync(
+		string url,
+		string userAgent,
+		CancellationToken cancellationToken)
 	{
 		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 		timeout.CancelAfter(FetchTimeout);
@@ -436,7 +515,7 @@ public sealed class InstagramResolver
 
 		try
 		{
-			using var request = _http.CreatePageGet(uri);
+			using var request = _http.CreatePageGet(uri, userAgent);
 
 			using var response = await _http.Client
 				.SendAsync(request, HttpCompletionOption.ResponseContentRead, timeout.Token)

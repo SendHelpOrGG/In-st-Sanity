@@ -61,7 +61,9 @@ public sealed class ResolvePostEndpoint : IApiEndpoint
 		}
 
 		var summary = string.Equals(request.QueryValue("summary"), "1", StringComparison.Ordinal);
-		var post = await _resolver.ResolveAsync(url, cancellationToken).ConfigureAwait(false);
+		var post = summary
+			? await _resolver.ResolveSummaryAsync(url, cancellationToken).ConfigureAwait(false)
+			: await _resolver.ResolveAsync(url, cancellationToken).ConfigureAwait(false);
 
 		if (post is null)
 		{
@@ -141,7 +143,9 @@ public sealed class ResolveBatchEndpoint : IApiEndpoint
 
 			try
 			{
-				return await _resolver.ResolveAsync(url, deadline.Token).ConfigureAwait(false);
+				// The grid only draws cards: cover, counts, owner. Asking for the whole
+				// carousel here is what made a page of twelve posts outlive its caller.
+				return await _resolver.ResolveSummaryAsync(url, deadline.Token).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException)
 			{
@@ -235,7 +239,9 @@ public sealed class ResolveOwnersEndpoint : IApiEndpoint
 
 			try
 			{
-				return await _resolver.ResolveAsync(url, deadline.Token).ConfigureAwait(false);
+				// The grid only draws cards: cover, counts, owner. Asking for the whole
+				// carousel here is what made a page of twelve posts outlive its caller.
+				return await _resolver.ResolveSummaryAsync(url, deadline.Token).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException)
 			{

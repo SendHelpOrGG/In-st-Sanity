@@ -23,6 +23,21 @@ public sealed class InstagramHttp
 	public const string UserAgent =
 		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
+	/// <summary>
+	/// The user agent that talks to the public pages, and the reason covers work at all.
+	/// </summary>
+	/// <remarks>
+	/// Instagram serves a login shell to a browser user agent and the real public page
+	/// (with <c>og:</c> tags and the embedded JSON) to a link-preview crawler. The
+	/// original Python backend relied on exactly this (<c>BOT_UAS</c> in <c>server.py</c>);
+	/// with a Chrome UA every fetch lands on <c>/accounts/login</c> instead.
+	/// </remarks>
+	public const string BotUserAgent = "Twitterbot/1.0";
+
+	/// <summary>Second crawler identity, for when the first one is throttled.</summary>
+	public const string ShareBotUserAgent =
+		"facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)";
+
 	public const string InstagramOrigin = "https://www.instagram.com/";
 
 	public InstagramHttp()
@@ -81,17 +96,24 @@ public sealed class InstagramHttp
 	/// Builds a GET for an Instagram page (the captioned embed or the post page), asking
 	/// for HTML the way a browser opened in an iframe would.
 	/// </summary>
-	public HttpRequestMessage CreatePageGet(Uri uri)
+	public HttpRequestMessage CreatePageGet(Uri uri, string? userAgent = null)
 	{
 		var request = new HttpRequestMessage(HttpMethod.Get, uri);
+
+		// A request-level User-Agent replaces the client default for this call only;
+		// media still goes out as Chrome, which is what the CDN expects.
+		if (userAgent is not null)
+		{
+			request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
+		}
 
 		request.Headers.Referrer = new Uri(InstagramOrigin);
 		request.Headers.TryAddWithoutValidation(
 			"Accept",
 			"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-		request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "iframe");
+		request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "document");
 		request.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "navigate");
-		request.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-origin");
+		request.Headers.TryAddWithoutValidation("Sec-Fetch-Site", userAgent is null ? "same-origin" : "none");
 		request.Headers.TryAddWithoutValidation("Upgrade-Insecure-Requests", "1");
 
 		return request;
