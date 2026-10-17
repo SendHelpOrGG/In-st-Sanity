@@ -96,6 +96,7 @@ picture. Details in [docs/hybrid-port-plan.md](docs/hybrid-port-plan.md) §2.1.
 docs/hybrid-port-plan.md       the porting plan (architecture, API contract, phases, risks)
 docs/web-layer.md              where the web layer came from and what was changed in it
 preview/index.html             static mock-up of the earlier native shell (see below)
+tools/preview-server.py        serves the app UI in a browser, no Windows build needed
 tools/patch-webapp.py          reproduces the web layer from the pristine upload
 tools/smoke-test.ps1           boots a build and verifies it serves the UI
 src/InStSanity/
@@ -109,11 +110,31 @@ src/InStSanity/
 └─ Resources/Raw/wwwroot/      the web layer
 ```
 
-## Contributing
+## Previewing the UI without Windows
 
-CI is the compiler of record: Windows MAUI targets cannot be built on Linux, so every push is built,
-published and smoke tested on `windows-latest`. Keep phases small and let CI prove each one.
+`tools/preview-server.py` reproduces the loopback contract with the Python standard library, so the
+app UI can be opened in any browser on any OS:
+
+```bash
+python tools/preview-server.py            # http://localhost:8080/
+python tools/preview-server.py --port 9000
+```
+
+| Route | Serves |
+| --- | --- |
+| `/` | the ported web layer — **the app's actual UI** |
+| `/mockup.html` | the earlier static mock-up of the native shell |
+| `/__health` | the same diagnostic payload `LoopbackHost` returns |
+| `/api/*` | `501 {"ok":false,…}`, exactly as an unimplemented route answers in the app |
+
+It is a preview tool, not the backend: no media is proxied and no post is resolved, so covers fall
+back to the app's own artwork. Range requests are supported (video/audio playback needs them).
 
 `preview/index.html` is a static mock-up of the *earlier* native shell (side panel plus an empty main
 page). It is no longer what the app looks like — the ported app looks like the web layer — but it is
 still handy as a colour/style reference.
+
+## Contributing
+
+CI is the compiler of record: Windows MAUI targets cannot be built on Linux, so every push is built,
+published and smoke tested on `windows-latest`. Keep phases small and let CI prove each one.
