@@ -215,7 +215,9 @@ WebView2 profile that kept the previous document cannot replay it from cache.
 Both are ignored by the served page: the web layer only reads `?ls=` and
 `?jsonThrow=`. In a Debug build the startup diagnostic in `App.xaml.cs` prints
 the rooted file's size, write time and boot cut, so "is my executable running
-the new web layer" is one line in the Output window.
+the new web layer" is one line in the Output window. `INSTSANITY_LS=1..5` pins
+the boot variant for the app (it is appended to the loopback URL as `&ls=`), so
+v5 can be watched without relying on the 1-in-5 random pick.
 
 ## Loading-screen concepts (not shipped)
 
