@@ -219,6 +219,42 @@ the new web layer" is one line in the Output window. `INSTSANITY_LS=1..5` pins
 the boot variant for the app (it is appended to the loopback URL as `&ls=`), so
 v5 can be watched without relying on the 1-in-5 random pick.
 
+## Post resolution (owner, cover, carousel)
+
+The import only reads post URLs out of `label_values`; everything the grid shows is resolved
+afterwards. That is what the three resolve routes are for:
+
+| route | caller | job |
+| --- | --- | --- |
+| `GET /api/resolve-post?url=…[&summary=1]` | an opened post, a cover that failed | one post, summary or full carousel |
+| `GET /api/resolve-batch?urls=a,b,c` | the card grid (chunks of 10) | summary for a page of posts |
+| `GET /api/resolve-owners?urls=a,b,c` | whole-library search index (chunks of 20) | account name only |
+| `GET /api/cached-posts` | startup restore | what is already resolved |
+
+`InstagramResolver` fetches `https://www.instagram.com/p/{code}/embed/captioned/` — the one
+public page that carries media, owner and caption without a session — and falls back to the
+plain post page. It then walks the JSON blobs the page embeds (`contextJSON`, the
+`data-sjs` `xdt_shortcode_media` payload, the older Polaris `image_versions2` one) for the
+first object that has **both** an id (`code`/`shortcode`/`pk`) and media, which is what makes
+a carousel resolve as a whole instead of as one slide. Missing `display_url` on a carousel
+parent is normal: the slides live under `edge_sidecar_to_children` / `carousel_media`, and
+those keys count as media when picking the node. If the page carries no JSON at all, the
+resolver falls back to `og:image` / `og:video` / `og:title` / `og:description` and the
+`UsernameText` anchor, marking the result `sourceKind: "api"` instead of `"direct"`.
+
+Covers are kept as the CDN URL — the grid loads them through `/api/image?url=…`, which is why
+the media proxy had to exist first. Video slides keep their poster frame and `videoUrl`.
+
+Caching is in memory: 6 h for a hit, 10 min for a miss, so a dead or rate-limited post is not
+retried in a loop. Failures answer `200 {"ok":false}` on purpose — the web layer treats a
+5xx/501 as "backend down" and backs off for minutes, and one unreachable post is not an
+outage. That distinction is exactly what used to print *server unreachable* under the grid.
+
+**The static preview on :8080 cannot do any of this.** `tools/preview-server.py` is a file
+host with no resolver, and the sandbox it runs in has no route to instagram.com, so covers
+there always fall back to the artwork. Media appears in the Windows app, where the resolver
+runs in-process.
+
 ## Loading-screen concepts (not shipped)
 
 `preview/blackhole-loading-screens/index.html` is a standalone gallery of five remixes
