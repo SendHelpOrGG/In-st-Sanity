@@ -165,6 +165,18 @@ all of them, chosen at random with an equal 1-in-5 chance on every import.
 | 4 | Trident Strike & Post Rain | the trident is cocked, driven through the file, the imp laughs the sidebar's own evil cackle, and the posts rain down into their slots |
 | 5 | Slow Smirk & Finger Snap | a massive black hole pulls the file in; the imp recovers into a smirk, snaps side-on, and manifests the posts |
 
+### Both black holes open in the same spot
+
+Two of the cinematics open a black hole: Singularity Snap (#3) and Slow Smirk (#5). They used to
+compute it separately — Singularity put it 160 px right of the file badge's start
+(`0.54·w + 160 px`, `0.38·h − 10 px`), Slow Smirk a little right of centre on the middle line. Both
+now call one helper, `jsonThrowHoleSpot()`, which returns 57% of the viewport width and 50% of the
+height, so the hole opens in exactly the same place in both animations (and the file's spiral, the
+palms' reach and the collapse rings all follow it).
+
+Checked by forcing each variant in the jsdom harness at a 1024×768 viewport: #3 drew its hole at
+`(583.7, 384.0)` and #5 at `(583.68, 384)` — the same point to sub-pixel rounding.
+
 Geometry, timing and choreography are the reference's, unchanged. Only the DOM layer is adapted:
 the reference's own sticker ids are mapped onto the app's twelve themed stickers at run time
 (the missing halos, laugh mouth and second brow are grafted on and removed afterwards), its sample

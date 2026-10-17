@@ -339,6 +339,11 @@ an equal chance: the shipped Clawed Devil-Palms variant plus four ported from th
 `tools/imp-throw-variants.js` and is inlined by the patch tool; see
 [`web-layer.md`](web-layer.md#five-json-devour-cinematics).
 
+Singularity Snap and Slow Smirk share one black-hole anchor (`jsonThrowHoleSpot()`: 57% of the
+viewport width, 50% of the height), so both open the hole in the same place; Singularity used to
+derive its position from the file badge. See
+[`web-layer.md`](web-layer.md#both-black-holes-open-in-the-same-spot).
+
 Trident Strike no longer acts out its own grin: the imp performs the sidebar's idle *Demonic Villain
 Cackle* (expression 2) once the trident lands, drawn into the same `.imp-expr-mouth` /
 `.imp-expr-eyes` nodes with the theme's own palette, and the rest face returns between "ha" cycles

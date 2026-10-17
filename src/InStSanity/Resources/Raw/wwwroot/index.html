@@ -6785,6 +6785,15 @@ function injectStyle(){
   document.head.appendChild(st);
 }
 
+/* The one spot where a cinematic opens its black hole, measured as a fraction
+   of the viewport: a little right of centre, on the horizontal middle.  Slow
+   Smirk has always opened its hole here; Singularity Snap used to open one
+   next to the file badge instead, so the two cinematics did not agree.  Both
+   read this now, so they open in exactly the same place. */
+function jsonThrowHoleSpot(){
+  return { x: window.innerWidth * 0.57, y: window.innerHeight * 0.50 };
+}
+
 function play(variant, fileName, totalCount){
   var myRun = ++animRunId;
   injectStyle();
@@ -7012,7 +7021,7 @@ function play(variant, fileName, totalCount){
   }
 
   function runB(){
-  const BH = { x: startFilePos.x + 160, y: startFilePos.y - 10 };
+  const BH = jsonThrowHoleSpot();
   const BR = Math.max(90, Math.min(170, window.innerHeight * 0.24));
   const T_GROW = 150, T_FULL = 800, T_SUCK0 = 700, T_SUCK1 = 1500, T_COL0 = 1500, T_COL1 = 1950, T_SNAP = 2700, REV0 = T_SNAP + 200, RST = 110;
   const endFx = REV0 + 5 * RST + 720, lastPop = REV0 + 5 * RST;
@@ -7509,8 +7518,8 @@ function play(variant, fileName, totalCount){
   }
 
   function runD(){
-  const holeX = window.innerWidth * 0.57;
-  const holeY = window.innerHeight * 0.50;
+  const holePos = jsonThrowHoleSpot();
+  const holeX = holePos.x, holeY = holePos.y;
   const formEnd = 720;
   const suckEnd = 1450;
   const closeEnd = 1940;
