@@ -29,17 +29,72 @@ sticker animating and the synthesised sounds playing. Run the app locally to con
 Prefer .NET 9? Change one line in `src/InStSanity/InStSanity.csproj`
 (`<TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>`) and install the matching workload.
 
-## Build and run
+## Run it
+
+### Visual Studio
+
+1. Open **`InStSanity.sln`** (not *File → Open → Folder* — folder view has no startup project).
+2. Leave the solution platform on **Any CPU**. The SDK picks `win-x64` or `win-arm64` from the
+   machine, so there is nothing to select there.
+3. Make sure **InStSanity** is the startup project (it is the only project, so this is usually
+   automatic — otherwise right-click it → *Set as Startup Project*).
+4. Press <kbd>F5</kbd> to debug, or <kbd>Ctrl</kbd>+<kbd>F5</kbd> to run without the debugger.
+
+The first build takes a few minutes: it restores the MAUI workload's packages and generates the
+app icon and splash screen.
+
+If Visual Studio offers to install missing components, accept — it needs the **.NET Multi-platform
+App UI development** workload.
+
+### Command line
 
 ```powershell
-dotnet workload install maui-windows          # once
-dotnet build src/InStSanity/InStSanity.csproj
+dotnet workload install maui-windows          # once per machine
 dotnet run --project src/InStSanity
 ```
 
-The app is **unpackaged** (`<WindowsPackageType>None</WindowsPackageType>`), so `dotnet run` and
-<kbd>F5</kbd> work directly — no MSIX, no developer certificate. The runtime identifier
-(`win-x64` / `win-arm64`) is picked up automatically.
+Executable after a build, if you want to double-click it:
+
+```
+src\InStSanity\bin\Debug\net10.0-windows10.0.19041.0\win-x64\InStSanity.exe
+```
+
+The app is **unpackaged** (`<WindowsPackageType>None</WindowsPackageType>`), so <kbd>F5</kbd> and
+`dotnet run` work directly — no MSIX, no developer certificate.
+
+### What you should see
+
+1. A dark window titled **In-st-Sanity**, 1440×900.
+2. Briefly a spinner and "Starting In-st-Sanity…".
+3. The app UI: side panel with the In[st]Sanity brand, the library toolbar, the animated sticker.
+
+Imported posts show fallback artwork rather than real covers until the resolution endpoints land
+(phases 2–3) — that is expected, not a failure.
+
+In a **Debug** build the Output window reports which URL the app is serving, and whether the web
+layer was found:
+
+```
+[In-st-Sanity] host: http://localhost:8000/  web root: …\Resources\Raw\wwwroot  index.html: found
+```
+
+While the app is running you can also check the backend from a browser:
+<http://localhost:8000/__health>. If port 8000 was busy the host moves to 8001–8020, so try
+`http://localhost:8001/__health` too (the Debug output names the actual port).
+
+### If it does not run
+
+| Symptom | Cause and fix |
+| --- | --- |
+| `NETSDK1147: … workloads must be installed: maui-windows` | Run `dotnet workload install maui-windows`, or install the *.NET MAUI development* workload in the Visual Studio Installer. |
+| `NETSDK1045: The current .NET SDK does not support targeting .NET 10.0` | The machine has no .NET 10 SDK. Install it and update Visual Studio to 17.14+ (or VS 2026), **or** switch the TFM to `net9.0-windows10.0.19041.0` in `InStSanity.csproj` and install the .NET 9 MAUI workload. |
+| The project loads but shows "not supported" | Visual Studio is too old for the target framework — see the row above. |
+| Pressing F5 appears to do nothing | An earlier instance is probably still running (Task Manager → `InStSanity.exe` → End task). The app allows **one** instance, because two would fight over the loopback port and the WebView2 profile; a second one exits immediately and logs why. |
+| Window opens, then the overlay says the UI could not be loaded | The web layer was not found next to the executable. Check the `index.html: …` line in the Output window, and rebuild. |
+| Blank window, no error | Missing WebView2 runtime. Install the *Microsoft Edge WebView2 Runtime* (Evergreen); it is preinstalled on Windows 11. |
+| A port already in use, or `/__health` on 8000 fails | Something else owns 8000; the app moved to the next free port. The Debug output shows the real URL. |
+
+To verify a build without watching the window, see the smoke test below.
 
 Verify a build without watching the window:
 

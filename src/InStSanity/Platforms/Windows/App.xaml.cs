@@ -28,9 +28,12 @@ public partial class App : MauiWinUIApplication
 	{
 		if (!SingleInstance.IsPrimaryInstance)
 		{
-			// Another instance owns the loopback port and the WebView2 profile.
-			// (Focusing the existing window is planned for a later phase.)
-			Exit();
+			// Another instance owns the loopback port and the WebView2 profile. Exit
+			// deterministically: Application.Exit() before a window exists can leave the
+			// process alive, and a second copy would only fail to bind the port.
+			System.Diagnostics.Debug.WriteLine(
+				"[In-st-Sanity] another instance is already running - exiting this one.");
+			Environment.Exit(0);
 			return;
 		}
 

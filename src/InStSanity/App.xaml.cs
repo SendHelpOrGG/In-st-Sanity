@@ -21,6 +21,15 @@ public partial class App : Application
 		// Start serving before the window exists: the WebView navigates to this host as
 		// soon as MainPage is created.
 		webHost.Start();
+
+#if DEBUG
+		// First-run diagnostics, visible in the Visual Studio Output window. If the UI does
+		// not appear, these two lines say whether the host came up and whether the web layer
+		// was found next to the executable.
+		var indexPath = Path.Combine(webHost.WebRoot, "index.html");
+		System.Diagnostics.Debug.WriteLine(
+			$"[In-st-Sanity] host: {webHost.Url}  web root: {webHost.WebRoot}  index.html: {(File.Exists(indexPath) ? "found" : "MISSING")}");
+#endif
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
