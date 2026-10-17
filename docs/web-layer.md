@@ -110,9 +110,15 @@ Now:
 - The cinematic starts through `queueImpJsonThrow()` — two `requestAnimationFrame`s later — so its
   first frames no longer land on a main thread that is still laying out the rebuilt grid.
 
-Measured in the jsdom harness with a 300-post import: the reload path drops from ~120 ms of blocked
-main thread (parse + 300 post rebuilds + index) to ~1 ms of JS plus the 20-card re-render, and the
-poke runs its full 480–640 ms instead of being cancelled after one frame.
+Measured in the jsdom harness (it exaggerates DOM work, so compare paths, not absolute values):
+the full import blocks for 86–233 ms depending on the fixture; the replay path keeps the same 20-card
+re-render but drops the parse, the entry extraction, every `buildPostFromEntry` call and the index
+write, for 44–72 ms. The size-proportional part is what used to be felt as a freeze.
+
+The click itself was checked end to end with a real `pointerdown` on the button: the poke armed a
+520 ms deadline, `useLastUploadedJson()` resolved 601 ms after the click (it waited out the poke,
+then replayed), and the cinematic's first frame landed at 704 ms — the poke runs to completion
+instead of dying on its first frame.
 
 ### A theme swap stuttered through its transitions
 
