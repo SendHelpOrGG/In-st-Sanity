@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    ════════════════════════════════════════════════════════════════════════════
+    Native side-panel shell — NOT part of the boot path while the web layer is
+    hosted (see docs/hybrid-port-plan.md §2).
+
+    The ported app is the original web UI, which draws its own side panel, so the
+    window now hosts MainPage's WebView directly (App.CreateWindow). This shell is
+    kept for the alternative: native chrome around the web layer, or native pages
+    alongside it. To switch back, register AppShell in MauiProgram and return
+    `new Window(shell)` from App.CreateWindow — the fly-out below already carries
+    the side-panel branding, nav entry and footer.
+    ════════════════════════════════════════════════════════════════════════════
+-->
+<Shell x:Class="InStSanity.AppShell"
+       xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       Title="In-st-Sanity"
+       FlyoutBackgroundColor="{StaticResource SideBarBackground}"
+       FlyoutBehavior="Locked"
+       FlyoutWidth="264">
+
+    <Shell.FlyoutHeader>
+        <Grid RowDefinitions="Auto,Auto">
+
+            <!-- Brand block -->
+            <Grid Grid.Row="0"
+                  Padding="20,22,20,18"
+                  ColumnDefinitions="40,*"
+                  ColumnSpacing="12">
+
+                <Border Style="{StaticResource SideBarBrandMark}">
+                    <Label Text="IS" Style="{StaticResource SideBarBrandMarkText}" />
+                </Border>
+
+                <VerticalStackLayout Grid.Column="1"
+                                     Spacing="2"
+                                     VerticalOptions="Center">
+                    <Label Text="In-st-Sanity" Style="{StaticResource SideBarBrandTitle}" />
+                    <Label Text="Desktop workspace" Style="{StaticResource SideBarBrandSubtitle}" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Divider -->
+            <BoxView Grid.Row="1"
+                     HeightRequest="1"
+                     Color="{StaticResource SideBarStroke}"
+                     HorizontalOptions="Fill" />
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <ShellContent x:Name="HomeShellContent"
+                  Title="Home"
+                  Icon="icon_home.png"
+                  Route="home" />
+
+    <Shell.FlyoutFooter>
+        <Grid Padding="20,16,20,18" RowDefinitions="Auto,*" RowSpacing="10">
+            <BoxView Grid.Row="0"
+                     HeightRequest="1"
+                     Color="{StaticResource SideBarStroke}"
+                     HorizontalOptions="Fill" />
+            <Label Grid.Row="1"
+                   Text="v1.0.0  ·  Dark theme"
+                   Style="{StaticResource SideBarFooterText}" />
+        </Grid>
+    </Shell.FlyoutFooter>
+
+</Shell>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Application x:Class="InStSanity.App"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:InStSanity">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- 1. Colours (the single place to re-skin the app) -->
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <!-- 2. Global, dark-only control styles -->
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+                <!-- 3. Styles used by the side panel / shell chrome -->
+                <ResourceDictionary Source="Resources/Styles/SideBar.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

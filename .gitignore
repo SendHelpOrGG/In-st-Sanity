@@ -1,0 +1,62 @@
+# ── Python (tools/) ──────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+
+# ── Build output ─────────────────────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+artifacts/
+*.binlog
+*.tlog
+*.log
+*.pdb
+*.mdb
+*.ilk
+*.obj
+
+# ── Visual Studio / Rider / VS Code ──────────────────────────────────────────
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.userprefs
+launchSettings.json.user
+
+# ── NuGet ────────────────────────────────────────────────────────────────────
+*.nupkg
+*.snupkg
+packages/
+!packages/build/
+.nuget/
+
+# ── MAUI / WinUI ─────────────────────────────────────────────────────────────
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+AppPackages/
+BundleArtifacts/
+Generated Files/
+*.g.cs
+
+# ── Test / coverage ──────────────────────────────────────────────────────────
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+*.coverage
+*.coveragexml
+
+# ── OS junk ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*~

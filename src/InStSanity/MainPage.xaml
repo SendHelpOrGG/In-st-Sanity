@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="InStSanity.MainPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:InStSanity.ViewModels"
+             x:DataType="vm:MainPageViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="{StaticResource AppBackground}">
+
+    <!--
+        ════════════════════════════════════════════════════════════════════════
+        Host page for the ported web layer.
+
+        The whole In[st]Sanity UI (side panel, library, animations, sounds) is the
+        web app served by InStSanity.Services.WebHost.LoopbackHost; this page only
+        frames it. Loopback start, WebView2 profile and link handling are set up in
+        MauiProgram / Platforms/Windows.
+        ════════════════════════════════════════════════════════════════════════
+    -->
+    <Grid>
+
+        <WebView x:Name="WebAppView"
+                 Source="{Binding AppUrl}"
+                 Navigated="OnWebAppNavigated" />
+
+        <!-- Shown until the web layer has loaded; also used to report a failed start. -->
+        <VerticalStackLayout x:Name="StartupOverlay"
+                             Padding="32"
+                             Spacing="14"
+                             HorizontalOptions="Center"
+                             VerticalOptions="Center">
+            <ActivityIndicator x:Name="StartupSpinner"
+                               IsRunning="True"
+                               Color="{StaticResource Primary}"
+                               HorizontalOptions="Center" />
+            <Label x:Name="StartupMessage"
+                   Text="Starting In-st-Sanity…"
+                   Style="{StaticResource EmptyStateMessage}" />
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>
