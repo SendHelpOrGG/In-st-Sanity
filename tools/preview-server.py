@@ -8,8 +8,10 @@ browser:
 
     /                 the ported web layer  (Resources/Raw/wwwroot/index.html)
     /mockup.html      the earlier static mock-up of the native shell (preview/index.html)
-    /concepts         the black-hole loading-screen concept gallery
+    /concepts/        the black-hole loading-screen concept gallery
                       (preview/blackhole-loading-screens/index.html)
+    /concepts/wild-concepts.html
+                      the earlier canvas-only off-shoots from the same gallery
     /__health         the same diagnostic shape LoopbackHost returns
     /api/*            501 {"ok":false,...} exactly as LoopbackHost answers an
                       unimplemented route, so the UI takes its normal fallback paths
