@@ -86,6 +86,7 @@ While the app is running you can also check the backend from a browser:
 
 | Symptom | Cause and fix |
 | --- | --- |
+| **"The debug executable … specified in the 'Windows Machine' debug profile does not exist"** | No build has produced the exe at the path Visual Studio expects — see *that error, step by step* below. |
 | `NETSDK1147: … workloads must be installed: maui-windows` | Run `dotnet workload install maui-windows`, or install the *.NET MAUI development* workload in the Visual Studio Installer. |
 | `NETSDK1045: The current .NET SDK does not support targeting .NET 10.0` | The machine has no .NET 10 SDK. Install it and update Visual Studio to 17.14+ (or VS 2026), **or** switch the TFM to `net9.0-windows10.0.19041.0` in `InStSanity.csproj` and install the .NET 9 MAUI workload. |
 | The project loads but shows "not supported" | Visual Studio is too old for the target framework — see the row above. |
@@ -95,6 +96,37 @@ While the app is running you can also check the backend from a browser:
 | A port already in use, or `/__health` on 8000 fails | Something else owns 8000; the app moved to the next free port. The Debug output shows the real URL. |
 
 To verify a build without watching the window, see the smoke test below.
+
+### "The debug executable … does not exist"
+
+The real build output sits one folder deeper than the path in the message — the debugger is looking
+at a path no build produced:
+
+```
+bin\Debug\net10.0-windows10.0.19041.0\win-x64\InStSanity.exe     ← where the build puts it
+bin\Debug\net10.0-windows10.0.19041.0\InStSanity.exe             ← what the profile asked for
+```
+
+Work through these in order:
+
+1. **Build → Rebuild Solution**, then look at the **Error List**. A fresh clone usually needs one
+   explicit build before <kbd>F5</kbd> works.
+2. **If the Error List shows errors, that is the real problem** — the missing exe is only the
+   symptom. The usual suspects are `NETSDK1147` (MAUI workload) and `NETSDK1045` (.NET 10 SDK);
+   both are covered in the table above.
+3. **If the rebuild succeeds but F5 still complains**, Visual Studio is holding a stale debug
+   target. Close Visual Studio, delete `.vs`, `bin` and `obj` (repository root *and* `src/InStSanity`),
+   reopen the solution, build, then <kbd>F5</kbd>.
+4. **Check whether the app runs at all**, independently of the debugger:
+
+   ```powershell
+   dotnet run --project src\InStSanity
+   ```
+
+   or double-click `src\InStSanity\bin\Debug\net10.0-windows10.0.19041.0\win-x64\InStSanity.exe`.
+
+If none of that helps, capture the last ~20 lines of **Output → Build** (not the Error List, the raw
+build log) — it names the path the build actually wrote to.
 
 Verify a build without watching the window:
 
