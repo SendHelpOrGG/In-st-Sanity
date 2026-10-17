@@ -210,7 +210,12 @@ reproduces the served file byte for byte. The stage also carries
 that attribute (or its absence) says whether the app loaded the new document at
 all. `LoopbackHost.ResolveWebRoot` serves whichever of the two possible
 `index.html` copies is newest, so a stale copy left behind by an earlier build
-cannot win.
+cannot win, and `LoopbackHost.Url` carries a `?v=<write time>` stamp so a
+WebView2 profile that kept the previous document cannot replay it from cache.
+Both are ignored by the served page: the web layer only reads `?ls=` and
+`?jsonThrow=`. In a Debug build the startup diagnostic in `App.xaml.cs` prints
+the rooted file's size, write time and boot cut, so "is my executable running
+the new web layer" is one line in the Output window.
 
 ## Loading-screen concepts (not shipped)
 
