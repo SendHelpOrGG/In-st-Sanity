@@ -371,3 +371,8 @@ frame's worth of work while the animation that click had just started was still 
 - Switching themes repainted the page through a third of a second of colour transitions. The swap now
   runs with transitions frozen for two frames (`body.theme-swapping`), so the new palette lands in one
   frame.
+- The black-and-white theme (`v3`) is the only one whose selected surface is a solid light fill
+  (`--t-nav-act-bg: #f4f4f6`). Three decorative surfaces in the Upload JSON dialog borrowed that
+  token and turned white-on-white; they now get a v3-scoped ink tint, and the other eleven themes
+  are untouched. See
+  [`web-layer.md`](web-layer.md#the-mono-themes-upload-dialog-was-white-on-white).

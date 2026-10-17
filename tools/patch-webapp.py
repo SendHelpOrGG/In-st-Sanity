@@ -288,6 +288,25 @@ UI_FIXES: list[tuple[str, str, str, int]] = [
         1,
     ),
     (
+        # v3 (the black-and-white theme) is the only theme whose "active"
+        # surface is a solid light fill: --t-nav-act-bg is #f4f4f6 and the ink
+        # on it is #090a0c, because the selected nav row is meant to read as a
+        # white pill.  Three surfaces inside the Upload JSON dialog borrow that
+        # token as a decorative tint - the recent-file card and its two icon
+        # tiles - so on v3 they inherited the solid fill and became white on
+        # white: filename and icons invisible, meta text at 3.4:1, trash button
+        # greyed.  Every other theme uses a translucent accent gradient there,
+        # which is why only v3 looked broken.  Give those three a faint ink tint
+        # on v3 alone; the other eleven themes keep their accent tint untouched.
+        "the mono theme's upload dialog stays dark",
+        ".upload-recent-actions .icon-btn{width:32px;height:32px;flex:0 0 32px;border-radius:9px}",
+        ".upload-recent-actions .icon-btn{width:32px;height:32px;flex:0 0 32px;border-radius:9px}\n"
+        'body[data-theme="v3"] .upload-recent{background:rgba(244,244,246,.055);border-color:rgba(244,244,246,.22)}\n'
+        'body[data-theme="v3"] .upload-dropzone-icon,body[data-theme="v3"] .upload-recent-icon{'
+        'background:rgba(244,244,246,.08);border-color:rgba(244,244,246,.24);color:var(--t-ink,#f4f4f6)}',
+        1,
+    ),
+    (
         "a theme swap runs without transitions",
         "function setAppTheme(themeId,quiet=false){\n"
         "  const id=APP_THEME_NAMES[themeId]?themeId:'default';\n"

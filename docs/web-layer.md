@@ -132,6 +132,29 @@ after the click.
 is removed two frames later. Animations are untouched, so the sticker keeps bouncing through it, and
 the transitions are exactly as they were before the click.
 
+## The mono theme's upload dialog was white on white
+
+The black-and-white theme (`data-theme="v3"`) is the only one whose selected surface is a *solid*
+fill: `--t-nav-act-bg` is `#f4f4f6` with `#090a0c` ink, because its active nav row is meant to read
+as a white pill. Every other theme uses a translucent accent gradient for that token.
+
+Three surfaces in the Upload JSON dialog borrow that token for decoration rather than for selection:
+the recent-file card (`.upload-recent`) and its two icon tiles (`.upload-recent-icon`,
+`.upload-dropzone-icon`). On v3 they inherited the solid fill, so the card was white with a white
+filename, a white meta line and invisible icons — filename and icons at 1.00:1, the meta line at
+3.42:1 — while all eleven other themes stayed dark. The trash button only looked washed out because
+its translucent `--t-card-bg` was compositing over that white card.
+
+The fix is three v3-scoped rules that tint those surfaces with 5.5–8% ink instead of the solid nav
+fill. Nothing else changes: the other themes keep their accent tint, and v3's nav pill, filters and
+settings tabs are untouched. Contrast on v3 becomes 15.27:1 for the filename and icons and 4.47:1
+for the meta line — in line with the other themes (e.g. 11.44:1 / 4.89:1 on the default theme).
+
+Checked by removing the three rules from the built page, which reproduces the previous build
+byte-for-byte, and by reading the computed background back in jsdom with v3 applied
+(`rgba(244,244,246,.055)` on the card, `.08` on the icon tiles). The 12-theme render check still
+passes.
+
 ## Reproducing the transformation
 
 ```bash
