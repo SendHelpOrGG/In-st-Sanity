@@ -564,7 +564,7 @@ function sceneOrbit(stage, uid){
     }
     const hOp = enter * (1 - win(t, CLAP - .08, CLAP + .06));
     el.arms.innerHTML = hOp > .02
-      ? (hOp > .02 ? dust(angL, 1, TH.accent) + L + dust(angR, -1, TH.accent2) + Rp : '')
+      ? dust(angL, 1, TH.accent) + L + dust(angR, -1, TH.accent2) + Rp
       : '';
 
     /* the clap */
@@ -906,15 +906,15 @@ function sceneClap(stage, uid){
    ═══════════════════════════════════════════════════════════════════════ */
 const DEFS = [
   { name:'Remastered', blurb:'The shipped sequence, same beats: the palms cup nothing, the core lights between them, the disk opens, the screen is dragged in, the hands clap.',
-    untilNow:'Everything the app already does — only the rig is cleaner and the light is stronger.', period:6.6, draw:sceneRim },
+    untilNow:'Everything the app already does — only the rig is cleaner and the light is stronger.', period:6.6, still:3.45, draw:sceneRim },
   { name:'Orbiting Palms', blurb:'The hole is born between the hands, then the palms let go and sweep around its rim, left and right, while the disk winds itself up under the fingers.',
-    untilNow:'The arms keep moving all scene instead of just rising and clapping.', period:6.9, draw:sceneOrbit },
+    untilNow:'The arms keep moving all scene instead of just rising and clapping.', period:6.9, still:3.90, draw:sceneOrbit },
   { name:'The Greedy Mouth', blurb:'The grin unhinges into a maw ringed with fangs, the hole sits inside it, and the whole grin snaps shut on the scene while his palms brace the corners of the mouth.',
-    untilNow:'The mouth is the event, drawn much further than the boot screen dares.', period:6.2, draw:sceneMouth },
+    untilNow:'The mouth is the event, drawn much further than the boot screen dares.', period:6.2, still:3.85, draw:sceneMouth },
   { name:'Eclipse', blurb:'The same imp and the same arms, framed as an eclipse: the hole is the sun behind him, the palms hold the rim, and the last sliver closes to a diamond ring before the clap.',
-    untilNow:'The hole goes behind the imp for the first time, and the light does the talking.', period:6.8, draw:sceneEclipse },
+    untilNow:'The hole goes behind the imp for the first time, and the light does the talking.', period:6.8, still:3.95, draw:sceneEclipse },
   { name:'The Clap', blurb:'A fast loop where the clap is both start and end: the palms part, the hole blooms out of the gap, they take the rim and squeeze until it is a vertical line.',
-    untilNow:'The arms are the protagonists and the hole is almost a prop.', period:4.5, draw:sceneClap }
+    untilNow:'The arms are the protagonists and the hole is almost a prop.', period:4.5, still:2.35, draw:sceneClap }
 ];
 
 const reduced = (() => {
@@ -965,7 +965,7 @@ DEFS.forEach((def, i) => {
     pips().forEach((p, k) => p.classList.toggle('on', k <= on));
   }
 
-  if (reduced){ paint(def.period * .38); }
+  if (reduced){ paint(def.still || def.period * .38); }
 
   let t = 0, last = 0, raf = 0, running = false;
   function frame(now){
