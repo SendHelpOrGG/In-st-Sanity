@@ -70,7 +70,8 @@ public sealed class LoopbackHost : IAsyncDisposable
 	public int Port { get; }
 
 	/// <summary>API routes this build actually serves, for the startup diagnostic.</summary>
-	public IReadOnlyCollection<string> Routes => _endpoints.Keys;
+	public IReadOnlyCollection<string> Routes =>
+		_endpoints.Keys.OrderBy(route => route, StringComparer.OrdinalIgnoreCase).ToArray();
 
 	/// <summary>
 	/// URL to point the WebView at. The host name must stay <c>localhost</c>: the web layer
