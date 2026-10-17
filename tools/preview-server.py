@@ -39,6 +39,7 @@ REPO = Path(__file__).resolve().parent.parent
 WEB_ROOT = REPO / "src" / "InStSanity" / "Resources" / "Raw" / "wwwroot"
 MOCKUP = REPO / "preview" / "index.html"
 CONCEPTS = REPO / "preview" / "blackhole-loading-screens" / "index.html"
+CONCEPTS_WILD = REPO / "preview" / "blackhole-loading-screens" / "wild-concepts.html"
 
 # Spelled out rather than left to the platform mime database: Chromium is strict about
 # scripts and stylesheets, and mimetypes differs between Windows and Linux installs.
@@ -94,6 +95,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                     "webRootExists": (WEB_ROOT / "index.html").is_file(),
                     "mockup": MOCKUP.is_file(),
                     "concepts": CONCEPTS.is_file(),
+                    "conceptsWild": CONCEPTS_WILD.is_file(),
                     "endpoints": ["/api/image", "/api/download-photo"],
                 },
                 send_body=send_body,
@@ -117,8 +119,21 @@ class PreviewHandler(BaseHTTPRequestHandler):
             self.send_file(MOCKUP, send_body=send_body)
             return
 
-        if route in ("/concepts", "/concepts/", "/concepts/index.html"):
+        # The gallery uses relative links to its own pages, so /concepts must keep
+        # its trailing slash or the wild-concepts link would resolve to the repo root.
+        if route == "/concepts":
+            self.send_response(HTTPStatus.MOVED_PERMANENTLY)
+            self.send_header("Location", "/concepts/")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+
+        if route in ("/concepts/", "/concepts/index.html"):
             self.send_file(CONCEPTS, send_body=send_body)
+            return
+
+        if route in ("/concepts/wild-concepts.html", "/concepts/wild-concepts"):
+            self.send_file(CONCEPTS_WILD, send_body=send_body)
             return
 
         # Anything else is looked up next to the web app, with traversal protection.
