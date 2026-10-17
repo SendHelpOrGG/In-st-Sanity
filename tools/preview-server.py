@@ -8,6 +8,8 @@ browser:
 
     /                 the ported web layer  (Resources/Raw/wwwroot/index.html)
     /mockup.html      the earlier static mock-up of the native shell (preview/index.html)
+    /concepts         the black-hole loading-screen concept gallery
+                      (preview/blackhole-loading-screens/index.html)
     /__health         the same diagnostic shape LoopbackHost returns
     /api/*            501 {"ok":false,...} exactly as LoopbackHost answers an
                       unimplemented route, so the UI takes its normal fallback paths
@@ -36,6 +38,7 @@ from urllib.parse import urlparse
 REPO = Path(__file__).resolve().parent.parent
 WEB_ROOT = REPO / "src" / "InStSanity" / "Resources" / "Raw" / "wwwroot"
 MOCKUP = REPO / "preview" / "index.html"
+CONCEPTS = REPO / "preview" / "blackhole-loading-screens" / "index.html"
 
 # Spelled out rather than left to the platform mime database: Chromium is strict about
 # scripts and stylesheets, and mimetypes differs between Windows and Linux installs.
@@ -90,6 +93,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                     "webRoot": str(WEB_ROOT),
                     "webRootExists": (WEB_ROOT / "index.html").is_file(),
                     "mockup": MOCKUP.is_file(),
+                    "concepts": CONCEPTS.is_file(),
                     "endpoints": ["/api/image", "/api/download-photo"],
                 },
                 send_body=send_body,
@@ -111,6 +115,10 @@ class PreviewHandler(BaseHTTPRequestHandler):
 
         if route in ("/mockup.html", "/mockup"):
             self.send_file(MOCKUP, send_body=send_body)
+            return
+
+        if route in ("/concepts", "/concepts/", "/concepts/index.html"):
+            self.send_file(CONCEPTS, send_body=send_body)
             return
 
         # Anything else is looked up next to the web app, with traversal protection.

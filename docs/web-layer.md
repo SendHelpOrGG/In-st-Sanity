@@ -164,6 +164,27 @@ on v6, 2.49:1 on v10. The glyph now uses the theme's button ink (`--t-btn-ink`),
 to 18.03:1, 12.65:1, 12.37:1 and 7.49:1 and is a no-op on the seven themes whose button ink is
 already white.
 
+## Loading-screen concepts (not shipped)
+
+`preview/blackhole-loading-screens/index.html` is a standalone gallery of five
+re-imaginings of the boot screen's black hole. It is served at `/concepts` by
+`tools/preview-server.py` and is **not** part of the web layer: the app's own five boot
+variants are untouched, and nothing here is inlined by the patch tool.
+
+| # | concept | what it does |
+| --- | --- | --- |
+| 1 | Photon Ring | an almost edge-on disk with a razor shadow; the far side of the disk is lensed over the top, hot spots race around it, and a tick ring carries the progress |
+| 2 | Feed the Void | a smaller hole with two eyes that track the next saved-post tile; the tiles spiral in with contrails, each swallow pops a ring and lights a segment of the counter |
+| 3 | Spaghettification | the wordmark itself is the stream: real letters ride a tilted spiral from the outside in, stretched and red-shifted to pink as they cross the horizon |
+| 4 | Gravity Well | a spacetime grid of lensed grid lines and nodes bent around a growing horizon, with a countdown, tick ring and scanline HUD |
+| 5 | Collapse & Rebirth | one nine-second life: dust falls in, the hole eats itself in a white flash, then throws the galaxy back out as the wordmark lands |
+
+Each panel draws in a fixed 960×540 world on a plain 2D canvas and is letterboxed into
+whatever size the panel is; click a panel (or press 1–5) to go fullscreen, Esc to return.
+Panels pause when scrolled out of view and when another panel is fullscreen, and a static
+frame is drawn instead of animation under `prefers-reduced-motion`. No images, fonts or
+libraries — only canvas and system typefaces.
+
 ## Reproducing the transformation
 
 ```bash
