@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Globalization;
+using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -92,6 +93,12 @@ public sealed class InstagramResolver
 	/// <summary>How long a failed one is remembered, so a dead post is not retried in a loop.</summary>
 	static readonly TimeSpan FailureLifetime = TimeSpan.FromMinutes(10);
 
+	/// <summary>
+	/// One page fetch. Kept short on purpose: the grid gives a batch 16 s and an opened
+	/// post 12 s, so a fetch that is going to fail has to fail inside that window.
+	/// </summary>
+	static readonly TimeSpan FetchTimeout = TimeSpan.FromSeconds(7);
+
 	static readonly Regex ShortcodeRegex = new(
 		@"instagram\.com/(?:[A-Za-z0-9_.]+/)?(?:p|reel|reels|tv)/([A-Za-z0-9_-]+)",
 		RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
@@ -123,6 +130,11 @@ public sealed class InstagramResolver
 	readonly InstagramHttp _http;
 	readonly ILogger<InstagramResolver> _logger;
 	readonly ConcurrentDictionary<string, CacheEntry> _cache = new(StringComparer.OrdinalIgnoreCase);
+
+	int _attempts;
+	int _resolved;
+	int _failed;
+	string _lastFailure = string.Empty;
 
 	sealed class CacheEntry
 	{
@@ -172,6 +184,23 @@ public sealed class InstagramResolver
 		return result;
 	}
 
+	/// <summary>Fetch attempts since launch, including cache hits.</summary>
+	public int Attempts => Volatile.Read(ref _attempts);
+
+	/// <summary>Attempts that produced a post.</summary>
+	public int Resolved => Volatile.Read(ref _resolved);
+
+	/// <summary>Attempts that produced nothing (see <see cref="LastFailure"/> for why).</summary>
+	public int Failed => Volatile.Read(ref _failed);
+
+	/// <summary>
+	/// Why the last attempt failed: <c>timeout</c>, <c>unreachable</c>, <c>http_403</c>,
+	/// <c>login_wall</c>, <c>no_media</c>, <c>bad_url</c>. Empty when nothing has failed.
+	/// Surfaced on <c>/__health</c> — it is the difference between "the app never asked"
+	/// and "Instagram refused the app".
+	/// </summary>
+	public string LastFailure => Volatile.Read(ref _lastFailure);
+
 	/// <summary>
 	/// Resolves one post, or returns <c>null</c> when Instagram could not be read.
 	/// The result always contains every slide; callers that only need the summary can
@@ -190,10 +219,13 @@ public sealed class InstagramResolver
 			return cached.Post;
 		}
 
+		Interlocked.Increment(ref _attempts);
+
 		ResolvedPost? post = null;
+		var reason = "exception";
 		try
 		{
-			post = await ResolveCoreAsync(shortcode, cancellationToken).ConfigureAwait(false);
+			(post, reason) = await ResolveCoreAsync(shortcode, cancellationToken).ConfigureAwait(false);
 		}
 		catch (OperationCanceledException)
 		{
@@ -204,6 +236,17 @@ public sealed class InstagramResolver
 			_logger.LogWarning(ex, "Resolve failed for {Shortcode}", shortcode);
 		}
 
+		if (post is { Ok: true })
+		{
+			Interlocked.Increment(ref _resolved);
+		}
+		else
+		{
+			Interlocked.Increment(ref _failed);
+			Volatile.Write(ref _lastFailure, reason);
+			_logger.LogInformation("Resolve failed for {Shortcode}: {Reason}", shortcode, reason);
+		}
+
 		var written = DateTimeOffset.UtcNow;
 		_cache[shortcode] = new CacheEntry(
 			post,
@@ -212,43 +255,63 @@ public sealed class InstagramResolver
 		return post;
 	}
 
-	async Task<ResolvedPost?> ResolveCoreAsync(string shortcode, CancellationToken cancellationToken)
+	/// <summary>
+	/// Turns a shortcode into the numeric media id Instagram's JSON API expects.
+	/// The shortcode is the id written in base 64 with Instagram's own alphabet.
+	/// </summary>
+	static string? ShortcodeToMediaId(string shortcode)
 	{
-		// The captioned embed is the one public page that carries the media, the owner and
-		// the caption without a session. The normal post page is the second try.
-		var html = await GetHtmlAsync(
-			$"https://www.instagram.com/p/{shortcode}/embed/captioned/?cr=1&v=14",
-			cancellationToken).ConfigureAwait(false);
+		const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
-		if (string.IsNullOrEmpty(html) || html.Contains("Page Not Found", StringComparison.OrdinalIgnoreCase))
-		{
-			html = await GetHtmlAsync(
-				$"https://www.instagram.com/p/{shortcode}/",
-				cancellationToken).ConfigureAwait(false);
-		}
-
-		if (string.IsNullOrEmpty(html))
+		if (shortcode.Length is 0 or > 20)
 		{
 			return null;
 		}
 
-		var fromJson = ParseFromPageJson(html, shortcode);
-		if (fromJson is not null)
+		var id = BigInteger.Zero;
+		foreach (var character in shortcode)
 		{
-			return fromJson;
+			var index = alphabet.IndexOf(character, StringComparison.Ordinal);
+			if (index < 0)
+			{
+				return null;
+			}
+
+			id = (id * 64) + index;
 		}
 
-		return ParseFromOpenGraph(html, shortcode);
+		return id.ToString(CultureInfo.InvariantCulture);
 	}
 
-	async Task<string?> GetHtmlAsync(string url, CancellationToken cancellationToken)
+	/// <summary>
+	/// Instagram's own media-info endpoint — pure JSON, no HTML to parse, and the lightest
+	/// request available. It answers for public posts without a session; when it refuses
+	/// (401/404), the embed page is tried instead.
+	/// </summary>
+	async Task<(ResolvedPost? Post, string Reason)> FetchMediaInfoAsync(
+		string shortcode,
+		CancellationToken cancellationToken)
 	{
+		var mediaId = ShortcodeToMediaId(shortcode);
+		if (mediaId is null)
+		{
+			return (null, "bad_url");
+		}
+
 		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-		timeout.CancelAfter(TimeSpan.FromSeconds(12));
+		timeout.CancelAfter(FetchTimeout);
 
 		try
 		{
-			using var request = _http.CreatePageGet(new Uri(url));
+			using var request = new HttpRequestMessage(
+				HttpMethod.Get,
+				$"https://i.instagram.com/api/v1/media/{mediaId}/info/");
+
+			// The public web app id; sending it is what makes the endpoint answer JSON
+			// instead of redirecting to the login page.
+			request.Headers.TryAddWithoutValidation("X-IG-App-ID", "936619743392459");
+			request.Headers.TryAddWithoutValidation("Accept", "*/*");
+			request.Headers.Referrer = new Uri(InstagramHttp.InstagramOrigin);
 
 			using var response = await _http.Client
 				.SendAsync(request, HttpCompletionOption.ResponseContentRead, timeout.Token)
@@ -257,24 +320,159 @@ public sealed class InstagramResolver
 			if (!response.IsSuccessStatusCode)
 			{
 				_logger.LogInformation(
+					"Media info: upstream {Status} for {Shortcode}",
+					(int)response.StatusCode,
+					shortcode);
+
+				return (null, $"http_{(int)response.StatusCode}");
+			}
+
+			var body = await response.Content.ReadAsStringAsync(timeout.Token).ConfigureAwait(false);
+			var root = JsonNode.Parse(body);
+			if (root?["items"] is JsonArray items && items.Count > 0 && items[0] is JsonNode item)
+			{
+				var built = BuildFromMedia(item, shortcode);
+				if (built is not null)
+				{
+					return (built, string.Empty);
+				}
+			}
+
+			return (null, "no_media");
+		}
+		catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+		{
+			return (null, "timeout");
+		}
+		catch (HttpRequestException ex)
+		{
+			_logger.LogInformation(ex, "Media info failed for {Shortcode}", shortcode);
+			return (null, "unreachable");
+		}
+		catch (JsonException)
+		{
+			return (null, "no_media");
+		}
+	}
+
+	async Task<(ResolvedPost? Post, string Reason)> ResolveCoreAsync(
+		string shortcode,
+		CancellationToken cancellationToken)
+	{
+		// 1. The media-info endpoint: one small JSON response, no HTML.
+		var info = await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
+		if (info.Post is not null)
+		{
+			return info;
+		}
+
+		// If the transport itself is down there is no point asking two more times.
+		if (info.Reason is "timeout" or "unreachable")
+		{
+			return info;
+		}
+
+		// 2. The captioned embed is the one public page that carries the media, the owner
+		//    and the caption without a session. The normal post page is the last try.
+		var embed = await FetchHtmlAsync(
+			$"https://www.instagram.com/p/{shortcode}/embed/captioned/?cr=1&v=14",
+			cancellationToken).ConfigureAwait(false);
+
+		var html = embed.Html;
+		var reason = embed.Reason;
+
+		// Only fall back to the post page when the embed answered but had nothing usable
+		// in it. If the transport itself failed (timeout / unreachable / blocked), the
+		// second request fails the same way and only doubles the time the caller waits.
+		var transportFailed = reason is "timeout" or "unreachable" or "login_wall" || reason.StartsWith("http_", StringComparison.Ordinal);
+		if (!transportFailed &&
+			(string.IsNullOrEmpty(html) || html.Contains("Page Not Found", StringComparison.OrdinalIgnoreCase)))
+		{
+			var page = await FetchHtmlAsync(
+				$"https://www.instagram.com/p/{shortcode}/",
+				cancellationToken).ConfigureAwait(false);
+
+			if (!string.IsNullOrEmpty(page.Html))
+			{
+				html = page.Html;
+				reason = page.Reason;
+			}
+		}
+
+		if (string.IsNullOrEmpty(html))
+		{
+			return (null, reason);
+		}
+
+		var fromJson = ParseFromPageJson(html, shortcode);
+		if (fromJson is not null)
+		{
+			return (fromJson, string.Empty);
+		}
+
+		var fromOpenGraph = ParseFromOpenGraph(html, shortcode);
+		if (fromOpenGraph is null)
+		{
+			return (null, "no_media");
+		}
+
+		return (fromOpenGraph, string.Empty);
+	}
+
+	async Task<(string? Html, string Reason)> FetchHtmlAsync(string url, CancellationToken cancellationToken)
+	{
+		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		timeout.CancelAfter(FetchTimeout);
+
+		Uri uri;
+		try
+		{
+			uri = new Uri(url);
+		}
+		catch (UriFormatException)
+		{
+			return (null, "bad_url");
+		}
+
+		try
+		{
+			using var request = _http.CreatePageGet(uri);
+
+			using var response = await _http.Client
+				.SendAsync(request, HttpCompletionOption.ResponseContentRead, timeout.Token)
+				.ConfigureAwait(false);
+
+			// Instagram answers blocked / logged-out scrapes with a redirect to the login
+			// page; that is still a 200, so it has to be checked explicitly.
+			var finalUrl = response.RequestMessage?.RequestUri?.AbsoluteUri ?? url;
+			if (finalUrl.Contains("/accounts/login", StringComparison.OrdinalIgnoreCase) ||
+				finalUrl.Contains("/challenge/", StringComparison.OrdinalIgnoreCase))
+			{
+				_logger.LogInformation("Resolve fetch: login wall for {Url}", url);
+				return (null, "login_wall");
+			}
+
+			if (!response.IsSuccessStatusCode)
+			{
+				_logger.LogInformation(
 					"Resolve fetch: upstream {Status} for {Url}",
 					(int)response.StatusCode,
 					url);
 
-				return null;
+				return (null, $"http_{(int)response.StatusCode}");
 			}
 
-			return await response.Content.ReadAsStringAsync(timeout.Token).ConfigureAwait(false);
+			return (await response.Content.ReadAsStringAsync(timeout.Token).ConfigureAwait(false), string.Empty);
 		}
 		catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
 		{
 			_logger.LogInformation("Resolve fetch timed out for {Url}", url);
-			return null;
+			return (null, "timeout");
 		}
 		catch (HttpRequestException ex)
 		{
 			_logger.LogInformation(ex, "Resolve fetch failed for {Url}", url);
-			return null;
+			return (null, "unreachable");
 		}
 	}
 

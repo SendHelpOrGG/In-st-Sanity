@@ -76,6 +76,12 @@ public sealed class ResolvePostEndpoint : IApiEndpoint
 /// <c>GET /api/resolve-batch?urls=a,b,c</c> — the call the card grid makes for a page of
 /// posts, and the one whose failure used to print "server unreachable".
 /// </summary>
+/// <remarks>
+/// The response is bounded by <see cref="Deadline"/>, because the grid abandons the
+/// request after 16 s: whatever has not resolved by then is answered as missing and the
+/// next pass picks it up from the cache. A batch that outlives its caller looks exactly
+/// like a dead backend to the UI, which is the one thing this must never do.
+/// </remarks>
 public sealed class ResolveBatchEndpoint : IApiEndpoint
 {
 	/// <summary>The grid sends at most 10; a little headroom keeps one slow post from stalling a page.</summary>
@@ -83,6 +89,8 @@ public sealed class ResolveBatchEndpoint : IApiEndpoint
 
 	/// <summary>Mirrors the web layer's own cap (2) with room for a full page to land in time.</summary>
 	const int Parallelism = 6;
+
+	static readonly TimeSpan Deadline = TimeSpan.FromSeconds(9);
 
 	readonly InstagramResolver _resolver;
 
@@ -109,19 +117,35 @@ public sealed class ResolveBatchEndpoint : IApiEndpoint
 			.Take(MaxUrls)
 			.ToArray();
 
+		// An empty list is a normal answer, not a client error: the grid retries forever
+		// on a 4xx/5xx and prints "server unreachable" while it does.
 		if (urls.Length == 0)
 		{
-			return HttpResponseInfo.Error("no instagram urls in 'urls'", 400);
+			return EmptyBatch();
 		}
 
 		using var gate = new SemaphoreSlim(Parallelism);
+		using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		deadline.CancelAfter(Deadline);
 
 		async Task<ResolvedPost?> ResolveOneAsync(string url)
 		{
-			await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
 			try
 			{
-				return await _resolver.ResolveAsync(url, cancellationToken).ConfigureAwait(false);
+				await gate.WaitAsync(deadline.Token).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException)
+			{
+				return null;
+			}
+
+			try
+			{
+				return await _resolver.ResolveAsync(url, deadline.Token).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException)
+			{
+				return null;
 			}
 			finally
 			{
@@ -140,6 +164,13 @@ public sealed class ResolveBatchEndpoint : IApiEndpoint
 
 		return HttpResponseInfo.Json(new { ok = true, byShortcode, posts = resolved });
 	}
+
+	static HttpResponseInfo EmptyBatch() => HttpResponseInfo.Json(new
+	{
+		ok = true,
+		byShortcode = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase),
+		posts = Array.Empty<object>(),
+	});
 }
 
 /// <summary>
@@ -150,6 +181,8 @@ public sealed class ResolveOwnersEndpoint : IApiEndpoint
 {
 	const int MaxUrls = 24;
 	const int Parallelism = 6;
+
+	static readonly TimeSpan Deadline = TimeSpan.FromSeconds(9);
 
 	readonly InstagramResolver _resolver;
 
@@ -178,17 +211,35 @@ public sealed class ResolveOwnersEndpoint : IApiEndpoint
 
 		if (urls.Length == 0)
 		{
-			return HttpResponseInfo.Error("no instagram urls in 'urls'", 400);
+			return HttpResponseInfo.Json(new
+			{
+				ok = true,
+				byShortcode = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase),
+			});
 		}
 
 		using var gate = new SemaphoreSlim(Parallelism);
+		using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		deadline.CancelAfter(Deadline);
 
 		async Task<ResolvedPost?> ResolveOneAsync(string url)
 		{
-			await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
 			try
 			{
-				return await _resolver.ResolveAsync(url, cancellationToken).ConfigureAwait(false);
+				await gate.WaitAsync(deadline.Token).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException)
+			{
+				return null;
+			}
+
+			try
+			{
+				return await _resolver.ResolveAsync(url, deadline.Token).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException)
+			{
+				return null;
 			}
 			finally
 			{

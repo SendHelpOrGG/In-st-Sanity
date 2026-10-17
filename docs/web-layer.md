@@ -231,9 +231,18 @@ afterwards. That is what the three resolve routes are for:
 | `GET /api/resolve-owners?urls=a,b,c` | whole-library search index (chunks of 20) | account name only |
 | `GET /api/cached-posts` | startup restore | what is already resolved |
 
-`InstagramResolver` fetches `https://www.instagram.com/p/{code}/embed/captioned/` — the one
-public page that carries media, owner and caption without a session — and falls back to the
-plain post page. It then walks the JSON blobs the page embeds (`contextJSON`, the
+`InstagramResolver` tries two direct sources, in this order:
+
+1. `https://i.instagram.com/api/v1/media/{id}/info/` — the shortcode is the media id in
+   Instagram's own base-64 alphabet, so it can be rebuilt locally. One small JSON response,
+   no HTML; sends `X-IG-App-ID` (the public web app id) so it answers instead of redirecting
+   to login. Most posts resolve here.
+2. `https://www.instagram.com/p/{code}/embed/captioned/` — the public page that carries
+   media, owner and caption without a session — then the plain post page.
+
+Both are requested straight from the desktop process. If the transport fails
+(`timeout`/`unreachable`) the resolver stops there instead of spending two more timeouts,
+and each fetch is capped at 7 s so a batch stays inside the grid's 16 s window. It then walks the JSON blobs the page embeds (`contextJSON`, the
 `data-sjs` `xdt_shortcode_media` payload, the older Polaris `image_versions2` one) for the
 first object that has **both** an id (`code`/`shortcode`/`pk`) and media, which is what makes
 a carousel resolve as a whole instead of as one slide. Missing `display_url` on a carousel
@@ -249,6 +258,26 @@ Caching is in memory: 6 h for a hit, 10 min for a miss, so a dead or rate-limite
 retried in a loop. Failures answer `200 {"ok":false}` on purpose — the web layer treats a
 5xx/501 as "backend down" and backs off for minutes, and one unreachable post is not an
 outage. That distinction is exactly what used to print *server unreachable* under the grid.
+
+### Checking it on a running app
+
+`GET /__health` reports what this build can actually do:
+
+```json
+{"ok":true,"port":8000,"url":"http://localhost:8000/?v=…",
+ "endpoints":["/api/cached-posts","/api/download-photo","/api/image",
+              "/api/resolve-batch","/api/resolve-owners","/api/resolve-post"],
+ "resolve":{"attempts":40,"resolved":37,"failed":3,"cached":37,"lastFailure":"http_429"}}
+```
+
+- `/api/resolve-*` missing from `endpoints` → the executable is an older build.
+- `attempts: 0` after the library loads → the page never called resolve.
+- `lastFailure: "unreachable"`/`"timeout"` → Instagram is not reachable from that machine.
+- `lastFailure: "login_wall"` → Instagram refused the logged-out view; that is what the
+  embedded Instagram session (phase 3) is for.
+
+`GET /api/resolve-post?url=https://www.instagram.com/p/<code>/` can be opened in a browser
+directly and returns the same JSON the grid consumes.
 
 **The static preview on :8080 cannot do any of this.** `tools/preview-server.py` is a file
 host with no resolver, and the sandbox it runs in has no route to instagram.com, so covers
