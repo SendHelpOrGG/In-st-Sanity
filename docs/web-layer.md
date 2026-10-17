@@ -231,18 +231,22 @@ afterwards. That is what the three resolve routes are for:
 | `GET /api/resolve-owners?urls=a,b,c` | whole-library search index (chunks of 20) | account name only |
 | `GET /api/cached-posts` | startup restore | what is already resolved |
 
-`InstagramResolver` tries two direct sources, in this order:
+`InstagramResolver` fetches two public pages **in parallel**, and asks for them as a
+link-preview crawler rather than a browser:
 
-1. `https://i.instagram.com/api/v1/media/{id}/info/` — the shortcode is the media id in
-   Instagram's own base-64 alphabet, so it can be rebuilt locally. One small JSON response,
-   no HTML; sends `X-IG-App-ID` (the public web app id) so it answers instead of redirecting
-   to login. Most posts resolve here.
-2. `https://www.instagram.com/p/{code}/embed/captioned/` — the public page that carries
-   media, owner and caption without a session — then the plain post page.
+1. `https://www.instagram.com/p/{code}/embed/captioned/` — the captioned embed, whose
+   `contextJSON` carries every slide, the exact counts and the caption.
+2. `https://www.instagram.com/p/{code}/` — the post page, whose Polaris JSON or `og:` tags
+   answer when the embed is throttled.
 
-Both are requested straight from the desktop process. If the transport fails
-(`timeout`/`unreachable`) the resolver stops there instead of spending two more timeouts,
-and each fetch is capped at 7 s so a batch stays inside the grid's 16 s window. It then walks the JSON blobs the page embeds (`contextJSON`, the
+The user agent is the whole trick: Instagram serves a **login shell** to a Chrome UA and the
+real public page to `Twitterbot/1.0` (or `facebookexternalhit/1.1`), which is exactly what
+the original `server.py` did with `BOT_UAS`. With a browser UA every fetch ended up on
+`/accounts/login` and the app reported `login_wall` / `no_media` for all 1139 posts. The
+`i.instagram.com/api/v1/media/{id}/info/` JSON endpoint remains as a last resort after both
+HTML paths fail.
+
+Each fetch is capped at 7 s, so a post costs at most one timeout instead of two. The resolver then walks the JSON blobs the page embeds (`contextJSON`, the
 `data-sjs` `xdt_shortcode_media` payload, the older Polaris `image_versions2` one) for the
 first object that has **both** an id (`code`/`shortcode`/`pk`) and media, which is what makes
 a carousel resolve as a whole instead of as one slide. Missing `display_url` on a carousel
@@ -253,6 +257,15 @@ resolver falls back to `og:image` / `og:video` / `og:title` / `og:description` a
 
 Covers are kept as the CDN URL — the grid loads them through `/api/image?url=…`, which is why
 the media proxy had to exist first. Video slides keep their poster frame and `videoUrl`.
+
+When the page carries no date, the creation time is recovered from the shortcode itself
+(`(media_id >> 23) + 1314220021721` ms, the arithmetic behind `shortcode_to_timestamp` in
+`server.py`), so a card never falls back to "recently" or a wrong age.
+
+Two resolve shapes exist. The grid asks for **summaries** (`/api/resolve-batch`,
+`/api/resolve-owners`) and gets the cover, counts and owner; `/api/resolve-post` without
+`summary=1` returns the full carousel for an opened post. Summary entries are cached under a
+`sum:` key so `/api/cached-posts` only ever lists full posts.
 
 Caching is in memory: 6 h for a hit, 10 min for a miss, so a dead or rate-limited post is not
 retried in a loop. Failures answer `200 {"ok":false}` on purpose — the web layer treats a
