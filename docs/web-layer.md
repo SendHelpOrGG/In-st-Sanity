@@ -115,7 +115,7 @@ all of them, chosen at random with an equal 1-in-5 chance on every import.
 | 1 | Big-Mouth Devour | palms snatch the file, shove it into the jaws, four chomps with JSON crumbs, a gulp, then the posts are spat out |
 | 2 | Clawed Devil-Palms | the original 1B: pincer grab, tear the file in half, alternate left/right rapid-fire pitches |
 | 3 | Singularity Snap | a black hole spaghettifies the file, collapses with a pop, the imp smirks, snaps, and the posts sparkle into place |
-| 4 | Trident Strike & Post Rain | the trident is cocked, driven through the file, and the posts rain down into their slots |
+| 4 | Trident Strike & Post Rain | the trident is cocked, driven through the file, the imp laughs the sidebar's own evil cackle, and the posts rain down into their slots |
 | 5 | Slow Smirk & Finger Snap | a massive black hole pulls the file in; the imp recovers into a smirk, snaps side-on, and manifests the posts |
 
 Geometry, timing and choreography are the reference's, unchanged. Only the DOM layer is adapted:
@@ -128,6 +128,26 @@ into the page by `tools/patch-webapp.py`, so the served web layer stays a single
 patches in the page route the import through `playImpJsonThrowRandom()`, let the app's existing
 `cleanupImpJsonThrow()` tear the engine down, and give the throw the sticker's `transform` (see
 "The throw has to own the sticker's transform" above).
+
+### The imp's laugh is the sidebar's laugh
+
+The reference build gave the Trident Strike its own face: it stretched the sticker's single grin
+stroke into an open mouth and planted three flat triangles on it. It reads as a cartoon grin, and
+it played for the whole animation. The port drops it and borrows the face the sticker already
+performs while idling — expression 2 of `initImpSixFacialExpressionsLoop`, *Demonic Villain
+Cackle*: the 1450 ms envelope, three uneven "ha" waves, the filled open mouth with six fangs, the
+slanted eye wedges with pupils, the head roll and the horn lift.
+
+The cinematics reach that drawing through the same DOM the idle engine uses
+(`.imp-default-eyes` / `.imp-expr-eyes`, `.imp-default-mouth` / `.imp-expr-mouth`, both grafted by
+`decorateStickerEyeGlow`), and read the same palette (`STICKER_THEME_PALETTES[currentStickerThemeId]`,
+a top-level binding in the page's script), so every one of the twelve sticker themes laughs in its
+own colours. The laugh starts when the trident lands, not on the wind-up, and the rest face is
+restored between "ha" cycles and when the throw ends — `resetImp()` puts the default eyes, mouth,
+horn paths and transforms back, and the idle loop resumes unchanged.
+
+The undecorated markup a test harness uses has no expression groups, so the engine grafts a group
+inside `.imp-grin` and hides the plain grin path instead; the drawing is identical.
 
 To see a specific variant, append `?jsonThrow=1..5` or set `localStorage['stillSane.jsonThrowVariant']`
 to a number; without an override the roll is uniform.

@@ -428,20 +428,32 @@ function buildImp(root){
     }
   }
 
-  var laughMouth = document.createElementNS(NS, 'g');
-  laughMouth.setAttribute('class', 'imp-extra');
-  laughMouth.setAttribute('opacity', '0');
-  var laughTeeth = document.createElementNS(NS, 'path');
-  laughTeeth.setAttribute('fill', '#f8fafc');
-  laughTeeth.setAttribute('stroke-width', '1');
-  laughTeeth.setAttribute('stroke-linejoin', 'round');
-  laughMouth.appendChild(laughTeeth);
-  mouth.appendChild(laughMouth);
+  /* The page decorates every themed sticker with resting/expression pairs
+     (decorateStickerEyeGlow); the idle expression engine draws the cackle
+     into the "expr" halves. The cinematics reuse those same nodes so the
+     imp's laugh is literally the sidebar's own, not a second drawing. An
+     undecorated sticker (test harness, hand-made markup) falls back to a
+     grafted group and the plain grin path. */
+  var eyesBlink = eyes.querySelector('.imp-eyes-blink') || null;
+  var defaultEyes = eyes.querySelector('.imp-default-eyes') || null;
+  var exprEyes = eyes.querySelector('.imp-expr-eyes') || null;
+  var defaultMouth = mouth.querySelector('.imp-default-mouth') || null;
+  var exprMouth = mouth.querySelector('.imp-expr-mouth') || null;
+  var laughMouth = null;
+  if(!exprMouth){
+    laughMouth = document.createElementNS(NS, 'g');
+    laughMouth.setAttribute('class', 'imp-extra');
+    mouth.appendChild(laughMouth);
+  }
 
   return {
     svg: root, head: head, horns: horns, eyes: eyes, mouth: mouth,
     mouthPath: mouthPath, haloL: haloL, haloR: haloR,
-    browL: browL, browR: browR, laughMouth: laughMouth, laughTeeth: laughTeeth,
+    browL: browL, browR: browR,
+    browLD: browL ? browL.getAttribute('d') : null,
+    browRD: browR ? browR.getAttribute('d') : null,
+    eyesBlink: eyesBlink, defaultEyes: defaultEyes, exprEyes: exprEyes,
+    defaultMouth: defaultMouth, exprMouth: exprMouth, laughMouth: laughMouth,
     defs: defs, browClone: browClone, hornD: hornD,
     mouthD: mouthPath.getAttribute('d'),
     mouthStroke: mouthPath.getAttribute('stroke-width'),
@@ -457,6 +469,7 @@ function resetImp(){
     if(IMP.mouthOpacity !== null) IMP.mouthPath.setAttribute('opacity', IMP.mouthOpacity);
   }
   if(IMP.browL && IMP.hornD !== null) IMP.browL.setAttribute('d', IMP.hornD);
+  if(IMP.browR && IMP.browR !== IMP.browL && IMP.browRD !== null) IMP.browR.setAttribute('d', IMP.browRD);
   [IMP.defs, IMP.haloL, IMP.haloR, IMP.laughMouth, IMP.browClone].forEach(function(el){
     try{ if(el && el.parentNode) el.parentNode.removeChild(el); }catch(_){}
   });
@@ -469,8 +482,12 @@ function resetImp(){
     if(IMP.eyes) IMP.eyes.style.transform = '';
     if(IMP.mouth){ IMP.mouth.style.transform = ''; IMP.mouth.style.opacity = ''; }
     if(IMP.mouthPath) IMP.mouthPath.setAttribute('opacity', IMP.mouthOpacity !== null ? IMP.mouthOpacity : '1');
-    if(IMP.laughMouth){ IMP.laughMouth.setAttribute('opacity', '0'); IMP.laughMouth.removeAttribute('transform'); }
-    if(IMP.laughTeeth){ IMP.laughTeeth.removeAttribute('opacity'); IMP.laughTeeth.setAttribute('d', ''); }
+    if(IMP.defaultMouth) IMP.defaultMouth.style.display = '';
+    if(IMP.exprMouth) IMP.exprMouth.innerHTML = '';
+    if(IMP.defaultEyes) IMP.defaultEyes.style.display = '';
+    if(IMP.exprEyes) IMP.exprEyes.innerHTML = '';
+    if(IMP.eyesBlink) IMP.eyesBlink.style.transform = '';
+    if(IMP.laughMouth){ IMP.laughMouth.innerHTML = ''; }
     if(IMP.haloL) IMP.haloL.setAttribute('opacity', '0');
     if(IMP.haloR) IMP.haloR.setAttribute('opacity', '0');
     if(svg) svg.style.transform = '';
@@ -933,79 +950,110 @@ function play(variant, fileName, totalCount){
   const browL = IMP.browL;
   const browR = IMP.browR;
   const mouthPath = IMP.mouthPath;
-  const laughMouth = IMP.laughMouth;
-  const laughTeeth = IMP.laughTeeth;
-  const startingMouth = { leftX: 59, leftY: 95, controlY: 116, rightX: 101, rightY: 95 };
+  const eyesBlink = IMP.eyesBlink;
+  const defaultEyes = IMP.defaultEyes;
+  const exprEyes = IMP.exprEyes;
+  const grinToHide = IMP.defaultMouth || mouthPath;
+  /* the idle engine's own expression drawer; a grafted group on undecorated art */
+  const cackleMouth = IMP.exprMouth || IMP.laughMouth;
 
   function setTridentGaze(progress, laughIntensity = 0) {
     const g = clamp01(progress), squint = clamp01(laughIntensity);
     const eyeY = (1 - g * 0.12) * (1 - squint * 0.10);
     eyes.style.transform = `translate3d(${(g * 7).toFixed(2)}px, ${(-g * 2.4).toFixed(2)}px, 0) scale(${(1 + g * 0.14).toFixed(3)}, ${eyeY.toFixed(3)})`;
   }
+
+  /* ---- the imp's own evil laugh -----------------------------------------
+     The reference's "smile" stretched the single grin stroke and planted
+     three flat triangles on it. The imp already has a much better face: the
+     sidebar's idle expression 2, "Demonic Villain Cackle". This is that
+     drawing, note for note - the 1450 ms envelope, three uneven "ha" waves,
+     the open mouth with six fangs, the slanted eye wedges, the head roll and
+     the horn lift - so the strike laughs exactly like the idle sticker. */
+  const CACKLE_START = impactAt;  /* the trident lands, then he laughs at it */
+  const CACKLE_CYCLE = 1450;      /* EXPR_DURATIONS[2] in the page */
+
+  let cackleOn = false;
+
+  function cacklePalette() {
+    try {
+      if (typeof STICKER_THEME_PALETTES !== 'undefined' && typeof currentStickerThemeId !== 'undefined') {
+        const p = STICKER_THEME_PALETTES[currentStickerThemeId];
+        if (p && p.c1 && p.c2 && p.line) return p;
+      }
+    } catch (_) { /* harness: the engine runs without the page's globals */ }
+    const dots = svg.querySelectorAll('.imp-eyes-blink circle');
+    return {
+      c1: (dots[0] && dots[0].getAttribute('fill')) || '#38bdf8',
+      c2: (dots[1] && dots[1].getAttribute('fill')) || '#ec4899',
+      line: '#f1f5f9', pupil: '#ffffff', mouthFill: 'rgba(15,23,42,0.90)'
+    };
+  }
+
+  function restTridentFace() {
+    if (!cackleOn) return;
+    cackleOn = false;
+    headGroup.style.transform = '';
+    horns.style.transform = '';
+    if (eyesBlink) eyesBlink.style.transform = '';
+    if (defaultEyes) defaultEyes.style.display = '';
+    if (exprEyes) exprEyes.innerHTML = '';
+    if (grinToHide) grinToHide.style.display = '';
+    if (cackleMouth) cackleMouth.innerHTML = '';
+    if (browL && IMP.browLD !== null) browL.setAttribute('d', IMP.browLD);
+    if (browR && browR !== browL && IMP.browRD !== null) browR.setAttribute('d', IMP.browRD);
+    if (IMP.haloL) IMP.haloL.setAttribute('opacity', '0');
+    if (IMP.haloR) IMP.haloR.setAttribute('opacity', '0');
+  }
+
   function updateTridentLaugh(t, envelope = 1) {
-    const build = easeOutCubic(clamp01(t / 320));
-    const intensity = clamp01(envelope) * build;
-    const cycle = (((t + 580) % 800) + 800) % 800 / 800;
-    const pulse = (start, peak, end) => {
-      if (cycle < start || cycle > end) return 0;
-      if (cycle <= peak) return easeOutCubic(clamp01((cycle - start) / (peak - start)));
-      return 1 - easeInOutCubic(clamp01((cycle - peak) / (end - peak)));
-    };
-    // Two uneven, clearly held "ha-ha" beats followed by a breathy pause.
-    const openPulse = Math.max(pulse(0.02, 0.12, 0.32), pulse(0.40, 0.50, 0.68) * 0.78);
-    // Morph one connected lip outline from the starting smile into the
-    // laughing shape. Both curves share the same corners, so they never
-    // separate; as intensity falls, the same path collapses back to idle.
-    const leftX = startingMouth.leftX + (58 - startingMouth.leftX) * intensity;
-    const leftY = startingMouth.leftY + (98 - startingMouth.leftY) * intensity;
-    const rightX = startingMouth.rightX + (102 - startingMouth.rightX) * intensity;
-    const rightY = startingMouth.rightY + (95.5 - startingMouth.rightY) * intensity;
-    const laughUpperCtrlY = 101 + openPulse * 1.4;
-    const laughLowerCtrlY = laughUpperCtrlY + 18 * openPulse;
-    const upperCtrlY = startingMouth.controlY + (laughUpperCtrlY - startingMouth.controlY) * intensity;
-    const lowerCtrlY = startingMouth.controlY + (laughLowerCtrlY - startingMouth.controlY) * intensity;
-    mouthPath.setAttribute('d',
-      `M ${leftX.toFixed(1)} ${leftY.toFixed(1)} Q 80 ${upperCtrlY.toFixed(1)} ${rightX.toFixed(1)} ${rightY.toFixed(1)} Q 80 ${lowerCtrlY.toFixed(1)} ${leftX.toFixed(1)} ${leftY.toFixed(1)} Z`);
-    mouthPath.setAttribute('opacity', '1');
-    mouthPath.setAttribute('stroke-width', (5.2 - 1.4 * intensity).toFixed(2));
-    laughMouth.setAttribute('opacity', intensity.toFixed(3));
-    laughMouth.removeAttribute('transform');
+    const outer = clamp01(envelope) * easeOutCubic(clamp01((t - CACKLE_START) / 240));
+    if (outer <= 0.001) { restTridentFace(); return { intensity: 0, openPulse: 0, bob: 0 }; }
 
-    // Large triangular teeth sit on the upper lip and extend into the
-    // opening; their points shorten with the face as it returns to idle.
-    const curveYAt = (x, controlY) => {
-      const q = clamp01((x - leftX) / Math.max(1, rightX - leftX));
-      const u = 1 - q;
-      return u * u * leftY + 2 * u * q * controlY + q * q * rightY;
-    };
-    const upperYAt = x => curveYAt(x, upperCtrlY);
-    const lowerYAt = x => curveYAt(x, lowerCtrlY);
-    const toothCenters = [68, 80, 92];
-    const toothHalfWidth = 5.6;
-    laughTeeth.setAttribute('d', toothCenters.map(center => {
-      const xLeft = center - toothHalfWidth, xRight = center + toothHalfWidth;
-      const yLeft = upperYAt(xLeft), yRight = upperYAt(xRight);
-      const opening = Math.max(0, lowerYAt(center) - upperYAt(center));
-      const yTip = upperYAt(center) + opening * 0.92;
-      return `M ${xLeft.toFixed(1)} ${yLeft.toFixed(1)} L ${center.toFixed(1)} ${yTip.toFixed(1)} L ${xRight.toFixed(1)} ${yRight.toFixed(1)} Z`;
-    }).join(' '));
-    laughTeeth.setAttribute('opacity', openPulse.toFixed(3));
+    const local = t - CACKLE_START;
+    const phase = (local % CACKLE_CYCLE) / CACKLE_CYCLE;
+    const cycleEnv = phase < 0.16 ? phase / 0.16 : (phase < 0.84 ? 1 : 1 - (phase - 0.84) / 0.16);
+    const env = cycleEnv * outer;
+    const wave = Math.abs(Math.sin(phase * Math.PI * 6.0));
 
-    const leftOuterY = 52 + intensity * (56 + (1 - openPulse) * 1.5 - 52);
-    const leftMidY = 64 + intensity * (58 + openPulse * 1.6 - 64);
-    const leftInnerY = 73 + intensity * (70 + openPulse - 73);
-    const rightOuterY = 52 + intensity * (51 + openPulse * 1.5 - 52);
-    const rightMidY = 64 + intensity * (55 + openPulse * 1.3 - 64);
-    const rightInnerY = 73 + intensity * (69 + openPulse * 1.2 - 73);
-    browL.setAttribute('d', `M 51 ${leftOuterY.toFixed(1)} L ${(48 + intensity * 13).toFixed(1)} ${leftMidY.toFixed(1)} L 73 ${leftInnerY.toFixed(1)}`);
-    browR.setAttribute('d', `M 109 ${rightOuterY.toFixed(1)} L ${(112 - intensity * 13).toFixed(1)} ${rightMidY.toFixed(1)} L 87 ${rightInnerY.toFixed(1)}`);
-    const headRoll = Math.sin(cycle * Math.PI * 2) * 0.9 + openPulse * 0.75;
-    headGroup.style.transform = `rotate(${(headRoll * intensity).toFixed(2)}deg)`;
-    horns.style.transform = `rotate(${(-headRoll * 0.65 * intensity).toFixed(2)}deg)`;
-    const glow = 0.28 * intensity * (0.62 + 0.38 * openPulse);
-    haloL.setAttribute('opacity', (glow * 0.86).toFixed(3));
-    haloR.setAttribute('opacity', glow.toFixed(3));
-    return { intensity, openPulse, bob: openPulse * intensity };
+    /* below the idle engine's own threshold the rest face comes back, so the
+       mouth closes between "ha" cycles exactly as it does between idle skits */
+    if (env <= 0.18) { restTridentFace(); return { intensity: 0, openPulse: 0, bob: 0 }; }
+    cackleOn = true;
+
+    const pal = cacklePalette();
+    const topY = 92.5;
+    const mouthOpen = env * (6.2 + wave * 7.5);
+    const botY = 96.5 + mouthOpen * 1.45;
+
+    headGroup.style.transform =
+      `translate3d(${(Math.sin(t * 0.055) * 1.8 * env).toFixed(2)}px, ${(-wave * 7.2 * env).toFixed(2)}px, 0)` +
+      ` rotate(${(Math.sin(phase * Math.PI * 3) * 5.2 * env).toFixed(2)}deg)` +
+      ` scale(${(1 + env * 0.065).toFixed(3)})`;
+    horns.style.transform = `translate3d(0px, ${(-wave * 3.2 * env).toFixed(2)}px, 0)`;
+    const hornTip = (78 + env * 2.5).toFixed(1);
+    if (browL) browL.setAttribute('d', `M56 56 L52 72 L71 ${hornTip}`);
+    if (browR && browR !== browL) browR.setAttribute('d', `M104 56 L108 72 L89 ${hornTip}`);
+    if (eyesBlink) eyesBlink.style.transform = `translate3d(0px, ${(-wave).toFixed(2)}px, 0)`;
+
+    if (defaultEyes) defaultEyes.style.display = 'none';
+    if (exprEyes) exprEyes.innerHTML =
+      `<polygon points="60,79.5 75,83.5 71.5,87.8 60.5,85" fill="${pal.c1}"/>` +
+      `<polygon points="100,79.5 85,83.5 88.5,87.8 99.5,85" fill="${pal.c2}"/>` +
+      `<circle cx="68.5" cy="83.8" r="1.6" fill="${pal.pupil}"/>` +
+      `<circle cx="91.5" cy="83.8" r="1.6" fill="${pal.pupil}"/>`;
+
+    if (grinToHide) grinToHide.style.display = 'none';
+    if (cackleMouth) cackleMouth.innerHTML =
+      `<path d="M 58 ${topY} Q 80 ${(topY + 3).toFixed(1)} 102 ${topY} Q 96 ${botY.toFixed(1)} 80 ${(botY + 2.5).toFixed(1)} Q 64 ${botY.toFixed(1)} 58 ${topY} Z" fill="${pal.mouthFill}" stroke="${pal.line}" stroke-width="3.2" stroke-linejoin="round"/>` +
+      `<polygon points="63,${(topY + 0.8).toFixed(1)} 66.5,${(topY + 7.2 + wave * 1.8).toFixed(1)} 70,${(topY + 1.2).toFixed(1)}" fill="${pal.line}"/>` +
+      `<polygon points="73,${(topY + 1.4).toFixed(1)} 75.5,${(topY + 5.5 + wave * 1.2).toFixed(1)} 78,${(topY + 1.6).toFixed(1)}" fill="${pal.line}"/>` +
+      `<polygon points="82,${(topY + 1.6).toFixed(1)} 84.5,${(topY + 5.5 + wave * 1.2).toFixed(1)} 87,${(topY + 1.4).toFixed(1)}" fill="${pal.line}"/>` +
+      `<polygon points="90,${(topY + 1.2).toFixed(1)} 93.5,${(topY + 7.2 + wave * 1.8).toFixed(1)} 97,${(topY + 0.8).toFixed(1)}" fill="${pal.line}"/>` +
+      `<polygon points="68,${(botY - 1.5).toFixed(1)} 71,${(botY - 6.2).toFixed(1)} 74,${(botY - 0.8).toFixed(1)}" fill="${pal.line}"/>` +
+      `<polygon points="86,${(botY - 0.8).toFixed(1)} 89,${(botY - 6.2).toFixed(1)} 92,${(botY - 1.5).toFixed(1)}" fill="${pal.line}"/>`;
+
+    return { intensity: env, openPulse: wave * env, bob: wave * env };
   }
 
   function step2A(now) {

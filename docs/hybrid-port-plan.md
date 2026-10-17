@@ -339,6 +339,12 @@ an equal chance: the shipped Clawed Devil-Palms variant plus four ported from th
 `tools/imp-throw-variants.js` and is inlined by the patch tool; see
 [`web-layer.md`](web-layer.md#five-json-devour-cinematics).
 
+Trident Strike no longer acts out its own grin: the imp performs the sidebar's idle *Demonic Villain
+Cackle* (expression 2) once the trident lands, drawn into the same `.imp-expr-mouth` /
+`.imp-expr-eyes` nodes with the theme's own palette, and the rest face returns between "ha" cycles
+and after the throw. See
+[`web-layer.md`](web-layer.md#the-imps-laugh-is-the-sidebars-laugh).
+
 The first cut looked right in the harness and wrong on screen: the sticker never moved. The page
 floats it with a CSS animation on the `<svg>` itself, and a *paused* animation still outranks the
 `style` attribute in the cascade, so every `svg.style.transform` the cinematics wrote was thrown
