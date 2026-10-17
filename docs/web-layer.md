@@ -30,7 +30,8 @@ exactly seven lines:
 | 5 | Remaining two `https://wsrv.nl/?url=` literals (detail fallback, built-in browser thumbnails) → `/api/image?url=` | Same. |
 | 6 | Dropped the `<link rel="preconnect">` / `dns-prefetch` hints for `wsrv.nl` | That host is no longer contacted. |
 
-Plus the four audio transformations described below (`SCORE_TAIL`, `release()`, `finish()`, `skip()`).
+Plus the four audio transformations described below (`SCORE_TAIL`, `release()`, `finish()`, `skip()`)
+and the five JSON-devour cinematics (section below).
 
 Four further transformations fix the loading-screen audio (section below). Nothing else changed:
 no CSS, no animations, no layout. The transformed script passes `node --check`.
@@ -86,3 +87,31 @@ The removed endpoints (`/api/resolve-post`, `/api/resolve-batch`, `/api/resolve-
 `/api/cached-posts`, `/api/download-selected`, `/api/save-imported-list`, `/api/browser/*`) currently
 answer `501 not_implemented`, which the app already handles: it shows its own source badges and
 fallback artwork. They are implemented in phases 2 and 3 of the plan.
+
+## Five JSON-devour cinematics
+
+Loading a JSON file plays a short animation of the imp grabbing the file and pitching the posts
+into the grid. The app shipped with exactly one of those ("1B", the Clawed Devil-Palms rip); the
+reference build `sticker_json_throw_variants_5_animations.html` contains five, and the port now runs
+all of them, chosen at random with an equal 1-in-5 chance on every import.
+
+| # | animation | what it does |
+| --- | --- | --- |
+| 1 | Big-Mouth Devour | palms snatch the file, shove it into the jaws, four chomps with JSON crumbs, a gulp, then the posts are spat out |
+| 2 | Clawed Devil-Palms | the original 1B: pincer grab, tear the file in half, alternate left/right rapid-fire pitches |
+| 3 | Singularity Snap | a black hole spaghettifies the file, collapses with a pop, the imp smirks, snaps, and the posts sparkle into place |
+| 4 | Trident Strike & Post Rain | the trident is cocked, driven through the file, and the posts rain down into their slots |
+| 5 | Slow Smirk & Finger Snap | a massive black hole pulls the file in; the imp recovers into a smirk, snaps side-on, and manifests the posts |
+
+Geometry, timing and choreography are the reference's, unchanged. Only the DOM layer is adapted:
+the reference's own sticker ids are mapped onto the app's twelve themed stickers at run time
+(the missing halos, laugh mouth and second brow are grafted on and removed afterwards), its sample
+grid onto the real `#postGrid` cards, and its effect layer onto `#jsonThrowFxLayer`.
+
+The engine is authored in [`tools/imp-throw-variants.js`](../tools/imp-throw-variants.js) and inlined
+into the page by `tools/patch-webapp.py`, so the served web layer stays a single file. Two small
+patches in the page route the import through `playImpJsonThrowRandom()` and let the app's existing
+`cleanupImpJsonThrow()` tear the engine down.
+
+To see a specific variant, append `?jsonThrow=1..5` or set `localStorage['stillSane.jsonThrowVariant']`
+to a number; without an override the roll is uniform.

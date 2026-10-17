@@ -330,3 +330,11 @@ The boot score used to lose its ending: `release()` closed the `AudioContext` ~1
 note while the halls behind it keep ringing for 1–5 s, and `skip()` hard-stopped it on any click.
 Fixed in `tools/patch-webapp.py` (transformations 7–10), verified with a fake-WebAudio harness.
 Numbers and the before/after table are in [`web-layer.md`](web-layer.md#the-loading-screen-sound-was-being-cut-short).
+
+## JSON-devour cinematics
+
+The import animation used to be a single fixed sequence. It now picks one of five cinematics with
+an equal chance: the shipped Clawed Devil-Palms variant plus four ported from the reference build
+(Devour, Singularity Snap, Trident Strike, Slow Smirk). The engine lives in
+`tools/imp-throw-variants.js` and is inlined by the patch tool; see
+[`web-layer.md`](web-layer.md#five-json-devour-cinematics).

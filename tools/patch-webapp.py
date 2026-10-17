@@ -150,6 +150,30 @@ AUDIO_FIXES: list[tuple[str, str, str, int]] = [
     ),
 ]
 
+# ── the five JSON-devour cinematics ───────────────────────────────────────────
+# Variant 1B (Clawed Devil-Palms) has always shipped in the page; the reference
+# build adds four more, and all five are picked with an equal 1-in-5 chance when
+# a JSON file is loaded. The engine is checked in as a separate authored file
+# (tools/imp-throw-variants.js) and inlined here, so the served web layer stays
+# a single document.
+JSON_THROW_FIXES: list[tuple[str, str, str, int]] = [
+    (
+        "import routes through the five-way picker",
+        "playImpJsonGrabAndThrow1B(name,posts.length);",
+        "playImpJsonThrowRandom(name,posts.length);",
+        1,
+    ),
+    (
+        "the app's cleanup also tears the engine down",
+        "  document.querySelectorAll('#postGrid .card').forEach(c=>c.classList.remove('card-throw-landed'));\n}",
+        "  document.querySelectorAll('#postGrid .card').forEach(c=>c.classList.remove('card-throw-landed'));\n"
+        "  try{ if(window.LS_JSON_THROW) window.LS_JSON_THROW.cleanup(); }catch(_){}\n}",
+        1,
+    ),
+]
+
+JSON_THROW_JS = pathlib.Path(__file__).with_name("imp-throw-variants.js")
+
 ALLOWED_RESIDUE = [
     # (1) sourceKindFromUrl() classifies URL provenance; it never performs a request.
     # (2) the unwrap check in the rewritten wrapProxiedImageUrl(), which recognises an
@@ -229,6 +253,26 @@ def main() -> int:
         text = text.replace(old, new)
         print(f"  ok  {label} ({found})")
 
+    # 5. the five JSON-devour cinematics
+    for label, old, new, expected in JSON_THROW_FIXES:
+        found = text.count(old)
+        if found != expected:
+            print(f"! {label}: expected {expected} occurrence(s), found {found}")
+            return 1
+        text = text.replace(old, new)
+        print(f"  ok  {label} ({found})")
+
+    module = JSON_THROW_JS.read_text(encoding="utf-8")
+    if "window.LS_JSON_THROW" not in module:
+        print(f"! {JSON_THROW_JS.name}: does not look like the animation module")
+        return 1
+    tail = "</body></html>"
+    if text.count(tail) != 1:
+        print(f"! expected one '{tail}', found {text.count(tail)}")
+        return 1
+    text = text.replace(tail, "<script>\n" + module.rstrip("\n") + "\n</script>\n" + tail, 1)
+    print(f"  ok  five JSON-devour cinematics inlined ({len(module)} chars)")
+
     for pattern, expected in FORBIDDEN_CALL_PATTERNS:
         found = text.count(pattern)
         if found != expected:
@@ -249,7 +293,7 @@ def main() -> int:
     out_digest = hashlib.sha256(text.encode("utf-8", errors="surrogateescape")).hexdigest()
     print(f"output: {destination}  ({len(text)} chars)")
     print(f"        sha256 {out_digest}")
-    print(f"        {len(REPLACEMENTS) + len(AUDIO_FIXES)} transformations, all call sites verified")
+    print(f"        {len(REPLACEMENTS) + len(AUDIO_FIXES) + len(JSON_THROW_FIXES) + 1} transformations, all call sites verified")
     return 0
 
 
