@@ -307,6 +307,18 @@ UI_FIXES: list[tuple[str, str, str, int]] = [
         1,
     ),
     (
+        # The little '{ }' chip on the file badge is painted with the theme's
+        # button fill (--t-btn-bg) but its glyph was hard-coded white.  Four
+        # themes have a light button fill with dark ink (v2 mint, v6 yellow,
+        # v10 teal, v3 white), so the braces disappeared on them - most visibly
+        # on the mono theme, in the animation that "Reload this file" starts.
+        # The chip's ink is the one the theme already uses on that fill.
+        "the JSON brace chip uses the button ink",
+        "font-family:monospace;font-size:14px;font-weight:900;flex-shrink:0;color:#fff;",
+        "font-family:monospace;font-size:14px;font-weight:900;flex-shrink:0;color:var(--t-btn-ink,#fff);",
+        1,
+    ),
+    (
         "a theme swap runs without transitions",
         "function setAppTheme(themeId,quiet=false){\n"
         "  const id=APP_THEME_NAMES[themeId]?themeId:'default';\n"

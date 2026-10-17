@@ -155,6 +155,15 @@ byte-for-byte, and by reading the computed background back in jsdom with v3 appl
 (`rgba(244,244,246,.055)` on the card, `.08` on the icon tiles). The 12-theme render check still
 passes.
 
+### The `{ }` chip on the flying file badge had the same bug
+
+The brace chip in the import animation is painted with the theme's button fill (`--t-btn-bg`) but its
+glyph was hard-coded white. Four themes put dark ink on that light fill — v2 (mint), v6 (yellow),
+v10 (teal) and v3 (white) — so the braces were invisible there: 1.10:1 on v3, 1.48:1 on v2, 1.53:1
+on v6, 2.49:1 on v10. The glyph now uses the theme's button ink (`--t-btn-ink`), which lifts those
+to 18.03:1, 12.65:1, 12.37:1 and 7.49:1 and is a no-op on the seven themes whose button ink is
+already white.
+
 ## Reproducing the transformation
 
 ```bash

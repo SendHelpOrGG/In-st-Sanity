@@ -374,5 +374,6 @@ frame's worth of work while the animation that click had just started was still 
 - The black-and-white theme (`v3`) is the only one whose selected surface is a solid light fill
   (`--t-nav-act-bg: #f4f4f6`). Three decorative surfaces in the Upload JSON dialog borrowed that
   token and turned white-on-white; they now get a v3-scoped ink tint, and the other eleven themes
-  are untouched. See
+  are untouched. The `{ }` chip on the import badge had the same shape of bug (hard-coded white ink
+  over the themed button fill, invisible on v2/v6/v10/v3); it now uses `--t-btn-ink`. See
   [`web-layer.md`](web-layer.md#the-mono-themes-upload-dialog-was-white-on-white).
