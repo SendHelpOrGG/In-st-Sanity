@@ -31,10 +31,25 @@ exactly seven lines:
 | 6 | Dropped the `<link rel="preconnect">` / `dns-prefetch` hints for `wsrv.nl` | That host is no longer contacted. |
 
 Plus the four audio transformations described below (`SCORE_TAIL`, `release()`, `finish()`, `skip()`)
-and the five JSON-devour cinematics (section below).
+and the five JSON-devour cinematics (section below), including one scoped CSS rule they need.
+Nothing else changed: no layout, no colours, no other animation. Every script block in the output
+passes `node --check`.
 
-Four further transformations fix the loading-screen audio (section below). Nothing else changed:
-no CSS, no animations, no layout. The transformed script passes `node --check`.
+## The throw has to own the sticker's transform
+
+The page floats the idle sticker with a CSS animation declared on the `<svg>` element itself
+(`.sidebar-sticker-slot svg{animation:impStickerBounce …}`). CSS animations sit *above* normal
+author declarations in the cascade, including the `style` attribute, and **pausing** an animation
+does not hand the property back — a paused animation still supplies the value. The throw already
+froze the sticker with `.throw-action-active svg *{animation-play-state:paused!important}`, so every
+`svg.style.transform` the cinematics write (the imp's whole flight: tilt, lunge, scale, recoil) was
+being discarded. The jaws and arms moved — they are separate elements — the sticker never did. That
+is the "border isn't rotating" report on variant 1: the imp's frame never left its frozen idle pose.
+
+The reference build never hit this because its float is scoped to `.sidebar-sticker-slot.idle svg`
+and a throw drops the `idle` class. The port scopes the fix the same way: the throw drops the root
+animation (`animation:none!important`) while descendants keep their paused idle pose, so nothing
+snaps when the throw starts and the bounce returns when `cleanup()` removes the class.
 
 ## The loading-screen sound was being cut short
 
@@ -109,9 +124,10 @@ the reference's own sticker ids are mapped onto the app's twelve themed stickers
 grid onto the real `#postGrid` cards, and its effect layer onto `#jsonThrowFxLayer`.
 
 The engine is authored in [`tools/imp-throw-variants.js`](../tools/imp-throw-variants.js) and inlined
-into the page by `tools/patch-webapp.py`, so the served web layer stays a single file. Two small
-patches in the page route the import through `playImpJsonThrowRandom()` and let the app's existing
-`cleanupImpJsonThrow()` tear the engine down.
+into the page by `tools/patch-webapp.py`, so the served web layer stays a single file. Three small
+patches in the page route the import through `playImpJsonThrowRandom()`, let the app's existing
+`cleanupImpJsonThrow()` tear the engine down, and give the throw the sticker's `transform` (see
+"The throw has to own the sticker's transform" above).
 
 To see a specific variant, append `?jsonThrow=1..5` or set `localStorage['stillSane.jsonThrowVariant']`
 to a number; without an override the roll is uniform.

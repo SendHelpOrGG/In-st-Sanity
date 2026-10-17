@@ -338,3 +338,11 @@ an equal chance: the shipped Clawed Devil-Palms variant plus four ported from th
 (Devour, Singularity Snap, Trident Strike, Slow Smirk). The engine lives in
 `tools/imp-throw-variants.js` and is inlined by the patch tool; see
 [`web-layer.md`](web-layer.md#five-json-devour-cinematics).
+
+The first cut looked right in the harness and wrong on screen: the sticker never moved. The page
+floats it with a CSS animation on the `<svg>` itself, and a *paused* animation still outranks the
+`style` attribute in the cascade, so every `svg.style.transform` the cinematics wrote was thrown
+away. The throw now drops that animation on the sticker root only (descendants stay paused, so the
+idle pose does not snap) — transformation 14, and the reason the imp's frame now tilts, lunges and
+spins through every variant. Details in
+[`web-layer.md`](web-layer.md#the-throw-has-to-own-the-stickers-transform).

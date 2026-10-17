@@ -170,6 +170,24 @@ JSON_THROW_FIXES: list[tuple[str, str, str, int]] = [
         "  try{ if(window.LS_JSON_THROW) window.LS_JSON_THROW.cleanup(); }catch(_){}\n}",
         1,
     ),
+    (
+        # The page floats the idle sticker with a CSS animation on the <svg>
+        # itself.  A *paused* animation still wins the cascade over a normal
+        # declaration, including the style attribute, so every cinematic's
+        # svg.style.transform (translate + rotate + scale, the imp's whole
+        # flight) was being swallowed: the jaws and arms moved, the sticker
+        # never did.  The reference build scopes its float to
+        # `.sidebar-sticker-slot.idle svg` and drops that class on throw, so it
+        # never had the collision.  Dropping the animation on the root only is
+        # the equivalent - descendants keep their paused idle pose (aura pulse,
+        # decor pop) so nothing snaps at the start of the throw.
+        "the throw owns the sticker's transform",
+        ".sidebar-sticker-slot.throw-action-active svg,"
+        ".sidebar-sticker-slot.throw-action-active svg *{animation-play-state:paused!important}",
+        ".sidebar-sticker-slot.throw-action-active svg{animation:none!important}\n"
+        ".sidebar-sticker-slot.throw-action-active svg *{animation-play-state:paused!important}",
+        1,
+    ),
 ]
 
 JSON_THROW_JS = pathlib.Path(__file__).with_name("imp-throw-variants.js")
