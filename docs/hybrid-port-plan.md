@@ -323,3 +323,10 @@ I cannot compile Windows MAUI targets in this Linux sandbox — no .NET SDK here
 *Evidence for every number in this document was extracted from the uploaded `index.html`
 (measured CSS/JS/base64 sizes, the `isLocalBackendOrigin`/`getApiUrls`/`SERVER_API_BASE` backend
 contract, the 10 `/api/*` routes as called by the JS, and the state fields the browser UI consumes).*
+
+## Loading-screen audio
+
+The boot score used to lose its ending: `release()` closed the `AudioContext` ~1.1 s after the last
+note while the halls behind it keep ringing for 1–5 s, and `skip()` hard-stopped it on any click.
+Fixed in `tools/patch-webapp.py` (transformations 7–10), verified with a fake-WebAudio harness.
+Numbers and the before/after table are in [`web-layer.md`](web-layer.md#the-loading-screen-sound-was-being-cut-short).
