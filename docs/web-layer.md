@@ -30,8 +30,39 @@ exactly seven lines:
 | 5 | Remaining two `https://wsrv.nl/?url=` literals (detail fallback, built-in browser thumbnails) → `/api/image?url=` | Same. |
 | 6 | Dropped the `<link rel="preconnect">` / `dns-prefetch` hints for `wsrv.nl` | That host is no longer contacted. |
 
-Nothing else changed: no CSS, no animations, no sound code, no layout. Line count is identical
-(6,181), and the transformed script passes `node --check`.
+Plus the four audio transformations described below (`SCORE_TAIL`, `release()`, `finish()`, `skip()`).
+
+Four further transformations fix the loading-screen audio (section below). Nothing else changed:
+no CSS, no animations, no layout. The transformed script passes `node --check`.
+
+## The loading-screen sound was being cut short
+
+The five loading-screen variants fade out at ~4.1 s (v5 at 4.4 s) while their score's last note
+lands at 5.8–6.7 s, and the halls behind those notes keep sounding well past that: each variant
+builds its own room with `setSpace()` (0.7 s to 5.0 s) and every variant also feeds the 3.4 s
+"laugh hall". `LS_SOUND.release()` closed the `AudioContext` about 1.1 s after the last note, so
+the decay was chopped:
+
+| variant | last note | room rings to | context closed | tail chopped |
+| --- | --- | --- | --- | --- |
+| v1 | 6.18 s | 9.58 s | 7.29 s | **2.29 s** |
+| v2 | 6.66 s | 10.86 s | 7.79 s | **3.07 s** |
+| v3 | 6.08 s | 9.48 s | 7.19 s | **2.29 s** |
+| v4 | 5.72 s | 9.12 s | 6.89 s | **2.23 s** |
+| v5 | 6.16 s | 11.16 s | 7.29 s | **3.87 s** |
+
+That is the sound "cutting in the end" — worst in v2 and v5, whose halls are the longest and
+loudest. A second, sharper cut came from `skip()`: any `pointerdown` anywhere during the boot
+screen hard-stopped the score mid-phrase (`stop()` fades out in 0.18 s).
+
+The fix adds a per-score tail (`SCORE_TAIL`, matching each variant's room plus the laugh hall) and
+makes `release()` hold for the rest of the dry score *plus* the whole decay, fading only the last
+0.6 s so closing the context cannot click. A skip is now visual only: it jumps to the fade and lets
+the score ring out on its own timeline. Turning the sound off in settings still stops it
+immediately, which is what that switch is for.
+
+Measured with the same harness afterwards: the context now closes 0.9 s *after* the room has decayed
+(was 2.2–3.9 s before it), for all five variants.
 
 The two scraper functions (`resolveViaJina`, `resolveViaMicrolink`) remain *defined* but are never
 called; their URL templates are inert strings. The patch tool asserts that no call site survives.

@@ -83,6 +83,73 @@ FORBIDDEN_CALL_PATTERNS = [
     ("lhr.life", 0),
 ]
 
+# ── audio fix: let the loading-screen score's reverb ring out ──────────────────
+# The loading screens fade out at ~4.1s (v5 at 4.4s) while their score's last note lands at
+# 5.8-6.7s, and the halls behind them (setSpace(0.7 .. 5.0s), plus the 3.4s laugh hall every
+# variant feeds) keep sounding for another 1-5s after that. release() used to close the
+# AudioContext ~1.1s after the last note, chopping 2.2-3.9s of audible decay - which is heard
+# as the sound being cut at the end. release() now holds for the score plus its room and only
+# fades the last 0.6s, and a skip (a pointerdown anywhere during the boot screen) releases
+# instead of hard-stopping, so moving on visually no longer mutes the score mid-phrase.
+AUDIO_FIXES: list[tuple[str, str, str, int]] = [
+    (
+        "score tail table",
+        "  var SCORE_END=[6.20,6.70,6.10,5.80,6.20];",
+        "  var SCORE_END=[6.20,6.70,6.10,5.80,6.20];\n"
+        "  /* how long each score's room keeps ringing after that last note: v1 default 2.6s hall,\n"
+        "     v2 4.2s, v3 1.1s, v4 0.7s, v5 5.0s - and every variant also feeds the 3.4s laugh hall. */\n"
+        "  var SCORE_TAIL=[3.4,4.2,3.4,3.4,5.0];",
+        1,
+    ),
+    (
+        "finish() passes the tail",
+        "    try{ if(window.LS_SOUND) window.LS_SOUND.release(SCORE_END[pick-1]); }catch(_){}",
+        "    try{ if(window.LS_SOUND) window.LS_SOUND.release(SCORE_END[pick-1], SCORE_TAIL[pick-1]); }catch(_){}",
+        1,
+    ),
+    (
+        "skip() no longer cuts the score",
+        "  function skip(){ if(done) return; try{ if(window.LS_SOUND) window.LS_SOUND.stop(); }catch(_){} "
+        "t0 = performance.now()-3800; }   // jump straight to the fade",
+        "  /* a skip is visual: jump to the fade, but let the score ring out on its own timeline */\n"
+        "  function skip(){ if(done) return; try{ if(window.LS_SOUND) window.LS_SOUND.release(SCORE_END[pick-1], "
+        "SCORE_TAIL[pick-1]); }catch(_){} t0 = performance.now()-3800; }",
+        1,
+    ),
+    (
+        "release() honours the room",
+        "    release:function(scoreEnd){\n"
+        "      try{\n"
+        "        if(!ctx) return;\n"
+        "        /* nothing was ever scheduled (blocked context) - close it rather than leak it */\n"
+        "        if(!startedAt){ teardown(0.8); return; }\n"
+        "        var elapsed = ctx.currentTime - startedAt;\n"
+        "        var left = (typeof scoreEnd === 'number' ? scoreEnd : 0) - elapsed;\n"
+        "        if(left <= 0.6){ teardown(0.8); return; }\n"
+        "        if(releaseTimer) clearTimeout(releaseTimer);\n"
+        "        releaseTimer = setTimeout(function(){ releaseTimer=null; teardown(0.8); }, Math.round(left*1000));\n"
+        "      }catch(_){ teardown(0.8); }\n"
+        "    },",
+        "    release:function(scoreEnd, tail){\n"
+        "      try{\n"
+        "        if(!ctx) return;\n"
+        "        /* nothing was ever scheduled (blocked context) - close it rather than leak it */\n"
+        "        if(!startedAt){ teardown(0.8); return; }\n"
+        "        /* tail = how long this score's room keeps sounding after the last note */\n"
+        "        var room = (typeof tail === 'number' && isFinite(tail) && tail > 0) ? tail : 0.8;\n"
+        "        var elapsed = ctx.currentTime - startedAt;\n"
+        "        var left = (typeof scoreEnd === 'number' ? scoreEnd : 0) - elapsed;\n"
+        "        /* hold for what is left of the dry score plus the whole decay, then fade the last\n"
+        "           0.6s so closing the context cannot click */\n"
+        "        var hold = Math.max(0, left) + room;\n"
+        "        if(releaseTimer) clearTimeout(releaseTimer);\n"
+        "        releaseTimer = setTimeout(function(){ releaseTimer=null; teardown(0.6); }, Math.round(hold*1000));\n"
+        "      }catch(_){ teardown(0.8); }\n"
+        "    },",
+        1,
+    ),
+]
+
 ALLOWED_RESIDUE = [
     # (1) sourceKindFromUrl() classifies URL provenance; it never performs a request.
     # (2) the unwrap check in the rewritten wrapProxiedImageUrl(), which recognises an
@@ -153,6 +220,15 @@ def main() -> int:
         text = text.replace(old, new)
         print(f"  ok  {label} ({found})")
 
+    # 4. audio: the loading screens' reverb tail (see AUDIO_FIXES)
+    for label, old, new, expected in AUDIO_FIXES:
+        found = text.count(old)
+        if found != expected:
+            print(f"! {label}: expected {expected} occurrence(s), found {found}")
+            return 1
+        text = text.replace(old, new)
+        print(f"  ok  {label} ({found})")
+
     for pattern, expected in FORBIDDEN_CALL_PATTERNS:
         found = text.count(pattern)
         if found != expected:
@@ -173,7 +249,7 @@ def main() -> int:
     out_digest = hashlib.sha256(text.encode("utf-8", errors="surrogateescape")).hexdigest()
     print(f"output: {destination}  ({len(text)} chars)")
     print(f"        sha256 {out_digest}")
-    print(f"        {len(REPLACEMENTS)} transformations, all call sites verified")
+    print(f"        {len(REPLACEMENTS) + len(AUDIO_FIXES)} transformations, all call sites verified")
     return 0
 
 

@@ -5108,16 +5108,20 @@ var SCHED={1:schedule1,2:schedule2,3:schedule3,4:schedule4,5:schedule5};
     stop:function(){ teardown(0.18); },
     /* release: the screen ended normally - let the score ring out, then close.
        scoreEnd is seconds from the score's own t=0. */
-    release:function(scoreEnd){
+    release:function(scoreEnd, tail){
       try{
         if(!ctx) return;
         /* nothing was ever scheduled (blocked context) - close it rather than leak it */
         if(!startedAt){ teardown(0.8); return; }
+        /* tail = how long this score's room keeps sounding after the last note */
+        var room = (typeof tail === 'number' && isFinite(tail) && tail > 0) ? tail : 0.8;
         var elapsed = ctx.currentTime - startedAt;
         var left = (typeof scoreEnd === 'number' ? scoreEnd : 0) - elapsed;
-        if(left <= 0.6){ teardown(0.8); return; }
+        /* hold for what is left of the dry score plus the whole decay, then fade the last
+           0.6s so closing the context cannot click */
+        var hold = Math.max(0, left) + room;
         if(releaseTimer) clearTimeout(releaseTimer);
-        releaseTimer = setTimeout(function(){ releaseTimer=null; teardown(0.8); }, Math.round(left*1000));
+        releaseTimer = setTimeout(function(){ releaseTimer=null; teardown(0.6); }, Math.round(hold*1000));
       }catch(_){ teardown(0.8); }
     },
     isRunning:function(){ try{ return !!(ctx && ctx.state==='running'); }catch(_){ return false; } }
@@ -6129,14 +6133,15 @@ function v5(sp){
     if(done) return; done=true;
     try{ if(raf) cancelAnimationFrame(raf); }catch(_){}
     /* let the score ring out past the fade instead of chopping its tail off */
-    try{ if(window.LS_SOUND) window.LS_SOUND.release(SCORE_END[pick-1]); }catch(_){}
+    try{ if(window.LS_SOUND) window.LS_SOUND.release(SCORE_END[pick-1], SCORE_TAIL[pick-1]); }catch(_){}
 
     try{ if(stopBrandGlitch) stopBrandGlitch(); }catch(_){}
     try{ document.removeEventListener('pointerdown',skip,true); }catch(_){}
     try{ document.removeEventListener('keydown',skip,true); }catch(_){}
     lsTeardown();
   }
-  function skip(){ if(done) return; try{ if(window.LS_SOUND) window.LS_SOUND.stop(); }catch(_){} t0 = performance.now()-3800; }   // jump straight to the fade
+  /* a skip is visual: jump to the fade, but let the score ring out on its own timeline */
+  function skip(){ if(done) return; try{ if(window.LS_SOUND) window.LS_SOUND.release(SCORE_END[pick-1], SCORE_TAIL[pick-1]); }catch(_){} t0 = performance.now()-3800; }
 
   if(!animsOn || reduced){
     /* static composition + plain fade */
@@ -6161,6 +6166,9 @@ function v5(sp){
   var fadeA=FADE_A[pick-1]||3.85, fadeB=fadeA+0.20, endT=fadeA+0.25;
   /* when each score's last audible moment ends, in seconds from its t=0 */
   var SCORE_END=[6.20,6.70,6.10,5.80,6.20];
+  /* how long each score's room keeps ringing after that last note: v1 default 2.6s hall,
+     v2 4.2s, v3 1.1s, v4 0.7s, v5 5.0s - and every variant also feeds the 3.4s laugh hall. */
+  var SCORE_TAIL=[3.4,4.2,3.4,3.4,5.0];
 
   t0=performance.now();
     try{ if(window.LS_SOUND && lsSoundEnabled && lsScreensEnabled) window.LS_SOUND.start(pick); }catch(_){}
