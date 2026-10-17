@@ -413,6 +413,9 @@ body.json-throw-active #postGrid .card.card-throw-landed{
   opacity:1!important;
   transform:translate3d(0,0,0) scale(1)!important;
 }
+/* theme swap: let the new palette land in one frame instead of animating
+   every border, background and shadow the page owns */
+body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.theme-swapping *::after{transition:none!important}
 .imp-btn-poke-squash{
   animation:impBtnPokeSquash .34s cubic-bezier(.22,1.4,.36,1);
 }
@@ -1585,6 +1588,7 @@ function isPostCarouselModalOpen(){
 }
 function cancelImpButtonClickFx(){
   impBtnClickAnimId++;
+  window.__impBtnFxEndsAt=0;
   if(lastImpClickedBtn&&lastImpClickedBtn.isConnected){
     lastImpClickedBtn.style.transform='';
     lastImpClickedBtn.classList.remove('imp-btn-poke-squash');
@@ -1673,6 +1677,9 @@ function playImpButtonClickRandom(btn,targetX,targetY){
   const totalDur=chosenVariant===1?480:(chosenVariant===2?520:640);
   let hitTriggered=false;
   const startTime=performance.now();
+  /* how long this poke owns the sticker - useLastUploadedJson() waits it out so the
+     reload cannot freeze the page mid-swing and the cinematic cannot cut it off */
+  window.__impBtnFxEndsAt=startTime+totalDur;
 
   function triggerSquash(){
     if(pokeEl&&pokeEl.isConnected){
@@ -2229,7 +2236,28 @@ function playImpJsonGrabAndThrow1B(fileName,totalCount){
   requestAnimationFrame(step1B);
 }
 function reportJsonImportError(name,kind){const modalSum=document.getElementById('uploadJsonModalSummary');const invalid=kind==='invalid';const msg=`${name} (${invalid?'invalid file':'0 posts found'})`;document.getElementById('jsonFileSummary').value=msg;if(modalSum)modalSum.value=msg;const hint=document.getElementById('jsonImportHint');if(hint)hint.textContent='The uploaded file has no posts in it, or that is the wrong file overall. Please double-check your JSON file.';showJsonNoticeModal(invalid?'Wrong or invalid file':'No posts found in this file',`The uploaded file "${name}" has no posts in it, or that's the wrong file overall. Please double-check ${invalid?'that you selected a valid JSON file':'the JSON file'} and try again.`);toast('The uploaded file has no posts or is the wrong file overall')}
-async function applyImportedJsonText(name,text){const modalSum=document.getElementById('uploadJsonModalSummary');const parsed=JSON.parse(text);const rawEntries=extractPostEntriesFromJson(parsed);const entries=rawEntries.filter(e=>/instagram\.com\/(?:share\/)?(?:[^/?#]+\/)?(?:p|reel|reels|tv)\/[^/?#]+/i.test(String(e?.url||'')));if(!entries.length)return 0;activeImportFileName=name;bgIndexToken++;bgIndexRunning=false;coverErrorAttempted.clear();posts=entries.map((entry,idx)=>buildPostFromEntry(entry,idx,false));currentPost=-1;currentPage=1;filter='all';document.querySelectorAll('.filter').forEach((btn,idx)=>btn.classList.toggle('active',idx===0));const okSummary=`${name} (${posts.length} post${posts.length===1?'':'s'})`;document.getElementById('jsonFileSummary').value=okSummary;if(modalSum)modalSum.value=okSummary;closeUploadJsonModal();for(const saveUrl of getApiUrls('/api/save-imported-list')){fetch(saveUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:name,entries})}).catch(()=>{})}saveImportedPostsState();showPage('library');render();loadCurrentPagePosts();playImpJsonThrowRandom(name,posts.length);toast(`Loaded ${posts.length} post${posts.length===1?'':'s'} from ${name}`);refreshLastJsonUi();return posts.length}
+let lastImportedJsonSource='';
+/* one frame for layout, one for the first paint, then roll the cinematic */
+function queueImpJsonThrow(name,count){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>playImpJsonThrowRandom(name,count)));
+}
+async function applyImportedJsonText(name,text){
+  const modalSum=document.getElementById('uploadJsonModalSummary');
+  /* "Reload this file" hands back the exact text the library was built from.
+     Re-parsing it, rebuilding every post and re-writing the index produced an
+     identical library and froze the page right after the click, so replay the
+     visible half of the import. Any different text takes the full path below. */
+  if(posts.length&&activeImportFileName===name&&text&&text===lastImportedJsonSource){
+    closeUploadJsonModal();
+    coverErrorAttempted.clear();
+    currentPost=-1;currentPage=1;filter='all';
+    document.querySelectorAll('.filter').forEach((btn,idx)=>btn.classList.toggle('active',idx===0));
+    showPage('library');render();loadCurrentPagePosts();
+    queueImpJsonThrow(name,posts.length);
+    toast(`Reloaded ${posts.length} post${posts.length===1?'':'s'} from ${name}`);
+    refreshLastJsonUi();
+    return posts.length;
+  }const parsed=JSON.parse(text);const rawEntries=extractPostEntriesFromJson(parsed);const entries=rawEntries.filter(e=>/instagram\.com\/(?:share\/)?(?:[^/?#]+\/)?(?:p|reel|reels|tv)\/[^/?#]+/i.test(String(e?.url||'')));if(!entries.length)return 0;activeImportFileName=name;bgIndexToken++;bgIndexRunning=false;coverErrorAttempted.clear();posts=entries.map((entry,idx)=>buildPostFromEntry(entry,idx,false));lastImportedJsonSource=String(text||'');currentPost=-1;currentPage=1;filter='all';document.querySelectorAll('.filter').forEach((btn,idx)=>btn.classList.toggle('active',idx===0));const okSummary=`${name} (${posts.length} post${posts.length===1?'':'s'})`;document.getElementById('jsonFileSummary').value=okSummary;if(modalSum)modalSum.value=okSummary;closeUploadJsonModal();for(const saveUrl of getApiUrls('/api/save-imported-list')){fetch(saveUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileName:name,entries})}).catch(()=>{})}saveImportedPostsState();showPage('library');render();loadCurrentPagePosts();queueImpJsonThrow(name,posts.length);toast(`Loaded ${posts.length} post${posts.length===1?'':'s'} from ${name}`);refreshLastJsonUi();return posts.length}
 async function processImportedJsonFile(file){if(!file)return;try{const text=await file.text();const n=await applyImportedJsonText(file.name,text);if(!n){reportJsonImportError(file.name,'empty');return}rememberLastUploadedJson(file.name,text,n)}catch(_){reportJsonImportError(file.name,'invalid')}}
 const LAST_JSON_IDB_KEY='last-json';
 let lastJsonMeta=null;
@@ -2239,7 +2267,20 @@ async function storeLastUploadedJson(rec){try{const db=await openBackgroundDb();
 async function readLastUploadedJson(){try{const db=await openBackgroundDb();const rec=await new Promise((resolve,reject)=>{const tx=db.transaction('assets','readonly');const req=tx.objectStore('assets').get(LAST_JSON_IDB_KEY);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('req'))});db.close();return(rec&&rec.text)?rec:null}catch(_){return null}}
 async function rememberLastUploadedJson(name,text,postCount){const rec={name:String(name||'saved_posts.json'),text:String(text||''),size:String(text||'').length,savedAt:Date.now(),postCount:Number(postCount)||0};if(!rec.text)return;const ok=await storeLastUploadedJson(rec);lastJsonMeta=ok?rec:null;refreshLastJsonUi()}
 async function forgetLastUploadedJson(){lastJsonMeta=null;try{const db=await openBackgroundDb();await new Promise(resolve=>{const tx=db.transaction('assets','readwrite');tx.objectStore('assets').delete(LAST_JSON_IDB_KEY);tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve});db.close()}catch(_){}refreshLastJsonUi();toast('Forgot the last uploaded JSON')}
-async function useLastUploadedJson(){let rec=lastJsonMeta;if(!rec)rec=await readLastUploadedJson();if(!rec||!rec.text){toast('No previously uploaded JSON found on this device');refreshLastJsonUi();return}lastJsonMeta=rec;try{const n=await applyImportedJsonText(rec.name,rec.text);if(!n){reportJsonImportError(rec.name,'empty');return}}catch(_){reportJsonImportError(rec.name,'invalid')}}
+function waitForImpButtonClickFx(){
+  const left=(Number(window.__impBtnFxEndsAt)||0)-performance.now();
+  if(!(left>16))return Promise.resolve();
+  return new Promise(resolve=>setTimeout(resolve,Math.min(900,left)));
+}
+async function useLastUploadedJson(){
+  let rec=lastJsonMeta;if(!rec)rec=await readLastUploadedJson();
+  if(!rec||!rec.text){toast('No previously uploaded JSON found on this device');refreshLastJsonUi();return}
+  lastJsonMeta=rec;
+  /* This used to run inside the click task: the parse and the whole library rebuild ran
+     while the imp was still winding up his poke, froze the page for that beat, and the
+     cinematic then cut the poke off mid-swing. Let the click feedback land first. */
+  await waitForImpButtonClickFx();
+  try{const n=await applyImportedJsonText(rec.name,rec.text);if(!n){reportJsonImportError(rec.name,'empty');return}}catch(_){reportJsonImportError(rec.name,'invalid')}}
 function refreshLastJsonUi(){const rec=lastJsonMeta||null;const count=Number(rec&&rec.postCount)||0;const isActive=Boolean(rec&&activeImportFileName&&rec.name===activeImportFileName);const ago=rec?jsonTimeAgo(rec.savedAt):'';const row=document.getElementById('jsonLastRow');const metaEl=document.getElementById('jsonLastMeta');const label=document.getElementById('jsonUseLastLabel');if(row)row.hidden=!rec;if(metaEl)metaEl.textContent=rec?`${rec.name} · ${count} post${count===1?'':'s'} · ${jsonBytesLabel(rec.size)} · uploaded ${ago}`:'';if(label)label.textContent=isActive?'Reload this file':'Use last uploaded JSON';const or=document.getElementById('uploadJsonOr');const box=document.getElementById('uploadJsonRecent');const nm=document.getElementById('uploadJsonRecentName');const mm=document.getElementById('uploadJsonRecentMeta');const rb=document.getElementById('uploadJsonRecentBtn');if(or)or.hidden=!rec;if(box)box.hidden=!rec;if(nm)nm.textContent=rec?rec.name:'';if(mm)mm.textContent=rec?`${count} post${count===1?'':'s'} · ${jsonBytesLabel(rec.size)} · uploaded ${ago}`:'';if(rb)rb.textContent=isActive?'Reload':'Use it'}
 async function importPostsFromJson(event){const file=event.target.files?.[0];event.target.value='';if(!file)return;await processImportedJsonFile(file)}function chooseFolder(){toast('Folder picker is available in the desktop app')}const LS_BOOT_BG={default:'#0a0f18',v1:'#130f1c',v2:'#161f26',v3:'#090a0c',v4:'#0e090b',v5:'#150e27',v6:'#141909',v7:'#1b120b',v8:'#0b152c',v9:'#121722',v10:'#181c2b',v11:'#fdf8fd'};
 let lsRestarting=false;
@@ -3801,6 +3842,11 @@ function resetAllAnimationSettings(){
 
 function setAppTheme(themeId,quiet=false){
   const id=APP_THEME_NAMES[themeId]?themeId:'default';
+  /* A flip swaps every var(--t-*) at once, and dozens of controls animate their
+     border/background/box-shadow over .16-.32s: the switch used to repaint the page
+     through a third of a second of transitions right after the click. Freeze them
+     for the swap itself - they come back untouched two frames later. */
+  document.body.classList.add('theme-swapping');
   if(id==='default'){
     document.body.removeAttribute('data-theme');
   }else{
@@ -3817,6 +3863,8 @@ function setAppTheme(themeId,quiet=false){
     playUiClick();
     toast(`Theme applied: ${APP_THEME_NAMES[id]}`);
   }
+  const doneSwapping=()=>document.body.classList.remove('theme-swapping');
+  requestAnimationFrame(()=>requestAnimationFrame(doneSwapping));
 }
 (function initBrandHeaderRandomGlitch2A(){
   const brand=document.getElementById('sidebarBrandHeader');

@@ -30,10 +30,10 @@ exactly seven lines:
 | 5 | Remaining two `https://wsrv.nl/?url=` literals (detail fallback, built-in browser thumbnails) → `/api/image?url=` | Same. |
 | 6 | Dropped the `<link rel="preconnect">` / `dns-prefetch` hints for `wsrv.nl` | That host is no longer contacted. |
 
-Plus the four audio transformations described below (`SCORE_TAIL`, `release()`, `finish()`, `skip()`)
-and the five JSON-devour cinematics (section below), including one scoped CSS rule they need.
-Nothing else changed: no layout, no colours, no other animation. Every script block in the output
-passes `node --check`.
+Plus the four audio transformations described below (`SCORE_TAIL`, `release()`, `finish()`, `skip()`),
+the five JSON-devour cinematics with the one scoped CSS rule they need, and the responsiveness fixes
+for a button click and a theme swap (section below). Nothing else changed: no layout, no colours, no
+other animation. Every script block in the output passes `node --check`.
 
 ## The throw has to own the sticker's transform
 
@@ -84,6 +84,47 @@ The two scraper functions (`resolveViaJina`, `resolveViaMicrolink`) remain *defi
 called; their URL templates are inert strings. The patch tool asserts that no call site survives.
 `sourceKindFromUrl()` still contains the string `wsrv.nl`, because it classifies a URL's
 provenance for the source badge — it never performs a request.
+
+## Clicks, theme swaps and the reload freeze
+
+Three UI problems, one cause: work that belongs to the *next* frame ran inside the click handler,
+on top of the animation the click had just started.
+
+### "Reload this file" froze the page and ate its own click animation
+
+Pressing the button in *Private settings → Import posts from JSON* runs `useLastUploadedJson()`.
+It re-parsed the stored JSON, rebuilt every post, re-wrote the index and then started a cinematic —
+all inside the click task. Meanwhile the imp's button-poke (the claw the sticker throws at whatever
+button you press) had only just started, so the page froze mid-swing, and the cinematic that followed
+cancelled the poke (`json-throw-active` stops `stepBtnClick` on its next frame). Net effect: a hitch
+and a click that looked like it did nothing.
+
+Now:
+
+- `playImpButtonClickRandom()` publishes `window.__impBtnFxEndsAt`, and the reload waits for that
+  deadline (at most 0.9 s) before touching the library, so the poke plays to completion first.
+- Reloading the file that is already loaded no longer re-parses it. `applyImportedJsonText()` keeps
+  the text it built the library from; if the same text arrives again the visible half of the import
+  is replayed (`showPage`/`render`/`loadCurrentPagePosts`) and the parse, the post rebuilding and the
+  index rewrite are skipped. Any different text takes the full path.
+- The cinematic starts through `queueImpJsonThrow()` — two `requestAnimationFrame`s later — so its
+  first frames no longer land on a main thread that is still laying out the rebuilt grid.
+
+Measured in the jsdom harness with a 300-post import: the reload path drops from ~120 ms of blocked
+main thread (parse + 300 post rebuilds + index) to ~1 ms of JS plus the 20-card re-render, and the
+poke runs its full 480–640 ms instead of being cancelled after one frame.
+
+### A theme swap stuttered through its transitions
+
+Every themed control pulls its border, background and shadow from `var(--t-*)`, so a theme flip
+changes all of them at once — and dozens of those controls declare `transition: … .16s–.32s`. The
+switch therefore repainted the whole page through a third of a second of colour transitions right
+after the click.
+
+`setAppTheme()` now puts `theme-swapping` on `<body>` before it applies the new palette; the rule
+`body.theme-swapping *{transition:none!important}` lets the swap land in a single frame, and the class
+is removed two frames later. Animations are untouched, so the sticker keeps bouncing through it, and
+the transitions are exactly as they were before the click.
 
 ## Reproducing the transformation
 

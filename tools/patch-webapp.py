@@ -190,6 +190,151 @@ JSON_THROW_FIXES: list[tuple[str, str, str, int]] = [
     ),
 ]
 
+# ── click feedback, theme swap and the reload freeze ─────────────────────────
+# Three UI problems that share a cause: work that belongs to the *next* frame
+# was being run inside the click handler, on top of the animation the click
+# had just started.
+#
+#  * "Reload this file" re-parsed the JSON it had already parsed, rebuilt every
+#    post and re-wrote the index, then started a cinematic - all in the click
+#    task, while the imp's button-poke was still winding up. The page froze for
+#    that beat and the cinematic killed the poke after a frame, so the click
+#    looked like it did nothing.  Now: identical text takes a cheap replay
+#    path, the poke is allowed to finish, and the cinematic starts two frames
+#    later, once the rebuilt grid has been laid out.
+#  * A theme flip changes every var(--t-*) at once, and dozens of controls
+#    transition border/background/box-shadow over .16-.32s, so the switch
+#    repainted the page through a third of a second of transitions.  Now the
+#    swap runs with transitions off for two frames.
+UI_FIXES: list[tuple[str, str, str, int]] = [
+    (
+        "the button poke publishes when it ends",
+        "  const totalDur=chosenVariant===1?480:(chosenVariant===2?520:640);\n"
+        "  let hitTriggered=false;\n"
+        "  const startTime=performance.now();",
+        "  const totalDur=chosenVariant===1?480:(chosenVariant===2?520:640);\n"
+        "  let hitTriggered=false;\n"
+        "  const startTime=performance.now();\n"
+        "  /* how long this poke owns the sticker - useLastUploadedJson() waits it out so the\n"
+        "     reload cannot freeze the page mid-swing and the cinematic cannot cut it off */\n"
+        "  window.__impBtnFxEndsAt=startTime+totalDur;",
+        1,
+    ),
+    (
+        "cancel clears that deadline",
+        "function cancelImpButtonClickFx(){\n  impBtnClickAnimId++;",
+        "function cancelImpButtonClickFx(){\n  impBtnClickAnimId++;\n  window.__impBtnFxEndsAt=0;",
+        1,
+    ),
+    (
+        "the reload waits for the click's own animation",
+        "async function useLastUploadedJson(){let rec=lastJsonMeta;if(!rec)rec=await readLastUploadedJson();"
+        "if(!rec||!rec.text){toast('No previously uploaded JSON found on this device');refreshLastJsonUi();return}"
+        "lastJsonMeta=rec;try{",
+        "function waitForImpButtonClickFx(){\n"
+        "  const left=(Number(window.__impBtnFxEndsAt)||0)-performance.now();\n"
+        "  if(!(left>16))return Promise.resolve();\n"
+        "  return new Promise(resolve=>setTimeout(resolve,Math.min(900,left)));\n"
+        "}\n"
+        "async function useLastUploadedJson(){\n"
+        "  let rec=lastJsonMeta;if(!rec)rec=await readLastUploadedJson();\n"
+        "  if(!rec||!rec.text){toast('No previously uploaded JSON found on this device');refreshLastJsonUi();return}\n"
+        "  lastJsonMeta=rec;\n"
+        "  /* This used to run inside the click task: the parse and the whole library rebuild ran\n"
+        "     while the imp was still winding up his poke, froze the page for that beat, and the\n"
+        "     cinematic then cut the poke off mid-swing. Let the click feedback land first. */\n"
+        "  await waitForImpButtonClickFx();\n"
+        "  try{",
+        1,
+    ),
+    (
+        "the cinematic starts after the grid has painted",
+        "loadCurrentPagePosts();playImpJsonThrowRandom(name,posts.length);toast(",
+        "loadCurrentPagePosts();queueImpJsonThrow(name,posts.length);toast(",
+        1,
+    ),
+    (
+        "reloading the loaded file replays instead of re-parsing",
+        "async function applyImportedJsonText(name,text){"
+        "const modalSum=document.getElementById('uploadJsonModalSummary');",
+        "let lastImportedJsonSource='';\n"
+        "/* one frame for layout, one for the first paint, then roll the cinematic */\n"
+        "function queueImpJsonThrow(name,count){\n"
+        "  requestAnimationFrame(()=>requestAnimationFrame(()=>playImpJsonThrowRandom(name,count)));\n"
+        "}\n"
+        "async function applyImportedJsonText(name,text){\n"
+        "  const modalSum=document.getElementById('uploadJsonModalSummary');\n"
+        "  /* \"Reload this file\" hands back the exact text the library was built from.\n"
+        "     Re-parsing it, rebuilding every post and re-writing the index produced an\n"
+        "     identical library and froze the page right after the click, so replay the\n"
+        "     visible half of the import. Any different text takes the full path below. */\n"
+        "  if(posts.length&&activeImportFileName===name&&text&&text===lastImportedJsonSource){\n"
+        "    closeUploadJsonModal();\n"
+        "    coverErrorAttempted.clear();\n"
+        "    currentPost=-1;currentPage=1;filter='all';\n"
+        "    document.querySelectorAll('.filter').forEach((btn,idx)=>btn.classList.toggle('active',idx===0));\n"
+        "    showPage('library');render();loadCurrentPagePosts();\n"
+        "    queueImpJsonThrow(name,posts.length);\n"
+        "    toast(`Reloaded ${posts.length} post${posts.length===1?'':'s'} from ${name}`);\n"
+        "    refreshLastJsonUi();\n"
+        "    return posts.length;\n"
+        "  }",
+        1,
+    ),
+    (
+        "remember the text the library was built from",
+        "posts=entries.map((entry,idx)=>buildPostFromEntry(entry,idx,false));",
+        "posts=entries.map((entry,idx)=>buildPostFromEntry(entry,idx,false));lastImportedJsonSource=String(text||'');",
+        1,
+    ),
+    (
+        "a theme swap runs without transitions",
+        "function setAppTheme(themeId,quiet=false){\n"
+        "  const id=APP_THEME_NAMES[themeId]?themeId:'default';\n"
+        "  if(id==='default'){",
+        "function setAppTheme(themeId,quiet=false){\n"
+        "  const id=APP_THEME_NAMES[themeId]?themeId:'default';\n"
+        "  /* A flip swaps every var(--t-*) at once, and dozens of controls animate their\n"
+        "     border/background/box-shadow over .16-.32s: the switch used to repaint the page\n"
+        "     through a third of a second of transitions right after the click. Freeze them\n"
+        "     for the swap itself - they come back untouched two frames later. */\n"
+        "  document.body.classList.add('theme-swapping');\n"
+        "  if(id==='default'){",
+        1,
+    ),
+    (
+        "release the freeze after the swap",
+        "  if(!quiet){\n"
+        "    playUiClick();\n"
+        "    toast(`Theme applied: ${APP_THEME_NAMES[id]}`);\n"
+        "  }\n"
+        "}",
+        "  if(!quiet){\n"
+        "    playUiClick();\n"
+        "    toast(`Theme applied: ${APP_THEME_NAMES[id]}`);\n"
+        "  }\n"
+        "  const doneSwapping=()=>document.body.classList.remove('theme-swapping');\n"
+        "  requestAnimationFrame(()=>requestAnimationFrame(doneSwapping));\n"
+        "}",
+        1,
+    ),
+    (
+        "the theme swap stylesheet",
+        "body.json-throw-active #postGrid .card.card-throw-landed{\n"
+        "  opacity:1!important;\n"
+        "  transform:translate3d(0,0,0) scale(1)!important;\n"
+        "}",
+        "body.json-throw-active #postGrid .card.card-throw-landed{\n"
+        "  opacity:1!important;\n"
+        "  transform:translate3d(0,0,0) scale(1)!important;\n"
+        "}\n"
+        "/* theme swap: let the new palette land in one frame instead of animating\n"
+        "   every border, background and shadow the page owns */\n"
+        "body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.theme-swapping *::after{transition:none!important}",
+        1,
+    ),
+]
+
 JSON_THROW_JS = pathlib.Path(__file__).with_name("imp-throw-variants.js")
 
 ALLOWED_RESIDUE = [
@@ -280,6 +425,15 @@ def main() -> int:
         text = text.replace(old, new)
         print(f"  ok  {label} ({found})")
 
+    # 5b. click feedback, the theme swap and the reload freeze
+    for label, old, new, expected in UI_FIXES:
+        found = text.count(old)
+        if found != expected:
+            print(f"! {label}: expected {expected} occurrence(s), found {found}")
+            return 1
+        text = text.replace(old, new)
+        print(f"  ok  {label} ({found})")
+
     module = JSON_THROW_JS.read_text(encoding="utf-8")
     if "window.LS_JSON_THROW" not in module:
         print(f"! {JSON_THROW_JS.name}: does not look like the animation module")
@@ -311,7 +465,7 @@ def main() -> int:
     out_digest = hashlib.sha256(text.encode("utf-8", errors="surrogateescape")).hexdigest()
     print(f"output: {destination}  ({len(text)} chars)")
     print(f"        sha256 {out_digest}")
-    print(f"        {len(REPLACEMENTS) + len(AUDIO_FIXES) + len(JSON_THROW_FIXES) + 1} transformations, all call sites verified")
+    print(f"        {len(REPLACEMENTS) + len(AUDIO_FIXES) + len(JSON_THROW_FIXES) + len(UI_FIXES) + 1} transformations, all call sites verified")
     return 0
 
 

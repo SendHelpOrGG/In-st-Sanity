@@ -352,3 +352,17 @@ away. The throw now drops that animation on the sticker root only (descendants s
 idle pose does not snap) — transformation 14, and the reason the imp's frame now tilts, lunges and
 spins through every variant. Details in
 [`web-layer.md`](web-layer.md#the-throw-has-to-own-the-stickers-transform).
+
+## Clicks, theme swaps and the reload freeze
+
+Two hitches reported from the running app turned out to be one pattern: a click handler doing a
+frame's worth of work while the animation that click had just started was still running.
+
+- *Reload this file* (Private settings) re-parsed the stored JSON, rebuilt every post and re-wrote the
+  index inside the click task — then started a cinematic that cancelled the imp's button-poke on its
+  next frame. The reload now waits for the poke to land, replays the already-parsed library instead of
+  re-parsing identical text, and queues the cinematic two frames later. Numbers in
+  [`web-layer.md`](web-layer.md#clicks-theme-swaps-and-the-reload-freeze).
+- Switching themes repainted the page through a third of a second of colour transitions. The swap now
+  runs with transitions frozen for two frames (`body.theme-swapping`), so the new palette lands in one
+  frame.
