@@ -153,13 +153,13 @@ try {
 
     # String.Contains, not -like: the marker contains brackets, which PowerShell wildcards
     # would read as a character class.
-    foreach ($marker in @('In[st]Sanity', 'lsBoot', 'app-startup-blocked', 'appVersionButton', 'openDownloadFolderBtn', 'startup-layout-v1-3', 'Version 1.3; open version history', 'body:not([data-theme]) #paginationBar .page-btn')) {
+    foreach ($marker in @('In[st]Sanity', 'lsBoot', 'app-startup-blocked', 'appVersionButton', 'openDownloadFolderBtn', 'startup-layout-v1-4', 'Version 1.4; open version history', 'source-toggle-button', 'id="railToggle"', 'body[data-theme="v3"] .page-btn.active:hover:not(:disabled)')) {
         if (-not $document.Content.Contains($marker)) {
             throw "The served document does not contain the expected marker '$marker'."
         }
     }
 
-    foreach ($obsolete in @('Choose your posts', 'id="libraryFooterNote"', '</svg>Open folder</button>')) {
+    foreach ($obsolete in @('Choose your posts', 'id="libraryFooterNote"', '</svg>Open folder</button>', '>Hide source</button>', '>Show source</button>', 'id="sidebarRestore"')) {
         if ($document.Content.Contains($obsolete)) {
             throw "The served document still contains obsolete library UI '$obsolete'."
         }
