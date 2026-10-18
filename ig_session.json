@@ -1,0 +1,16 @@
+{
+  "authenticated": false,
+  "username": "",
+  "userId": "",
+  "cookies": {
+    "csrftoken": "FecN3YGkgwbUhKfJL3r7q9fCJiCA0vNn",
+    "mid": "atIJxQALAAGaiP8JkE60MfayLnn4",
+    "ig_did": "64D8A4B9-6E2C-4247-88EA-38B10CBAE413",
+    "ig_nrcb": "1"
+  },
+  "twoFactorPending": false,
+  "twoFactorIdentifier": "",
+  "statusMessage": "Not logged in",
+  "currentUrl": "https://www.instagram.com/accounts/login/",
+  "updatedAt": 1792149957
+}
