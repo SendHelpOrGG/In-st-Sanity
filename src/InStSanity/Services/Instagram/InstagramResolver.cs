@@ -133,6 +133,7 @@ public sealed class InstagramResolver
 		RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
 	readonly InstagramHttp _http;
+	readonly SaveFreeClient? _saveFree;
 	readonly ILogger<InstagramResolver> _logger;
 	readonly ConcurrentDictionary<string, CacheEntry> _cache = new(StringComparer.OrdinalIgnoreCase);
 
@@ -154,10 +155,14 @@ public sealed class InstagramResolver
 		public DateTimeOffset Expires { get; }
 	}
 
-	public InstagramResolver(InstagramHttp http, ILogger<InstagramResolver> logger)
+	public InstagramResolver(
+		InstagramHttp http,
+		ILogger<InstagramResolver> logger,
+		SaveFreeClient? saveFree = null)
 	{
 		_http = http;
 		_logger = logger;
+		_saveFree = saveFree;
 	}
 
 	/// <summary>Pulls the shortcode out of any Instagram post URL (p / reel / reels / tv).</summary>
@@ -455,28 +460,44 @@ public sealed class InstagramResolver
 		var reason = page.Reason.Length > 0 ? page.Reason : embed.Reason;
 
 		// 1. The captioned embed's own JSON: every slide, exact counts, the caption.
-		var fromEmbed = ParseFromPageJson(embed.Html ?? string.Empty, shortcode);
-		if (fromEmbed is not null)
-		{
-			return (WithShortcodeTimestamp(fromEmbed, shortcode), string.Empty);
-		}
+		ResolvedPost? direct = ParseFromPageJson(embed.Html ?? string.Empty, shortcode);
 
 		// 2. The post page's JSON — the newer Polaris shape, and the shape Instagram
 		//    serves to a crawler when the embed is throttled.
-		var fromPage = ParseFromPageJson(page.Html ?? string.Empty, shortcode);
-		if (fromPage is not null)
-		{
-			return (WithShortcodeTimestamp(fromPage, shortcode), string.Empty);
-		}
+		direct ??= ParseFromPageJson(page.Html ?? string.Empty, shortcode);
 
 		// 3. Open Graph: one cover, the owner, the likes, the caption. Enough for a card,
 		//    and often the only thing a throttled request returns.
-		var fromOpenGraph = ParseFromOpenGraph(page.Html ?? string.Empty, shortcode)
+		direct ??= ParseFromOpenGraph(page.Html ?? string.Empty, shortcode)
 			?? ParseFromOpenGraph(embed.Html ?? string.Empty, shortcode);
 
-		if (fromOpenGraph is not null)
+		if (direct is not null)
 		{
-			return (WithShortcodeTimestamp(fromOpenGraph, shortcode), string.Empty);
+			direct = WithShortcodeTimestamp(direct, shortcode);
+		}
+
+		// 4. save-free.net, for what Instagram will not serve logged out. Asked only when
+		//    the direct result cannot stand on its own — see NeedsSaveFree — because it is
+		//    a third party and the grid resolves twelve posts per request.
+		if (NeedsSaveFree(direct, summaryOnly) && _saveFree is not null)
+		{
+			var fallback = await _saveFree
+				.FetchAsync(shortcode, cancellationToken)
+				.ConfigureAwait(false);
+
+			if (fallback.Count > 0)
+			{
+				var pictures = MergeSlides(direct?.Pictures, fallback);
+
+				return (
+					WithPictures(direct, shortcode, pictures, direct is null ? "api" : "mixed"),
+					string.Empty);
+			}
+		}
+
+		if (direct is not null)
+		{
+			return (direct, string.Empty);
 		}
 
 		if (summaryOnly)
@@ -484,7 +505,7 @@ public sealed class InstagramResolver
 			return (null, reason.Length > 0 ? reason : "no_media");
 		}
 
-		// 4. Last resort: the JSON media endpoint, which sometimes answers when both HTML
+		// 5. Last resort: the JSON media endpoint, which sometimes answers when both HTML
 		//    paths were refused.
 		var info = await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
 		if (info.Post is not null)
@@ -493,6 +514,112 @@ public sealed class InstagramResolver
 		}
 
 		return (null, reason.Length > 0 ? reason : info.Reason.Length > 0 ? info.Reason : "no_media");
+	}
+
+	/// <summary>
+	/// Whether the direct result is too thin to return. A card only needs a cover; an
+	/// opened post also needs every slide, and a playable URL for each video — this is the
+	/// same test <c>server.py</c> made before reaching for a third party
+	/// (<c>not full_resolved or any(is_v and not vid_u)</c>).
+	/// </summary>
+	static bool NeedsSaveFree(ResolvedPost? post, bool summaryOnly)
+	{
+		if (post is null)
+		{
+			return true;
+		}
+
+		if (summaryOnly)
+		{
+			return post.CoverUrl.Length == 0;
+		}
+
+		// Open Graph only carries the first slide, so a carousel resolved that way is
+		// never the whole post; the page's own JSON is marked "direct".
+		if (post.Pictures.Count == 0 ||
+			!string.Equals(post.SourceKind, "direct", StringComparison.Ordinal))
+		{
+			return true;
+		}
+
+		return post.Pictures.Any(picture => picture.IsVideo && picture.VideoUrl.Length == 0);
+	}
+
+	/// <summary>
+	/// Combines the page's own slides with the third party's. More slides wins (that is
+	/// the carousel the page did not show), equal counts are merged slide by slide so a
+	/// missing poster or a missing MP4 is filled in without losing what was already good.
+	/// </summary>
+	static IReadOnlyList<ResolvedMedia> MergeSlides(
+		IReadOnlyList<ResolvedMedia>? direct,
+		IReadOnlyList<ResolvedMedia> fallback)
+	{
+		if (direct is null || direct.Count == 0 || fallback.Count > direct.Count)
+		{
+			return fallback;
+		}
+
+		if (fallback.Count < direct.Count)
+		{
+			return direct;
+		}
+
+		var merged = new List<ResolvedMedia>(direct.Count);
+		for (var index = 0; index < direct.Count; index++)
+		{
+			var page = direct[index];
+			var other = fallback[index];
+			var image = page.ImgUrl.Length > 0 ? page.ImgUrl : other.ImgUrl;
+			var video = page.VideoUrl.Length > 0 ? page.VideoUrl : other.VideoUrl;
+
+			merged.Add(new ResolvedMedia
+			{
+				ImgUrl = image,
+				RawUrl = image,
+				IsVideo = page.IsVideo || other.IsVideo,
+				VideoUrl = video,
+			});
+		}
+
+		return merged;
+	}
+
+	/// <summary>
+	/// Rebuilds a post around a new slide list, keeping every piece of metadata the page
+	/// did provide. With no <paramref name="post"/> the result is cover-and-counts only,
+	/// which is still enough for a card.
+	/// </summary>
+	static ResolvedPost WithPictures(
+		ResolvedPost? post,
+		string shortcode,
+		IReadOnlyList<ResolvedMedia> pictures,
+		string sourceKind)
+	{
+		var cover = pictures.Count > 0 ? pictures[0] : null;
+		var photoCount = pictures.Count(picture => !picture.IsVideo);
+		var videoCount = pictures.Count(picture => picture.IsVideo);
+
+		return new ResolvedPost
+		{
+			Ok = true,
+			Shortcode = post?.Shortcode is { Length: > 0 } code ? code : shortcode,
+			ParentCode = post?.ParentCode is { Length: > 0 } parent ? parent : shortcode,
+			Title = post?.Title ?? string.Empty,
+			Caption = post?.Caption ?? string.Empty,
+			Owner = post?.Owner ?? string.Empty,
+			OwnerFull = post?.OwnerFull ?? string.Empty,
+			Likes = post?.Likes ?? string.Empty,
+			Timestamp = post?.Timestamp ?? ShortcodeTimestamp(shortcode),
+			PhotoCount = photoCount,
+			VideoCount = videoCount,
+			CoverUrl = cover?.ImgUrl ?? post?.CoverUrl ?? string.Empty,
+			CoverIsVideo = cover?.IsVideo ?? post?.CoverIsVideo ?? false,
+			SummaryResolved = true,
+			FullResolved = pictures.Count > 0 &&
+				pictures.All(picture => !picture.IsVideo || picture.VideoUrl.Length > 0),
+			SourceKind = sourceKind,
+			Pictures = pictures,
+		};
 	}
 
 	async Task<(string? Html, string Reason)> FetchHtmlAsync(

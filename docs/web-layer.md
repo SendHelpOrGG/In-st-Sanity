@@ -246,7 +246,17 @@ the original `server.py` did with `BOT_UAS`. With a browser UA every fetch ended
 `i.instagram.com/api/v1/media/{id}/info/` JSON endpoint remains as a last resort after both
 HTML paths fail.
 
-Each fetch is capped at 7 s, so a post costs at most one timeout instead of two. The resolver then walks the JSON blobs the page embeds (`contextJSON`, the
+Each fetch is capped at 7 s, so a post costs at most one timeout instead of two.
+
+When neither page yields a usable result — or the carousel is incomplete, or a video has no
+playable URL — the resolver asks **save-free.net** (`POST /api/ajaxSearch`), the same third
+party `server.py` used. That response is Hunter-encoded JS, so `SaveFreeClient` decodes it
+(`eval(function(p,a,c,k,e,d){…})` → `innerHTML = "…"` → markup), unwraps the base64url
+`token=` download links into real CDN URLs, and detects video slides from `icon-dlvideo`,
+`Download Video`, `.mp4`, or the `efg` parameter. It is a last resort and capped at 6 s;
+the batch deadline cancels it rather than letting it outlive the caller.
+
+The resolver then walks the JSON blobs the page embeds (`contextJSON`, the
 `data-sjs` `xdt_shortcode_media` payload, the older Polaris `image_versions2` one) for the
 first object that has **both** an id (`code`/`shortcode`/`pk`) and media, which is what makes
 a carousel resolve as a whole instead of as one slide. Missing `display_url` on a carousel

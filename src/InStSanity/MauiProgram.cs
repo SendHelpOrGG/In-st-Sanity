@@ -26,6 +26,7 @@ public static class MauiProgram
 		// It talks to that host exactly as it talked to its own local backend, so its
 		// /api/* calls never leave the machine.
 		builder.Services.AddSingleton<InstagramHttp>();
+		builder.Services.AddSingleton<SaveFreeClient>();
 		builder.Services.AddSingleton<InstagramResolver>();
 		builder.Services.AddSingleton<MediaCache>();
 
@@ -45,7 +46,8 @@ public static class MauiProgram
 			asAttachment: true));
 
 		// The resolve routes are what turn an imported URL into a cover image, an owner,
-		// a caption and a carousel. Without them every card keeps an empty coverUrl and
+		// a caption and a carousel. SaveFreeClient is the fallback for posts Instagram
+		// refuses to serve logged out (ported from fetch_via_savefree in server.py). Without them every card keeps an empty coverUrl and
 		// the grid's "server unreachable" note comes on — see InstagramResolver.
 		builder.Services.AddSingleton<IApiEndpoint, ResolvePostEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ResolveBatchEndpoint>();
