@@ -30,6 +30,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<InstagramResolver>();
 		builder.Services.AddSingleton<MediaCache>();
 		builder.Services.AddSingleton<IFolderPickerService, WindowsFolderPickerService>();
+		builder.Services.AddSingleton<IDownloadFolderOpener, WindowsDownloadFolderOpener>();
 
 		// /api/image and /api/download-photo share one implementation, differing only in
 		// how the payload is presented.
@@ -47,6 +48,7 @@ public static class MauiProgram
 			asAttachment: true));
 
 		builder.Services.AddSingleton<IApiEndpoint, DownloadSelectedEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, OpenDownloadFolderEndpoint>();
 
 		// The resolve routes are what turn an imported URL into a cover image, an owner,
 		// a caption and a carousel. SaveFreeClient is the fallback for posts Instagram

@@ -485,9 +485,41 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 #lsBoot .pip.on{background:var(--ls-accent,#38bdf8);box-shadow:0 0 8px var(--ls-accent,#38bdf8)}
 .app.ls-dragging{box-shadow:-18px 0 54px rgba(0,0,0,.55)}
 </style>
+<style id="startup-layout-v1-1">
+  body.app-startup-blocked .app, body.app-startup-blocked .app * { animation:none!important; transition:none!important; }
+  html, body, *, *::before, *::after { scrollbar-width:none!important; -ms-overflow-style:none!important; }
+  *::-webkit-scrollbar, *::-webkit-scrollbar-thumb, *::-webkit-scrollbar-track { display:none!important; width:0!important; height:0!important; }
+  #libraryPage { padding-bottom:104px; }
+  #libraryPage .library-footer {
+    display:none; position:fixed; z-index:80; left:var(--sidebar-width,244px); right:0; bottom:0;
+    max-width:calc(1180px + 84px); margin:0 auto; padding:12px 42px calc(12px + env(safe-area-inset-bottom,0px));
+    align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; min-height:62px;
+    border-top:1px solid rgba(255,255,255,.07); background:var(--t-modal-bg,linear-gradient(135deg,rgba(10,15,24,.97),rgba(19,26,33,.98)));
+    backdrop-filter:blur(16px); box-shadow:0 -10px 28px rgba(0,0,0,.16);
+  }
+  #libraryPage .library-footer::before { content:""; position:absolute; left:0; right:0; top:-14px; height:14px; background:linear-gradient(180deg,transparent,rgba(10,15,24,.72)); pointer-events:none; }
+  .app.sidebar-hidden #libraryPage .library-footer { left:0; }
+  .app-version-button { align-self:flex-start; border:0; background:transparent; color:var(--t-muted,#94a3b8); font:inherit; font-size:10px; letter-spacing:.5px; text-align:left; cursor:pointer; padding:3px 12px 8px; opacity:.8; }
+  .app-version-button:hover, .app-version-button:focus-visible { color:var(--t-accent,#38bdf8); opacity:1; outline:none; }
+  .version-history-overlay { display:none; position:fixed; inset:0; z-index:100020; align-items:center; justify-content:center; padding:20px; background:rgba(3,7,12,.72); backdrop-filter:blur(9px); }
+  .version-history-overlay.show { display:flex; }
+  .version-history-modal { width:min(560px,calc(100vw - 32px)); max-height:min(76vh,680px); overflow:auto; border:1px solid var(--t-card-border,#496073); border-radius:16px; background:var(--t-modal-bg,linear-gradient(145deg,#25313d,#1a232c 60%,#131a21)); color:var(--t-ink,#f1f5f9); box-shadow:0 26px 90px rgba(0,0,0,.72); }
+  .version-history-head { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 22px 15px; border-bottom:1px solid var(--t-line,rgba(255,255,255,.14)); }
+  .version-history-head .eyebrow { margin:0 0 5px; }
+  .version-history-head h2 { margin:0; font-size:20px; letter-spacing:-.3px; }
+  .version-history-list { display:grid; gap:12px; padding:16px; }
+  .version-entry { border:1px solid var(--t-card-border,#496073); border-radius:12px; background:var(--t-card-bg,rgba(30,41,59,.52)); padding:14px 16px; }
+  .version-entry-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:8px; }
+  .version-entry-head strong { color:var(--t-accent,#38bdf8); font-size:14px; }
+  .version-current { color:var(--t-muted,#94a3b8); font-size:10px; text-transform:uppercase; letter-spacing:.8px; }
+  .version-entry p { margin:6px 0 0; font-size:12px; line-height:1.5; color:var(--t-muted,#cbd5e1); }
+  .version-entry p b { color:var(--t-ink,#f1f5f9); }
+  @media(max-width:900px) { #libraryPage .library-footer { max-width:none; padding-left:24px; padding-right:24px; } }
+  @media(max-width:590px) { #libraryPage { padding-bottom:100px; } #libraryPage .library-footer { left:0; max-width:none; padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px)); gap:8px; } #libraryFooterNote { display:none; } #paginationBar { justify-content:center; width:100%; } }
+</style>
 </head>
-<body>
-<div id="lsBoot" aria-hidden="true"></div><script>(function(){try{var S={default:'#0a0f18',v1:'#130f1c',v2:'#161f26',v3:'#090a0c',v4:'#0e090b',v5:'#150e27',v6:'#141909',v7:'#1b120b',v8:'#0b152c',v9:'#121722',v10:'#181c2b',v11:'#fdf8fd'};var id=localStorage.getItem('stillSane.uiThemeV2')||'default';var el=document.getElementById('lsBoot');if(el)el.style.background=S[id]||'#0a0f18';}catch(e){}})();</script>
+<body class="app-startup-blocked">
+<div id="lsBoot" aria-hidden="true"></div><script>(function(){try{var S={default:'#0a0f18',v1:'#130f1c',v2:'#161f26',v3:'#090a0c',v4:'#0e090b',v5:'#150e27',v6:'#141909',v7:'#1b120b',v8:'#0b152c',v9:'#121722',v10:'#181c2b',v11:'#fdf8fd'};var id=localStorage.getItem('stillSane.uiThemeV2')||'default';if(!Object.prototype.hasOwnProperty.call(S,id))id='default';var el=document.getElementById('lsBoot');if(el)el.style.background=S[id];if(document.body&&id!=='default')document.body.setAttribute('data-theme',id);}catch(e){}})();</script>
 <div class="app">
 <aside class="sidebar">
   <div class="brand" id="sidebarBrandHeader"><span class="logo" id="sidebarBrandLogo"><svg viewBox="0 0 24 24" fill="none" stroke="url(#evilGrad5)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="evilGrad5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:var(--t-logo-c1,#38bdf8)"/><stop offset="50%" style="stop-color:var(--t-logo-c2,#818cf8)"/><stop offset="100%" style="stop-color:var(--t-logo-c3,#ec4899)"/></linearGradient></defs><g class="imp-mini-face" id="sidebarBrandImpFace" style="transform-origin:12px 12px"><path d="M5.8 5.8 5.5 8 10.6 10.2M18.2 5.8 18.5 8 13.4 10.2"/><g class="imp-mini-eyes" id="sidebarBrandImpEyes" style="transform-origin:12px 11.6px"><circle cx="8.3" cy="11.6" r="1.35" fill="url(#evilGrad5)" stroke="none"/><circle cx="15.7" cy="11.6" r="1.35" fill="url(#evilGrad5)" stroke="none"/></g><path d="M6.4 14.3Q12 19.5 17.6 14.3"/></g></svg></span><span class="brand-name" id="sidebarBrandName" data-text="In[st]Sanity"><span class="brand-part-in">In</span><span class="brand-part-bracket" id="sidebarBrandBracket"><span class="br-char">[</span><span class="st-core">st</span><span class="br-char">]</span></span><span class="brand-part-sanity">Sanity</span></span><button class="icon-btn brand-collapse" id="railToggle" title="Hide sidebar" aria-label="Hide sidebar" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 9l-3 3 3 3"/></svg></button></div>
@@ -495,7 +527,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <button class="nav active" id="libraryNav" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Saved posts</button>
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
-  <div class="side-bottom"><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
+  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.1; open version history" title="Click to view what changed in each version">v.1.1</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
   <div class="sidebar-resize" id="sidebarResize" role="separator" aria-label="Resize sidebar" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="360" aria-valuenow="244" tabindex="0" onpointerdown="startSidebarResize(event)" onkeydown="keyboardSidebarResize(event)"></div>
 </aside>
 <main>
@@ -503,9 +535,9 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <header class="topbar"><div class="crumb-actions"><button class="icon-btn sidebar-restore" id="sidebarRestore" title="Show sidebar" aria-label="Show sidebar" onclick="toggleSidebar()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M12 9l3 3-3 3"/></svg></button><button class="icon-btn home-nav" title="Go to Saved posts" aria-label="Go to Saved posts" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9.5V21h14V9.5M9 21v-7h6v7"/></svg></button><div class="crumb"><b id="crumbText">Saved posts</b> <span id="crumbSub">/ Your Instagram posts</span></div></div><div class="top-actions"><button class="icon-btn" id="topRefreshBtn" title="Restart app" aria-label="Restart app" onclick="restartApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button><button class="icon-btn" title="Settings" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg></button><button class="login-btn" id="topLoginBtn" title="Log in with built-in Instagram browser" onclick="openIgBrowserModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg><span id="topLoginBtnLabel">Log in</span></button></div></header>
   <section class="content" id="libraryPage">
     <div class="heading-row"><div><div class="eyebrow">Your collection</div><h1>Choose your posts</h1><p>Open a post to choose individual photos for your collection.</p></div></div>
-    <div class="toolbar"><div class="filters"><button class="filter active" onclick="setFilter(this,'all')">All posts</button><button class="filter" id="selectedFilter" onclick="setFilter(this,'selected')">Selected (<span id="selectedPostCount">0</span>)</button><button class="filter" id="librarySourceToggleBtn" data-role="source-toggle" onclick="toggleSourceBadges()" title="Show or hide the Direct / API source mark on every post">Hide source</button><span id="srcStatusNote" class="src-status-note" title="Source labels are resolved as posts are viewed"></span><button id="uploadJsonToolbarBtn" class="primary download-toolbar" onclick="openUploadJsonModal()"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Upload JSON</button><button id="downloadBtn" class="primary download-toolbar" onclick="downloadSelected()" style="display:none;opacity:.45" disabled aria-disabled="true"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</button></div><div class="toolbar-right"><div class="sort-control"><label id="sortPostsLabel" onclick="toggleSortMenu(event)">Sort by:</label><input type="hidden" id="sortPosts" value="newest"><div class="sort-dropdown" id="sortDropdown"><button type="button" class="sort-trigger" id="sortTriggerBtn" aria-haspopup="listbox" aria-expanded="false" onclick="toggleSortMenu(event)"><span id="sortTriggerLabel">↓ Newest</span><svg class="sort-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="sort-menu" id="sortMenu" role="listbox" aria-labelledby="sortPostsLabel"><button type="button" class="sort-option active" data-value="newest" role="option" aria-selected="true" onclick="selectSortOption('newest','↓ Newest',event)"><span>↓ Newest</span><span class="sort-opt-dot"></span></button><button type="button" class="sort-option" data-value="oldest" role="option" aria-selected="false" onclick="selectSortOption('oldest','↑ Oldest',event)"><span>↑ Oldest</span><span class="sort-opt-dot"></span></button><button type="button" class="sort-option" data-value="likes" role="option" aria-selected="false" onclick="selectSortOption('likes','♡ Most liked',event)"><span>♡ Most liked</span><span class="sort-opt-dot"></span></button></div></div></div><div class="toolbar-search-row"><label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search" placeholder="Search posts..." oninput="filterSearch()"></label></div></div></div>
+    <div class="toolbar"><div class="filters"><button class="filter active" onclick="setFilter(this,'all')">All posts</button><button class="filter" id="selectedFilter" onclick="setFilter(this,'selected')">Selected (<span id="selectedPostCount">0</span>)</button><button class="filter" id="librarySourceToggleBtn" data-role="source-toggle" onclick="toggleSourceBadges()" title="Show or hide the Direct / API source mark on every post">Hide source</button><span id="srcStatusNote" class="src-status-note" title="Source labels are resolved as posts are viewed"></span><button id="uploadJsonToolbarBtn" class="primary download-toolbar" onclick="openUploadJsonModal()"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Upload JSON</button><button id="downloadBtn" class="primary download-toolbar" onclick="downloadSelected()" style="display:none;opacity:.45" disabled aria-disabled="true"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</button><button id="openDownloadFolderBtn" class="outline download-toolbar" onclick="openDownloadFolder()" style="display:none" title="Open the folder where downloaded photos are saved"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg>Open folder</button></div><div class="toolbar-right"><div class="sort-control"><label id="sortPostsLabel" onclick="toggleSortMenu(event)">Sort by:</label><input type="hidden" id="sortPosts" value="newest"><div class="sort-dropdown" id="sortDropdown"><button type="button" class="sort-trigger" id="sortTriggerBtn" aria-haspopup="listbox" aria-expanded="false" onclick="toggleSortMenu(event)"><span id="sortTriggerLabel">↓ Newest</span><svg class="sort-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="sort-menu" id="sortMenu" role="listbox" aria-labelledby="sortPostsLabel"><button type="button" class="sort-option active" data-value="newest" role="option" aria-selected="true" onclick="selectSortOption('newest','↓ Newest',event)"><span>↓ Newest</span><span class="sort-opt-dot"></span></button><button type="button" class="sort-option" data-value="oldest" role="option" aria-selected="false" onclick="selectSortOption('oldest','↑ Oldest',event)"><span>↑ Oldest</span><span class="sort-opt-dot"></span></button><button type="button" class="sort-option" data-value="likes" role="option" aria-selected="false" onclick="selectSortOption('likes','♡ Most liked',event)"><span>♡ Most liked</span><span class="sort-opt-dot"></span></button></div></div></div><div class="toolbar-search-row"><label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search" placeholder="Search posts..." oninput="filterSearch()"></label></div></div></div>
     <div class="grid" id="postGrid"></div>
-    <div class="library-footer"><span id="libraryFooterNote"></span><div class="pagination" id="paginationBar"></div></div>
+    <div class="library-footer" id="libraryFooter"><span id="libraryFooterNote"></span><div class="pagination" id="paginationBar"></div></div>
   </section>
   <section class="content" id="saveUrlPage" style="display:none">
     <div class="heading-row"><div><div class="eyebrow">Direct link</div><h1>Save via URL</h1><p>Paste an Instagram post or reel URL to open its photos and videos right here in this tab.</p></div></div>
@@ -544,7 +576,6 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
           </div></div>
           <div class="setting-body"><label class="field-label" for="jsonFileSummary">JSON file</label><div class="input-row"><input class="text-input" id="jsonFileSummary" value="No JSON file selected" readonly><button class="primary" id="jsonUploadBtn" onclick="document.getElementById('postJsonFile').click()">Choose JSON…</button><input id="postJsonFile" type="file" accept=".json,application/json" hidden onchange="importPostsFromJson(event)"></div><div class="json-last-row" id="jsonLastRow" hidden><button class="outline" id="jsonUseLastBtn" onclick="useLastUploadedJson()" title="Load the JSON file you uploaded last time"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span id="jsonUseLastLabel">Use last uploaded JSON</span></button><span class="json-last-meta" id="jsonLastMeta"></span><button class="json-last-forget" id="jsonLastForgetBtn" onclick="forgetLastUploadedJson()" title="Stop remembering this file">Forget</button></div><p class="hint" id="jsonImportHint">Looks through each element's <code>label_values</code> for a label named <code>URL</code>, copies its <code>value</code>, and creates a Library cell for every post.</p></div>
         </div>
-        <div class="save-row"><button class="primary" onclick="saveSettings()">Save settings</button></div>
       </div>
       <div class="settings-tab-panel" id="settings-ui" role="tabpanel">
         <div class="settings-card collapsed">
@@ -747,11 +778,16 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
           </div></div>
           <div class="setting-body"><label class="field-label" for="saveFolder">Download location</label><div class="folder-row"><input class="text-input" id="saveFolder" value="~/Pictures/Instagram" readonly><button class="outline" onclick="chooseFolder()">Browse…</button></div></div>
         </div>
-        <div class="save-row"><button class="primary" onclick="saveSettings()">Save settings</button></div>
       </div>
     </div>
   </section>
 </main></div>
+<div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
+  <section class="version-history-modal">
+    <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
+    <div class="version-history-list" id="versionHistoryList"></div>
+  </section>
+</div>
 <div class="status" id="toast">Done</div>
 <div class="detail-overlay" id="postDetail" onclick="if(event.target===this)closePost()"><svg class="post-peek-svg post-peek-behind" fill="none" id="postPeekBehind" aria-hidden="true"></svg><section class="post-modal"><header class="detail-head"><div class="detail-heading"><div class="eyebrow">Instagram post</div><span class="detail-meta-label">Caption</span><h2 id="detailTitle">Post title</h2><div class="detail-meta-list"><div class="detail-meta-row"><span class="detail-meta-label">Account</span><span class="detail-meta-value" id="detailAccount">—</span></div><div class="detail-meta-row"><span class="detail-meta-label">Posted</span><span class="detail-meta-value" id="detailMeta">—</span></div></div></div><div class="detail-actions"><button class="outline" id="detailSourceToggleBtn" data-role="source-toggle" onclick="toggleSourceBadges()" title="Show or hide the Direct / API source mark on each photo" style="height:38px;white-space:nowrap">Hide source</button><button class="primary detail-select-all" id="selectAllButton" onclick="toggleSelectAll()">Select all photos</button><button class="icon-btn" onclick="closePost()" aria-label="Close">✕</button></div></header><div class="post-url-bar"><div class="post-url-input" onclick="copyPostUrlInput(document.getElementById('detailUrl'))" title="Click to copy post URL"><span id="detailUrlLabel">POST URL</span><input id="detailUrl" readonly aria-label="Instagram post URL" title="Click to copy post URL" onclick="event.stopPropagation();copyPostUrlInput(this)"></div><button class="outline open-browser" onclick="openCurrentPostInBuiltInBrowser()" style="height:36px">🌐 &nbsp; Open in IG Browser</button><button class="primary open-browser" onclick="openCurrentPost()">↗ &nbsp; Open in Browser</button></div><div class="detail-grid" id="detailGrid"></div><footer class="detail-foot"><span><strong id="detailSelected">0</strong> photos selected in this post</span><button class="primary detail-done" onclick="closePost()">Done</button></footer></section><svg class="post-peek-svg post-peek-front" fill="none" id="postPeekFront" aria-hidden="true"></svg></div>
 <div class="photo-fullsize-overlay" id="photoFullSizeModal" onclick="if(event.target===this)closePhotoFullSize()" role="dialog" aria-modal="true" aria-label="Full size photo"><div class="photo-fullsize-inner"><div class="photo-fullsize-bar"><span id="photoFullSizeLabel">Photo</span><div style="display:flex;gap:8px;align-items:center"><a id="photoFullSizeExternal" class="primary open-browser" href="#" target="_blank" rel="noopener noreferrer" style="height:37px;text-decoration:none;display:none">↗ &nbsp; Open original</a><button class="icon-btn" onclick="closePhotoFullSize()" aria-label="Close full size photo">✕</button></div></div><div class="photo-fullsize-media" id="photoFullSizeMedia"></div></div></div>
@@ -1192,7 +1228,7 @@ function buildPostMetaHtml(post,badgeSummary,suffix){
 function formatMediaBadge(p){const {photoCount,videoCount}=getPostMediaCounts(p);const parts=[];if(photoCount>0)parts.push(`▧ ${photoCount} photo${photoCount===1?'':'s'}`);if(videoCount>0)parts.push(`▶ ${videoCount} video${videoCount===1?'':'s'}`);return parts.length?parts.join(' · '):'▧ 1 photo'}
 const MINI_CHECKMARK_SVG='<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:12px!important;height:12px!important;display:block;flex-shrink:0"><path d="M4.6 12.4c-.5-.5-.5-1.3 0-1.8.5-.5 1.4-.5 1.9 0l3.2 2.9c3.1-3.4 6.4-6.3 9.8-8.6.5-.3 1.1.2.8.8-2.6 3.9-5.8 7.8-9.7 11.7-.6.6-1.5.6-2.1 0L4.6 12.4z"/></svg>';
 function buildCardHtml(p,idx){const chosen=getPostSelectedCount(p);const badgeText=formatMediaBadge(p);const coverKey=getCardCoverKey(p);return `<article class="card ${chosen?'selected':''} ${throwLandedPostIndices.has(String(idx))?'card-throw-landed':''}" data-post-index="${idx}" data-cover-key="${escapeHtml(coverKey)}" onclick="openPost(${idx})" oncontextmenu="event.preventDefault();selectAllPostPhotos(${idx})"><div class="photo"><div class="photo-media" style="width:100%;height:100%">${renderCardCoverMarkup(p)}</div><span class="selected-mark" style="display:${chosen?'inline-flex':'none'}">${MINI_CHECKMARK_SVG}<span>${chosen} picked</span></span><span class="post-count">${badgeText}</span><span class="src-badge card-src-badge" data-role="src-badge" data-kind="unknown" title="Where the media came from: Direct = read from Instagram's own HTML, API = save-free.net had to supply it, Mixed = both (or photos + videos)">—</span></div><div class="card-info"><div class="card-meta-row"><span class="detail-meta-label card-meta-label">Account</span><span class="detail-meta-value card-meta-value card-account" title="${escapeHtml(buildPostAccountText(p))}">${escapeHtml(buildPostAccountText(p))}</span></div><div class="card-meta-row"><span class="detail-meta-label card-meta-label">Posted</span><span class="detail-meta-value card-meta-value card-posted" title="${escapeHtml(buildPostMetaText(p,'',''))}">${buildPostMetaHtml(p,'','')}</span></div></div></article>`}
-function updateToolbarCounts(){const selPosts=countSelectedPosts();const selTotal=countSelected();const spc=document.getElementById('selectedPostCount');if(spc)spc.textContent=selPosts;const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const upBtn=document.getElementById('uploadJsonToolbarBtn');if(upBtn)upBtn.style.display=hasJsonLoaded?'none':'inline-flex';const b=document.getElementById('downloadBtn');if(b){b.style.display=hasJsonLoaded?'inline-flex':'none';const canDownload=hasJsonLoaded&&selTotal>0;b.disabled=!canDownload;b.style.opacity=canDownload?'1':'.45';b.style.cursor=canDownload?'pointer':'not-allowed';b.style.pointerEvents=canDownload?'auto':'none';b.setAttribute('aria-disabled',canDownload?'false':'true')}}
+function updateToolbarCounts(){const selPosts=countSelectedPosts();const selTotal=countSelected();const spc=document.getElementById('selectedPostCount');if(spc)spc.textContent=selPosts;const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const upBtn=document.getElementById('uploadJsonToolbarBtn');if(upBtn)upBtn.style.display=hasJsonLoaded?'none':'inline-flex';const b=document.getElementById('downloadBtn');if(b){b.style.display=hasJsonLoaded?'inline-flex':'none';const canDownload=hasJsonLoaded&&selTotal>0;b.disabled=!canDownload;b.style.opacity=canDownload?'1':'.45';b.style.cursor=canDownload?'pointer':'not-allowed';b.style.pointerEvents=canDownload?'auto':'none';b.setAttribute('aria-disabled',canDownload?'false':'true')}const openFolderBtn=document.getElementById('openDownloadFolderBtn');if(openFolderBtn)openFolderBtn.style.display=hasJsonLoaded?'inline-flex':'none'}
 function updateCardInDom(idx){const p=posts[idx];if(!p)return;p._idx=idx;updateToolbarCounts();if(filter==='selected'){render();return}const card=document.querySelector(`#postGrid article.card[data-post-index="${idx}"]`);if(!card)return;const chosen=getPostSelectedCount(p);card.classList.toggle('selected',chosen>0);const coverKey=getCardCoverKey(p);if(card.dataset.coverKey!==coverKey){card.dataset.coverKey=coverKey;const mediaEl=card.querySelector('.photo-media');if(mediaEl)mediaEl.innerHTML=renderCardCoverMarkup(p)}const selMark=card.querySelector('.selected-mark');if(selMark){selMark.style.display=chosen?'inline-flex':'none';if(chosen)selMark.innerHTML=`${MINI_CHECKMARK_SVG}<span>${chosen} picked</span>`}const countEl=card.querySelector('.post-count');if(countEl)countEl.textContent=formatMediaBadge(p);const cardAcct=card.querySelector('.card-account');if(cardAcct){const at=buildPostAccountText(p);cardAcct.textContent=at;cardAcct.title=at}const cardPosted=card.querySelector('.card-posted');if(cardPosted){const pt=buildPostMetaText(p,'','');cardPosted.innerHTML=buildPostMetaHtml(p,'','');cardPosted.title=pt}updateCardSrcBadge(idx)}
 function buildLibraryEmptyState(hasJsonLoaded){
   if(!hasJsonLoaded)return '<div class="empty">No saved posts loaded yet. Click <b>Upload JSON</b> above to import your Instagram posts.</div>';
@@ -1202,7 +1238,7 @@ function buildLibraryEmptyState(hasJsonLoaded){
   if(query&&posts.some(post=>needsOwnerResolution(post)))return '<div class="empty">No matching posts yet. Account names are not fetched at startup. <button class="outline" style="margin-top:12px" onclick="startBackgroundAllPostsIndexing()">Search account names across all posts</button></div>';
   return '<div class="empty">No posts found across your list. Try a different search.</div>';
 }
-function render(){const list=getFilteredSortedPosts();const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const totalFiltered=list.length;const totalPages=Math.max(1,Math.ceil(totalFiltered/PAGE_SIZE));if(currentPage>totalPages)currentPage=totalPages;if(currentPage<1)currentPage=1;const startIdx=(currentPage-1)*PAGE_SIZE;const pageItems=list.slice(startIdx,startIdx+PAGE_SIZE);document.getElementById('postGrid').innerHTML=pageItems.length?pageItems.map(p=>buildCardHtml(p,p._idx)).join(''):buildLibraryEmptyState(hasJsonLoaded);if(typeof updateAllCardSrcBadges==='function')updateAllCardSrcBadges();if(typeof updateSrcStatusNote==='function')updateSrcStatusNote();const pag=document.getElementById('paginationBar');if(pag)pag.innerHTML=hasJsonLoaded?buildPaginationHtml(totalFiltered,totalPages,startIdx):'';const footer=document.getElementById('libraryFooterNote');if(footer&&!hasJsonLoaded)footer.textContent='';updateToolbarCounts();updateAllCardSrcBadges()}
+function render(){const list=getFilteredSortedPosts();const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const footerBar=document.getElementById('libraryFooter');if(footerBar)footerBar.style.display=hasJsonLoaded?'flex':'none';const totalFiltered=list.length;const totalPages=Math.max(1,Math.ceil(totalFiltered/PAGE_SIZE));if(currentPage>totalPages)currentPage=totalPages;if(currentPage<1)currentPage=1;const startIdx=(currentPage-1)*PAGE_SIZE;const pageItems=list.slice(startIdx,startIdx+PAGE_SIZE);document.getElementById('postGrid').innerHTML=pageItems.length?pageItems.map(p=>buildCardHtml(p,p._idx)).join(''):buildLibraryEmptyState(hasJsonLoaded);if(typeof updateAllCardSrcBadges==='function')updateAllCardSrcBadges();if(typeof updateSrcStatusNote==='function')updateSrcStatusNote();const pag=document.getElementById('paginationBar');if(pag)pag.innerHTML=hasJsonLoaded?buildPaginationHtml(totalFiltered,totalPages,startIdx):'';const footer=document.getElementById('libraryFooterNote');if(footer&&!hasJsonLoaded)footer.textContent='';updateToolbarCounts();updateAllCardSrcBadges()}
 function isVideoCdnUrl(url){if(!url)return false;const u=String(url);if(u.includes('.mp4')||u.includes('/o1/v/t'))return true;const m=u.match(/[?&]efg=([^&"'\s]+)/);if(m){try{const raw=decodeURIComponent(m[1]);if(/dmlkZW8|LnZpZGVv|X3ZpZGVv|Q0xJUFM|IkNMSVBT/.test(raw))return true;const b64=raw.replace(/-/g,'+').replace(/_/g,'/');const dec=atob(b64+'='.repeat((4-b64.length%4)%4)).toLowerCase();if(dec.includes('video')||dec.includes('clips.'))return true}catch(_){}}return false}
 function isVideoHtml(html){if(!html)return false;return /PlayButtonSprite|WatchOnInstagram|EmbeddedMediaVideo|property=["']og:video|content=["']video|Instagram\s+reel|instagram\.com\/(?:[^/"'?#]+\/)?(?:reel|reels|tv)\//i.test(String(html))}
 function hasOnlyUnresolvedMediaUrl(post){if(!post)return true;if(typeof post.coverArtIndex==='number'&&!post.coverUrl)return false;const u=String(post.coverUrl||post.pictures?.[0]?.rawUrl||post.pictures?.[0]?.imgUrl||'');return !u||u.includes('/media/?size=')}
@@ -2595,7 +2631,19 @@ async function useLastUploadedJson(){
   await waitForImpButtonClickFx();
   try{const n=await applyImportedJsonText(rec.name,rec.text,{hash:rec.hash||'',savedAt:rec.savedAt});if(!n){reportJsonImportError(rec.name,'empty');return}}catch(_){reportJsonImportError(rec.name,'invalid')}}
 function refreshLastJsonUi(){const rec=lastJsonMeta||null;const count=Number(rec&&rec.postCount)||0;const isActive=Boolean(rec&&activeImportFileName&&rec.name===activeImportFileName);const ago=rec?jsonTimeAgo(rec.savedAt):'';const row=document.getElementById('jsonLastRow');const metaEl=document.getElementById('jsonLastMeta');const label=document.getElementById('jsonUseLastLabel');if(row)row.hidden=!rec;if(metaEl)metaEl.textContent=rec?`${rec.name} · ${count} post${count===1?'':'s'} · ${jsonBytesLabel(rec.size)} · uploaded ${ago}`:'';if(label)label.textContent=isActive?'Reload this file':'Use last uploaded JSON';const or=document.getElementById('uploadJsonOr');const box=document.getElementById('uploadJsonRecent');const nm=document.getElementById('uploadJsonRecentName');const mm=document.getElementById('uploadJsonRecentMeta');const rb=document.getElementById('uploadJsonRecentBtn');if(or)or.hidden=!rec;if(box)box.hidden=!rec;if(nm)nm.textContent=rec?rec.name:'';if(mm)mm.textContent=rec?`${count} post${count===1?'':'s'} · ${jsonBytesLabel(rec.size)} · uploaded ${ago}`:'';if(rb)rb.textContent=isActive?'Reload':'Use it'}
-async function importPostsFromJson(event){const file=event.target.files?.[0];event.target.value='';if(!file)return;await processImportedJsonFile(file)}const SAVE_FOLDER_KEY='stillSane.downloadFolderV1';function persistDownloadFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(SAVE_FOLDER_KEY,path.trim())}catch(_){}}function loadDownloadFolder(){const input=document.getElementById('saveFolder');if(!input)return;try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())input.value=saved}catch(_){}}loadDownloadFolder();async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}const LS_BOOT_BG={default:'#0a0f18',v1:'#130f1c',v2:'#161f26',v3:'#090a0c',v4:'#0e090b',v5:'#150e27',v6:'#141909',v7:'#1b120b',v8:'#0b152c',v9:'#121722',v10:'#181c2b',v11:'#fdf8fd'};
+async function importPostsFromJson(event){const file=event.target.files?.[0];event.target.value='';if(!file)return;await processImportedJsonFile(file)}const SAVE_FOLDER_KEY='stillSane.downloadFolderV1';function persistDownloadFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(SAVE_FOLDER_KEY,path.trim())}catch(_){}}function loadDownloadFolder(){const input=document.getElementById('saveFolder');if(!input)return;try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())input.value=saved}catch(_){}}async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
+async function openDownloadFolder(){
+  const folder=String(document.getElementById('saveFolder')?.value||'~/Pictures/Instagram').trim();
+  persistDownloadFolder(folder);
+  let data=null;
+  for(const endpoint of getApiUrls('/api/open-download-folder')){
+    data=await fetchEndpointJson(endpoint,30000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder})});
+    if(data)break;
+  }
+  if(data?.ok){toast('Opened the saved photos folder in File Explorer');return}
+  toast(data?.error?'Could not open the saved photos folder':'Folder opening is available in the desktop app');
+}
+const LS_BOOT_BG={default:'#0a0f18',v1:'#130f1c',v2:'#161f26',v3:'#090a0c',v4:'#0e090b',v5:'#150e27',v6:'#141909',v7:'#1b120b',v8:'#0b152c',v9:'#121722',v10:'#181c2b',v11:'#fdf8fd'};
 let lsRestarting=false;
 function restartApp(){
   if(lsRestarting)return;
@@ -2620,7 +2668,7 @@ function restartApp(){
     try{history.go(0)}catch(errC){}
   },260);
 }
-function saveSettings(){persistDownloadFolder(document.getElementById('saveFolder')?.value||'~/Pictures/Instagram');flushAllUiSettings();toast('Settings are saved automatically — they are already stored on this device')}
+
 let igBrowserState={loggedIn:false,username:'',url:'https://www.instagram.com/accounts/login/',twoFactorRequired:false,twoFactorIdentifier:'',lastResolvedPost:null};
 function renderIgBrowserViewport(state={}){
   const wrap=document.getElementById('igBrowserViewportContent');
@@ -3658,7 +3706,7 @@ function resetAllAnimationSettings(){
     requestAnimationFrame(stepFacialExpressions);
   }
 
-  requestAnimationFrame(stepFacialExpressions);
+  window.startStickerFacialExpressionsLoop=()=>requestAnimationFrame(stepFacialExpressions);
 })();
 
   /* ============================================================
@@ -4318,7 +4366,7 @@ function setAppTheme(themeId,quiet=false){
     requestAnimationFrame(step);
   }
 
-  setTimeout(runBurst,600);
+  window.startBrandHeaderGlitchLoop=()=>setTimeout(runBurst,600);
 })();
 
 // Keeps every overlay-drawn Imp head (post-modal sneak-peek, Login/Browser modal top-border walk)
@@ -4351,6 +4399,7 @@ window.getImpOverlayHeadScale=function(){
   // 'n5': Counter-Rotating Hypno-Spiral Eyes & Corner Fang-Snarl (Candidate 5)
   const POST_PEEK_EXPR_POOL=['k1','k2','n1','n3','n4','n5'];
   let peekActive=false;
+  let peekLoopRunning=false;
   let peekStartTs=0;
   let currentSlotIdx=-1;
   let currentSideIdx=0;
@@ -4502,6 +4551,7 @@ window.getImpOverlayHeadScale=function(){
     peekActive=true;
     peekStartTs=performance.now();
     currentSlotIdx=-1;
+    if(!peekLoopRunning){peekLoopRunning=true;requestAnimationFrame(stepPostModalSneakPeek)}
   };
 
   window.stopPostModalSneakPeek=function(){
@@ -4516,7 +4566,13 @@ window.getImpOverlayHeadScale=function(){
     const overlay=document.getElementById('postDetail');
     const b=document.getElementById('postPeekBehind');
     const f=document.getElementById('postPeekFront');
-    if(!peekActive||!overlay||!overlay.classList.contains('show')||!stickerVisible||!stickerAnimEnabled||stickerOpacityPercent<=0){
+    if(!peekActive){
+      if(b&&b.innerHTML)b.innerHTML='';
+      if(f&&f.innerHTML)f.innerHTML='';
+      peekLoopRunning=false;
+      return;
+    }
+    if(!overlay||!overlay.classList.contains('show')||!stickerVisible||!stickerAnimEnabled||stickerOpacityPercent<=0){
       if(b&&b.innerHTML)b.innerHTML='';
       if(f&&f.innerHTML)f.innerHTML='';
       requestAnimationFrame(stepPostModalSneakPeek);
@@ -4606,7 +4662,6 @@ window.getImpOverlayHeadScale=function(){
     f.innerHTML=clawsHtml;
     requestAnimationFrame(stepPostModalSneakPeek);
   }
-  requestAnimationFrame(stepPostModalSneakPeek);
 })();
 
 
@@ -4619,6 +4674,7 @@ window.getImpOverlayHeadScale=function(){
   const SEGS_PER_HALF=3;
   const TOTAL_CYCLE_SEGS=SEGS_PER_HALF*2; // 0,1,2 = Left->Right; 3,4,5 = Right->Left
   let walkActive=false;
+  let walkLoopRunning=false;
   let walkStartTs=0;
   let activeSegCounter=-1;
   let currentMode=3; // 3 or 5
@@ -4638,6 +4694,7 @@ window.getImpOverlayHeadScale=function(){
     walkActive=true;
     walkStartTs=performance.now();
     activeSegCounter=-1;
+    if(!walkLoopRunning){walkLoopRunning=true;requestAnimationFrame(stepIgBrowserWalk)}
   };
 
   window.stopIgBrowserModalWalk=function(){
@@ -4652,7 +4709,13 @@ window.getImpOverlayHeadScale=function(){
     const overlay=document.getElementById('igBrowserModal');
     const b=document.getElementById('igPeekBehind');
     const f=document.getElementById('igPeekFront');
-    if(!walkActive||!overlay||!overlay.classList.contains('show')||!stickerVisible||!stickerAnimEnabled||stickerOpacityPercent<=0){
+    if(!walkActive){
+      if(b&&b.innerHTML)b.innerHTML='';
+      if(f&&f.innerHTML)f.innerHTML='';
+      walkLoopRunning=false;
+      return;
+    }
+    if(!overlay||!overlay.classList.contains('show')||!stickerVisible||!stickerAnimEnabled||stickerOpacityPercent<=0){
       if(b&&b.innerHTML)b.innerHTML='';
       if(f&&f.innerHTML)f.innerHTML='';
       requestAnimationFrame(stepIgBrowserWalk);
@@ -4756,18 +4819,48 @@ window.getImpOverlayHeadScale=function(){
 
     requestAnimationFrame(stepIgBrowserWalk);
   }
-  requestAnimationFrame(stepIgBrowserWalk);
 })();
 
-(function initSavedTheme(){
+function initializeSavedTheme(){
   try{
     const saved=localStorage.getItem('stillSane.uiThemeV2')||'default';
     setAppTheme(saved,true);
   }catch(_){
     setAppTheme('default',true);
   }
-})();
-initializeBackgroundSettings();render();restoreLibraryOnStartup();restoreUrlTabState();syncIgSessionState(false);initSourceBadges();applySavedUiPrefs();
+}
+const APP_VERSION='1.1';
+const VERSION_HISTORY=[
+  {version:'1.1',added:'Startup now waits for the loading screen to finish; page controls stay visible; added Open folder and clickable release notes.',removed:'Visible scrollbars and redundant Save settings buttons.',fixed:'The boot animation no longer competes with library restore and post requests; page navigation remains in reach while browsing.'},
+  {version:'1.0',added:'Initial version-tracking baseline.',removed:'No recorded removals.',fixed:'No recorded fixes before release notes began.'}
+];
+function renderVersionHistory(){
+  const label=document.getElementById('appVersionButton');
+  const list=document.getElementById('versionHistoryList');
+  if(label){label.textContent=`v.${APP_VERSION}`;label.setAttribute('aria-label',`Version ${APP_VERSION}; open version history`)}
+  if(list)list.innerHTML=VERSION_HISTORY.map((entry,index)=>`<article class="version-entry"><div class="version-entry-head"><strong>v.${escapeHtml(entry.version)}</strong>${index===0?'<span class="version-current">Current</span>':''}</div><p><b>Added:</b> ${escapeHtml(entry.added)}</p><p><b>Removed:</b> ${escapeHtml(entry.removed)}</p><p><b>Fixed:</b> ${escapeHtml(entry.fixed)}</p></article>`).join('');
+}
+function handleVersionHistoryKeydown(event){if(event.key==='Escape')closeVersionHistory()}
+function showVersionHistory(){const modal=document.getElementById('versionHistoryModal');if(!modal)return;renderVersionHistory();modal.classList.add('show');modal.setAttribute('aria-hidden','false');document.addEventListener('keydown',handleVersionHistoryKeydown);modal.querySelector('button')?.focus()}
+function closeVersionHistory(){const modal=document.getElementById('versionHistoryModal');if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true')}document.removeEventListener('keydown',handleVersionHistoryKeydown);document.getElementById('appVersionButton')?.focus()}
+function startAppAfterLoadingScreen(){
+  if(window.__instSanityAppStarted)return;
+  window.__instSanityAppStarted=true;
+  document.body.classList.remove('app-startup-blocked');
+  initializeSavedTheme();
+  renderVersionHistory();
+  initializeBackgroundSettings();
+  loadDownloadFolder();
+  render();
+  restoreLibraryOnStartup();
+  restoreUrlTabState();
+  syncIgSessionState(false);
+  initSourceBadges();
+  applySavedUiPrefs();
+  try{window.startStickerFacialExpressionsLoop?.()}catch(_){}
+  try{window.startBrandHeaderGlitchLoop?.()}catch(_){}
+}
+window.startAppAfterLoadingScreen=startAppAfterLoadingScreen;
 /* ---------------------------------------------------------------------
    Loading-screen sound setting.
    Browsers only allow audio after a user gesture, so this is best-effort:
@@ -5500,7 +5593,7 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
 (function initBootScreen(){
   'use strict';
   try{
-  if(window.__lsBootDone) return;
+  if(window.__lsBootDone){try{window.startAppAfterLoadingScreen?.()}catch(_){}return;}
   window.__lsBootDone = true;
 
   /* ---------- settings gates ---------- */
@@ -5517,6 +5610,7 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
     try{ if(appEl){ appEl.style.transform=''; appEl.style.willChange=''; appEl.classList.remove('ls-dragging'); } }catch(_){}
     try{ if(host && host.parentNode) host.parentNode.removeChild(host); }catch(_){}
     try{ var st=document.getElementById('lsBootStyle'); if(st && st.parentNode) st.parentNode.removeChild(st); }catch(_){}
+    try{ window.startAppAfterLoadingScreen?.(); }catch(_){}
   }
 
   /* the loading screens are switched off — straight into the app */
@@ -5524,7 +5618,7 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
 
   /* the user hid the imp — no imp boot screen at all */
   try{ if(typeof stickerVisible !== 'undefined' && stickerVisible === false){ lsTeardown(); return; } }catch(_){}
-  if(!host){ return; }
+  if(!host){ try{window.startAppAfterLoadingScreen?.()}catch(_){} return; }
 
   /* ---------- helpers: colours ---------- */
   var LS_SOLID={default:'#0a0f18',v1:'#130f1c',v2:'#161f26',v3:'#090a0c',v4:'#0e090b',v5:'#150e27',
@@ -6702,6 +6796,7 @@ function v4(sp){
   setTimeout(finish, 6000);        // hard stop even if rAF is throttled
   }catch(e){
     try{ var h=document.getElementById('lsBoot'); if(h&&h.parentNode) h.parentNode.removeChild(h); }catch(_){}
+    try{ window.startAppAfterLoadingScreen?.(); }catch(_){}
   }
 })();
 </script>

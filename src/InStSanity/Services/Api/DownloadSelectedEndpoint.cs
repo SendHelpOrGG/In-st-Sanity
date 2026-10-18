@@ -535,7 +535,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		throw new DownloadFailureException("filename_conflict");
 	}
 
-	static string ResolveFolder(string? requestedFolder)
+	internal static string ResolveFolder(string? requestedFolder)
 	{
 		var path = string.IsNullOrWhiteSpace(requestedFolder)
 			? "~/Pictures/Instagram"

@@ -138,6 +138,10 @@ try {
         throw "The selected-photo download route is missing from the running app."
     }
 
+    if ($health.endpoints -notcontains '/api/open-download-folder') {
+        throw "The Open folder route is missing from the running app."
+    }
+
     if (-not $health.webRootExists) {
         throw "The app is running but the web layer was not found next to the executable (looked in $($health.webRoot))."
     }
@@ -149,7 +153,7 @@ try {
 
     # String.Contains, not -like: the marker contains brackets, which PowerShell wildcards
     # would read as a character class.
-    foreach ($marker in @('In[st]Sanity', 'lsBoot')) {
+    foreach ($marker in @('In[st]Sanity', 'lsBoot', 'app-startup-blocked', 'appVersionButton', 'openDownloadFolderBtn')) {
         if (-not $document.Content.Contains($marker)) {
             throw "The served document does not contain the expected marker '$marker'."
         }
