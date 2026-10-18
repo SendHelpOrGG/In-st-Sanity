@@ -548,7 +548,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <button class="nav active" id="libraryNav" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Saved posts</button>
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
-  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.6; open version history" title="Click to view what changed in each version">v.1.6</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
+  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.7; open version history" title="Click to view what changed in each version">v.1.7</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
   <div class="sidebar-resize" id="sidebarResize" role="separator" aria-label="Resize sidebar" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="360" aria-valuenow="244" tabindex="0" onpointerdown="startSidebarResize(event)" onkeydown="keyboardSidebarResize(event)"></div>
 </aside>
 <main>
@@ -665,7 +665,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
                 <span class="theme-active-dot"></span>
               </button>
               <button type="button" class="theme-option" data-theme-id="v11" onclick="setAppTheme('v11')">
-                <span class="theme-swatch" style="background:linear-gradient(135deg,#151A10,#C7B654,#8BA64E)"><span class="theme-swatch-side" style="background:linear-gradient(180deg,#20261A,#0D120A)"></span><span class="theme-swatch-main"><span class="theme-swatch-pill" style="background:linear-gradient(90deg,#A98D45,#8BA64E)"></span><span class="theme-swatch-dots"><span style="background:#D6C16D"></span><span style="background:#A9C46A"></span><span style="background:#8BA64E"></span></span></span></span>
+                <span class="theme-swatch" style="background:linear-gradient(150deg,#11170f,#1a2115 58%,#10150e)"><span class="theme-swatch-side" style="background:linear-gradient(180deg,#151a10,#0d120a)"></span><span class="theme-swatch-main"><span class="theme-swatch-pill" style="background:linear-gradient(90deg,#A98D45,#8BA64E)"></span><span class="theme-swatch-dots"><span style="background:#D6C16D"></span><span style="background:#A9C46A"></span></span></span></span>
                 <span class="theme-meta"><strong>11. Moss &amp; Brass</strong><small>Botanical Green &amp; Antique Gold</small></span>
                 <span class="theme-active-dot"></span>
               </button>
@@ -4843,8 +4843,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.6';
+const APP_VERSION='1.7';
 const VERSION_HISTORY=[
+  {version:'1.7',added:'No new features.',removed:'No theme-picker layout elements.',fixed:'Matched the Moss & Brass mini-icon to its dark moss surfaces and gold/green accents.'},
   {version:'1.6',added:'No new features.',removed:'No interface elements.',fixed:'Removed the wordmark gap and centered the source and folder icons in their buttons.'},
   {version:'1.5',added:'Moss & Brass, a botanical green and antique-gold theme.',removed:'The former Velvet Cloud/Pink & Pale Lilac-Sky theme 11.',fixed:'Kept saved v11 selections; matched its stickers, startup screen, and restart overlay to the new palette.'},
   {version:'1.4',added:'Icon-only source controls and a larger app wordmark; the sidebar toggle moves to the top bar.',removed:'Text labels inside source toggle buttons.',fixed:'Centered folder/source icons, kept Minimalist Studio page numbers legible on hover, and kept primary-button icons theme-matched.'},
