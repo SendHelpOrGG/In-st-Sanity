@@ -288,13 +288,14 @@ outage. That distinction is exactly what used to print *server unreachable* unde
 
 ```json
 {"ok":true,"port":8000,"url":"http://localhost:8000/?v=…",
- "endpoints":["/api/browse-folder","/api/cached-posts","/api/download-photo","/api/image",
-              "/api/resolve-batch","/api/resolve-owners","/api/resolve-post"],
+ "endpoints":["/api/browse-folder","/api/cached-posts","/api/download-photo","/api/download-selected",
+              "/api/image","/api/resolve-batch","/api/resolve-owners","/api/resolve-post"],
  "resolve":{"attempts":40,"resolved":37,"failed":3,"cached":37,"lastFailure":"http_429"}}
 ```
 
 - `/api/resolve-*` missing from `endpoints` → the executable is an older build.
 - `/api/browse-folder` is the Windows-owned native picker used by Settings; the static preview deliberately does not implement it.
+- `/api/download-selected` writes the selected photo payloads into the chosen folder; the static preview deliberately does not implement downloads.
 - `attempts: 0` after the library loads → the page never called resolve.
 - `lastFailure: "unreachable"`/`"timeout"` → Instagram is not reachable from that machine.
 - `lastFailure: "login_wall"` → Instagram refused the logged-out view; that is what the
@@ -374,10 +375,9 @@ change.
 
 ## What the patch does *not* fix
 
-The removed endpoints (`/api/resolve-post`, `/api/resolve-batch`, `/api/resolve-owners`,
-`/api/cached-posts`, `/api/download-selected`, `/api/save-imported-list`, `/api/browser/*`) currently
-answer `501 not_implemented`, which the app already handles: it shows its own source badges and
-fallback artwork. They are implemented in phases 2 and 3 of the plan.
+The static preview does not implement `/api/*`: the Python preview server returns `501` by design.
+In the Windows app, `/api/download-selected` and `/api/browse-folder` are native routes; the remaining
+unimplemented routes include `/api/save-imported-list` and `/api/browser/*`.
 
 ## Five JSON-devour cinematics
 

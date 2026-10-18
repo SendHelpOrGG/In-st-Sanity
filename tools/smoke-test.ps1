@@ -134,6 +134,10 @@ try {
         throw "The native folder picker route is missing from the running app."
     }
 
+    if ($health.endpoints -notcontains '/api/download-selected') {
+        throw "The selected-photo download route is missing from the running app."
+    }
+
     if (-not $health.webRootExists) {
         throw "The app is running but the web layer was not found next to the executable (looked in $($health.webRoot))."
     }
@@ -166,6 +170,52 @@ try {
     if ($api.StatusCode -ne 400) { throw "/api/image without a url returned $($api.StatusCode), expected 400." }
 
     Write-Detail "api       GET /api/image -> 400 ($($api.Content))"
+
+    Write-Step 'verifying a selected photo is written to disk'
+    $downloadFolder = Join-Path $env:TEMP "InStSanity-download-smoke-$([Guid]::NewGuid().ToString('N'))"
+    $pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/WMcAAAAASUVORK5CYII='
+    $downloadFile = Join-Path $downloadFolder 'smoke-image.png'
+
+    try {
+        $downloadRequest = @{
+            folder = $downloadFolder
+            items = @(@{
+                shortcode = 'smoke'
+                photoIndex = 0
+                filename = 'smoke-image.png'
+                rawUrl = ''
+                dataUri = "data:image/png;base64,$pngBase64"
+                svgMarkup = ''
+            })
+        } | ConvertTo-Json -Depth 8 -Compress
+
+        $downloadResult = Invoke-RestMethod `
+            -Uri "$baseUrl/api/download-selected" `
+            -Method Post `
+            -ContentType 'application/json' `
+            -Body $downloadRequest `
+            -TimeoutSec 60
+
+        if (-not $downloadResult.ok -or $downloadResult.savedCount -ne 1) {
+            throw "Download endpoint did not report one saved image: $($downloadResult | ConvertTo-Json -Compress)."
+        }
+
+        if (-not (Test-Path -LiteralPath $downloadFile)) {
+            throw "Download endpoint reported success but did not create $downloadFile."
+        }
+
+        $savedBytes = [System.IO.File]::ReadAllBytes($downloadFile)
+        if ([Convert]::ToBase64String($savedBytes) -ne $pngBase64) {
+            throw 'The saved image bytes do not match the submitted image.'
+        }
+
+        Write-Detail "download  POST /api/download-selected -> saved 1 image to $downloadFile"
+    }
+    finally {
+        if (Test-Path -LiteralPath $downloadFolder) {
+            Remove-Item -LiteralPath $downloadFolder -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
 
     Write-Step 'phase 1 passed' 'Green'
 }

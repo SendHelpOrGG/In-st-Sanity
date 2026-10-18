@@ -163,7 +163,7 @@ Every route the web app calls, as the JS actually uses it:
 | `/api/cached-posts` | GET | — | cached post records | JSON file in `%LOCALAPPDATA%\InStSanity\cache` |
 | `/api/image` | GET | `?url=<mediaUrl>` | image bytes | Streaming proxy with `Referer`/UA headers so Instagram CDN links resolve; caches to disk |
 | `/api/download-photo` | GET | `?url=<mediaUrl>` | file bytes | Same as `/api/image` with `Content-Disposition: attachment` |
-| `/api/download-selected` | POST | `{folder, items[]}` | `{ok, files:[{filename,…}]}` | **Native**: expand `~/…`, create folder, download each item (HTTP or reuse cache), write files, return the written paths. |
+| `/api/download-selected` | POST | `{folder, items[]}` | `{ok, savedCount, failedCount, files:[{filename,ok,error}]}` | **Native**: expand `~/…`, create folder, decode image data or fetch trusted Instagram media URLs (reusing cache), save each file, and report confirmed per-item results. |
 | `/api/browse-folder` | POST | — | `{ok, path}` or `{ok, cancelled}` | Opens the Windows `FolderPicker` owned by the MAUI window; returns the selected path to the settings UI. |
 | `/api/save-imported-list` | POST | imported list JSON | ok | Atomic write to the app data store (replaces browser-only persistence) |
 | `/api/browser/action` | POST | `{action:'navigate'\|'login'\|…, url, username, password}` | browser state (§ below) | Drives the **hidden WebView2** |
@@ -251,8 +251,8 @@ Implementation notes that came out of building it:
   readable from anywhere.
 
 ### Phase 2 — Files & downloads · `M`
-- `/api/image`, `/api/download-photo`, `/api/download-selected`, `/api/save-imported-list`, `/api/cached-posts`.
-- Native folder picker + path expansion (`~/Pictures/Instagram`), atomic JSON writes, disk cache.
+- `/api/image`, `/api/download-photo`, `/api/download-selected`, `/api/browse-folder`, `/api/save-imported-list`, `/api/cached-posts`.
+- Native folder picker + path expansion (`~/Pictures/Instagram`), selected-photo writes, atomic JSON writes, disk cache.
 - `DownloadStarting` sink for the one `<a download>` path; failures toast in the UI as today.
 - **Done when:** selecting posts and hitting Download writes real image files to the chosen folder
   and the UI reports the same per-file results it used to get from the backend.

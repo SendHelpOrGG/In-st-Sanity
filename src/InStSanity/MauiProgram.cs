@@ -46,6 +46,8 @@ public static class MauiProgram
 			"/api/download-photo",
 			asAttachment: true));
 
+		builder.Services.AddSingleton<IApiEndpoint, DownloadSelectedEndpoint>();
+
 		// The resolve routes are what turn an imported URL into a cover image, an owner,
 		// a caption and a carousel. SaveFreeClient is the fallback for posts Instagram
 		// refuses to serve logged out (ported from fetch_via_savefree in server.py). Without them every card keeps an empty coverUrl and
@@ -57,7 +59,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IApiEndpoint, CachedPostsEndpoint>();
 
 		// Routes that are not registered yet answer 501, which the web layer handles
-		// gracefully. Remaining phases: download-selected / save-imported-list / browser-*.
+		// gracefully. Remaining phases: save-imported-list / browser-*.
 
 		builder.Services.AddSingleton<LoopbackHost>();
 
