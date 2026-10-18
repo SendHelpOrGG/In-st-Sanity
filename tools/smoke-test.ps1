@@ -159,6 +159,12 @@ try {
         }
     }
 
+    foreach ($obsolete in @('Choose your posts', 'id="libraryFooterNote"', '</svg>Open folder</button>')) {
+        if ($document.Content.Contains($obsolete)) {
+            throw "The served document still contains obsolete library UI '$obsolete'."
+        }
+    }
+
     Write-Detail "document  GET / -> 200, $($document.RawContentLength) bytes, markers present"
 
     Write-Step 'checking range support (media playback depends on it)'
