@@ -153,7 +153,7 @@ try {
 
     # String.Contains, not -like: the marker contains brackets, which PowerShell wildcards
     # would read as a character class.
-    foreach ($marker in @('In[st]Sanity', 'lsBoot', 'app-startup-blocked', 'appVersionButton', 'openDownloadFolderBtn')) {
+    foreach ($marker in @('In[st]Sanity', 'lsBoot', 'app-startup-blocked', 'appVersionButton', 'openDownloadFolderBtn', 'startup-layout-v1-3', 'Version 1.3; open version history', 'body:not([data-theme]) #paginationBar .page-btn')) {
         if (-not $document.Content.Contains($marker)) {
             throw "The served document does not contain the expected marker '$marker'."
         }
