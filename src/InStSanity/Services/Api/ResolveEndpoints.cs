@@ -23,6 +23,7 @@ static class ResolveJson
 		photoCount = post.PhotoCount,
 		videoCount = post.VideoCount,
 		coverUrl = post.CoverUrl,
+		coverThumbnailUrl = post.CoverThumbnailUrl,
 		coverIsVideo = post.CoverIsVideo,
 		summaryOnly = true,
 		summaryResolved = post.SummaryResolved,

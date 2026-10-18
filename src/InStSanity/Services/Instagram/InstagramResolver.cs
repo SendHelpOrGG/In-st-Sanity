@@ -14,6 +14,9 @@ public sealed class ResolvedMedia
 	/// <summary>Best still image for the slide (a video's poster frame when it is a video).</summary>
 	public string ImgUrl { get; init; } = string.Empty;
 
+	/// <summary>Smaller image candidate for grid covers and video posters, when Instagram provides one.</summary>
+	public string ThumbnailUrl { get; init; } = string.Empty;
+
 	/// <summary>Same URL under the name the web layer reads first.</summary>
 	public string RawUrl { get; init; } = string.Empty;
 
@@ -60,6 +63,9 @@ public sealed class ResolvedPost
 	public int VideoCount { get; init; }
 
 	public string CoverUrl { get; init; } = string.Empty;
+
+	/// <summary>Smaller cover candidate used only in the library grid.</summary>
+	public string CoverThumbnailUrl { get; init; } = string.Empty;
 
 	public bool CoverIsVideo { get; init; }
 
@@ -571,10 +577,14 @@ public sealed class InstagramResolver
 			var other = fallback[index];
 			var image = page.ImgUrl.Length > 0 ? page.ImgUrl : other.ImgUrl;
 			var video = page.VideoUrl.Length > 0 ? page.VideoUrl : other.VideoUrl;
+			var thumbnail = page.ThumbnailUrl.Length > 0
+				? page.ThumbnailUrl
+				: (other.ThumbnailUrl.Length > 0 ? other.ThumbnailUrl : image);
 
 			merged.Add(new ResolvedMedia
 			{
 				ImgUrl = image,
+				ThumbnailUrl = thumbnail,
 				RawUrl = image,
 				IsVideo = page.IsVideo || other.IsVideo,
 				VideoUrl = video,
@@ -613,6 +623,9 @@ public sealed class InstagramResolver
 			PhotoCount = photoCount,
 			VideoCount = videoCount,
 			CoverUrl = cover?.ImgUrl ?? post?.CoverUrl ?? string.Empty,
+			CoverThumbnailUrl = cover?.ThumbnailUrl is { Length: > 0 } thumbnail
+				? thumbnail
+				: (post?.CoverThumbnailUrl ?? cover?.ImgUrl ?? post?.CoverUrl ?? string.Empty),
 			CoverIsVideo = cover?.IsVideo ?? post?.CoverIsVideo ?? false,
 			SummaryResolved = true,
 			FullResolved = pictures.Count > 0 &&
@@ -849,6 +862,7 @@ public sealed class InstagramResolver
 		foreach (var slide in slides)
 		{
 			var image = PickImage(slide);
+			var thumbnail = PickThumbnailImage(slide, image);
 			var videoUrl = PickVideoUrl(slide);
 			var isVideo = IsVideoSlide(slide) || videoUrl.Length > 0;
 
@@ -860,6 +874,7 @@ public sealed class InstagramResolver
 			pictures.Add(new ResolvedMedia
 			{
 				ImgUrl = image,
+				ThumbnailUrl = thumbnail,
 				RawUrl = image,
 				IsVideo = isVideo,
 				VideoUrl = videoUrl,
@@ -890,6 +905,7 @@ public sealed class InstagramResolver
 			PhotoCount = photoCount,
 			VideoCount = videoCount,
 			CoverUrl = cover.ImgUrl,
+			CoverThumbnailUrl = cover.ThumbnailUrl.Length > 0 ? cover.ThumbnailUrl : cover.ImgUrl,
 			CoverIsVideo = cover.IsVideo,
 			SummaryResolved = true,
 			FullResolved = allVideosPlayable && pictures.Count > 0,
@@ -988,6 +1004,7 @@ public sealed class InstagramResolver
 			new()
 			{
 				ImgUrl = cover,
+				ThumbnailUrl = cover,
 				RawUrl = cover,
 				IsVideo = isVideo,
 				VideoUrl = isVideo ? video : string.Empty,
@@ -1008,12 +1025,72 @@ public sealed class InstagramResolver
 			PhotoCount = isVideo ? 0 : 1,
 			VideoCount = isVideo ? 1 : 0,
 			CoverUrl = cover,
+			CoverThumbnailUrl = cover,
 			CoverIsVideo = isVideo,
 			SummaryResolved = true,
 			FullResolved = !isVideo || video.Length > 0,
 			SourceKind = "api",
 			Pictures = pictures,
 		};
+	}
+
+	static string PickThumbnailImage(JsonNode slide, string fullImage)
+	{
+		var thumbnail = ThumbnailCandidate(slide["display_resources"], 480);
+		if (thumbnail.Length > 0)
+		{
+			return thumbnail;
+		}
+
+		thumbnail = ThumbnailCandidate(slide["image_versions2"]?["candidates"], 480);
+		if (thumbnail.Length > 0)
+		{
+			return thumbnail;
+		}
+
+		var fallbackThumbnail = Text(slide["thumbnail_src"]);
+		return string.IsNullOrWhiteSpace(fallbackThumbnail) ? fullImage : fallbackThumbnail;
+	}
+
+	static string ThumbnailCandidate(JsonNode? candidates, double maximumWidth)
+	{
+		if (candidates is not JsonArray array || array.Count == 0)
+		{
+			return string.Empty;
+		}
+
+		string bestUrl = string.Empty;
+		double bestWidth = -1;
+		string smallestUrl = string.Empty;
+		double smallestWidth = double.MaxValue;
+		foreach (var candidate in array)
+		{
+			var url = Text(candidate?["src"]);
+			if (string.IsNullOrWhiteSpace(url))
+			{
+				url = Text(candidate?["url"]);
+			}
+
+			if (string.IsNullOrWhiteSpace(url))
+			{
+				continue;
+			}
+
+			var width = Number(candidate?["config_width"]) ?? Number(candidate?["width"]) ?? 0;
+			if (width > 0 && width < smallestWidth)
+			{
+				smallestWidth = width;
+				smallestUrl = url;
+			}
+
+			if (width > 0 && width <= maximumWidth && width > bestWidth)
+			{
+				bestWidth = width;
+				bestUrl = url;
+			}
+		}
+
+		return bestUrl.Length > 0 ? bestUrl : smallestUrl;
 	}
 
 	static string PickImage(JsonNode slide)

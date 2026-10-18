@@ -447,3 +447,17 @@ inside `.imp-grin` and hides the plain grin path instead; the drawing is identic
 
 To see a specific variant, append `?jsonThrow=1..5` or set `localStorage['stillSane.jsonThrowVariant']`
 to a number; without an override the roll is uniform.
+
+## Page navigation and media loading
+
+The library still renders only the current 20-post page. Its background summary resolver now batches up
+to 10 posts per request (instead of five) and cancels the previous page's pending request when the
+user navigates again. This prevents responses for an old page from continuing to occupy the resolver
+while the new page is loading.
+
+When the desktop resolver sees Instagram's sized image candidates, it keeps the full-resolution URL
+for detail photos and downloads, and exposes the largest cover candidate no wider than 480 px for
+library cards. Video cards and detail-player posters use that smaller still image; video playback
+URLs and selected-photo download URLs are unchanged. Cards remain lazy-loaded and request low
+priority. If Instagram supplies no smaller candidate, the UI falls back to the original cover URL.
+The `/api/image` proxy still serves the requested upstream bytes as-is; it does not resize images.

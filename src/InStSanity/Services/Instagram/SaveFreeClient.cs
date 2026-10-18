@@ -261,6 +261,7 @@ public sealed class SaveFreeClient
 			slides.Add(new ResolvedMedia
 			{
 				ImgUrl = imageUrl,
+				ThumbnailUrl = thumbnailUrl.Length > 0 ? thumbnailUrl : imageUrl,
 				RawUrl = imageUrl,
 				IsVideo = isVideo,
 				VideoUrl = isVideo ? bestUrl : string.Empty,
