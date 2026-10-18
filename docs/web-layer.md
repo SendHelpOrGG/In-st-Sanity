@@ -227,9 +227,17 @@ afterwards. That is what the three resolve routes are for:
 | route | caller | job |
 | --- | --- | --- |
 | `GET /api/resolve-post?url=…[&summary=1]` | an opened post, a cover that failed | one post, summary or full carousel |
-| `GET /api/resolve-batch?urls=a,b,c` | the card grid (chunks of 10) | summary for a page of posts |
-| `GET /api/resolve-owners?urls=a,b,c` | whole-library search index (chunks of 20) | account name only |
-| `GET /api/cached-posts` | startup restore | what is already resolved |
+| `GET /api/resolve-batch?urls=a,b,c` | the card grid (chunks of 5) | summary for the visible page |
+| `GET /api/resolve-owners?urls=a,b,c` | explicit whole-library account search (chunks of 20) | account name only |
+| `GET /api/cached-posts` | fallback startup restore | server-side resolved posts when no local library is available |
+
+The imported JSON is kept in IndexedDB as the most-recent upload, while a compact copy of the
+library (including resolved card summaries and selections) is kept in `localStorage`. Startup
+restores that compact copy without re-indexing all posts; it silently imports the recent JSON only
+when the compact copy is missing. Owner-name indexing is opt-in from an empty search, and media
+source labels are resolved as posts are viewed. Failed visible-page summary lookups are persisted
+with a six-hour retry cooldown, so restarting or revisiting a page does not immediately repeat the
+same failed requests.
 
 `InstagramResolver` fetches two public pages **in parallel**, and asks for them as a
 link-preview crawler rather than a browser:
