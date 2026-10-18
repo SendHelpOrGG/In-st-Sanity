@@ -29,6 +29,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SaveFreeClient>();
 		builder.Services.AddSingleton<InstagramResolver>();
 		builder.Services.AddSingleton<MediaCache>();
+		builder.Services.AddSingleton<IFolderPickerService, WindowsFolderPickerService>();
 
 		// /api/image and /api/download-photo share one implementation, differing only in
 		// how the payload is presented.
@@ -49,6 +50,7 @@ public static class MauiProgram
 		// a caption and a carousel. SaveFreeClient is the fallback for posts Instagram
 		// refuses to serve logged out (ported from fetch_via_savefree in server.py). Without them every card keeps an empty coverUrl and
 		// the grid's "server unreachable" note comes on — see InstagramResolver.
+		builder.Services.AddSingleton<IApiEndpoint, BrowseFolderEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ResolvePostEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ResolveBatchEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ResolveOwnersEndpoint>();

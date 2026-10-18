@@ -288,12 +288,13 @@ outage. That distinction is exactly what used to print *server unreachable* unde
 
 ```json
 {"ok":true,"port":8000,"url":"http://localhost:8000/?v=…",
- "endpoints":["/api/cached-posts","/api/download-photo","/api/image",
+ "endpoints":["/api/browse-folder","/api/cached-posts","/api/download-photo","/api/image",
               "/api/resolve-batch","/api/resolve-owners","/api/resolve-post"],
  "resolve":{"attempts":40,"resolved":37,"failed":3,"cached":37,"lastFailure":"http_429"}}
 ```
 
 - `/api/resolve-*` missing from `endpoints` → the executable is an older build.
+- `/api/browse-folder` is the Windows-owned native picker used by Settings; the static preview deliberately does not implement it.
 - `attempts: 0` after the library loads → the page never called resolve.
 - `lastFailure: "unreachable"`/`"timeout"` → Instagram is not reachable from that machine.
 - `lastFailure: "login_wall"` → Instagram refused the logged-out view; that is what the

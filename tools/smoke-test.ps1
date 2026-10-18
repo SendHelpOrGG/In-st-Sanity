@@ -130,6 +130,10 @@ try {
     Write-Detail "web root  $($health.webRoot) (exists=$($health.webRootExists))"
     Write-Detail "endpoints $($health.endpoints -join ', ')"
 
+    if ($health.endpoints -notcontains '/api/browse-folder') {
+        throw "The native folder picker route is missing from the running app."
+    }
+
     if (-not $health.webRootExists) {
         throw "The app is running but the web layer was not found next to the executable (looked in $($health.webRoot))."
     }

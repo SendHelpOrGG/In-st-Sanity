@@ -163,7 +163,8 @@ Every route the web app calls, as the JS actually uses it:
 | `/api/cached-posts` | GET | — | cached post records | JSON file in `%LOCALAPPDATA%\InStSanity\cache` |
 | `/api/image` | GET | `?url=<mediaUrl>` | image bytes | Streaming proxy with `Referer`/UA headers so Instagram CDN links resolve; caches to disk |
 | `/api/download-photo` | GET | `?url=<mediaUrl>` | file bytes | Same as `/api/image` with `Content-Disposition: attachment` |
-| `/api/download-selected` | POST | `{folder, items[]}` | `{ok, files:[{filename,…}]}` | **Native**: expand `~/…`, create folder, download each item (HTTP or reuse cache), write files, return the written paths. Folder picker offered when the path is invalid |
+| `/api/download-selected` | POST | `{folder, items[]}` | `{ok, files:[{filename,…}]}` | **Native**: expand `~/…`, create folder, download each item (HTTP or reuse cache), write files, return the written paths. |
+| `/api/browse-folder` | POST | — | `{ok, path}` or `{ok, cancelled}` | Opens the Windows `FolderPicker` owned by the MAUI window; returns the selected path to the settings UI. |
 | `/api/save-imported-list` | POST | imported list JSON | ok | Atomic write to the app data store (replaces browser-only persistence) |
 | `/api/browser/action` | POST | `{action:'navigate'\|'login'\|…, url, username, password}` | browser state (§ below) | Drives the **hidden WebView2** |
 | `/api/browser/state` | GET | `?screenshot=1` | `{loggedIn, username, url, screenshot}` | `loggedIn`/`username`/`url` from the hidden WebView2 + `CapturePreviewAsync` → base64 PNG for `screenshot` |
