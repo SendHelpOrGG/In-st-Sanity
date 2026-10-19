@@ -581,7 +581,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   .leaving-actions { display:flex; justify-content:center; gap:10px; }
   .leaving-actions button { display:flex; align-items:center; justify-content:center; flex:1 1 0; min-height:40px; font:inherit; }
   #leavingYesButton { border-color:color-mix(in srgb,var(--t-accent2,#ec4899) 58%,var(--t-card-border,#496073)); color:var(--t-accent2,#ec4899); }
-  #leavingNotYetButton { background:var(--t-card-bg,linear-gradient(120deg,#25313d,#1a232c)); border-color:var(--t-input-border,#496073); color:var(--t-ink,#f1f5f9); }
+  #leavingNotYetButton { background:var(--t-card-bg,linear-gradient(120deg,#25313d,#1a232c)); border-color:var(--t-input-border,#496073); color:var(--t-muted,#94a3b8); }
   #leavingYesButton,#leavingNotYetButton { transition:background .16s ease,border-color .16s ease,color .16s ease; }
   #leavingYesButton:hover,#leavingNotYetButton:hover { background:var(--t-btn-bg,linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%)); border-color:var(--t-btn-border,#f1f5f9); color:var(--t-btn-ink,#091318); }
   #leavingYesButton:focus,#leavingNotYetButton:focus { outline:none; }
@@ -599,7 +599,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <button class="nav active" id="libraryNav" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Saved posts</button>
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
-  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.15; open version history" title="Click to view what changed in each version">v.1.15</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
+  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.16; open version history" title="Click to view what changed in each version">v.1.16</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
   <div class="sidebar-resize" id="sidebarResize" role="separator" aria-label="Resize sidebar" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="360" aria-valuenow="244" tabindex="0" onpointerdown="startSidebarResize(event)" onkeydown="keyboardSidebarResize(event)"></div>
 </aside>
 <main>
@@ -5206,8 +5206,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.15';
+const APP_VERSION='1.16';
 const VERSION_HISTORY=[
+  {version:'1.16',added:'No new features.',removed:'The fixed white “Not yet” label.',fixed:'Made its neutral text follow the active theme.'},
   {version:'1.15',added:'Cursor-tracking eyes on the exit-prompt sticker.',removed:'Sidebar sticker click reactions while the prompt is open.',fixed:'Blocked click and JSON-throw animations during the prompt.'},
   {version:'1.14',added:'No new features.',removed:'Automatic focus in the exit prompt.',fixed:'Matched the title’s brand glitch and gave both actions the primary hover state.'},
   {version:'1.13',added:'No new features.',removed:'The exit button’s direct-close action.',fixed:'Unified exit prompts, matched the sticker size, refined button styling, and timed the prompt before the caught animation ends.'},
