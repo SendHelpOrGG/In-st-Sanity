@@ -35,11 +35,14 @@ public static class MauiProgram
 		{
 			events.AddWindows(windows => windows.OnWindowCreated(window =>
 			{
+				if (!AppWindowTitleBar.IsCustomizationSupported())
+					return;
+
 				var handle = WindowNative.GetWindowHandle(window);
 				var id = Win32Interop.GetWindowIdFromWindow(handle);
 				var titleBar = AppWindow.GetFromWindowId(id).TitleBar;
 				titleBar.ExtendsContentIntoTitleBar = true;
-				titleBar.PreferredHeightOption = AppWindowTitleBarHeightOption.Collapsed;
+				titleBar.PreferredHeightOption = TitleBarHeightOption.Collapsed;
 			}));
 		});
 #endif
