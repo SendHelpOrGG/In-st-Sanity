@@ -14,7 +14,7 @@ public partial class App : Application
 		_services = services;
 
 		// In-st-Sanity is a single-theme (dark) desktop app. Forcing the theme here keeps
-		// the native Windows chrome (title bar, scrollbars, dialogs) dark so it does not
+		// the remaining native Windows chrome (scrollbars, dialogs) dark so it does not
 		// flash light while the web layer loads.
 		UserAppTheme = AppTheme.Dark;
 

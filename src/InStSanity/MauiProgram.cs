@@ -5,6 +5,12 @@ using InStSanity.Services.WebHost;
 using InStSanity.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
+#if WINDOWS
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
+using WinRT.Interop;
+#endif
 
 namespace InStSanity;
 
@@ -20,6 +26,23 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 
 		builder.UseMauiApp<App>();
+
+#if WINDOWS
+		// The desktop UX owns its own close affordances (the caught-imp prompt by default,
+		// or an optional in-app exit icon). Collapse the WinUI title bar so Windows does
+		// not add a second, competing row of min/max/close controls above the web UI.
+		builder.ConfigureLifecycleEvents(events =>
+		{
+			events.AddWindows(windows => windows.OnWindowCreated(window =>
+			{
+				var handle = WindowNative.GetWindowHandle(window);
+				var id = Win32Interop.GetWindowIdFromWindow(handle);
+				var titleBar = AppWindow.GetFromWindowId(id).TitleBar;
+				titleBar.ExtendsContentIntoTitleBar = true;
+				titleBar.PreferredHeightOption = AppWindowTitleBarHeightOption.Collapsed;
+			}));
+		});
+#endif
 
 		// ── Web layer hosting (see docs/hybrid-port-plan.md) ────────────────────
 		// The ported UI is the original web app served by an in-process loopback host.
@@ -49,6 +72,7 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<IApiEndpoint, DownloadSelectedEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenDownloadFolderEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, ExitAppEndpoint>();
 
 		// The resolve routes are what turn an imported URL into a cover image, an owner,
 		// a caption and a carousel. SaveFreeClient is the fallback for posts Instagram

@@ -519,7 +519,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   body .download-toolbar.primary svg { color:inherit; stroke:currentColor; }
   .brand { grid-template-columns:40px minmax(0,1fr); column-gap:8px; height:44px; padding:0 8px; margin-bottom:34px; }
   .brand .logo { width:40px; height:40px; }
-  .brand-name { font-size:24.5px; line-height:1; text-align:left; justify-self:start; align-self:center; }
+  .brand-name { font-size:24.5px; line-height:1.2; text-align:left; justify-self:start; align-self:center; }
   .app-version-button { align-self:flex-start; border:0; background:transparent; color:var(--t-muted,#94a3b8); font:inherit; font-size:10px; letter-spacing:.5px; text-align:left; cursor:pointer; padding:3px 12px 8px; opacity:.8; }
   .app-version-button:hover, .app-version-button:focus-visible { color:var(--t-accent,#38bdf8); opacity:1; outline:none; }
   .version-history-overlay { display:none; position:fixed; inset:0; z-index:100020; align-items:center; justify-content:center; padding:20px; background:rgba(3,7,12,.72); backdrop-filter:blur(9px); }
@@ -538,6 +538,24 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   @media(max-width:900px) { #libraryPage .library-footer { max-width:none; padding-left:24px; padding-right:24px; } }
   @media(max-width:590px) { #libraryPage { padding-bottom:100px; } #libraryPage .library-footer { left:0; max-width:none; padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px)); gap:8px; } #paginationBar { justify-content:center; width:100%; } }
 </style>
+<style id="leavingPromptStyles">
+  #topExitAppBtn[hidden] { display:none!important; }
+  #topExitAppBtn { display:grid; place-items:center; flex:0 0 37px; padding:0; line-height:0; }
+  #topExitAppBtn svg { display:block; width:18px; height:18px; }
+  .leaving-overlay { position:fixed; inset:0; z-index:100030; display:flex; align-items:center; justify-content:center; padding:22px; background:rgba(3,7,12,.78); backdrop-filter:blur(12px); opacity:0; visibility:hidden; pointer-events:none; transition:opacity .2s ease,visibility .2s ease; }
+  .leaving-overlay.show { opacity:1; visibility:visible; pointer-events:auto; }
+  .leaving-dialog { width:min(420px,calc(100vw - 36px)); border:1px solid var(--t-card-border,#496073); border-radius:18px; padding:26px 26px 22px; background:var(--t-modal-bg,linear-gradient(145deg,#25313d,#1a232c 60%,#131a21)); color:var(--t-ink,#f1f5f9); text-align:center; box-shadow:0 28px 90px rgba(0,0,0,.74); transform:translateY(9px) scale(.98); transition:transform .22s ease; }
+  .leaving-overlay.show .leaving-dialog { transform:translateY(0) scale(1); }
+  .leaving-dialog h2 { margin:0; font-size:23px; line-height:1.2; letter-spacing:-.45px; }
+  .leaving-sticker-slot { display:grid; place-items:center; width:160px; height:160px; margin:14px auto 18px; }
+  .leaving-sticker-slot svg { display:block; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 8px 20px rgba(0,0,0,.3)); pointer-events:none; }
+  .leaving-actions { display:flex; justify-content:center; gap:10px; }
+  .leaving-actions button { display:flex; align-items:center; justify-content:center; flex:1 1 0; min-height:40px; }
+  #leavingYesButton { border-color:color-mix(in srgb,var(--t-accent2,#ec4899) 58%,var(--t-card-border,#496073)); color:var(--t-accent2,#ec4899); }
+  #leavingYesButton:hover,#leavingYesButton:focus-visible { background:color-mix(in srgb,var(--t-accent2,#ec4899) 12%,transparent); }
+  @media(max-width:480px) { .leaving-dialog { padding:22px 18px 18px; } .leaving-sticker-slot { width:140px; height:140px; } }
+  @media(prefers-reduced-motion:reduce) { .leaving-overlay,.leaving-dialog { transition:none; } }
+</style>
 </head>
 <body class="app-startup-blocked">
 <div id="lsBoot" aria-hidden="true"></div><script>(function(){try{var S={default:'#0a0f18',v1:'#130f1c',v2:'#161f26',v3:'#090a0c',v4:'#0e090b',v5:'#150e27',v6:'#141909',v7:'#1b120b',v8:'#0b152c',v9:'#121722',v10:'#181c2b',v11:'#11170f'};var id=localStorage.getItem('stillSane.uiThemeV2')||'default';if(!Object.prototype.hasOwnProperty.call(S,id))id='default';var el=document.getElementById('lsBoot');if(el)el.style.background=S[id];if(document.body&&id!=='default')document.body.setAttribute('data-theme',id);}catch(e){}})();</script>
@@ -548,12 +566,12 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <button class="nav active" id="libraryNav" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Saved posts</button>
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
-  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.9; open version history" title="Click to view what changed in each version">v.1.9</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
+  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.10; open version history" title="Click to view what changed in each version">v.1.10</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
   <div class="sidebar-resize" id="sidebarResize" role="separator" aria-label="Resize sidebar" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="360" aria-valuenow="244" tabindex="0" onpointerdown="startSidebarResize(event)" onkeydown="keyboardSidebarResize(event)"></div>
 </aside>
 <main>
   <div class="main-bg-sticker" id="mainBgSticker" aria-hidden="true"></div>
-  <header class="topbar"><div class="crumb-actions"><button type="button" class="icon-btn sidebar-toggle" id="railToggle" title="Hide sidebar" aria-label="Hide sidebar" aria-pressed="false" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 9l-3 3 3 3"/></svg></button><button class="icon-btn home-nav" title="Go to Saved posts" aria-label="Go to Saved posts" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9.5V21h14V9.5M9 21v-7h6v7"/></svg></button><div class="crumb"><b id="crumbText">Saved posts</b> <span id="crumbSub">/ Your Instagram posts</span></div></div><div class="top-actions"><button class="icon-btn" id="topRefreshBtn" title="Restart app" aria-label="Restart app" onclick="restartApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button><button class="icon-btn" title="Settings" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg></button><button class="login-btn" id="topLoginBtn" title="Log in with built-in Instagram browser" onclick="openIgBrowserModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg><span id="topLoginBtnLabel">Log in</span></button></div></header>
+  <header class="topbar"><div class="crumb-actions"><button type="button" class="icon-btn sidebar-toggle" id="railToggle" title="Hide sidebar" aria-label="Hide sidebar" aria-pressed="false" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 9l-3 3 3 3"/></svg></button><button class="icon-btn home-nav" title="Go to Saved posts" aria-label="Go to Saved posts" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9.5V21h14V9.5M9 21v-7h6v7"/></svg></button><div class="crumb"><b id="crumbText">Saved posts</b> <span id="crumbSub">/ Your Instagram posts</span></div></div><div class="top-actions"><button class="icon-btn" id="topRefreshBtn" title="Restart app" aria-label="Restart app" onclick="restartApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button><button class="icon-btn" title="Settings" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg></button><button type="button" class="icon-btn exit-app-btn" id="topExitAppBtn" title="Exit app" aria-label="Exit app" hidden onclick="requestDesktopExit(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button><button class="login-btn" id="topLoginBtn" title="Log in with built-in Instagram browser" onclick="openIgBrowserModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg><span id="topLoginBtnLabel">Log in</span></button></div></header>
   <section class="content" id="libraryPage">
     <div class="toolbar"><div class="filters"><button class="filter active" onclick="setFilter(this,'all')">All posts</button><button class="filter" id="selectedFilter" onclick="setFilter(this,'selected')">Selected (<span id="selectedPostCount">0</span>)</button><button type="button" class="filter source-toggle-button" id="librarySourceToggleBtn" data-role="source-toggle" onclick="toggleSourceBadges()" title="Hide source labels" aria-label="Hide source labels" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.4"/></svg></button><span id="srcStatusNote" class="src-status-note" title="Source labels are resolved as posts are viewed"></span><button id="uploadJsonToolbarBtn" class="primary download-toolbar" onclick="openUploadJsonModal()"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Upload JSON</button><button id="downloadBtn" class="primary download-toolbar" onclick="downloadSelected()" style="display:none;opacity:.45" disabled aria-disabled="true"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</button><button id="openDownloadFolderBtn" class="outline download-toolbar" onclick="openDownloadFolder()" style="display:none" title="Open the saved photos folder in File Explorer" aria-label="Open the saved photos folder in File Explorer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button></div><div class="toolbar-right"><div class="sort-control"><label id="sortPostsLabel" onclick="toggleSortMenu(event)">Sort by:</label><input type="hidden" id="sortPosts" value="newest"><div class="sort-dropdown" id="sortDropdown"><button type="button" class="sort-trigger" id="sortTriggerBtn" aria-haspopup="listbox" aria-expanded="false" onclick="toggleSortMenu(event)"><span id="sortTriggerLabel">↓ Newest</span><svg class="sort-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="sort-menu" id="sortMenu" role="listbox" aria-labelledby="sortPostsLabel"><button type="button" class="sort-option active" data-value="newest" role="option" aria-selected="true" onclick="selectSortOption('newest','↓ Newest',event)"><span>↓ Newest</span><span class="sort-opt-dot"></span></button><button type="button" class="sort-option" data-value="oldest" role="option" aria-selected="false" onclick="selectSortOption('oldest','↑ Oldest',event)"><span>↑ Oldest</span><span class="sort-opt-dot"></span></button><button type="button" class="sort-option" data-value="likes" role="option" aria-selected="false" onclick="selectSortOption('likes','♡ Most liked',event)"><span>♡ Most liked</span><span class="sort-opt-dot"></span></button></div></div></div><div class="toolbar-search-row"><label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search" placeholder="Search posts..." oninput="filterSearch()"></label></div></div></div>
     <div class="grid" id="postGrid"></div>
@@ -740,6 +758,26 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
           </div></div>
           <div class="setting-body"><div class="background-actions"><button class="outline" onclick="document.getElementById('backgroundFile').click()">Choose picture…</button><button class="outline" onclick="document.getElementById('backgroundGifFile').click()">Choose GIF…</button><button class="outline" onclick="resetBackground()">Default theme</button><input id="backgroundFile" type="file" accept="image/jpeg,image/png,image/webp,image/bmp" hidden onchange="importBackground(event)"><input id="backgroundGifFile" type="file" accept="image/gif,.gif" hidden onchange="importBackgroundGif(event)"></div><label class="field-label opacity-label" for="backgroundOpacity">Background opacity <strong id="backgroundOpacityValue">30%</strong></label><input class="opacity-slider" id="backgroundOpacity" type="range" min="0" max="80" value="30" oninput="setBackgroundOpacity(this.value)"><p class="hint">The original dark gradient stays underneath the image.</p></div>
         </div>
+        <div class="settings-card collapsed">
+          <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
+            <div class="settings-card-head-inner">
+              <div class="settings-card-head-text">
+                <h2>Nah bro i'm leaving</h2>
+                <p>Choose how the app should close.</p>
+              </div>
+              <span class="settings-card-chevron" aria-hidden="true">▾</span>
+            </div>
+          </div>
+          <div class="setting-body">
+            <div class="anim-group">
+              <div class="anim-group-title">App exit</div>
+              <div class="background-actions">
+                <button type="button" class="outline ui-toggle-btn" id="topExitModeToggle" aria-pressed="false" onclick="toggleTopExitButtonMode()">Top-right exit button: Off</button>
+              </div>
+              <p class="hint">Off: click the imp until he is caught to see the exit prompt. On: show a top-right exit icon instead.</p>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="settings-tab-panel" id="settings-sound" role="tabpanel">
         <div class="settings-card collapsed">
@@ -806,6 +844,17 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
     <div class="version-history-list" id="versionHistoryList"></div>
+  </section>
+</div>
+<div class="leaving-overlay" id="leavingPromptOverlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="leavingPromptTitle">
+  <section class="leaving-dialog">
+    <h2 id="leavingPromptTitle">Leaving already?</h2>
+    <!-- Future sticker animation slot; for now this holds the static themed side-panel sticker. -->
+    <div class="leaving-sticker-slot" id="leavingStickerArt" aria-hidden="true"></div>
+    <div class="leaving-actions">
+      <button type="button" class="outline" id="leavingYesButton" onclick="confirmLeavingFromPrompt()">Yes</button>
+      <button type="button" class="primary" id="leavingNotYetButton" onclick="dismissLeavingPrompt()">Not yet</button>
+    </div>
   </section>
 </div>
 <div class="status" id="toast">Done</div>
@@ -3004,6 +3053,7 @@ function toggleUiSettingsPanel(card){
 }
 function applySavedUiPrefs(){
   loadUiPrefs();
+  syncTopExitButtonMode(Boolean(getUiPref('topExitButtonMode',false)));
   try{
     const hidden=getUiPref('sidebarHidden',false);
     const app=document.querySelector('.app');
@@ -3049,6 +3099,90 @@ function flushAllUiSettings(){
   try{const n=Number(document.getElementById('backgroundOpacity')?.value);if(isFinite(n))setUiPref('backgroundOpacity',n)}catch(_){}
   try{const w=parseInt(getComputedStyle(document.querySelector('.app')).getPropertyValue('--sidebar-width'),10);if(isFinite(w))setUiPref('sidebarWidth',w)}catch(_){}
 }
+
+function syncTopExitButtonMode(enabled){
+  const active=Boolean(enabled);
+  const exitButton=document.getElementById('topExitAppBtn');
+  const toggle=document.getElementById('topExitModeToggle');
+  if(exitButton){
+    exitButton.hidden=!active;
+    exitButton.setAttribute('aria-hidden',String(!active));
+    exitButton.tabIndex=active?0:-1;
+  }
+  if(toggle){
+    toggle.textContent=`Top-right exit button: ${active?'On':'Off'}`;
+    toggle.classList.toggle('active',active);
+    toggle.setAttribute('aria-pressed',String(active));
+  }
+}
+function isTopExitButtonMode(){return Boolean(getUiPref('topExitButtonMode',false))}
+function toggleTopExitButtonMode(){
+  const enabled=!isTopExitButtonMode();
+  setUiPref('topExitButtonMode',enabled);
+  syncTopExitButtonMode(enabled);
+  playUiClick();
+  toast(enabled?'Top-right exit button enabled':'Sticker exit prompt enabled');
+}
+let leavingPromptReturnFocus=null;
+function renderLeavingSticker(){
+  const target=document.getElementById('leavingStickerArt');
+  if(!target)return;
+  const themeId=currentStickerThemeId||'default';
+  const template=THEME_STICKER_SVGS[themeId]||THEME_STICKER_SVGS.default;
+  const uid='leaving_'+themeId;
+  target.innerHTML=template.replace(/\{uid\}/g,uid);
+  const svg=target.querySelector('svg');
+  if(svg){svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');svg.style.animation='none';svg.style.pointerEvents='none'}
+}
+function handleLeavingPromptKeydown(event){
+  const overlay=document.getElementById('leavingPromptOverlay');
+  if(!overlay?.classList.contains('show'))return;
+  if(event.key==='Escape'){
+    event.preventDefault();event.stopPropagation();dismissLeavingPrompt();return;
+  }
+  if(event.key==='Tab'){
+    const buttons=[...overlay.querySelectorAll('button:not([disabled])')];
+    if(!buttons.length)return;
+    const first=buttons[0],last=buttons[buttons.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+  }
+}
+function showLeavingPrompt(){
+  if(isTopExitButtonMode())return;
+  const overlay=document.getElementById('leavingPromptOverlay');
+  if(!overlay||overlay.classList.contains('show'))return;
+  leavingPromptReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
+  renderLeavingSticker();
+  document.body.classList.add('leaving-prompt-open');
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden','false');
+  document.addEventListener('keydown',handleLeavingPromptKeydown,true);
+  requestAnimationFrame(()=>document.getElementById('leavingNotYetButton')?.focus({preventScroll:true}));
+}
+function dismissLeavingPrompt(){
+  const overlay=document.getElementById('leavingPromptOverlay');
+  if(!overlay)return;
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden','true');
+  document.body.classList.remove('leaving-prompt-open');
+  document.removeEventListener('keydown',handleLeavingPromptKeydown,true);
+  if(leavingPromptReturnFocus?.isConnected&&leavingPromptReturnFocus!==document.body){
+    try{leavingPromptReturnFocus.focus({preventScroll:true})}catch(_){}
+  }
+  leavingPromptReturnFocus=null;
+}
+async function requestDesktopExit(button){
+  if(button)button.disabled=true;
+  try{
+    const response=await fetch('/api/exit-app',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    if(response.ok)return true;
+  }catch(_){}
+  if(button)button.disabled=false;
+  toast('App exit is available in the desktop app');
+  return false;
+}
+function confirmLeavingFromPrompt(){return requestDesktopExit(document.getElementById('leavingYesButton'))}
 
 function resetStickerExpressionVisuals(c){
   if(!c)return;
@@ -4159,13 +4293,13 @@ function resetAllAnimationSettings(){
       return lastPlayed;
     }
 
-    let dodge=null, dodgeRaf=0;
+    let dodge=null, dodgeRaf=0, caughtPromptTimer=0;
 
     function dodgeAllowed(){
       const appEl=document.getElementById('appShell');
       if(!stickerVisible||stickerOpacityPercent<=0)return false;
       if(appEl&&appEl.classList.contains('sidebar-hidden'))return false;
-      if(document.body.classList.contains('json-throw-active'))return false;
+      if(document.body.classList.contains('json-throw-active')||document.body.classList.contains('leaving-prompt-open'))return false;
       if(typeof isPostCarouselModalOpen==='function'&&isPostCarouselModalOpen())return false;
       return true;
     }
@@ -4187,7 +4321,18 @@ function resetAllAnimationSettings(){
       const c=stickerDomCache||cacheSidebarStickerNodes();
       if(!c||!c.face||!dodgeAllowed()){ stopDodge(c&&c.face?c:null); return; }
       const p=(now-dodge.startAt)/dodge.dur;
-      if(p>=1){ stopDodge(c); return; }
+      if(p>=1){
+        const wasCaught=dodge.n===5;
+        stopDodge(c);
+        if(wasCaught&&!isTopExitButtonMode()){
+          if(caughtPromptTimer)clearTimeout(caughtPromptTimer);
+          caughtPromptTimer=setTimeout(()=>{
+            caughtPromptTimer=0;
+            if(!isTopExitButtonMode())showLeavingPrompt();
+          },750);
+        }
+        return;
+      }
       const pal=STICKER_THEME_PALETTES[currentStickerThemeId]||STICKER_THEME_PALETTES.default;
       drawDodge(c,pal,dodge.n,p,now);
       dodgeRaf=requestAnimationFrame(stepDodge);
@@ -4843,8 +4988,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.9';
+const APP_VERSION='1.10';
 const VERSION_HISTORY=[
+  {version:'1.10',added:'A caught-imp exit prompt and an optional top-right exit icon.',removed:'The native Windows title bar.',fixed:'Kept the wordmark descender visible and changed the desktop app icon to the sidebar logo.'},
   {version:'1.9',added:'No new features.',removed:'No brand elements.',fixed:'Adjusted the sidebar wordmark size while keeping its starting point beside the logo.'},
   {version:'1.8',added:'No new features.',removed:'No brand elements.',fixed:'Lengthened the sidebar wordmark while keeping its starting point beside the logo.'},
   {version:'1.7',added:'No new features.',removed:'No theme-picker layout elements.',fixed:'Matched the Moss & Brass mini-icon to its dark moss surfaces and gold/green accents.'},

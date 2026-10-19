@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>In[st]Sanity — Leaving prompt sticker concepts</title>
+<style>
+:root{color-scheme:dark;--bg:#080d13;--panel:#111a24;--panel-2:#151f2b;--line:#263745;--ink:#edf4f8;--muted:#91a4b4;--cyan:#67d8e8;--pink:#f38ac2;--gold:#d7c26b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 8% 0%,rgba(50,156,188,.14),transparent 36%),radial-gradient(ellipse at 92% 10%,rgba(163,89,163,.12),transparent 34%),var(--bg);color:var(--ink);font:15px/1.5 Inter,"Segoe UI",sans-serif}
+.shell{width:min(1380px,100%);margin:0 auto;padding:34px 30px 40px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:24px}
+.kicker{margin:0 0 7px;color:var(--cyan);font-size:11px;font-weight:750;letter-spacing:.16em;text-transform:uppercase}
+h1{margin:0;font-size:clamp(25px,3.5vw,38px);line-height:1.08;letter-spacing:-.045em}
+.intro{max-width:780px;margin:11px 0 0;color:var(--muted);font-size:14px}
+.preview-note{max-width:320px;padding:11px 14px;border:1px solid rgba(103,216,232,.24);border-radius:12px;background:rgba(103,216,232,.06);color:#b9d4de;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.concept-card{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:17px;background:linear-gradient(155deg,rgba(21,31,43,.96),rgba(12,19,27,.96));box-shadow:0 16px 42px rgba(0,0,0,.24);transition:border-color .2s,transform .2s,box-shadow .2s}
+.concept-card:hover{transform:translateY(-2px);border-color:#416071;box-shadow:0 20px 50px rgba(0,0,0,.32)}
+.concept-card.selected{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(103,216,232,.16),0 18px 46px rgba(0,0,0,.32)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px 0}
+.card-number{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.mood-label{padding:4px 8px;border:1px solid rgba(255,255,255,.1);border-radius:999px;color:#9db0bd;font-size:10px;white-space:nowrap}
+.concept-card[data-mood="sad"] .mood-label{color:#9edbf2;border-color:rgba(110,199,232,.35)}
+.concept-card[data-mood="happy"] .mood-label{color:#f3b7d3;border-color:rgba(243,138,194,.35)}
+.visual-stage{position:relative;display:grid;place-items:center;height:188px;margin:12px 13px 0;overflow:hidden;border:1px solid rgba(255,255,255,.055);border-radius:13px;background:radial-gradient(ellipse at 50% 74%,rgba(69,160,179,.12),transparent 46%),linear-gradient(135deg,rgba(6,12,18,.76),rgba(14,22,31,.84))}
+.visual-stage::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;background-image:radial-gradient(rgba(164,212,223,.32) .6px,transparent .6px);background-size:8px 8px;mask-image:linear-gradient(to bottom,transparent,black 48%,transparent)}
+.stage-glow{position:absolute;width:126px;height:28px;bottom:23px;border-radius:50%;background:rgba(68,183,201,.1);filter:blur(12px);transition:transform .35s,opacity .35s}
+.sticker-wrap{position:relative;z-index:1;width:151px;height:151px;transform-origin:50% 60%;filter:drop-shadow(0 13px 20px rgba(0,0,0,.35))}
+.sticker-art{display:block;width:100%;height:100%;overflow:visible}
+.sticker-art .imp-eyes-blink{transform-box:fill-box;transform-origin:center;animation:demoBlink 5.2s ease-in-out infinite}
+.preview-expression{opacity:0;transition:opacity .16s ease}
+.concept-card[data-mood="sad"] .imp-eyes-blink,.concept-card[data-mood="happy"] .imp-eyes-blink,.concept-card[data-mood="sad"] .imp-grin,.concept-card[data-mood="happy"] .imp-grin{opacity:0;animation:none}
+.concept-card[data-mood="sad"] .mood-sad,.concept-card[data-mood="happy"] .mood-happy{opacity:1}
+.concept-card[data-mood="sad"] .sticker-wrap{animation:responseSad .42s ease-out both}
+.concept-card[data-mood="happy"] .sticker-wrap{animation:responseHappy .52s ease-in-out infinite alternate}
+.concept-card[data-mood="sad"] .stage-glow{transform:scaleX(.7);opacity:.35}
+.concept-card[data-mood="happy"] .stage-glow{transform:scaleX(1.35);opacity:1;background:rgba(243,138,194,.22)}
+.concept-card[data-concept="1"] .sticker-wrap{animation:gentleFloat 3.4s ease-in-out infinite}
+.concept-card[data-concept="2"] .sticker-wrap{animation:slowSway 4.1s ease-in-out infinite}
+.concept-card[data-concept="3"] .sticker-wrap{animation:softPulse 3.3s ease-in-out infinite}
+.concept-card[data-concept="4"] .sticker-wrap{animation:doubleHop 2.8s ease-in-out infinite}
+.concept-card[data-concept="5"] .sticker-wrap{animation:curiousLean 3.6s ease-in-out infinite}
+.concept-card[data-concept="6"] .sticker-wrap{animation:dreamyDrift 4.4s ease-in-out infinite}
+.concept-card[data-concept="1"][data-mood="sad"] .sticker-wrap,.concept-card[data-concept="2"][data-mood="sad"] .sticker-wrap,.concept-card[data-concept="3"][data-mood="sad"] .sticker-wrap,.concept-card[data-concept="4"][data-mood="sad"] .sticker-wrap,.concept-card[data-concept="5"][data-mood="sad"] .sticker-wrap,.concept-card[data-concept="6"][data-mood="sad"] .sticker-wrap{animation:responseSad .42s ease-out both}
+.concept-card[data-concept="1"][data-mood="happy"] .sticker-wrap,.concept-card[data-concept="2"][data-mood="happy"] .sticker-wrap,.concept-card[data-concept="3"][data-mood="happy"] .sticker-wrap,.concept-card[data-concept="4"][data-mood="happy"] .sticker-wrap,.concept-card[data-concept="5"][data-mood="happy"] .sticker-wrap,.concept-card[data-concept="6"][data-mood="happy"] .sticker-wrap{animation:responseHappy .52s ease-in-out infinite alternate}
+@keyframes demoBlink{0%,45%,48%,100%{transform:scaleY(1)}46.5%{transform:scaleY(.08)}}
+@keyframes gentleFloat{0%,100%{transform:translateY(2px)}50%{transform:translateY(-9px)}}
+@keyframes slowSway{0%,100%{transform:translate(0,1px) rotate(-2deg)}50%{transform:translate(0,-4px) rotate(2deg)}}
+@keyframes softPulse{0%,100%{transform:translateY(0) scale(.97);filter:drop-shadow(0 8px 15px rgba(62,190,209,.18))}50%{transform:translateY(-3px) scale(1.035);filter:drop-shadow(0 12px 22px rgba(104,161,245,.36))}}
+@keyframes doubleHop{0%,100%{transform:translateY(0)}18%{transform:translateY(-10px)}34%{transform:translateY(1px)}43%{transform:translateY(-5px)}58%{transform:translateY(0)}}
+@keyframes curiousLean{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-4px) rotate(-4deg)}65%{transform:translateX(3px) rotate(3deg)}}
+@keyframes dreamyDrift{0%,100%{transform:translate(-2px,2px) rotate(-1deg)}50%{transform:translate(3px,-6px) rotate(1.8deg)}}
+@keyframes responseSad{0%{transform:translateY(-3px) rotate(0)}100%{transform:translateY(5px) rotate(-5deg)}}
+@keyframes responseHappy{from{transform:translateY(1px) rotate(-2deg) scale(1)}to{transform:translateY(-7px) rotate(2deg) scale(1.045)}}
+.card-copy{padding:14px 17px 0}
+h2{margin:0;font-size:17px;letter-spacing:-.02em}
+.description{min-height:38px;margin:5px 0 0;color:var(--muted);font-size:12px}
+.answers{display:flex;gap:8px;padding:13px 17px 0}
+.answer,.choose{min-height:36px;border-radius:9px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:transform .15s,border-color .15s,background .15s,color .15s}
+.answer{flex:1;border:1px solid #35495a;background:#101923;color:#d5e0e8}
+.answer:hover,.answer:focus-visible{transform:translateY(-1px);outline:none}
+.answer-yes:hover,.answer-yes:focus-visible{border-color:#83cde6;background:rgba(101,193,222,.11);color:#bceafb}
+.answer-not-yet:hover,.answer-not-yet:focus-visible{border-color:#df91bd;background:rgba(232,130,184,.12);color:#ffd1e8}
+.choose{display:block;width:calc(100% - 34px);margin:11px 17px 16px;border:1px solid rgba(103,216,232,.3);background:rgba(103,216,232,.07);color:#bceaf0}
+.choose:hover,.choose:focus-visible{outline:none;border-color:var(--cyan);background:rgba(103,216,232,.14)}
+.concept-card.selected .choose{border-color:var(--cyan);background:rgba(103,216,232,.17);color:#e7fcff}
+.selection-bar{position:sticky;bottom:12px;display:flex;align-items:center;gap:12px;width:fit-content;max-width:100%;margin:20px auto 0;padding:10px 15px;border:1px solid #344a58;border-radius:12px;background:rgba(9,15,21,.92);box-shadow:0 14px 36px rgba(0,0,0,.35);color:#c7d5df;font-size:12px;backdrop-filter:blur(10px)}
+.selection-bar strong{color:var(--cyan)}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.preview-note{max-width:260px}}
+@media(max-width:680px){.shell{padding:24px 15px 32px}header{display:block}.preview-note{max-width:none;margin-top:15px}.grid{grid-template-columns:1fr}.visual-stage{height:196px}.description{min-height:0}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div>
+      <p class="kicker">In[st]Sanity · concept preview</p>
+      <h1>“Leaving already?” sticker animations</h1>
+      <p class="intro">Pick a motion style for the exit prompt. Each option uses the same idle side-panel imp, with a simple loop only—no random laughs, smoke, or click-dodge variants. Hover or keyboard-focus <b>Yes</b> to see a sad reaction, and <b>Not yet</b> to see a happy, excited one.</p>
+    </div>
+    <aside class="preview-note"><b>Preview only.</b> These six animation concepts are isolated from the desktop app and are not implemented there yet.</aside>
+  </header>
+  <main class="grid" id="conceptGrid" aria-label="Six sticker animation concepts"></main>
+  <div class="selection-bar" role="status" aria-live="polite"><strong id="selectionTitle">No concept selected</strong><span id="selectionHint">Choose a card below, then tell me its number.</span></div>
+</div>
+<script>
+const CONCEPTS=[
+  {id:1,title:'Gentle float',description:'A slow, soft bob—calm and familiar, closest to the side-panel idle.'},
+  {id:2,title:'Shy sway',description:'A small side-to-side tilt, as if the imp is quietly reconsidering your choice.'},
+  {id:3,title:'Soft pulse',description:'A subtle scale and glow pulse; the character feels alive without jumping around.'},
+  {id:4,title:'Double hop',description:'A light two-part bounce, playful but still small enough for the confirmation card.'},
+  {id:5,title:'Curious lean',description:'A gentle lean from side to side, like the imp is watching what you decide.'},
+  {id:6,title:'Dreamy drift',description:'A very slow floating drift with a tiny tilt for a softer, more whimsical feel.'}
+];
+const grid=document.getElementById('conceptGrid');
+const svgNamespace='http://www.w3.org/2000/svg';
+let stickerMarkup='';
+function moodOverlay(className,markup){
+  const doc=new DOMParser().parseFromString(`<svg xmlns="${svgNamespace}"><g>${markup}</g></svg>`,'image/svg+xml');
+  const group=doc.documentElement.firstElementChild;
+  group.setAttribute('class',`preview-expression ${className}`);
+  return document.importNode(group,true);
+}
+function attachExpressions(svg){
+  const face=svg.querySelector('.imp-face-group');
+  if(!face)return;
+  face.appendChild(moodOverlay('mood-sad',`
+    <path d="M62 82 Q68 87 75 82 M85 82 Q92 87 98 82" fill="none" stroke="#92d9f4" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M63 102 Q80 88 97 102" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/>
+    <path d="M108 73 C112 79 114 82 114 86 A4 4 0 1 1 106 86 C106 82 107 78 108 73Z" fill="#75c8ec" stroke="#d9f7ff" stroke-width="1.2"/>
+  `));
+  face.appendChild(moodOverlay('mood-happy',`
+    <path d="M61 84 Q68 74 75 84 M85 84 Q92 74 99 84" fill="none" stroke="#baf7ff" stroke-width="3.1" stroke-linecap="round"/>
+    <path d="M62 94 Q80 113 98 94 Q95 109 80 109 Q65 109 62 94Z" fill="#101727" stroke="#fff" stroke-width="2.8" stroke-linejoin="round"/>
+    <path d="M70 99 Q80 103 90 99" fill="none" stroke="#f38ac2" stroke-width="3" stroke-linecap="round"/>
+    <path d="M42 68 L44 74 L50 76 L44 78 L42 84 L40 78 L34 76 L40 74Z M118 66 L120 72 L126 74 L120 76 L118 82 L116 76 L110 74 L116 72Z" fill="#f8c8e3"/>
+  `));
+}
+function setMood(card,mood){
+  card.dataset.mood=mood;
+  const label=card.querySelector('.mood-label');
+  if(label)label.textContent=mood==='sad'?'Feeling sad':mood==='happy'?'Excited':'Idle';
+}
+function buildCard(concept){
+  const card=document.createElement('article');
+  card.className='concept-card';
+  card.dataset.concept=String(concept.id);
+  card.dataset.mood='idle';
+  card.innerHTML=`
+    <div class="card-head"><span class="card-number">Concept ${String(concept.id).padStart(2,'0')}</span><span class="mood-label">Idle</span></div>
+    <div class="visual-stage" aria-label="Sticker animation sample">
+      <div class="stage-glow"></div><div class="sticker-wrap"></div>
+    </div>
+    <div class="card-copy"><h2>${concept.title}</h2><p class="description">${concept.description}</p></div>
+    <div class="answers" role="group" aria-label="Preview the prompt response">
+      <button type="button" class="answer answer-yes" data-mood="sad">Yes</button>
+      <button type="button" class="answer answer-not-yet" data-mood="happy">Not yet</button>
+    </div>
+    <button type="button" class="choose" aria-pressed="false">Choose this style</button>`;
+  const svgText=stickerMarkup.replaceAll('sticker_exit_concept',`sticker_concept_${concept.id}`);
+  const svgDocument=new DOMParser().parseFromString(svgText,'image/svg+xml');
+  const svg=svgDocument.documentElement;
+  if(svg&&svg.localName==='svg'){
+    svg.setAttribute('class','sticker-art');
+    svg.setAttribute('aria-hidden','true');
+    attachExpressions(svg);
+    card.querySelector('.sticker-wrap').appendChild(document.importNode(svg,true));
+  }
+  card.querySelectorAll('.answer').forEach(button=>{
+    const mood=button.dataset.mood;
+    button.addEventListener('pointerenter',()=>setMood(card,mood));
+    button.addEventListener('pointerleave',()=>{if(!button.matches(':focus'))setMood(card,'idle')});
+    button.addEventListener('focus',()=>setMood(card,mood));
+    button.addEventListener('blur',()=>setMood(card,'idle'));
+  });
+  card.querySelector('.choose').addEventListener('click',()=>{
+    document.querySelectorAll('.concept-card').forEach(item=>{
+      const selected=item===card;
+      item.classList.toggle('selected',selected);
+      item.querySelector('.choose').setAttribute('aria-pressed',String(selected));
+      item.querySelector('.choose').textContent=selected?'Selected ✓':'Choose this style';
+    });
+    document.getElementById('selectionTitle').textContent=`Concept ${concept.id}: ${concept.title}`;
+    document.getElementById('selectionHint').textContent='Got it — tell me this number to use later.';
+  });
+  return card;
+}
+(async function init(){
+  try{
+    const response=await fetch('./sticker.svg');
+    if(!response.ok)throw new Error('Could not load the side-panel sticker artwork.');
+    stickerMarkup=await response.text();
+    CONCEPTS.forEach(concept=>grid.appendChild(buildCard(concept)));
+  }catch(error){
+    grid.innerHTML=`<p role="alert">${error.message}</p>`;
+  }
+})();
+</script>
+</body>
+</html>
