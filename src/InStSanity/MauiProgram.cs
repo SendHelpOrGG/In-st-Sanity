@@ -1,5 +1,6 @@
 using InStSanity.Platforms.Windows;
 using InStSanity.Services.Api;
+using InStSanity.Services.Browser;
 using InStSanity.Services.Instagram;
 using InStSanity.Services.WebHost;
 using InStSanity.ViewModels;
@@ -55,6 +56,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SaveFreeClient>();
 		builder.Services.AddSingleton<InstagramResolver>();
 		builder.Services.AddSingleton<MediaCache>();
+		builder.Services.AddSingleton<InstagramBrowserWindowService>();
 		builder.Services.AddSingleton<IFolderPickerService, WindowsFolderPickerService>();
 		builder.Services.AddSingleton<IDownloadFolderOpener, WindowsDownloadFolderOpener>();
 
@@ -76,6 +78,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IApiEndpoint, DownloadSelectedEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenDownloadFolderEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ExitAppEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, OpenInstagramBrowserEndpoint>();
 
 		// The resolve routes are what turn an imported URL into a cover image, an owner,
 		// a caption and a carousel. SaveFreeClient is the fallback for posts Instagram
@@ -87,8 +90,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IApiEndpoint, ResolveOwnersEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, CachedPostsEndpoint>();
 
-		// Routes that are not registered yet answer 501, which the web layer handles
-		// gracefully. Remaining phases: save-imported-list / browser-*.
+		// The visible Instagram browser is hosted natively by MainPage and opened via
+		// OpenInstagramBrowserEndpoint. Session state/cookie extraction routes remain
+		// intentionally unregistered; Instagram credentials are entered only on Instagram.
+		// Other unregistered API routes continue to return 501 from LoopbackHost.
 
 		builder.Services.AddSingleton<LoopbackHost>();
 

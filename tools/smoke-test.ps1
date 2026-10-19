@@ -146,6 +146,10 @@ try {
         throw "The app-exit route is missing from the running app."
     }
 
+    if ($health.endpoints -notcontains '/api/open-instagram-browser') {
+        throw "The native Instagram browser route is missing from the running app."
+    }
+
     if (-not $health.webRootExists) {
         throw "The app is running but the web layer was not found next to the executable (looked in $($health.webRoot))."
     }
@@ -157,7 +161,7 @@ try {
 
     # String.Contains, not -like: the marker contains brackets, which PowerShell wildcards
     # would read as a character class.
-    foreach ($marker in @('In[st]Sanity', 'lsBoot', 'app-startup-blocked', 'appVersionButton', 'openDownloadFolderBtn', 'startup-layout-v1-4', 'Version 1.16; open version history', "version:'1.16',added:'No new features.',removed:'The fixed white ", 'Made its neutral text follow the active theme.', "version:'1.15',added:'Cursor-tracking eyes on the exit-prompt sticker.',removed:'Sidebar sticker click reactions while the prompt is open.',fixed:'Blocked click and JSON-throw animations during the prompt.'", "version:'1.14',added:'No new features.", 'CAUGHT_PROMPT_LEAD_MS=500', 'onclick="showLeavingPrompt()"', 'width:177px; height:177px', 'font:inherit', 'color:var(--t-muted,#94a3b8)', '#leavingYesButton:hover,#leavingNotYetButton:hover', 'leavingPromptTitleText', 'function setTextSliceCuts', 'function drawLeavingCackle', 'function updateLeavingStickerEyes(clientX,clientY)', 'updateLeavingStickerEyes(e.clientX,e.clientY)', 'leaving-sad-eyes-track', 'if(document.body.classList.contains(''leaving-prompt-open''))return;', 'data-concept="02"', 'leavingCackleBody', 'font-size:24.5px; line-height:1.2; text-align:left; justify-self:start', 'id="topExitAppBtn"', 'id="topExitModeToggle"', 'On: click the top-right exit icon to open the same prompt.', 'Nah bro i''m leaving', 'Leaving already?', 'id="leavingNotYetButton"', "fetch('/api/exit-app'", 'background:linear-gradient(150deg,#11170f,#1a2115 58%,#10150e)', 'style="background:#A9C46A"', 'text-align:left; justify-self:start', 'grid-template-columns:minmax(0,1fr)', 'justify-content:center!important', "openFolderBtn.style.display=hasJsonLoaded?'grid':'none'", '11. Moss &amp; Brass', 'data-theme-id="v11"', "version:'1.5',added:'Moss & Brass", "v11:'#11170f'", 'body[data-theme="v11"] .ls-restart-ring', 'source-toggle-button', 'id="railToggle"', 'body[data-theme="v3"] .page-btn.active:hover:not(:disabled)')) {
+    foreach ($marker in @('In[st]Sanity', 'lsBoot', 'app-startup-blocked', 'appVersionButton', 'openDownloadFolderBtn', 'startup-layout-v1-4', 'id="browserNav"', 'function openInstagramBrowser', '/api/open-instagram-browser', 'Version 1.17; open version history', "version:'1.17',added:'A native in-app Instagram browser.',removed:'The simulated Instagram login form and startup session probe.',fixed:'Routed Instagram browsing through a persistent WebView2 profile; sign-in stays on Instagram.'", "version:'1.16',added:'No new features.',removed:'The fixed white ", 'Made its neutral text follow the active theme.', "version:'1.15',added:'Cursor-tracking eyes on the exit-prompt sticker.',removed:'Sidebar sticker click reactions while the prompt is open.',fixed:'Blocked click and JSON-throw animations during the prompt.'", "version:'1.14',added:'No new features.", 'CAUGHT_PROMPT_LEAD_MS=500', 'onclick="showLeavingPrompt()"', 'width:177px; height:177px', 'font:inherit', 'color:var(--t-muted,#94a3b8)', '#leavingYesButton:hover,#leavingNotYetButton:hover', 'leavingPromptTitleText', 'function setTextSliceCuts', 'function drawLeavingCackle', 'function updateLeavingStickerEyes(clientX,clientY)', 'updateLeavingStickerEyes(e.clientX,e.clientY)', 'leaving-sad-eyes-track', 'if(document.body.classList.contains(''leaving-prompt-open''))return;', 'data-concept="02"', 'leavingCackleBody', 'font-size:24.5px; line-height:1.2; text-align:left; justify-self:start', 'id="topExitAppBtn"', 'id="topExitModeToggle"', 'On: click the top-right exit icon to open the same prompt.', 'Nah bro i''m leaving', 'Leaving already?', 'id="leavingNotYetButton"', "fetch('/api/exit-app'", 'background:linear-gradient(150deg,#11170f,#1a2115 58%,#10150e)', 'style="background:#A9C46A"', 'text-align:left; justify-self:start', 'grid-template-columns:minmax(0,1fr)', 'justify-content:center!important', "openFolderBtn.style.display=hasJsonLoaded?'grid':'none'", '11. Moss &amp; Brass', 'data-theme-id="v11"', "version:'1.5',added:'Moss & Brass", "v11:'#11170f'", 'body[data-theme="v11"] .ls-restart-ring', 'source-toggle-button', 'id="railToggle"', 'body[data-theme="v3"] .page-btn.active:hover:not(:disabled)')) {
         if (-not $document.Content.Contains($marker)) {
             throw "The served document does not contain the expected marker '$marker'."
         }
@@ -165,6 +169,25 @@ try {
 
     if ($document.Content.Contains("requestAnimationFrame(()=>document.getElementById('leavingNotYetButton')?.focus")) {
         throw 'The exit prompt must not autofocus a button.'
+    }
+
+    $saveUrlNavIndex = $document.Content.IndexOf('id="saveUrlNav"', [System.StringComparison]::Ordinal)
+    $browserNavIndex = $document.Content.IndexOf('id="browserNav"', [System.StringComparison]::Ordinal)
+    $sidebarStickerIndex = $document.Content.IndexOf('id="sidebarStickerSlot"', [System.StringComparison]::Ordinal)
+    $saveUrlCloseIndex = if ($saveUrlNavIndex -ge 0) { $document.Content.IndexOf('</button>', $saveUrlNavIndex, [System.StringComparison]::Ordinal) } else { -1 }
+    $browserButtonIndex = if ($browserNavIndex -ge 0) { $document.Content.LastIndexOf('<button', $browserNavIndex, [System.StringComparison]::Ordinal) } else { -1 }
+    $betweenSaveAndBrowser = if ($saveUrlCloseIndex -ge 0 -and $browserButtonIndex -gt $saveUrlCloseIndex) {
+        $document.Content.Substring($saveUrlCloseIndex + 9, $browserButtonIndex - ($saveUrlCloseIndex + 9))
+    } else { 'invalid' }
+    if ($saveUrlNavIndex -lt 0 -or $saveUrlCloseIndex -lt 0 -or $browserButtonIndex -le $saveUrlCloseIndex -or $browserNavIndex -le $saveUrlNavIndex -or $sidebarStickerIndex -le $browserNavIndex -or $betweenSaveAndBrowser -notmatch '^\s*$') {
+        throw 'The Browser button must sit directly below Save via URL and above the sidebar sticker.'
+    }
+
+    if ($document.Content.Contains('id="igVpPass"') -or
+        $document.Content.Contains('/api/browser/action') -or
+        $document.Content.Contains('/api/browser/state') -or
+        $document.Content.Contains('syncIgSessionState(false)')) {
+        throw 'The app must not ship the simulated Instagram credential form or startup session probe.'
     }
 
     foreach ($obsolete in @('Choose your posts', 'id="libraryFooterNote"', '</svg>Open folder</button>', '>Hide source</button>', '>Show source</button>', 'id="sidebarRestore"')) {
@@ -188,6 +211,33 @@ try {
     if ($api.StatusCode -ne 400) { throw "/api/image without a url returned $($api.StatusCode), expected 400." }
 
     Write-Detail "api       GET /api/image -> 400 ($($api.Content))"
+
+    Write-Step 'checking native Instagram browser validation without opening a page'
+    $browserRejected = Invoke-WebRequest `
+        -Uri "$baseUrl/api/open-instagram-browser" `
+        -Method Post `
+        -ContentType 'application/json' `
+        -Body '{"url":"https://example.org/"}' `
+        -TimeoutSec 15 `
+        -SkipHttpErrorCheck
+
+    if ($browserRejected.StatusCode -ne 400) {
+        throw "The Instagram browser accepted a non-Instagram URL (status $($browserRejected.StatusCode), expected 400)."
+    }
+
+    $browserHeadless = Invoke-WebRequest `
+        -Uri "$baseUrl/api/open-instagram-browser" `
+        -Method Post `
+        -ContentType 'application/json' `
+        -Body '{"url":""}' `
+        -TimeoutSec 15 `
+        -SkipHttpErrorCheck
+
+    if ($browserHeadless.StatusCode -ne 503) {
+        throw "The browser route without a desktop page returned $($browserHeadless.StatusCode), expected 503."
+    }
+
+    Write-Detail 'browser   non-Instagram URL rejected; headless open returns 503 without launching a browser'
 
     Write-Step 'verifying a selected photo is written to disk'
     $downloadFolder = Join-Path $env:TEMP "InStSanity-download-smoke-$([Guid]::NewGuid().ToString('N'))"

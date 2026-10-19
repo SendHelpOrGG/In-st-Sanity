@@ -31,44 +31,13 @@ body[data-theme="v3"] .upload-dropzone-icon,body[data-theme="v3"] .upload-recent
    silently pins the Download location field to the same look in every theme.
    Let the theme drive it: background var(--t-input-bg), border var(--t-input-border). */
 .folder-row{display:flex;gap:8px}.save-row{display:flex;justify-content:flex-end;margin-top:18px}.crop-modal-wrap{display:none;position:fixed;inset:0;background:rgba(5,9,12,.86);backdrop-filter:blur(5px);z-index:40;align-items:center;justify-content:center;padding:16px}.crop-modal-wrap.show{display:flex}.crop-modal{width:min(760px,calc(100vw - 32px));max-height:94vh;overflow:auto;background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border:1px solid #496073;border-radius:16px;padding:23px;box-shadow:0 24px 80px #000b}.crop-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px}.crop-heading h2{font-size:18px;margin:0 0 5px}.crop-heading p{font-size:11px;color:#9fb1c1;margin:0}.crop-ratios{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}.crop-ratio{border:1px solid #496073;background:linear-gradient(120deg,#1c252e,#161f27);color:#cbd5e1;border-radius:7px;padding:7px 10px;font:inherit;font-size:11px;cursor:pointer}.crop-ratio.active{background:linear-gradient(105deg,rgba(204,251,241,.20),rgba(45,212,191,.14));border-color:rgba(204,251,241,.38);color:#99f6e4}.crop-preview{position:relative;width:100%;aspect-ratio:16/9;margin-inline:auto;overflow:hidden;background:#080c10;border:1px solid #99f6e488;border-radius:10px;touch-action:none;cursor:grab}.crop-preview:active{cursor:grabbing}.crop-preview img{position:absolute;left:0;top:0;max-width:none;max-height:none;user-select:none;pointer-events:none}.crop-zoom-label{display:flex;justify-content:space-between;margin:14px 0 6px}.crop-zoom-label strong{color:#99f6e4}.opacity-slider:disabled{opacity:.38;cursor:not-allowed}.crop-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.crop-actions button{min-width:96px;justify-content:center}.status{position:fixed;bottom:24px;right:25px;background:#1c2832;border:1px solid #99f6e4;color:#f8fafc;border-radius:9px;padding:12px 16px;box-shadow:var(--shadow);font-size:12px;font-weight:600;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;z-index:100}.status.show{opacity:1;transform:translateY(0)}.modal-wrap{display:none;position:fixed;inset:0;background:rgba(7,11,15,.82);backdrop-filter:blur(3px);z-index:30;align-items:center;justify-content:center}.modal-wrap.show{display:flex}.modal{width:min(410px,calc(100vw - 32px));background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border-radius:16px;padding:27px;box-shadow:0 20px 70px #0009;position:relative}.close{position:absolute;right:17px;top:17px;border:0;background:#25313d;width:29px;height:29px;border-radius:8px;cursor:pointer;color:#cbd5e1}.modal-logo{margin:0 auto 17px;width:44px;height:44px;border-radius:14px;background:#1e2c36;display:grid;place-items:center;color:#99f6e4}.modal h2{text-align:center;font-size:19px;margin:0 0 8px}.modal p{text-align:center;color:#9fb1c1;font-size:12px;line-height:1.6;margin:0 5px 20px}.ig-login{width:100%;justify-content:center;background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);color:#091318;padding:12px;border:1px solid #f1f5f9}.fineprint{text-align:center;color:#9fb1c1;font-size:10px;line-height:1.5;margin-top:14px}.fineprint a{color:#99f6e4;text-decoration:underline}.logged-in{display:none;background:#1b2c2a;border-radius:10px;padding:13px;margin-bottom:14px;font-size:12px;color:#5eead4}.logged-in strong{display:block;margin-bottom:3px}
-.detail-overlay{display:none;position:fixed;inset:0;background:rgba(7,11,15,.84);backdrop-filter:blur(7px);z-index:25;align-items:center;justify-content:center;padding:24px}.detail-overlay.show{display:flex;isolation:isolate}.post-peek-svg{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;overflow:visible;opacity:var(--sticker-opacity,.5);transition:opacity .2s ease}.post-peek-behind{z-index:1}.post-peek-front{z-index:3}body.sticker-hidden .post-peek-svg,body.animations-disabled .post-peek-svg,body.imp-anim-disabled .post-peek-svg{display:none!important}body.post-detail-open .sidebar-sticker-slot,body.ig-browser-open .sidebar-sticker-slot{opacity:0!important;pointer-events:none!important}.post-modal{position:relative;z-index:2;margin-top:56px;width:min(920px,calc(100vw - 136px));max-height:calc(100vh - 150px);background:linear-gradient(145deg,#25313d,#1a232c 56%,#131a21);border:1px solid #3d5060;border-radius:16px;box-shadow:0 25px 90px #000a;display:flex;flex-direction:column;overflow:hidden}.detail-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--line);gap:20px;flex-shrink:0}.detail-heading{min-width:0}.detail-heading .eyebrow{margin:0 0 6px}.detail-heading h2{font-size:19px;letter-spacing:-.4px;margin:0 0 5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;word-break:break-word}.detail-heading p{font-size:11px;color:#9fb1c1;margin:0}.detail-meta-label{display:block;color:var(--green);font-size:9px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase;opacity:.9;margin:6px 0 3px}.detail-meta-list{display:flex;flex-wrap:wrap;gap:4px 26px;margin-top:7px}.detail-meta-row{min-width:0;max-width:100%}.detail-meta-value{display:block;font-size:11.5px;color:#cbd5e1;line-height:1.5;word-break:break-word}.detail-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}.brand-collapse{margin-left:0;flex-shrink:0}.post-url-bar{display:flex;align-items:end;gap:12px;margin:12px 23px 0;padding:11px 12px;border:1px solid #99f6e466;border-radius:10px;background:linear-gradient(112deg,#16222c 0%,#1c2b36 67%,#213f44 86%,#182630 100%);box-shadow:inset 0 1px rgba(204,251,241,.18);flex-shrink:0}.post-url-input{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;cursor:pointer}.post-url-input span{font-size:9px;letter-spacing:1.2px;font-weight:700;color:#99f6e4}.post-url-input input{height:36px;width:100%;min-width:0;padding:0 10px;border:1px solid #496073;border-radius:7px;background:linear-gradient(115deg,#121a22 0 68%,#1d3338 86%,#141e27 100%);color:#f8fafc;font:inherit;font-size:11px;outline:0;cursor:pointer;transition:border-color .15s,box-shadow .15s}.post-url-input:hover input,.post-url-input input:focus{border-color:#99f6e4;box-shadow:0 0 0 2px rgba(153,246,228,.18)}.open-browser{height:36px;white-space:nowrap;padding:0 14px!important}.sidebar-restore{flex-shrink:0}.rail-toggle{flex-shrink:0}
+.detail-overlay{display:none;position:fixed;inset:0;background:rgba(7,11,15,.84);backdrop-filter:blur(7px);z-index:25;align-items:center;justify-content:center;padding:24px}.detail-overlay.show{display:flex;isolation:isolate}.post-peek-svg{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;overflow:visible;opacity:var(--sticker-opacity,.5);transition:opacity .2s ease}.post-peek-behind{z-index:1}.post-peek-front{z-index:3}body.sticker-hidden .post-peek-svg,body.animations-disabled .post-peek-svg,body.imp-anim-disabled .post-peek-svg{display:none!important}body.post-detail-open .sidebar-sticker-slot{opacity:0!important;pointer-events:none!important}.post-modal{position:relative;z-index:2;margin-top:56px;width:min(920px,calc(100vw - 136px));max-height:calc(100vh - 150px);background:linear-gradient(145deg,#25313d,#1a232c 56%,#131a21);border:1px solid #3d5060;border-radius:16px;box-shadow:0 25px 90px #000a;display:flex;flex-direction:column;overflow:hidden}.detail-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--line);gap:20px;flex-shrink:0}.detail-heading{min-width:0}.detail-heading .eyebrow{margin:0 0 6px}.detail-heading h2{font-size:19px;letter-spacing:-.4px;margin:0 0 5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;word-break:break-word}.detail-heading p{font-size:11px;color:#9fb1c1;margin:0}.detail-meta-label{display:block;color:var(--green);font-size:9px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase;opacity:.9;margin:6px 0 3px}.detail-meta-list{display:flex;flex-wrap:wrap;gap:4px 26px;margin-top:7px}.detail-meta-row{min-width:0;max-width:100%}.detail-meta-value{display:block;font-size:11.5px;color:#cbd5e1;line-height:1.5;word-break:break-word}.detail-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}.brand-collapse{margin-left:0;flex-shrink:0}.post-url-bar{display:flex;align-items:end;gap:12px;margin:12px 23px 0;padding:11px 12px;border:1px solid #99f6e466;border-radius:10px;background:linear-gradient(112deg,#16222c 0%,#1c2b36 67%,#213f44 86%,#182630 100%);box-shadow:inset 0 1px rgba(204,251,241,.18);flex-shrink:0}.post-url-input{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;cursor:pointer}.post-url-input span{font-size:9px;letter-spacing:1.2px;font-weight:700;color:#99f6e4}.post-url-input input{height:36px;width:100%;min-width:0;padding:0 10px;border:1px solid #496073;border-radius:7px;background:linear-gradient(115deg,#121a22 0 68%,#1d3338 86%,#141e27 100%);color:#f8fafc;font:inherit;font-size:11px;outline:0;cursor:pointer;transition:border-color .15s,box-shadow .15s}.post-url-input:hover input,.post-url-input input:focus{border-color:#99f6e4;box-shadow:0 0 0 2px rgba(153,246,228,.18)}.open-browser{height:36px;white-space:nowrap;padding:0 14px!important}.sidebar-restore{flex-shrink:0}.rail-toggle{flex-shrink:0}
 .detail-grid{padding:18px 23px 20px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:max-content;align-content:start;gap:13px;overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:0;scrollbar-width:thin;scrollbar-color:#5eead4 #131a21}.picture-tile{border:2px solid #3d5060;border-radius:11px;overflow:hidden;background:#141b22;cursor:pointer;position:relative;transition:.15s;width:100%;aspect-ratio:3/4}.picture-tile:hover{border-color:#648296;transform:translateY(-2px)}.picture-tile.chosen{border-color:#99f6e4;box-shadow:0 0 0 2px #99f6e427}.picture-art{width:100%;aspect-ratio:3/4;position:relative;overflow:hidden}.picture-art::before{content:"";display:block;padding-bottom:calc(100% * 4 / 3)}.picture-art>svg,.picture-art>img,.picture-art>video{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center 22%}.picture-num{position:absolute;left:10px;top:10px;background:#0b0f14e6;color:#f8fafc;border-radius:6px;padding:5px 8px;font-size:10px;z-index:2}.picture-tick{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:11px;background:rgba(10,14,18,.48);border:2px solid rgba(255,255,255,.86);backdrop-filter:blur(6px);box-shadow:0 3px 10px rgba(0,0,0,.34);display:flex;align-items:center;justify-content:center;color:#fff;z-index:2;transition:transform .16s,background .16s,border-color .16s,box-shadow .16s}.picture-tick svg{position:static!important;inset:auto!important;width:21px;height:21px;display:block;flex-shrink:0;pointer-events:none}.chosen .picture-tick{background:linear-gradient(125deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);border:2px solid #ffffff;color:#091318;box-shadow:0 0 0 2px rgba(0,0,0,.32),0 4px 14px rgba(153,246,228,.38)}.picture-zoom-btn{position:absolute;right:10px;bottom:10px;width:39px;height:39px;border-radius:11px;background:rgba(11,15,20,.82);border:1.5px solid rgba(255,255,255,.55);color:#fff;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;z-index:2;transition:transform .14s,background .14s,border-color .14s}.picture-zoom-btn:hover{background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);border-color:#f1f5f9;color:#091318;transform:scale(1.06)}.picture-zoom-btn svg{position:static;inset:auto;width:21px;height:21px;display:block;flex-shrink:0;pointer-events:none}.video-notice{display:none;margin:12px 23px 0;padding:10px 12px;border:1px solid #496073;border-radius:9px;background:linear-gradient(105deg,rgba(204,251,241,.18),rgba(45,212,191,.10));color:#e2e8f0;font-size:11px;line-height:1.5}.video-notice.show{display:block}.video-stamp{position:absolute;inset:0;display:grid;place-items:center;color:white;font-size:12px;font-weight:700;text-shadow:0 2px 8px #000;background:rgba(10,9,14,.14);pointer-events:none;z-index:2}.video-pill{position:absolute;right:10px;top:10px;border:1px solid #ffffff55;border-radius:6px;padding:5px 7px;background:#0b0f14bd;color:#fff;font-size:9px;font-weight:700;letter-spacing:.5px;z-index:2}.picture-tile.is-video{cursor:default}.picture-tile.is-video:hover{transform:none;border-color:#648296}.picture-tile.is-video .picture-tick{display:none}.detail-foot{display:flex;align-items:center;justify-content:space-between;padding:13px 22px;border-top:1px solid var(--line);color:#9fb1c1;font-size:11px;flex-shrink:0}.detail-foot strong{color:#f8fafc}.detail-select-all{height:37px;min-height:37px;border:1px solid #f1f5f9;background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);color:#091318;padding:0 15px;border-radius:10px;font:inherit;font-weight:650;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;box-shadow:inset 0 1px rgba(255,255,255,.65),0 4px 14px rgba(0,0,0,.25)}.detail-done{padding:9px 15px!important}.photo-fullsize-overlay{display:none;position:fixed;inset:0;background:rgba(5,9,12,.92);backdrop-filter:blur(8px);z-index:60;align-items:center;justify-content:center;padding:24px}.photo-fullsize-overlay.show{display:flex}.photo-fullsize-inner{position:relative;max-width:95vw;max-height:92vh;display:flex;flex-direction:column;align-items:center;gap:10px}.photo-fullsize-bar{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#f8fafc;font-size:12px;font-weight:600}.photo-fullsize-media{max-width:95vw;max-height:84vh;display:flex;align-items:center;justify-content:center;border-radius:12px;overflow:hidden;border:1px solid #496073;background:#0b0f14;box-shadow:0 24px 80px rgba(0,0,0,.85)}.photo-fullsize-media img,.photo-fullsize-media svg{max-width:95vw;max-height:84vh;width:auto;height:auto;display:block;object-fit:contain}.card.selected{border-color:#99f6e4;box-shadow:0 0 0 2px #99f6e428}.selected-mark{position:absolute;top:10px;left:10px;background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);color:#091318;border:1.5px solid #ffffff;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:700;box-shadow:0 0 0 1.5px rgba(0,0,0,.32),0 3px 10px #0004;display:inline-flex;align-items:center;gap:4px}.selected-mark svg{width:12px!important;height:12px!important;display:block;flex-shrink:0}.post-count{position:absolute;bottom:10px;right:10px;background:#0b0f14e6;color:#fff;border-radius:6px;padding:5px 8px;font-size:10px}.src-badge{position:absolute;bottom:10px;left:10px;z-index:4;background:#0b0f14e6;color:#e2e8f0;border:1px solid rgba(255,255,255,.16);border-radius:6px;padding:4px 7px;font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;line-height:1;pointer-events:none}.src-badge[data-kind="direct"]{color:#7dd3fc;border-color:rgba(125,211,252,.5)}.src-badge[data-kind="api"]{color:#fca5a5;border-color:rgba(252,165,165,.5)}.src-badge[data-kind="mixed"]{color:#fcd34d;border-color:rgba(252,211,77,.5)}body.src-hidden .src-badge,.src-badge[data-kind="unknown"]{display:none!important}.src-status-note{font-size:10px;color:#8fa3b3;margin-left:9px;letter-spacing:.3px;white-space:nowrap;align-self:center}
 @media(max-width:700px){.crop-modal{padding:16px}.post-url-bar{align-items:stretch;flex-direction:column}.post-url-input{width:100%}.open-browser{align-self:flex-end}.detail-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:13px}.detail-head{padding:16px}.detail-actions{flex-direction:column-reverse}.post-modal{max-height:92vh}.detail-foot{padding:11px 15px}}
 @media(max-width:900px){.app{grid-template-columns:var(--sidebar-width,244px) minmax(0,1fr)}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:0 24px 35px}}@media(max-width:590px){.app{display:block}.sidebar{display:none}main{padding:0 16px 25px}.topbar{height:62px;margin-bottom:26px}.heading-row{align-items:flex-start;gap:12px}.heading-row h1{font-size:24px}.heading-row p{max-width:260px;line-height:1.5}.selection-count{white-space:nowrap}.grid{grid-template-columns:1fr 1fr;gap:10px}.photo{height:145px}.card-info{padding:10px}.toolbar{align-items:flex-start;gap:8px;flex-direction:column}.settings-layout{grid-template-columns:1fr}.setting-nav{display:none}.toolbar-right{width:100%;align-items:stretch}.sort-control select{min-width:165px}.toolbar-search-row{width:100%;justify-content:space-between;flex-wrap:wrap}.selection-count{flex-shrink:0}.search{flex:1;min-width:0}.search input{width:115px}}
 
 #settingsLogin,#jsonUploadBtn,#headerLogout{height:38px;min-height:38px;display:inline-flex;align-items:center;justify-content:center}
 .library-footer{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:19px;color:#9fb1c1;font-size:10px}.pagination{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.page-btn{height:32px;min-width:32px;padding:0 10px;border:1px solid rgba(204,251,241,.16);border-radius:8px;background:linear-gradient(105deg,rgba(148,163,184,.10),rgba(45,212,191,.05));color:#cbd5e1;font:inherit;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s}.page-btn:hover:not(:disabled){border-color:rgba(204,251,241,.36);color:#f8fafc}.page-btn.active{background:linear-gradient(105deg,rgba(204,251,241,.24),rgba(45,212,191,.16));border-color:rgba(204,251,241,.42);color:#99f6e4;box-shadow:inset 0 0 0 1px rgba(153,246,228,.18)}.page-btn:disabled{opacity:.38;cursor:not-allowed}.page-ellipsis{color:#9fb1c1;padding:0 4px;font-size:11px;user-select:none}.page-info{color:#99f6e4;font-size:11px;font-weight:600;margin-right:4px}
-.ig-browser-modal{position:relative;z-index:2;margin-top:64px;width:min(980px,96vw);max-height:calc(100vh - 172px);background:linear-gradient(165deg,rgba(20,28,29,.97),rgba(13,18,19,.98));border:1px solid rgba(166,237,223,.22);border-radius:16px;box-shadow:0 28px 80px rgba(0,0,0,.72);display:flex;flex-direction:column;overflow:hidden}
-.ig-browser-chrome{display:flex;align-items:center;gap:8px;padding:11px 14px;background:rgba(10,15,16,.88);border-bottom:1px solid rgba(166,237,223,.14);flex-wrap:wrap}
-.ig-chrome-btn{height:32px;min-width:32px;padding:0 10px;border-radius:8px;border:1px solid rgba(166,237,223,.16);background:rgba(26,37,39,.75);color:#d7e5e3;font:inherit;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px}
-.ig-chrome-btn:hover{border-color:rgba(166,237,223,.38);color:#fff}
-.ig-address-bar{flex:1;min-width:210px;display:flex;align-items:center;gap:7px;background:#0d1314;border:1px solid rgba(166,237,223,.18);border-radius:8px;padding:0 10px;height:32px}
-.ig-address-bar span{font-size:10px;color:#729893;font-weight:700;letter-spacing:.04em}
-.ig-address-bar input{flex:1;background:transparent;border:none;color:#e6f2f0;font:inherit;font-size:11.5px;outline:none}
-.ig-login-strip{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(21,31,33,.82);border-bottom:1px solid rgba(166,237,223,.12);flex-wrap:wrap}
-.ig-login-strip input{height:32px;padding:0 10px;border-radius:7px;border:1px solid rgba(166,237,223,.18);background:#0f1617;color:#edf4f3;font:inherit;font-size:11.5px;outline:none;min-width:140px}
-.ig-login-strip input:focus{border-color:#a6eddf}
-.ig-chrome-btn.active{border-color:rgba(166,237,223,.42);background:rgba(41,116,108,.22);color:#a6eddf}
-.ig-viewport-wrap{position:relative;background:radial-gradient(circle at 50% 40%,#141d1f 0%,#090c0d 65%,#050708 100%);display:flex;align-items:center;justify-content:center;min-height:360px;max-height:54vh;overflow-y:auto;outline:none;padding:22px 24px}
-.ig-vp-login-layout{display:flex;align-items:center;justify-content:center;width:100%;margin:0 auto}
-.ig-vp-card{width:350px;max-width:100%;margin:0 auto;background:#121718;border:1px solid #2a393b;border-radius:12px;padding:24px 26px 20px;text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.62)}
-.ig-vp-logo{font-size:29px;font-weight:700;margin-bottom:4px;background:linear-gradient(135deg,#f9ce34,#ee2a7b,#6228d7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.ig-vp-sub{font-size:11px;color:#8fa3a1;margin-bottom:16px}
-.ig-vp-card input{width:100%;height:36px;background:#192224;border:1px solid #35494b;border-radius:7px;padding:0 11px;color:#fff;font:inherit;font-size:12.5px;margin-bottom:8px;outline:none}
-.ig-vp-card input:focus{border-color:#a6eddf;box-shadow:0 0 0 2px rgba(166,237,223,.2)}
-.ig-vp-submit{width:100%;height:36px;background:linear-gradient(118deg,#0095f6 0%,#1877f2 100%);color:#fff;border:none;border-radius:8px;font:inherit;font-weight:600;font-size:12.5px;margin-top:4px;cursor:pointer}
-.ig-vp-submit:hover{filter:brightness(1.06)}
-.ig-vp-status{color:#a6eddf;font-size:11.5px;margin-top:10px;min-height:16px}
-.ig-vp-foot{color:#7e918f;font-size:10.5px;margin-top:10px;line-height:1.45}
-.ig-vp-session{width:100%;max-width:860px;display:flex;flex-direction:column;gap:14px}
-.ig-vp-session-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#151e20;border:1px solid #2b3d3e;border-radius:10px;gap:12px;flex-wrap:wrap}
-.ig-vp-session-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.ig-vp-tile{background:#151d1e;border:1px solid #2b3c3d;border-radius:9px;overflow:hidden}
-.ig-vp-thumb{height:130px;position:relative;background:#0a0e0f}
-.ig-vp-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.ig-vp-tag{position:absolute;top:6px;left:6px;background:rgba(12,18,19,.84);color:#a6eddf;padding:2px 6px;border-radius:5px;font-size:9.5px;font-weight:700}
-.ig-vp-url{padding:6px 8px;font-size:10px;color:#8fa3a1;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ig-scontent-drawer{padding:10px 14px;background:rgba(12,18,19,.95);border-top:1px solid rgba(166,237,223,.14);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:11px;color:#a5b8b6}
 main::-webkit-scrollbar,.detail-grid::-webkit-scrollbar{width:10px}main::-webkit-scrollbar-track,.detail-grid::-webkit-scrollbar-track{background:linear-gradient(180deg,#131a21,#1a232c);border-left:1px solid #2d3c4a}main::-webkit-scrollbar-thumb,.detail-grid::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#cbd5e1,#99f6e4,#2dd4bf);border:2px solid #161f26;border-radius:8px}main::-webkit-scrollbar-thumb:hover,.detail-grid::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#f8fafc,#99f6e4)}
 
 /* Theme Panel in UI Settings */
@@ -598,13 +567,14 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <div class="nav-label">Workspace</div>
   <button class="nav active" id="libraryNav" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Saved posts</button>
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
+  <button class="nav" id="browserNav" type="button" onclick="openInstagramBrowser()" title="Open Instagram in the in-app browser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Browser</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
-  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.16; open version history" title="Click to view what changed in each version">v.1.16</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
+  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.17; open version history" title="Click to view what changed in each version">v.1.17</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
   <div class="sidebar-resize" id="sidebarResize" role="separator" aria-label="Resize sidebar" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="360" aria-valuenow="244" tabindex="0" onpointerdown="startSidebarResize(event)" onkeydown="keyboardSidebarResize(event)"></div>
 </aside>
 <main>
   <div class="main-bg-sticker" id="mainBgSticker" aria-hidden="true"></div>
-  <header class="topbar"><div class="crumb-actions"><button type="button" class="icon-btn sidebar-toggle" id="railToggle" title="Hide sidebar" aria-label="Hide sidebar" aria-pressed="false" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 9l-3 3 3 3"/></svg></button><button class="icon-btn home-nav" title="Go to Saved posts" aria-label="Go to Saved posts" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9.5V21h14V9.5M9 21v-7h6v7"/></svg></button><div class="crumb"><b id="crumbText">Saved posts</b> <span id="crumbSub">/ Your Instagram posts</span></div></div><div class="top-actions"><button class="icon-btn" id="topRefreshBtn" title="Restart app" aria-label="Restart app" onclick="restartApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button><button class="icon-btn" title="Settings" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg></button><button type="button" class="icon-btn exit-app-btn" id="topExitAppBtn" title="Exit app" aria-label="Exit app" aria-haspopup="dialog" hidden onclick="showLeavingPrompt()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button><button class="login-btn" id="topLoginBtn" title="Log in with built-in Instagram browser" onclick="openIgBrowserModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg><span id="topLoginBtnLabel">Log in</span></button></div></header>
+  <header class="topbar"><div class="crumb-actions"><button type="button" class="icon-btn sidebar-toggle" id="railToggle" title="Hide sidebar" aria-label="Hide sidebar" aria-pressed="false" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 9l-3 3 3 3"/></svg></button><button class="icon-btn home-nav" title="Go to Saved posts" aria-label="Go to Saved posts" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9.5V21h14V9.5M9 21v-7h6v7"/></svg></button><div class="crumb"><b id="crumbText">Saved posts</b> <span id="crumbSub">/ Your Instagram posts</span></div></div><div class="top-actions"><button class="icon-btn" id="topRefreshBtn" title="Restart app" aria-label="Restart app" onclick="restartApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button><button class="icon-btn" title="Settings" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg></button><button type="button" class="icon-btn exit-app-btn" id="topExitAppBtn" title="Exit app" aria-label="Exit app" aria-haspopup="dialog" hidden onclick="showLeavingPrompt()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button><button class="login-btn" id="topLoginBtn" title="Open Instagram's login page in the in-app browser" onclick="openInstagramBrowser('https://www.instagram.com/accounts/login/')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg><span id="topLoginBtnLabel">Log in</span></button></div></header>
   <section class="content" id="libraryPage">
     <div class="toolbar"><div class="filters"><button class="filter active" onclick="setFilter(this,'all')">All posts</button><button class="filter" id="selectedFilter" onclick="setFilter(this,'selected')">Selected (<span id="selectedPostCount">0</span>)</button><button type="button" class="filter source-toggle-button" id="librarySourceToggleBtn" data-role="source-toggle" onclick="toggleSourceBadges()" title="Hide source labels" aria-label="Hide source labels" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.4"/></svg></button><span id="srcStatusNote" class="src-status-note" title="Source labels are resolved as posts are viewed"></span><button id="uploadJsonToolbarBtn" class="primary download-toolbar" onclick="openUploadJsonModal()"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Upload JSON</button><button id="downloadBtn" class="primary download-toolbar" onclick="downloadSelected()" style="display:none;opacity:.45" disabled aria-disabled="true"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</button><button id="openDownloadFolderBtn" class="outline download-toolbar" onclick="openDownloadFolder()" style="display:none" title="Open the saved photos folder in File Explorer" aria-label="Open the saved photos folder in File Explorer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button></div><div class="toolbar-right"><div class="sort-control"><label id="sortPostsLabel" onclick="toggleSortMenu(event)">Sort by:</label><input type="hidden" id="sortPosts" value="newest"><div class="sort-dropdown" id="sortDropdown"><button type="button" class="sort-trigger" id="sortTriggerBtn" aria-haspopup="listbox" aria-expanded="false" onclick="toggleSortMenu(event)"><span id="sortTriggerLabel">↓ Newest</span><svg class="sort-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="sort-menu" id="sortMenu" role="listbox" aria-labelledby="sortPostsLabel"><button type="button" class="sort-option active" data-value="newest" role="option" aria-selected="true" onclick="selectSortOption('newest','↓ Newest',event)"><span>↓ Newest</span><span class="sort-opt-dot"></span></button><button type="button" class="sort-option" data-value="oldest" role="option" aria-selected="false" onclick="selectSortOption('oldest','↑ Oldest',event)"><span>↑ Oldest</span><span class="sort-opt-dot"></span></button><button type="button" class="sort-option" data-value="likes" role="option" aria-selected="false" onclick="selectSortOption('likes','♡ Most liked',event)"><span>♡ Most liked</span><span class="sort-opt-dot"></span></button></div></div></div><div class="toolbar-search-row"><label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search" placeholder="Search posts..." oninput="filterSearch()"></label></div></div></div>
     <div class="grid" id="postGrid"></div>
@@ -629,12 +599,12 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
             <div class="settings-card-head-inner">
             <div class="settings-card-head-text">
-              <h2>Built-in Instagram Browser &amp; Login</h2>
-              <p>Log in once inside the built-in browser and stay logged in while browsing posts. Authenticated sessions extract <code>scontent</code> carousel photos directly while keeping our fast video stream pipeline for videos.</p>
+              <h2>Instagram Browser</h2>
+              <p>Browse Instagram's real website in a native in-app browser. Sign in directly with Instagram; the WebView2 browser profile persists on this PC across app restarts.</p>
             </div>
             <span class="settings-card-chevron" aria-hidden="true">▾</span>
           </div></div>
-          <div class="setting-body"><label class="field-label" for="igSettingsStatusInput">Instagram session status</label><div class="input-row"><input class="text-input" id="igSettingsStatusInput" value="Not logged in — open Built-in Browser to sign in" readonly><button class="primary" onclick="openIgBrowserModal()">Open Built-in Browser</button><button class="outline" id="igSettingsLogoutBtn" onclick="logoutIgBrowser()" style="display:none">Log out</button></div><p class="hint" id="igSettingsHint">Your logged-in Instagram session persists across restarts and extracts <code>scontent</code> photo URLs when opening posts.</p></div>
+          <div class="setting-body"><label class="field-label" for="igSettingsStatusInput">Browser profile</label><div class="input-row"><input class="text-input" id="igSettingsStatusInput" value="Sign in on instagram.com in the in-app browser" readonly><button class="primary" onclick="openInstagramBrowser()">Open Browser</button></div><p class="hint" id="igSettingsHint">Instagram handles sign-in directly. The app does not collect your password, and browser sign-in is not currently shared with Save via URL or saved-post resolution.</p></div>
         </div>
         <div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
@@ -896,51 +866,6 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 <div class="crop-modal-wrap" id="backgroundCropModal"><section class="crop-modal" role="dialog" aria-modal="true" aria-labelledby="cropTitle"><div class="crop-heading"><div><div class="eyebrow">BACKGROUND IMAGE</div><h2 id="cropTitle">Choose the crop</h2><p>Drag the picture to reposition it, then zoom to frame the area you want.</p></div><button class="icon-btn" onclick="cancelBackgroundCrop()" aria-label="Cancel crop">✕</button></div><div class="crop-ratios" role="group" aria-label="Crop shape"><button class="crop-ratio active" onclick="setCropRatio(16,9,this)">Wide · 16:9</button><button class="crop-ratio" onclick="setCropRatio(4,3,this)">Classic · 4:3</button><button class="crop-ratio" onclick="setCropRatio(1,1,this)">Square</button><button class="crop-ratio" onclick="setCropFullSize(this)">Full size</button></div><div class="crop-preview" id="cropViewport" onpointerdown="startCropDrag(event)"><img id="cropImage" alt="Move and zoom to select the background crop" draggable="false"></div><label class="field-label crop-zoom-label" for="cropZoom">Zoom <strong id="cropZoomValue">100%</strong></label><input class="opacity-slider" id="cropZoom" type="range" min="1" max="3" step="0.01" value="1" oninput="setCropZoom(this.value)"><div class="crop-actions"><button class="outline" onclick="cancelBackgroundCrop()">Cancel</button><button class="primary" onclick="applyBackgroundCrop()">Use this crop</button></div></section></div>
 <div class="crop-modal-wrap" id="uploadJsonModal" onclick="if(event.target===this)closeUploadJsonModal()"><section class="upload-json-modal" role="dialog" aria-modal="true" aria-labelledby="uploadJsonModalTitle"><div class="crop-heading"><div><div class="eyebrow">IMPORT SAVED POSTS</div><h2 id="uploadJsonModalTitle">Upload JSON file</h2><p>Select or drag &amp; drop your Instagram <code>saved_posts.json</code> file to load your saved posts.</p></div><button class="icon-btn" onclick="closeUploadJsonModal()" aria-label="Close Upload JSON window">✕</button></div><div class="upload-dropzone" id="uploadJsonDropzone" onclick="document.getElementById('postJsonFile').click()" ondragover="handleJsonDragOver(event)" ondragleave="handleJsonDragLeave(event)" ondrop="handleJsonDrop(event)"><div class="upload-dropzone-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div><strong>Click to choose a JSON file, or drag &amp; drop it here</strong><span>Supports Instagram saved posts JSON exports (<code>.json</code>)</span></div><div class="upload-or" id="uploadJsonOr" hidden>or</div><div class="upload-recent" id="uploadJsonRecent" hidden><div class="upload-recent-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3.5 2"/></svg></div><div class="upload-recent-copy"><strong id="uploadJsonRecentName"></strong><span id="uploadJsonRecentMeta"></span></div><div class="upload-recent-actions"><button class="primary" id="uploadJsonRecentBtn" onclick="useLastUploadedJson()">Use it</button><button class="icon-btn" onclick="forgetLastUploadedJson()" aria-label="Forget the last uploaded JSON file" title="Forget this file"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button></div></div><div class="input-row" style="margin-top:12px"><input class="text-input" id="uploadJsonModalSummary" value="No JSON file loaded yet" readonly aria-label="Selected JSON file"></div></section></div>
 <div class="modal-wrap" id="jsonNoticeModal" onclick="if(event.target===this)closeJsonNoticeModal()"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="jsonNoticeTitle" aria-describedby="jsonNoticeMessage"><button class="close" onclick="closeJsonNoticeModal()" aria-label="Close">✕</button><div class="modal-logo"><svg width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><circle cx="12" cy="16.5" r=".8" fill="currentColor"/></svg></div><h2 id="jsonNoticeTitle">No posts found in this file</h2><p id="jsonNoticeMessage">The uploaded JSON file contains no posts, or this may be the wrong file overall. Please double-check the file and try again.</p><button class="primary ig-login" onclick="closeJsonNoticeModal()">Got it</button></div></div>
-<div class="detail-overlay" id="igBrowserModal" onclick="if(event.target===this)closeIgBrowserModal()">
-  <svg class="post-peek-svg post-peek-behind" fill="none" id="igPeekBehind" aria-hidden="true"></svg>
-  <section class="ig-browser-modal" role="dialog" aria-modal="true" aria-label="Built-in Instagram Browser">
-    <header class="ig-browser-chrome">
-      <button class="ig-chrome-btn" onclick="igBrowserNavigate('https://www.instagram.com/accounts/login/')" title="Go to Instagram Login">🔑 Login Page</button>
-      <button class="ig-chrome-btn" onclick="igBrowserReload()" title="Reload Built-in Browser">↻</button>
-      <div class="ig-address-bar">
-        <span>HTTPS</span>
-        <input id="igBrowserUrlInput" value="https://www.instagram.com/accounts/login/" placeholder="https://www.instagram.com/p/..." onkeydown="if(event.key==='Enter')igBrowserNavigate(this.value)">
-      </div>
-      <button class="ig-chrome-btn" onclick="igBrowserNavigate(document.getElementById('igBrowserUrlInput').value)">Go</button>
-      <button class="icon-btn" onclick="closeIgBrowserModal()" aria-label="Close Built-in Browser">✕</button>
-    </header>
-    <div class="ig-login-strip" id="igBrowserLoginStrip">
-      <button class="primary" id="igLoginSubmitBtn" onclick="submitIgBrowserLogin()" style="height:32px;padding:0 13px;font-size:11.5px">Sign in &amp; Stay Logged In</button>
-      <button class="ig-chrome-btn active" id="igCookieSyncToggleBtn" onclick="toggleIgCookieSyncRow()" title="Hide or show sessionid cookie bar">Hide SSiD</button>
-      <button class="ig-chrome-btn" id="igModalLogoutBtn" onclick="logoutIgBrowser()" style="display:none;color:#fca5a5;border-color:rgba(252,165,165,.3)">Log out</button>
-    </div>
-    <div class="ig-login-strip" id="igCookieSyncRow" style="display:flex;background:rgba(15,23,25,.95)">
-      <input id="igCookieInput" placeholder="Paste Instagram sessionid cookie (or full Cookie header) to sync session immediately…" style="flex:1;min-width:260px" onkeydown="if(event.key==='Enter')submitIgCookieSync()">
-      <button class="primary" onclick="submitIgCookieSync()" style="height:32px;padding:0 13px;font-size:11.5px">Attach Session Cookie</button>
-    </div>
-    <div class="ig-viewport-wrap" id="igBrowserViewportWrap">
-      <div id="igBrowserViewportContent" style="width:100%;display:flex;align-items:center;justify-content:center">
-        <div class="ig-vp-login-layout">
-          <div class="ig-vp-card">
-            <div class="ig-vp-logo">Instagram</div>
-            <div class="ig-vp-sub">instagram.com/accounts/login</div>
-            <input id="igVpUser" placeholder="Phone number, username, or email" autocomplete="username" onkeydown="if(event.key==='Enter')submitIgBrowserLogin()">
-            <input id="igVpPass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitIgBrowserLogin()">
-            <input id="igVp2fa" placeholder="6-digit 2FA security code" style="display:none" onkeydown="if(event.key==='Enter')submitIgBrowserLogin()">
-            <button type="button" class="ig-vp-submit" id="igVpSubmitBtn" onclick="submitIgBrowserLogin()">Log in</button>
-            <div class="ig-vp-status" id="igVpStatus">Not logged in</div>
-            <div class="ig-vp-foot">Persistent session cookies (<code>sessionid</code>, <code>csrftoken</code>) are stored locally in your workspace.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <footer class="ig-scontent-drawer">
-      <div id="igBrowserStatusText">Log in once to stay signed in while browsing posts in <strong>Saved posts</strong> and <strong>Save via URL</strong>. Videos continue using our fast stream pipeline.</div>
-      <div id="igBrowserScontentSummary" style="color:#a6eddf;font-weight:600"></div>
-    </footer>
-  </section>
-  <svg class="post-peek-svg post-peek-front" fill="none" id="igPeekFront" aria-hidden="true"></svg>
-</div>
 <div class="json-throw-fx-layer" id="jsonThrowFxLayer" aria-hidden="true">
   <svg class="json-throw-tether-svg" id="jsonThrowTetherSvg"></svg>
   <svg class="json-throw-tether-svg" id="impButtonClickFxSvg"></svg>
@@ -1367,7 +1292,7 @@ function closePost(){closePhotoFullSize();const closedIdx=currentPost;const post
 function showSettingsTab(name,button){setUiPref('settingsTab',name);document.querySelector('main')?.scrollTo({top:0,behavior:'smooth'});document.querySelectorAll('.settings-tab').forEach(tab=>{const active=tab===button;tab.setAttribute('aria-selected',String(active));tab.setAttribute('class','settings-tab'+(active?' active':''))});document.querySelectorAll('.settings-tab-panel').forEach(panel=>panel.classList.toggle('active',panel.id==='settings-'+name))}function setFilter(el,f){filter=f;currentPage=1;document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));el.classList.add('active');render();loadCurrentPagePosts()}function filterSearch(){currentPage=1;render();loadCurrentPagePosts()}function showPage(p){let mode=p==='save-url'?'save-url':p==='settings'?'settings':'library';if(mode==='settings'&&document.getElementById('settingsPage').style.display==='block')mode='library';document.getElementById('libraryPage').style.display=mode==='library'?'block':'none';const saveUrlEl=document.getElementById('saveUrlPage');if(saveUrlEl)saveUrlEl.style.display=mode==='save-url'?'block':'none';document.getElementById('settingsPage').style.display=mode==='settings'?'block':'none';document.getElementById('libraryNav').classList.toggle('active',mode==='library');document.getElementById('saveUrlNav')?.classList.toggle('active',mode==='save-url');document.getElementById('settingsNav').classList.toggle('active',mode==='settings');document.getElementById('crumbText').textContent=mode==='settings'?'Settings':mode==='save-url'?'Save via URL':'Saved posts';document.getElementById('crumbSub').textContent=mode==='settings'?'/ Preferences':mode==='save-url'?'/ Fetch a post by link':'/ Your Instagram posts';document.querySelector('main').scrollTo({top:0,behavior:'smooth'})}let urlTabPost=null;
 function saveUrlTabState(){if(!urlTabPost)return;try{const p=urlTabPost;const compact={title:p.title,location:p.location,date:p.date,likes:p.likes,url:p.url,shortcode:p.shortcode,loading:false,resolved:Boolean(p.resolved),fullResolved:Boolean(p.fullResolved),confirmedSingleMedia:Boolean(p.confirmedSingleMedia),serverResolved:Boolean(p.serverResolved),savedAt:p.savedAt,pictures:(p.pictures||[]).map(pic=>({artIndex:pic.artIndex,rawUrl:pic.rawUrl||'',proxyUrl:pic.proxyUrl||'',imgUrl:pic.imgUrl||'',fallbackUrl:pic.fallbackUrl||'',videoUrl:pic.videoUrl||'',selected:Boolean(pic.selected),isVideo:Boolean(pic.isVideo)}))};localStorage.setItem('stillSane.urlTabPostV3',JSON.stringify(compact))}catch(_){}}
 function restoreUrlTabState(){try{const rawV3=localStorage.getItem('stillSane.urlTabPostV3');const rawV2=localStorage.getItem('stillSane.urlTabPostV2');const rawV1=localStorage.getItem('stillSane.urlTabPostV1');localStorage.removeItem('stillSane.urlTabPostV1');localStorage.removeItem('stillSane.urlTabPostV2');const raw=rawV3||rawV2||rawV1;if(!raw)return;const saved=JSON.parse(raw);if(saved&&saved.url){if(Array.isArray(saved.pictures))saved.pictures.forEach(pic=>{if(pic&&isVideoCdnUrl(pic.rawUrl||pic.imgUrl)){pic.isVideo=true;pic.selected=false}});saved.mediaLoaded=Boolean((saved.pictures?.length||0)>1||(saved.confirmedSingleMedia&&saved.serverResolved));if(!rawV3||!saved.serverResolved||(saved.pictures?.length||0)<=1||saved.pictures?.some(pic=>pic?.isVideo&&!pic?.videoUrl)){saved.resolved=false;saved.fullResolved=false;saved.confirmedSingleMedia=false;saved.serverResolved=false;saved.mediaLoaded=false}urlTabPost=saved;const input=document.getElementById('directPostUrlInput');if(input&&!input.value)input.value=saved.url;renderSaveUrlTab();if(needsFullCarouselResolution(urlTabPost)){resolveSinglePostVisual(urlTabPost,true).then(()=>{saveUrlTabState();renderSaveUrlTab()})}}}catch(_){}}
-function renderSaveUrlTab(){const grid=document.getElementById('saveUrlGrid');if(!grid)return;if(!urlTabPost){grid.innerHTML='';return}const post=urlTabPost;const badgeSummary=formatMediaBadge(post);const loadingSuffix=post.loading&&needsFullCarouselResolution(post)?' · Loading all photos & videos…':'';const accountText=buildPostAccountText(post);const metaText=buildPostMetaText(post,badgeSummary,loadingSuffix);const metaHtml=buildPostMetaHtml(post,badgeSummary,loadingSuffix);const selected=post.pictures.filter(x=>x.selected).length;const selectableCount=post.pictures.filter(x=>!x.isVideo).length;const selectBtnLabel=selectableCount>0&&selected===selectableCount?'Clear selection':'Select all photos';const zoomBtnSvg='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:static!important;inset:auto!important;width:21px!important;height:21px!important;margin:auto!important;display:block!important;pointer-events:none"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';const tilesHtml=post.pictures.map((pic,j)=>`<article class="picture-tile ${pic.selected?'chosen':''} ${pic.isVideo?'is-video':''}" data-slide="${j}" onclick="toggleUrlTabPicture(${j})"><div class="picture-art">${renderPictureMarkup(pic,post,j,true)}<span class="picture-num">${pic.isVideo?`▶ Video ${j+1} of ${post.pictures.length}`:`Photo ${j+1} of ${post.pictures.length}`}</span>${pic.isVideo&&!pic.videoUrl?'<span class="video-stamp">▶ &nbsp; VIDEO CLIP</span>':''}<span class="picture-tick">${pic.selected?CHECKMARK_SVG:''}</span><span class="src-badge tile-src-badge" data-role="src-badge" data-kind="unknown" title="Where this file came from: Direct = read from Instagram's own HTML, API = save-free.net had to supply it">—</span>${!pic.isVideo?`<button type="button" class="picture-zoom-btn" title="Open photo in full size" aria-label="Open photo in full size" onclick="openPhotoFullSize(event,${j},true)">${zoomBtnSvg}</button>`:''}</div></article>`).join('');grid.innerHTML=`<section class="post-modal" style="width:100%;max-height:none;overflow:visible"><header class="detail-head"><div class="detail-heading"><div class="eyebrow">Instagram post</div><span class="detail-meta-label">Caption</span><h2>${escapeHtml(post.fullCaption||post.title)}</h2><div class="detail-meta-list"><div class="detail-meta-row"><span class="detail-meta-label">Account</span><span class="detail-meta-value">${escapeHtml(accountText)}</span></div><div class="detail-meta-row"><span class="detail-meta-label">Posted</span><span class="detail-meta-value">${metaHtml}</span></div></div></div><div class="detail-actions"><button type="button" class="outline source-toggle-button" data-role="source-toggle" onclick="toggleSourceBadges()" title="Hide source labels" aria-label="Hide source labels" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.4"/></svg></button><button class="primary detail-select-all" onclick="toggleUrlTabSelectAll()">${selectBtnLabel}</button><button class="primary download-toolbar" onclick="downloadUrlTabSelected()" style="opacity:${selected?1:.55}" ${selected?'':'disabled'}><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download${selected?` (${selected})`:''}</button></div></header><div class="post-url-bar"><div class="post-url-input" onclick="copyPostUrlInput(this.querySelector('input'))" title="Click to copy post URL"><span>POST URL</span><input value="${escapeHtml(post.url)}" readonly aria-label="Instagram post URL" title="Click to copy post URL" onclick="event.stopPropagation();copyPostUrlInput(this)"></div><button class="outline open-browser" onclick="if(urlTabPost)openIgBrowserModal(urlTabPost.url)" style="height:36px">🌐 &nbsp; Open in IG Browser</button><button class="primary open-browser" onclick="if(urlTabPost)window.open(urlTabPost.url,'_blank','noopener,noreferrer')">↗ &nbsp; Open in Browser</button></div><div class="detail-grid" style="max-height:none;overflow:visible">${tilesHtml}</div><footer class="detail-foot"><span><strong>${selected}</strong> photo${selected===1?'':'s'} selected in this post</span><button class="primary detail-done" onclick="downloadUrlTabSelected()" style="opacity:${selected?1:.55}" ${selected?'':'disabled'}>Download selected</button></footer></section>`;applySourceVisibility();updateTileSrcBadges()}
+function renderSaveUrlTab(){const grid=document.getElementById('saveUrlGrid');if(!grid)return;if(!urlTabPost){grid.innerHTML='';return}const post=urlTabPost;const badgeSummary=formatMediaBadge(post);const loadingSuffix=post.loading&&needsFullCarouselResolution(post)?' · Loading all photos & videos…':'';const accountText=buildPostAccountText(post);const metaText=buildPostMetaText(post,badgeSummary,loadingSuffix);const metaHtml=buildPostMetaHtml(post,badgeSummary,loadingSuffix);const selected=post.pictures.filter(x=>x.selected).length;const selectableCount=post.pictures.filter(x=>!x.isVideo).length;const selectBtnLabel=selectableCount>0&&selected===selectableCount?'Clear selection':'Select all photos';const zoomBtnSvg='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:static!important;inset:auto!important;width:21px!important;height:21px!important;margin:auto!important;display:block!important;pointer-events:none"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';const tilesHtml=post.pictures.map((pic,j)=>`<article class="picture-tile ${pic.selected?'chosen':''} ${pic.isVideo?'is-video':''}" data-slide="${j}" onclick="toggleUrlTabPicture(${j})"><div class="picture-art">${renderPictureMarkup(pic,post,j,true)}<span class="picture-num">${pic.isVideo?`▶ Video ${j+1} of ${post.pictures.length}`:`Photo ${j+1} of ${post.pictures.length}`}</span>${pic.isVideo&&!pic.videoUrl?'<span class="video-stamp">▶ &nbsp; VIDEO CLIP</span>':''}<span class="picture-tick">${pic.selected?CHECKMARK_SVG:''}</span><span class="src-badge tile-src-badge" data-role="src-badge" data-kind="unknown" title="Where this file came from: Direct = read from Instagram's own HTML, API = save-free.net had to supply it">—</span>${!pic.isVideo?`<button type="button" class="picture-zoom-btn" title="Open photo in full size" aria-label="Open photo in full size" onclick="openPhotoFullSize(event,${j},true)">${zoomBtnSvg}</button>`:''}</div></article>`).join('');grid.innerHTML=`<section class="post-modal" style="width:100%;max-height:none;overflow:visible"><header class="detail-head"><div class="detail-heading"><div class="eyebrow">Instagram post</div><span class="detail-meta-label">Caption</span><h2>${escapeHtml(post.fullCaption||post.title)}</h2><div class="detail-meta-list"><div class="detail-meta-row"><span class="detail-meta-label">Account</span><span class="detail-meta-value">${escapeHtml(accountText)}</span></div><div class="detail-meta-row"><span class="detail-meta-label">Posted</span><span class="detail-meta-value">${metaHtml}</span></div></div></div><div class="detail-actions"><button type="button" class="outline source-toggle-button" data-role="source-toggle" onclick="toggleSourceBadges()" title="Hide source labels" aria-label="Hide source labels" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.4"/></svg></button><button class="primary detail-select-all" onclick="toggleUrlTabSelectAll()">${selectBtnLabel}</button><button class="primary download-toolbar" onclick="downloadUrlTabSelected()" style="opacity:${selected?1:.55}" ${selected?'':'disabled'}><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download${selected?` (${selected})`:''}</button></div></header><div class="post-url-bar"><div class="post-url-input" onclick="copyPostUrlInput(this.querySelector('input'))" title="Click to copy post URL"><span>POST URL</span><input value="${escapeHtml(post.url)}" readonly aria-label="Instagram post URL" title="Click to copy post URL" onclick="event.stopPropagation();copyPostUrlInput(this)"></div><button class="outline open-browser" onclick="if(urlTabPost)openInstagramBrowser(urlTabPost.url)" style="height:36px">🌐 &nbsp; Open in IG Browser</button><button class="primary open-browser" onclick="if(urlTabPost)window.open(urlTabPost.url,'_blank','noopener,noreferrer')">↗ &nbsp; Open in Browser</button></div><div class="detail-grid" style="max-height:none;overflow:visible">${tilesHtml}</div><footer class="detail-foot"><span><strong>${selected}</strong> photo${selected===1?'':'s'} selected in this post</span><button class="primary detail-done" onclick="downloadUrlTabSelected()" style="opacity:${selected?1:.55}" ${selected?'':'disabled'}>Download selected</button></footer></section>`;applySourceVisibility();updateTileSrcBadges()}
 function toggleUrlTabPicture(j){if(!urlTabPost)return;const pic=urlTabPost.pictures[j];if(!pic)return;if(pic.isVideo){if(!pic.videoUrl)toast("This carousel item is a video, not a photo, so it cannot be selected for photo download.");return}pic.selected=!pic.selected;saveUrlTabState();renderSaveUrlTab()}
 function toggleUrlTabSelectAll(){if(!urlTabPost)return;const pics=urlTabPost.pictures.filter(p=>!p.isVideo);const select=pics.some(p=>!p.selected);pics.forEach(p=>p.selected=select);saveUrlTabState();renderSaveUrlTab()}
 function extractArtPayload(artIndex){const markup=typeof artIndex==='number'?String(art[artIndex]||''):'';if(!markup)return{dataUri:'',svgMarkup:''};if(markup.trim().startsWith('<svg'))return{dataUri:'',svgMarkup:markup.trim()};const m=markup.match(/src=["'](data:image\/[^"']+)["']/i);return{dataUri:m?m[1]:'',svgMarkup:''}}
@@ -1980,11 +1905,9 @@ function renderChainLinksAlongCurveV3(p0,p1,p2,sagAmount=0,jitter=0){
 function isPostCarouselModalOpen(){
   const pd=document.getElementById('postDetail');
   const pf=document.getElementById('photoFullSizeModal');
-  const ig=document.getElementById('igBrowserModal');
   return Boolean(
     (pd&&(pd.classList.contains('show')||pd.classList.contains('open')))||
-    (pf&&(pf.classList.contains('show')||pf.classList.contains('open')))||
-    (ig&&(ig.classList.contains('show')||ig.classList.contains('open')))
+    (pf&&(pf.classList.contains('show')||pf.classList.contains('open')))
   );
 }
 function cancelImpButtonClickFx(){
@@ -2377,7 +2300,7 @@ document.addEventListener('pointerdown',e=>{
   }
   if(document.body.classList.contains('leaving-prompt-open'))return;
   if(e.button&&e.button!==0)return;
-  if(isPostCarouselModalOpen()||e.target.closest('#postDetail,#photoFullSizeModal,#igBrowserModal'))return;
+  if(isPostCarouselModalOpen())return;
   const btn=e.target.closest('button,.settings-card-head,.check,.sort-option');
   if(!btn)return;
   const r=btn.getBoundingClientRect();
@@ -2766,186 +2689,16 @@ function restartApp(){
   },260);
 }
 
-let igBrowserState={loggedIn:false,username:'',url:'https://www.instagram.com/accounts/login/',twoFactorRequired:false,twoFactorIdentifier:'',lastResolvedPost:null};
-function renderIgBrowserViewport(state={}){
-  const wrap=document.getElementById('igBrowserViewportContent');
-  if(!wrap)return;
-  const loggedIn=Boolean(igBrowserState.loggedIn);
-  const uname=igBrowserState.username?`@${igBrowserState.username.replace(/^@/,'')}`:'Instagram session';
-  const resolved=state.resolvedPost||state.extracted||igBrowserState.lastResolvedPost;
-  if(loggedIn){
-    const pics=Array.isArray(resolved?.pictures)?resolved.pictures:[];
-    const sc=resolved?.shortcode||'';
-    const mediaHtml=pics.length?`<div class="ig-vp-media-grid">${pics.slice(0,8).map((p,idx)=>{const raw=p.imgUrl||p.rawUrl||'';const src=raw?`/api/image?url=${encodeURIComponent(raw)}&w=360`:'';return`<div class="ig-vp-media-thumb">${src?`<img src="${escapeHtml(src)}" alt="Slide ${idx+1}" loading="lazy">`:''}<span>#${idx+1}${p.isVideo?' · Video':''}</span></div>`}).join('')}</div>`:'';
-    wrap.innerHTML=`<div class="ig-vp-session"><div class="ig-vp-session-head"><div class="ig-vp-avatar">✓</div><div class="ig-vp-session-meta"><h4>Connected as ${escapeHtml(uname)}</h4><p>${escapeHtml(igBrowserState.url||'https://www.instagram.com/')}</p></div></div><div class="ig-vp-session-body">${escapeHtml(state.message||`Persistent Instagram session is active. Every post you open in Saved posts or Save via URL automatically uses your authenticated session${sc?` · Current post: ${sc} (${pics.length} media item${pics.length===1?'':'s'})`:''}.`)}${mediaHtml}</div></div>`;
-    return;
+async function openInstagramBrowser(targetUrl=''){
+  const url=String(targetUrl||'').trim();
+  for(const endpoint of getApiUrls('/api/open-instagram-browser')){
+    const data=await fetchEndpointJson(endpoint,10000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    if(data?.ok)return true;
   }
-  if(!document.getElementById('igVpUser')){
-    const curUser=igBrowserState.username||'';
-    wrap.innerHTML=`<div class="ig-vp-login-layout"><div class="ig-vp-card"><div class="ig-vp-logo">Instagram</div><div class="ig-vp-sub">${escapeHtml(igBrowserState.url||'instagram.com/accounts/login')}</div><input id="igVpUser" placeholder="Phone number, username, or email" autocomplete="username" value="${escapeHtml(curUser)}" onkeydown="if(event.key==='Enter')submitIgBrowserLogin()"><input id="igVpPass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitIgBrowserLogin()"><input id="igVp2fa" placeholder="6-digit 2FA security code" style="display:${igBrowserState.twoFactorRequired?'block':'none'}" onkeydown="if(event.key==='Enter')submitIgBrowserLogin()"><button type="button" class="ig-vp-submit" id="igVpSubmitBtn" onclick="submitIgBrowserLogin()">Log in</button><div class="ig-vp-status" id="igVpStatus">Not logged in</div><div class="ig-vp-foot">Persistent session cookies (<code>sessionid</code>, <code>csrftoken</code>) are stored locally in your workspace.</div></div></div>`;
-  }
-  const vpStatus=document.getElementById('igVpStatus');
-  if(vpStatus){
-    const msg=String(state.message||'').trim();
-    const isErr=/fail|error|invalid|check|not completed|could not/i.test(msg);
-    vpStatus.textContent=msg||'Not logged in';
-    vpStatus.className='ig-vp-status'+(isErr?' err':'');
-  }
-  const vp2fa=document.getElementById('igVp2fa');
-  if(vp2fa)vp2fa.style.display=igBrowserState.twoFactorRequired?'block':'none';
+  toast('The in-app Instagram browser is available in the Windows desktop app.');
+  return false;
 }
-function applyIgBrowserStateUi(state){
-  if(!state||typeof state!=='object')return;
-  if(typeof state.loggedIn==='boolean')igBrowserState.loggedIn=state.loggedIn;
-  if(typeof state.username==='string')igBrowserState.username=state.username;
-  if(typeof state.url==='string'&&state.url)igBrowserState.url=state.url;
-  const loggedIn=Boolean(igBrowserState.loggedIn);
-  const uname=igBrowserState.username?`@${igBrowserState.username.replace(/^@/,'')}`:'Instagram session';
-  const topBtnLabel=document.getElementById('topLoginBtnLabel');
-  if(topBtnLabel){topBtnLabel.textContent=loggedIn?`● ${uname}`:'Log in'}
-  const setInput=document.getElementById('igSettingsStatusInput');
-  if(setInput){setInput.value=loggedIn?`Logged in as ${uname} · Persistent session active (extracting scontent photos)`:'Not logged in — open Built-in Browser to sign in'}
-  const setLogout=document.getElementById('igSettingsLogoutBtn');
-  if(setLogout)setLogout.style.display=loggedIn?'inline-flex':'none';
-  const modLogout=document.getElementById('igModalLogoutBtn');
-  if(modLogout)modLogout.style.display=loggedIn?'inline-flex':'none';
-  const urlInp=document.getElementById('igBrowserUrlInput');
-  if(urlInp&&state.url&&document.activeElement!==urlInp)urlInp.value=state.url;
-  const statusEl=document.getElementById('igBrowserStatusText');
-  if(statusEl&&state.message){statusEl.textContent=state.message}
-  if(state.twoFactorRequired){
-    igBrowserState.twoFactorRequired=true;
-    if(state.twoFactorIdentifier)igBrowserState.twoFactorIdentifier=state.twoFactorIdentifier;
-    const tfa=document.getElementById('igVp2fa');
-    if(tfa){tfa.style.display='block';tfa.focus()}
-  }
-  const resolved=state.resolvedPost||state.extracted;
-  if(resolved&&Array.isArray(resolved.pictures)&&resolved.pictures.length){
-    igBrowserState.lastResolvedPost=resolved;
-    const sc=String(resolved.shortcode||'').toLowerCase();
-    const photoCount=resolved.pictures.filter(p=>!p.isVideo).length;
-    const sumEl=document.getElementById('igBrowserScontentSummary');
-    if(sumEl)sumEl.textContent=`✓ Extracted ${photoCount} scontent photo${photoCount===1?'':'s'}${sc?` for ${sc}`:''}`;
-    if(sc){
-      posts.forEach((p,idx)=>{if(String(p.shortcode||'').toLowerCase()===sc){if(currentPost===idx){applyResolvedPostData(p,{...resolved,fullResolved:true,serverResolved:true});renderDetail()}else{applyPostSummaryData(p,{...resolved,fullResolved:true})}updateCardInDom(idx)}});
-      if(urlTabPost&&String(urlTabPost.shortcode||'').toLowerCase()===sc){applyResolvedPostData(urlTabPost,{...resolved,fullResolved:true,serverResolved:true});saveUrlTabState();renderSaveUrlTab()}
-      scheduleSaveImportedPostsState();
-    }
-  }
-  renderIgBrowserViewport(state);
-}
-async function sendIgBrowserAction(payload){
-  const statusEl=document.getElementById('igBrowserStatusText');
-  if(statusEl&&payload.action==='navigate')statusEl.textContent=`Navigating built-in browser to ${payload.url||'Instagram'}…`;
-  for(const ep of getApiUrls('/api/browser/action')){
-    const data=await fetchEndpointJson(ep,25000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(data){applyIgBrowserStateUi(data);return data}
-  }
-  return null;
-}
-async function syncIgSessionState(withScreenshot=false){
-  const path=withScreenshot?'/api/browser/state?screenshot=1':'/api/browser/state';
-  for(const ep of getApiUrls(path)){
-    const data=await fetchEndpointJson(ep,withScreenshot?20000:8000);
-    if(data){applyIgBrowserStateUi(data);return data}
-  }
-  renderIgBrowserViewport({});
-  return null;
-}
-async function openIgBrowserModal(targetUrl=''){
-  cancelImpButtonClickFx();
-  resetStickerTransforms();
-  const modal=document.getElementById('igBrowserModal');
-  if(modal)modal.classList.add('show');
-  document.body.classList.add('ig-browser-open');
-  if(typeof window.startIgBrowserModalWalk==='function')window.startIgBrowserModalWalk();
-  const cookieRow=document.getElementById('igCookieSyncRow');
-  if(cookieRow)cookieRow.style.display='flex';
-  const cookieBtn=document.getElementById('igCookieSyncToggleBtn');
-  if(cookieBtn){cookieBtn.classList.add('active');cookieBtn.textContent='Hide SSiD'}
-  renderIgBrowserViewport({});
-  if(targetUrl){
-    const urlInp=document.getElementById('igBrowserUrlInput');
-    if(urlInp)urlInp.value=targetUrl;
-    await sendIgBrowserAction({action:'navigate',url:targetUrl});
-  }else{
-    await syncIgSessionState(false);
-  }
-}
-function closeIgBrowserModal(){document.getElementById('igBrowserModal')?.classList.remove('show');document.body.classList.remove('ig-browser-open');if(typeof window.stopIgBrowserModalWalk==='function')window.stopIgBrowserModalWalk()}
-function openCurrentPostInBuiltInBrowser(){if(currentPost<0||!posts[currentPost])return;openIgBrowserModal(posts[currentPost].url)}
-async function igBrowserNavigate(url){const target=String(url||'').trim()||'https://www.instagram.com/accounts/login/';await sendIgBrowserAction({action:'navigate',url:target})}
-async function igBrowserReload(){const urlInp=document.getElementById('igBrowserUrlInput');await igBrowserNavigate(urlInp?.value||igBrowserState.url)}
-function toggleIgCookieSyncRow(){
-  const row=document.getElementById('igCookieSyncRow');
-  if(!row)return;
-  const opening=row.style.display==='none';
-  row.style.display=opening?'flex':'none';
-  const btn=document.getElementById('igCookieSyncToggleBtn');
-  if(btn){
-    btn.classList.toggle('active',opening);
-    btn.textContent=opening?'Hide SSiD':'Show SSiD';
-  }
-}
-async function submitIgBrowserLogin(){
-  const username=String(document.getElementById('igVpUser')?.value||'').trim();
-  const password=String(document.getElementById('igVpPass')?.value||'');
-  const code=String(document.getElementById('igVp2fa')?.value||'').trim();
-  const btn=document.getElementById('igLoginSubmitBtn');
-  const vpBtn=document.getElementById('igVpSubmitBtn');
-  if(igBrowserState.twoFactorRequired&&code){
-    if(btn)btn.textContent='Verifying 2FA…';
-    if(vpBtn)vpBtn.textContent='Verifying 2FA…';
-    const res=await sendIgBrowserAction({action:'two_factor',username,verificationCode:code,identifier:igBrowserState.twoFactorIdentifier});
-    if(btn)btn.textContent='Sign in & Stay Logged In';
-    if(vpBtn)vpBtn.textContent='Log in';
-    if(res?.loggedIn){
-      igBrowserState.twoFactorRequired=false;
-      const tfa=document.getElementById('igVp2fa');
-      if(tfa)tfa.style.display='none';
-      toast(`Logged in as @${res.username||username} — session saved!`);
-      loadCurrentPagePosts();
-    }else{
-      toast(res?.message||'2FA verification failed');
-    }
-    return;
-  }
-  if(!username||!password){toast('Enter your Instagram username and password first');return}
-  if(btn)btn.textContent='Signing in…';
-  if(vpBtn)vpBtn.textContent='Signing in…';
-  const res=await sendIgBrowserAction({action:'login',username,password});
-  if(btn)btn.textContent='Sign in & Stay Logged In';
-  if(vpBtn)vpBtn.textContent='Log in';
-  if(res?.loggedIn){
-    toast(`Logged in as @${res.username||username} — persistent session active!`);
-    loadCurrentPagePosts();
-  }else if(res?.twoFactorRequired){
-    toast('Two-factor authentication required — enter your 2FA code');
-  }else{
-    toast(res?.message||'Sign-in was not completed');
-  }
-}
-async function submitIgCookieSync(){
-  const raw=String(document.getElementById('igCookieInput')?.value||'').trim();
-  if(!raw){toast('Paste your Instagram sessionid cookie first');return}
-  const res=await sendIgBrowserAction({action:'set_cookie',cookie:raw,username:String(document.getElementById('igVpUser')?.value||'').trim()});
-  if(res?.loggedIn){
-    toast('Instagram session synced and saved! Browsing posts as logged-in user.');
-    loadCurrentPagePosts();
-  }else{
-    toast(res?.message||'Could not sync Instagram cookie');
-  }
-}
-async function logoutIgBrowser(){
-  const res=await sendIgBrowserAction({action:'logout'});
-  if(res){
-    igBrowserState.lastResolvedPost=null;
-    const sumEl=document.getElementById('igBrowserScontentSummary');
-    if(sumEl)sumEl.textContent='';
-    renderIgBrowserViewport(res);
-    toast('Logged out of Instagram built-in browser');
-  }
-}
+function openCurrentPostInBuiltInBrowser(){if(currentPost<0||!posts[currentPost])return false;return openInstagramBrowser(posts[currentPost].url)}
 const APP_THEME_NAMES={
   default:'Default',
   v1:'1. Neon Obsidian',
@@ -5042,162 +4795,6 @@ window.getImpOverlayHeadScale=function(){
 })();
 
 
-(function initIgBrowserModalTopWalk(){
-  // Full cycle moves Left -> Right (3 segments) and then Right -> Left (3 segments).
-  // On each segment, the Imp randomly swaps between:
-  //   Mode 3: Long-Arm Reach, Border-Grab & Slide-Pull
-  //   Mode 5: Stealthy Ledge Creep with Mid-Walk Duck & Spy
-  const SEG_DUR=2150;
-  const SEGS_PER_HALF=3;
-  const TOTAL_CYCLE_SEGS=SEGS_PER_HALF*2; // 0,1,2 = Left->Right; 3,4,5 = Right->Left
-  let walkActive=false;
-  let walkLoopRunning=false;
-  let walkStartTs=0;
-  let activeSegCounter=-1;
-  let currentMode=3; // 3 or 5
-
-  function easeInOutQuad(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
-
-  function renderLedgeGripClaw(x,y,rotDeg,pal){
-    return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rotDeg.toFixed(1)}) scale(1.14)"><rect x="-8" y="-5" width="16" height="10" rx="5" fill="${pal.mouthFill}" stroke="${pal.c1}" stroke-width="2.2"/><path d="M -5 -4 L -7 -10 M 0 -5 L 0 -11 M 5 -4 L 7 -10" stroke="${pal.line}" stroke-width="2.2" stroke-linecap="round" fill="none"/></g>`;
-  }
-
-  function renderWalkImpHead(cx,cy,scale,rotDeg,lookX,lookY,squint,pal){
-    const c1=pal.c1,c2=pal.c2,line=pal.line,pupil=pal.pupil,mouthFill=pal.mouthFill;
-    return `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)}) rotate(${rotDeg.toFixed(1)}) scale(${scale.toFixed(3)}) translate(-80,-80)"><circle cx="80" cy="80" r="41" fill="${mouthFill}" stroke="${c1}" stroke-width="3.0"/><path d="M56 56 L52 72 L71 78 M104 56 L108 72 L89 78" stroke="${line}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><g transform="translate(${lookX.toFixed(1)},${lookY.toFixed(1)})"><ellipse cx="68" cy="82" rx="4.6" ry="${(4.6*squint).toFixed(2)}" fill="${c1}"/><ellipse cx="92" cy="82" rx="4.6" ry="${(4.6*squint).toFixed(2)}" fill="${c2}"/><circle cx="68" cy="82" r="1.5" fill="${pupil}"/><circle cx="92" cy="82" r="1.5" fill="${pupil}"/></g><path d="M62 94 Q80 109 98 94" stroke="${line}" stroke-width="3.4" stroke-linecap="round" fill="none"/></g>`;
-  }
-
-  window.startIgBrowserModalWalk=function(){
-    walkActive=true;
-    walkStartTs=performance.now();
-    activeSegCounter=-1;
-    if(!walkLoopRunning){walkLoopRunning=true;requestAnimationFrame(stepIgBrowserWalk)}
-  };
-
-  window.stopIgBrowserModalWalk=function(){
-    walkActive=false;
-    const b=document.getElementById('igPeekBehind');
-    const f=document.getElementById('igPeekFront');
-    if(b)b.innerHTML='';
-    if(f)f.innerHTML='';
-  };
-
-  function stepIgBrowserWalk(now){
-    const overlay=document.getElementById('igBrowserModal');
-    const b=document.getElementById('igPeekBehind');
-    const f=document.getElementById('igPeekFront');
-    if(!walkActive){
-      if(b&&b.innerHTML)b.innerHTML='';
-      if(f&&f.innerHTML)f.innerHTML='';
-      walkLoopRunning=false;
-      return;
-    }
-    if(!overlay||!overlay.classList.contains('show')||!stickerVisible||!stickerAnimEnabled||stickerOpacityPercent<=0){
-      if(b&&b.innerHTML)b.innerHTML='';
-      if(f&&f.innerHTML)f.innerHTML='';
-      requestAnimationFrame(stepIgBrowserWalk);
-      return;
-    }
-
-    const modal=overlay.querySelector('.ig-browser-modal');
-    if(!modal||!b||!f){
-      requestAnimationFrame(stepIgBrowserWalk);
-      return;
-    }
-
-    const vw=window.innerWidth||1280;
-    const vh=window.innerHeight||800;
-    b.setAttribute('viewBox',`0 0 ${vw} ${vh}`);
-    f.setAttribute('viewBox',`0 0 ${vw} ${vh}`);
-
-    const elapsed=now-walkStartTs;
-    const segCounter=Math.floor(elapsed/SEG_DUR);
-    if(segCounter!==activeSegCounter){
-      activeSegCounter=segCounter;
-      // Randomly swap between Mode 3 (Reach-Grab-Pull) and Mode 5 (Stealthy Creep + Duck & Spy)
-      currentMode=Math.random()<0.5?3:5;
-    }
-
-    const localP=(elapsed%SEG_DUR)/SEG_DUR;
-    const cycleSeg=segCounter%TOTAL_CYCLE_SEGS;
-    const goingRight=cycleSeg<SEGS_PER_HALF;
-    const dir=goingRight?1:-1;
-    const segIdxInHalf=goingRight?cycleSeg:(cycleSeg-SEGS_PER_HALF);
-
-    const r=modal.getBoundingClientRect();
-    const startX=r.left+64;
-    const endX=Math.max(startX+120,r.right-64);
-    const segLen=(endX-startX)/SEGS_PER_HALF;
-    const segStartX=goingRight?(startX+segIdxInHalf*segLen):(endX-segIdxInHalf*segLen);
-    const ledgeY=r.top;
-    const pal=STICKER_THEME_PALETTES[currentStickerThemeId]||STICKER_THEME_PALETTES.default;
-    const headScale=window.getImpOverlayHeadScale();
-    const walkHeadR=41*headScale;
-    const walkMinY=10+walkHeadR;
-
-    if(currentMode===3){
-      // Mode 3: Long-Arm Reach, Border-Grab & Slide-Pull
-      let reachP=0,bodySlideP=0;
-      if(localP<0.38){
-        reachP=easeInOutQuad(localP/0.38);
-        bodySlideP=0;
-      }else if(localP<0.86){
-        reachP=1;
-        bodySlideP=easeInOutQuad((localP-0.38)/0.48);
-      }else{
-        reachP=1;
-        bodySlideP=1;
-      }
-
-      const hx=segStartX+dir*bodySlideP*segLen;
-      const hy=Math.max(walkMinY,ledgeY-14-Math.sin(bodySlideP*Math.PI)*6);
-      const leadClawX=hx+dir*28+dir*(reachP-bodySlideP)*segLen;
-      const trailClawX=hx-dir*28;
-      const tilt=dir*(reachP-bodySlideP)*14;
-
-      b.innerHTML=`
-        <path d="M ${(hx+dir*20).toFixed(1)} ${(hy+14).toFixed(1)} Q ${((hx+leadClawX)*0.5).toFixed(1)} ${(ledgeY-20).toFixed(1)} ${leadClawX.toFixed(1)} ${ledgeY.toFixed(1)}"
-              stroke="${pal.c1}" stroke-width="4.2" stroke-linecap="round" fill="none"/>
-        ${renderWalkImpHead(hx,hy,headScale,tilt,4.8*dir,4.2,0.72,pal)}
-      `;
-      f.innerHTML=`
-        ${renderLedgeGripClaw(trailClawX,ledgeY,180,pal)}
-        ${renderLedgeGripClaw(leadClawX,ledgeY,180,pal)}
-      `;
-    }else{
-      // Mode 5: Stealthy Ledge Creep with Mid-Walk Duck & Spy
-      let moveP=0,duck=0,squint=0.82,isMoving=true;
-      if(localP<0.62){
-        moveP=localP/0.62;
-        isMoving=true;
-      }else{
-        moveP=1;
-        isMoving=false;
-        const sp=(localP-0.62)/0.38;
-        duck=Math.sin(sp*Math.PI)*11;
-        squint=0.45;
-      }
-
-      const stepPh=isMoving?now*0.018:0;
-      const hx=segStartX+dir*moveP*segLen;
-      const hy=Math.max(walkMinY,ledgeY-14+duck+(isMoving?Math.abs(Math.sin(stepPh))*-4.0:0));
-      const lookX=isMoving?(4.2*dir):Math.sin(now*0.011)*5.5;
-      const lStepX=hx-28+(isMoving?Math.sin(stepPh)*9*dir:0);
-      const lLiftY=isMoving?Math.max(0,-Math.cos(stepPh))*6.5:0;
-      const rStepX=hx+28+(isMoving?Math.sin(stepPh+Math.PI)*9*dir:0);
-      const rLiftY=isMoving?Math.max(0,-Math.cos(stepPh+Math.PI))*6.5:0;
-
-      b.innerHTML=renderWalkImpHead(hx,hy,headScale,isMoving?Math.sin(stepPh)*5:0,lookX,4.5,squint,pal);
-      f.innerHTML=`
-        ${renderLedgeGripClaw(lStepX,ledgeY-lLiftY,180,pal)}
-        ${renderLedgeGripClaw(rStepX,ledgeY-rLiftY,180,pal)}
-      `;
-    }
-
-    requestAnimationFrame(stepIgBrowserWalk);
-  }
-})();
-
 function initializeSavedTheme(){
   try{
     const saved=localStorage.getItem('stillSane.uiThemeV2')||'default';
@@ -5206,8 +4803,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.16';
+const APP_VERSION='1.17';
 const VERSION_HISTORY=[
+  {version:'1.17',added:'A native in-app Instagram browser.',removed:'The simulated Instagram login form and startup session probe.',fixed:'Routed Instagram browsing through a persistent WebView2 profile; sign-in stays on Instagram.'},
   {version:'1.16',added:'No new features.',removed:'The fixed white “Not yet” label.',fixed:'Made its neutral text follow the active theme.'},
   {version:'1.15',added:'Cursor-tracking eyes on the exit-prompt sticker.',removed:'Sidebar sticker click reactions while the prompt is open.',fixed:'Blocked click and JSON-throw animations during the prompt.'},
   {version:'1.14',added:'No new features.',removed:'Automatic focus in the exit prompt.',fixed:'Matched the title’s brand glitch and gave both actions the primary hover state.'},
@@ -5246,7 +4844,6 @@ function startAppAfterLoadingScreen(){
   render();
   restoreLibraryOnStartup();
   restoreUrlTabState();
-  syncIgSessionState(false);
   initSourceBadges();
   applySavedUiPrefs();
   try{window.startStickerFacialExpressionsLoop?.()}catch(_){}
