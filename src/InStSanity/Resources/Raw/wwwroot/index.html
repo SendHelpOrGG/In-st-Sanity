@@ -547,6 +547,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   .leaving-dialog { width:min(420px,calc(100vw - 36px)); border:1px solid var(--t-card-border,#496073); border-radius:18px; padding:26px 26px 22px; background:var(--t-modal-bg,linear-gradient(145deg,#25313d,#1a232c 60%,#131a21)); color:var(--t-ink,#f1f5f9); text-align:center; box-shadow:0 28px 90px rgba(0,0,0,.74); transform:translateY(9px) scale(.98); transition:transform .22s ease; }
   .leaving-overlay.show .leaving-dialog { transform:translateY(0) scale(1); }
   .leaving-dialog h2 { margin:0; font-size:23px; line-height:1.2; letter-spacing:-.45px; }
+  .leaving-title-brand { font-size:23px; line-height:1.2; letter-spacing:-.45px; }
   .leaving-sticker-slot { display:grid; place-items:center; width:177px; height:177px; margin:14px auto 18px; }
   .leaving-sticker-slot svg { display:block; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 8px 20px rgba(0,0,0,.3)); pointer-events:none; transform-origin:50% 60%; }
   #leavingStickerArt[data-reaction="idle"] svg { animation:leavingSway 4.1s ease-in-out infinite; }
@@ -576,11 +577,11 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   .leaving-actions { display:flex; justify-content:center; gap:10px; }
   .leaving-actions button { display:flex; align-items:center; justify-content:center; flex:1 1 0; min-height:40px; font:inherit; }
   #leavingYesButton { border-color:color-mix(in srgb,var(--t-accent2,#ec4899) 58%,var(--t-card-border,#496073)); color:var(--t-accent2,#ec4899); }
-  #leavingYesButton:hover,#leavingYesButton:focus-visible { background:color-mix(in srgb,var(--t-accent2,#ec4899) 12%,transparent); }
   #leavingNotYetButton { background:var(--t-card-bg,linear-gradient(120deg,#25313d,#1a232c)); border-color:var(--t-input-border,#496073); color:var(--t-ink,#f1f5f9); }
-  #leavingNotYetButton:hover { background:var(--t-btn-bg,linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%)); border-color:var(--t-btn-border,#f1f5f9); color:var(--t-btn-ink,#091318); }
-  #leavingNotYetButton:focus { outline:none; }
-  #leavingNotYetButton:focus-visible { outline:2px solid var(--t-accent,#38bdf8); outline-offset:2px; }
+  #leavingYesButton,#leavingNotYetButton { transition:background .16s ease,border-color .16s ease,color .16s ease; }
+  #leavingYesButton:hover,#leavingNotYetButton:hover { background:var(--t-btn-bg,linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%)); border-color:var(--t-btn-border,#f1f5f9); color:var(--t-btn-ink,#091318); }
+  #leavingYesButton:focus,#leavingNotYetButton:focus { outline:none; }
+  #leavingYesButton:focus-visible,#leavingNotYetButton:focus-visible { outline:2px solid var(--t-accent,#38bdf8); outline-offset:2px; }
   @media(max-width:480px) { .leaving-dialog { padding:22px 18px 18px; } }
   @media(prefers-reduced-motion:reduce) { .leaving-overlay,.leaving-dialog { transition:none; } #leavingStickerArt svg,#leavingStickerArt svg * { animation:none!important; } #leavingStickerArt .leaving-sad-expression { transition:none; } }
 </style>
@@ -594,7 +595,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <button class="nav active" id="libraryNav" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Saved posts</button>
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
-  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.13; open version history" title="Click to view what changed in each version">v.1.13</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
+  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.14; open version history" title="Click to view what changed in each version">v.1.14</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
   <div class="sidebar-resize" id="sidebarResize" role="separator" aria-label="Resize sidebar" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="360" aria-valuenow="244" tabindex="0" onpointerdown="startSidebarResize(event)" onkeydown="keyboardSidebarResize(event)"></div>
 </aside>
 <main>
@@ -876,7 +877,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </div>
 <div class="leaving-overlay" id="leavingPromptOverlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="leavingPromptTitle">
   <section class="leaving-dialog">
-    <h2 id="leavingPromptTitle">Leaving already?</h2>
+    <h2 id="leavingPromptTitle"><span class="brand-name leaving-title-brand" id="leavingPromptTitleText" data-text="Leaving already?"><span class="brand-part-sanity">Leaving already?</span></span></h2>
     <!-- Concept 02: shy idle, tearful sniffle on Yes, continuous villain cackle on Not yet. -->
     <div class="leaving-sticker-slot" id="leavingStickerArt" data-concept="02" data-reaction="idle" aria-hidden="true"></div>
     <div class="leaving-actions">
@@ -3255,8 +3256,8 @@ function syncLeavingReactionFromControls(){
   if(!overlay?.classList.contains('show')){setLeavingReaction('idle');return;}
   const yes=document.getElementById('leavingYesButton');
   const notYet=document.getElementById('leavingNotYetButton');
-  if(notYet?.matches(':hover')||document.activeElement===notYet){setLeavingReaction('cackle');return;}
-  if(yes?.matches(':hover')||document.activeElement===yes){setLeavingReaction('sad');return;}
+  if(notYet?.matches(':hover')){setLeavingReaction('cackle');return;}
+  if(yes?.matches(':hover')){setLeavingReaction('sad');return;}
   setLeavingReaction('idle');
 }
 function bindLeavingPromptReactionEvents(){
@@ -3265,13 +3266,9 @@ function bindLeavingPromptReactionEvents(){
   const notYet=document.getElementById('leavingNotYetButton');
   if(!yes||!notYet)return;
   yes.addEventListener('pointerenter',()=>setLeavingReaction('sad'));
-  yes.addEventListener('focus',()=>setLeavingReaction('sad'));
   yes.addEventListener('pointerleave',()=>requestAnimationFrame(syncLeavingReactionFromControls));
-  yes.addEventListener('blur',()=>requestAnimationFrame(syncLeavingReactionFromControls));
   notYet.addEventListener('pointerenter',()=>setLeavingReaction('cackle'));
-  notYet.addEventListener('focus',()=>setLeavingReaction('cackle'));
   notYet.addEventListener('pointerleave',()=>requestAnimationFrame(syncLeavingReactionFromControls));
-  notYet.addEventListener('blur',()=>requestAnimationFrame(syncLeavingReactionFromControls));
   leavingPromptReactionEventsBound=true;
 }
 function handleLeavingPromptKeydown(event){
@@ -3284,8 +3281,10 @@ function handleLeavingPromptKeydown(event){
     const buttons=[...overlay.querySelectorAll('button:not([disabled])')];
     if(!buttons.length)return;
     const first=buttons[0],last=buttons[buttons.length-1];
-    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
-    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+    if(!overlay.contains(document.activeElement)){
+      event.preventDefault();(event.shiftKey?last:first).focus({preventScroll:true});
+    }else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus({preventScroll:true})}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus({preventScroll:true})}
   }
 }
 function showLeavingPrompt(){
@@ -3299,7 +3298,6 @@ function showLeavingPrompt(){
   overlay.classList.add('show');
   overlay.setAttribute('aria-hidden','false');
   document.addEventListener('keydown',handleLeavingPromptKeydown,true);
-  requestAnimationFrame(()=>document.getElementById('leavingNotYetButton')?.focus({preventScroll:true}));
 }
 function dismissLeavingPrompt(){
   const overlay=document.getElementById('leavingPromptOverlay');
@@ -4539,9 +4537,18 @@ function setAppTheme(themeId,quiet=false){
   const eyes=document.getElementById('sidebarBrandImpEyes');
   const word=document.getElementById('sidebarBrandName');
   const bracket=document.getElementById('sidebarBrandBracket');
+  const titleWord=document.getElementById('leavingPromptTitleText');
   if(!brand||!logo||!face||!eyes||!word||!bracket)return;
 
   let queuedAftershock=false;
+
+  function setTextSliceCuts(target,top1,bottom1,top2,bottom2){
+    if(!target)return;
+    target.style.setProperty('--g2a-tc1-top',top1+'%');
+    target.style.setProperty('--g2a-tc1-bot',bottom1+'%');
+    target.style.setProperty('--g2a-tc2-top',top2+'%');
+    target.style.setProperty('--g2a-tc2-bot',bottom2+'%');
+  }
 
   function resetRestState(){
     brand.style.setProperty('--g2a-slice-op','0');
@@ -4562,6 +4569,14 @@ function setAppTheme(themeId,quiet=false){
     word.style.transform='translate3d(0,0,0) skewX(0deg)';
     bracket.style.transform='translate3d(0,0,0) scale(1)';
     bracket.style.filter='none';
+    if(titleWord){
+      titleWord.style.setProperty('--g2a-slice-op','0');
+      titleWord.style.setProperty('--g2a-tx1','0px');
+      titleWord.style.setProperty('--g2a-ty1','0px');
+      titleWord.style.setProperty('--g2a-tx2','0px');
+      titleWord.style.setProperty('--g2a-ty2','0px');
+      titleWord.style.transform='translate3d(0,0,0) skewX(0deg)';
+    }
   }
   window.resetBrandHeaderGlitchRestState=resetRestState;
 
@@ -4578,7 +4593,8 @@ function setAppTheme(themeId,quiet=false){
   }
 
   function runBurst(){
-    if(!logoAnimEnabled||document.body.classList.contains('sidebar-collapsed')){
+    const leavingPromptVisible=Boolean(document.getElementById('leavingPromptOverlay')?.classList.contains('show'));
+    if(!logoAnimEnabled||(document.body.classList.contains('sidebar-collapsed')&&!leavingPromptVisible)){
       resetRestState();
       scheduleNextBurst();
       return;
@@ -4597,10 +4613,8 @@ function setAppTheme(themeId,quiet=false){
     brand.style.setProperty('--g2a-lc1-bot',botCut1+'%');
     brand.style.setProperty('--g2a-lc2-top',topCut2+'%');
     brand.style.setProperty('--g2a-lc2-bot',botCut2+'%');
-    brand.style.setProperty('--g2a-tc1-top',topCut1+'%');
-    brand.style.setProperty('--g2a-tc1-bot',botCut1+'%');
-    brand.style.setProperty('--g2a-tc2-top',topCut2+'%');
-    brand.style.setProperty('--g2a-tc2-bot',botCut2+'%');
+    setTextSliceCuts(brand,topCut1,botCut1,topCut2,botCut2);
+    setTextSliceCuts(titleWord,topCut1,botCut1,topCut2,botCut2);
 
     function step(now){
       if(!logoAnimEnabled){
@@ -4622,10 +4636,12 @@ function setAppTheme(themeId,quiet=false){
 
       if(now-lastSliceShuffle>55){
         lastSliceShuffle=now;
-        brand.style.setProperty('--g2a-tc1-top',Math.floor(Math.random()*28)+'%');
-        brand.style.setProperty('--g2a-tc1-bot',(42+Math.floor(Math.random()*26))+'%');
-        brand.style.setProperty('--g2a-tc2-top',(40+Math.floor(Math.random()*26))+'%');
-        brand.style.setProperty('--g2a-tc2-bot',Math.floor(Math.random()*24)+'%');
+        const cutTop1=Math.floor(Math.random()*28);
+        const cutBottom1=42+Math.floor(Math.random()*26);
+        const cutTop2=40+Math.floor(Math.random()*26);
+        const cutBottom2=Math.floor(Math.random()*24);
+        setTextSliceCuts(brand,cutTop1,cutBottom1,cutTop2,cutBottom2);
+        setTextSliceCuts(titleWord,cutTop1,cutBottom1,cutTop2,cutBottom2);
       }
 
       const tx1=(wave1*6.2*amp).toFixed(2);
@@ -4663,6 +4679,14 @@ function setAppTheme(themeId,quiet=false){
       eyes.style.transform=`scale(${eyeScale})`;
       eyes.style.filter=`drop-shadow(0 0 ${(5*env).toFixed(1)}px #fff)`;
       word.style.transform=`translate3d(${wordX}px,0,0) skewX(${wordSkew}deg)`;
+      if(titleWord){
+        titleWord.style.setProperty('--g2a-slice-op',Math.min(1,env*1.35).toFixed(3));
+        titleWord.style.setProperty('--g2a-tx1',tx1+'px');
+        titleWord.style.setProperty('--g2a-ty1',ty1+'px');
+        titleWord.style.setProperty('--g2a-tx2',tx2+'px');
+        titleWord.style.setProperty('--g2a-ty2',ty2+'px');
+        titleWord.style.transform=`translate3d(${wordX}px,0,0) skewX(${wordSkew}deg)`;
+      }
       bracket.style.transform=`translate3d(0,${brY}px,0) scale(${brScale})`;
       bracket.style.filter=`drop-shadow(0 0 ${(8*env).toFixed(1)}px #fff) drop-shadow(0 0 ${(14*env).toFixed(1)}px var(--t-logo-c3))`;
 
@@ -5134,8 +5158,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.13';
+const APP_VERSION='1.14';
 const VERSION_HISTORY=[
+  {version:'1.14',added:'No new features.',removed:'Automatic focus in the exit prompt.',fixed:'Matched the title’s brand glitch and gave both actions the primary hover state.'},
   {version:'1.13',added:'No new features.',removed:'The exit button’s direct-close action.',fixed:'Unified exit prompts, matched the sticker size, refined button styling, and timed the prompt before the caught animation ends.'},
   {version:'1.12',added:'Concept 02 exit-prompt sticker reactions.',removed:'The static exit-prompt sticker.',fixed:'Kept the villain cackle continuous and animated the sticker frame.'},
   {version:'1.11',added:'No new features.',removed:'No brand elements.',fixed:'Corrected the collapsed Windows title-bar API.'},
