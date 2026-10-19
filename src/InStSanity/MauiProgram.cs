@@ -94,6 +94,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IApiEndpoint, OpenDownloadFolderEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ExitAppEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenInstagramBrowserEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, InstagramBrowserViewEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, InstagramSessionEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, InstagramLogoutEndpoint>();
 
 		// The resolve routes are what turn an imported URL into a cover image, an owner,
 		// a caption and a carousel. SaveFreeClient is the fallback for posts Instagram
@@ -106,9 +109,12 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IApiEndpoint, CachedPostsEndpoint>();
 
 		// The visible Instagram browser is hosted natively by MainPage and opened via
-		// OpenInstagramBrowserEndpoint. Session state/cookie extraction routes remain
-		// intentionally unregistered; Instagram credentials are entered only on Instagram.
-		// Other unregistered API routes continue to return 501 from LoopbackHost.
+		// OpenInstagramBrowserEndpoint. The Browser page drives it through
+		// InstagramBrowserViewEndpoint and reads account state from InstagramSessionEndpoint;
+		// InstagramLogoutEndpoint clears the persistent profile session. Instagram
+		// credentials are entered only on Instagram; the session routes merely reflect
+		// what the user did there. Other unregistered API routes continue to return 501
+		// from LoopbackHost.
 
 		builder.Services.AddSingleton<LoopbackHost>();
 

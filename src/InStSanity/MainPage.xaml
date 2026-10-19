@@ -1,120 +1,53 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="InStSanity.MainPage"
-             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:InStSanity.ViewModels"
-             x:DataType="vm:MainPageViewModel"
-             Title="{Binding Title}"
-             BackgroundColor="{StaticResource AppBackground}">
+             x:Class="InStSanity.MainPage"
+             Shell.NavBarIsVisible="False"
+             Title="In[st]Sanity">
 
-    <!--
-        ════════════════════════════════════════════════════════════════════════
-        Host page for the ported web layer.
-
-        The whole In[st]Sanity UI (side panel, library, animations, sounds) is the
-        web app served by InStSanity.Services.WebHost.LoopbackHost; this page frames
-        it and lazily creates the native Instagram WebView only when requested.
-        ════════════════════════════════════════════════════════════════════════
-    -->
+    <!-- Root grid so the startup overlay and the native Instagram browser can stack above
+         the WebView that hosts the ported web app. -->
     <Grid>
-
+        <!-- The ported web app is served by LoopbackHost; MainPageViewModel provides the URL. -->
         <WebView x:Name="WebAppView"
                  Source="{Binding AppUrl}"
                  Navigated="OnWebAppNavigated" />
 
-        <!-- Shown until the web layer has loaded; also used to report a failed start. -->
-        <VerticalStackLayout x:Name="StartupOverlay"
-                             Padding="32"
-                             Spacing="14"
-                             HorizontalOptions="Center"
-                             VerticalOptions="Center">
-            <ActivityIndicator x:Name="StartupSpinner"
-                               IsRunning="True"
-                               Color="{StaticResource Primary}"
-                               HorizontalOptions="Center" />
-            <Label x:Name="StartupMessage"
-                   Text="Starting In-st-Sanity…"
-                   Style="{StaticResource EmptyStateMessage}" />
-        </VerticalStackLayout>
+        <!-- First-launch overlay: kept until the WebView reports a successful navigation,
+             so the user never sees a blank window while the loopback host comes up. -->
+        <Border x:Name="StartupOverlay"
+                ZIndex="30"
+                BackgroundColor="{AppThemeBinding Light=White, Dark=#0B0F14}"
+                Padding="24"
+                HorizontalOptions="Fill"
+                VerticalOptions="Fill">
+            <VerticalStackLayout Spacing="14"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center">
+                <Label x:Name="StartupMessage"
+                       Text="Loading In[st]Sanity…"
+                       FontSize="15"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light=#0B0F14, Dark=#F1F5F9}" />
+                <ActivityIndicator x:Name="StartupSpinner"
+                                   IsRunning="True"
+                                   Color="{AppThemeBinding Light=#0B0F14, Dark=#F1F5F9}" />
+            </VerticalStackLayout>
+        </Border>
 
-        <!-- The browser WebView is created on first open, not during app startup. -->
+        <!-- The browser WebView is created on first open, not during app startup.
+             It docks over the themed viewport of the web layer's Browser page (the
+             region is pushed via POST /api/browser-view), instead of covering the app. -->
         <Grid x:Name="InstagramBrowserOverlay"
               IsVisible="False"
               ZIndex="20"
-              Padding="12"
-              BackgroundColor="#B8000000">
-            <Border BackgroundColor="#101722"
-                    Stroke="#42586B"
-                    StrokeThickness="1"
-                    Padding="0">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="14" />
-                </Border.StrokeShape>
-                <Grid RowDefinitions="Auto,*,Auto">
-                    <Grid Grid.Row="0"
-                          ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto"
-                          ColumnSpacing="7"
-                          Padding="10,9"
-                          BackgroundColor="#182431">
-                        <Button x:Name="InstagramBrowserBackButton"
-                                Text="‹"
-                                FontSize="25"
-                                Padding="10,0"
-                                HeightRequest="38"
-                                IsEnabled="False"
-                                Clicked="OnInstagramBrowserBackClicked"
-                                AutomationProperties.Name="Back" />
-                        <Button Grid.Column="1"
-                                x:Name="InstagramBrowserForwardButton"
-                                Text="›"
-                                FontSize="25"
-                                Padding="10,0"
-                                HeightRequest="38"
-                                IsEnabled="False"
-                                Clicked="OnInstagramBrowserForwardClicked"
-                                AutomationProperties.Name="Forward" />
-                        <Button Grid.Column="2"
-                                Text="↻"
-                                FontSize="20"
-                                Padding="10,0"
-                                HeightRequest="38"
-                                Clicked="OnInstagramBrowserReloadClicked"
-                                AutomationProperties.Name="Reload" />
-                        <Entry Grid.Column="3"
-                               x:Name="InstagramBrowserAddressEntry"
-                               Placeholder="https://www.instagram.com/"
-                               Keyboard="Url"
-                               ReturnType="Go"
-                               ClearButtonVisibility="WhileEditing"
-                               Completed="OnInstagramBrowserAddressCompleted"
-                               AutomationProperties.Name="Instagram browser address" />
-                        <Button Grid.Column="4"
-                                Text="Go"
-                                Padding="14,0"
-                                HeightRequest="38"
-                                Clicked="OnInstagramBrowserGoClicked" />
-                        <Button Grid.Column="5"
-                                Text="✕"
-                                Padding="12,0"
-                                HeightRequest="38"
-                                Clicked="OnInstagramBrowserCloseClicked"
-                                AutomationProperties.Name="Close Instagram browser" />
-                    </Grid>
-
-                    <ContentView x:Name="InstagramBrowserHost"
-                                 Grid.Row="1"
-                                 BackgroundColor="#FFFFFF" />
-
-                    <Label x:Name="InstagramBrowserStatusLabel"
-                           Grid.Row="2"
-                           Padding="12,7"
-                           FontSize="11"
-                           TextColor="#B8C4D2"
-                           Text="Sign in on Instagram itself. This browser profile is stored locally on this PC." />
-                </Grid>
-            </Border>
+              BackgroundColor="Transparent"
+              HorizontalOptions="Start"
+              VerticalOptions="Start"
+              WidthRequest="0"
+              HeightRequest="0">
+            <ContentView x:Name="InstagramBrowserHost" BackgroundColor="Transparent" />
         </Grid>
-
     </Grid>
 
 </ContentPage>

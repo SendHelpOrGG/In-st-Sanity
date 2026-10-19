@@ -9,6 +9,7 @@ public partial class MainPage : ContentPage
 {
 	const string InstagramHomeUrl = "https://www.instagram.com/";
 
+	readonly InstagramBrowserWindowService _browserWindow;
 	WebView? _instagramBrowserView;
 	string? _currentInstagramUrl;
 
@@ -17,7 +18,11 @@ public partial class MainPage : ContentPage
 		InitializeComponent();
 
 		BindingContext = viewModel;
+		_browserWindow = browserWindow;
 		browserWindow.OpenRequested += OnInstagramBrowserOpenRequested;
+		browserWindow.NavigateRequested += OnInstagramBrowserNavigateRequested;
+		browserWindow.CommandRequested += OnInstagramBrowserCommandRequested;
+		browserWindow.RegionRequested += OnInstagramBrowserRegionRequested;
 
 		// Links opened by the app UI belong in the system browser (Windows only; the
 		// guard keeps the platform-specific intent explicit).
@@ -57,8 +62,7 @@ public partial class MainPage : ContentPage
 			(!Uri.TryCreate(targetUrl, UriKind.Absolute, out targetUri) ||
 			 !InstagramBrowserNavigationPolicy.IsAllowed(targetUri)))
 		{
-			InstagramBrowserStatusLabel.Text = "Only secure Instagram and Meta pages can open in this in-app browser.";
-			InstagramBrowserOverlay.IsVisible = true;
+			// Nothing valid to show: keep the docked page hidden rather than paging away.
 			return;
 		}
 
@@ -70,12 +74,73 @@ public partial class MainPage : ContentPage
 		{
 			NavigateInstagramBrowser(targetUri);
 		}
-		else if (targetUri is null)
+
+		UpdateBrowserState();
+	}
+
+	void OnInstagramBrowserNavigateRequested(string url)
+	{
+		if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+			!InstagramBrowserNavigationPolicy.IsAllowed(uri))
 		{
-			InstagramBrowserStatusLabel.Text = "Reopened your Instagram browser session.";
+			return;
 		}
 
-		UpdateInstagramBrowserNavigationButtons();
+		EnsureInstagramBrowserView();
+		InstagramBrowserOverlay.IsVisible = true;
+		NavigateInstagramBrowser(uri);
+		UpdateBrowserState();
+	}
+
+	void OnInstagramBrowserCommandRequested(string command)
+	{
+		switch (command)
+		{
+			case "back":
+				if (_instagramBrowserView?.CanGoBack == true)
+				{
+					_instagramBrowserView.GoBack();
+				}
+
+				UpdateBrowserState();
+				break;
+
+			case "forward":
+				if (_instagramBrowserView?.CanGoForward == true)
+				{
+					_instagramBrowserView.GoForward();
+				}
+
+				UpdateBrowserState();
+				break;
+
+			case "reload":
+				_instagramBrowserView?.Reload();
+				break;
+
+			case "show":
+				EnsureInstagramBrowserView();
+				InstagramBrowserOverlay.IsVisible = true;
+				UpdateBrowserState();
+				break;
+
+			case "hide":
+				CloseInstagramBrowser();
+				break;
+
+			case "logout":
+				_ = LogoutInstagramAsync();
+				break;
+		}
+	}
+
+	void OnInstagramBrowserRegionRequested(InstagramBrowserRegion region)
+	{
+		// Dock the native page over the themed viewport of the Browser tab. The region
+		// arrives in window-relative device-independent pixels, matching MAUI layout.
+		InstagramBrowserOverlay.Margin = new Thickness(region.Left, region.Top, 0, 0);
+		InstagramBrowserOverlay.WidthRequest = Math.Max(1, region.Width);
+		InstagramBrowserOverlay.HeightRequest = Math.Max(1, region.Height);
 	}
 
 	void EnsureInstagramBrowserView()
@@ -108,8 +173,6 @@ public partial class MainPage : ContentPage
 		}
 
 		_currentInstagramUrl = uri.AbsoluteUri;
-		InstagramBrowserAddressEntry.Text = uri.AbsoluteUri;
-		InstagramBrowserStatusLabel.Text = $"Opening {uri.Host}…";
 		_instagramBrowserView.Source = new UrlWebViewSource { Url = uri.AbsoluteUri };
 	}
 
@@ -117,18 +180,18 @@ public partial class MainPage : ContentPage
 	{
 		if (Uri.TryCreate(e.Url, UriKind.Absolute, out var httpUri) &&
 			httpUri.Scheme == Uri.UriSchemeHttp &&
-			InstagramBrowserNavigationPolicy.IsAllowed(ToHttpsUri(httpUri)))
+			InstagramBrowserNavigationPolicy.IsAllowed(InstagramBrowserAddressParser.ToHttpsUri(httpUri)))
 		{
 			e.Cancel = true;
-			NavigateInstagramBrowser(ToHttpsUri(httpUri));
+			NavigateInstagramBrowser(InstagramBrowserAddressParser.ToHttpsUri(httpUri));
 			return;
 		}
 
 		if (!Uri.TryCreate(e.Url, UriKind.Absolute, out var uri) ||
 			!InstagramBrowserNavigationPolicy.IsAllowed(uri))
 		{
+			// External sites open in the system browser; Instagram and Meta pages stay here.
 			e.Cancel = true;
-			InstagramBrowserStatusLabel.Text = "External sites open in your default browser; Instagram and Meta pages stay here.";
 			if (Uri.TryCreate(e.Url, UriKind.Absolute, out var externalUri) &&
 				(externalUri.Scheme == Uri.UriSchemeHttp || externalUri.Scheme == Uri.UriSchemeHttps))
 			{
@@ -139,8 +202,6 @@ public partial class MainPage : ContentPage
 		}
 
 		_currentInstagramUrl = uri.AbsoluteUri;
-		InstagramBrowserAddressEntry.Text = uri.AbsoluteUri;
-		InstagramBrowserStatusLabel.Text = $"Loading {uri.Host}…";
 	}
 
 	void OnInstagramBrowserNavigated(object? sender, WebNavigatedEventArgs e)
@@ -149,117 +210,55 @@ public partial class MainPage : ContentPage
 			InstagramBrowserNavigationPolicy.IsAllowed(uri))
 		{
 			_currentInstagramUrl = uri.AbsoluteUri;
-			InstagramBrowserAddressEntry.Text = uri.AbsoluteUri;
 		}
 
-		InstagramBrowserStatusLabel.Text = e.Result == WebNavigationResult.Success
-			? "Instagram page loaded. Sign-in is handled directly by Instagram."
-			: "Instagram could not load this page. Check your connection and try again.";
-		UpdateInstagramBrowserNavigationButtons();
+		UpdateBrowserState();
+		_ = RefreshInstagramAccountAsync();
 	}
 
-	void OnInstagramBrowserBackClicked(object? sender, EventArgs e)
+	void UpdateBrowserState()
 	{
-		if (_instagramBrowserView?.CanGoBack == true)
-		{
-			_instagramBrowserView.GoBack();
-		}
+		_browserWindow.SetOpenState(
+			InstagramBrowserOverlay.IsVisible,
+			_currentInstagramUrl ?? InstagramHomeUrl,
+			_instagramBrowserView?.CanGoBack == true,
+			_instagramBrowserView?.CanGoForward == true);
 	}
 
-	void OnInstagramBrowserForwardClicked(object? sender, EventArgs e)
+	async Task RefreshInstagramAccountAsync()
 	{
-		if (_instagramBrowserView?.CanGoForward == true)
-		{
-			_instagramBrowserView.GoForward();
-		}
-	}
-
-	void OnInstagramBrowserReloadClicked(object? sender, EventArgs e) => _instagramBrowserView?.Reload();
-
-	void OnInstagramBrowserGoClicked(object? sender, EventArgs e) => NavigateFromAddressBar();
-
-	void OnInstagramBrowserAddressCompleted(object? sender, EventArgs e) => NavigateFromAddressBar();
-
-	void NavigateFromAddressBar()
-	{
-		var text = InstagramBrowserAddressEntry.Text?.Trim() ?? string.Empty;
-		if (text.Length == 0)
+#if WINDOWS
+		if (_instagramBrowserView is null)
 		{
 			return;
 		}
 
-		if (!TryParseAddress(text, out var uri))
+		var snapshot = await WebViewBootstrapper.ProbeAccountAsync(_instagramBrowserView);
+		if (snapshot is null)
 		{
-			InstagramBrowserStatusLabel.Text = "Enter a valid Instagram URL, profile name, or search term.";
 			return;
 		}
 
-		if (InstagramBrowserNavigationPolicy.IsAllowed(uri))
+		_browserWindow.SetAccount(snapshot.LoggedIn, snapshot.Username, snapshot.FullName, snapshot.ProfilePicUrl);
+#endif
+	}
+
+	async Task LogoutInstagramAsync()
+	{
+#if WINDOWS
+		// The WebView2 profile persists across runs, so an old Instagram session may exist
+		// before any browser page was opened in this one. Create the view if needed, then
+		// clear the cookies.
+		EnsureInstagramBrowserView();
+		if (_instagramBrowserView is null)
 		{
-			NavigateInstagramBrowser(uri);
 			return;
 		}
 
-		InstagramBrowserStatusLabel.Text = "Opening this external address in your default browser…";
-		_ = OpenExternalUriAsync(uri);
-	}
-
-	static bool TryParseAddress(string text, out Uri uri)
-	{
-		var value = text.Trim();
-		if (value.StartsWith('@'))
-		{
-			var username = value.TrimStart('@').Trim('/');
-			if (username.Length == 0)
-			{
-				uri = new Uri(InstagramHomeUrl);
-				return true;
-			}
-
-			value = $"https://www.instagram.com/{Uri.EscapeDataString(username)}/";
-		}
-		else if (value.StartsWith('/'))
-		{
-			value = $"https://www.instagram.com{value}";
-		}
-		else if (value.Contains('/') && !value.Contains('.') && !value.Contains("://", StringComparison.Ordinal))
-		{
-			value = $"https://www.instagram.com/{value.TrimStart('/')}";
-		}
-		else if (value.Any(char.IsWhiteSpace) || (!value.Contains('.') && !value.Contains('/')))
-		{
-			value = $"https://www.instagram.com/explore/search/keyword/?q={Uri.EscapeDataString(value)}";
-		}
-		else if (!value.Contains("://", StringComparison.Ordinal))
-		{
-			value = $"https://{value}";
-		}
-
-		if (!Uri.TryCreate(value, UriKind.Absolute, out var parsed) ||
-			(parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps))
-		{
-			uri = new Uri(InstagramHomeUrl);
-			return false;
-		}
-
-		if (parsed.Scheme == Uri.UriSchemeHttp &&
-			InstagramBrowserNavigationPolicy.IsAllowed(ToHttpsUri(parsed)))
-		{
-			parsed = ToHttpsUri(parsed);
-		}
-
-		uri = parsed;
-		return true;
-	}
-
-	static Uri ToHttpsUri(Uri uri)
-	{
-		var builder = new UriBuilder(uri)
-		{
-			Scheme = Uri.UriSchemeHttps,
-			Port = -1,
-		};
-		return builder.Uri;
+		await WebViewBootstrapper.ClearInstagramSessionAsync(_instagramBrowserView);
+		_browserWindow.SetAccount(false, string.Empty, string.Empty, string.Empty);
+		UpdateBrowserState();
+#endif
 	}
 
 	static async Task OpenExternalUriAsync(Uri uri)
@@ -270,22 +269,14 @@ public partial class MainPage : ContentPage
 		}
 		catch
 		{
-			// Do not surface shell-launch errors over the Instagram page; the status label
-			// already tells the user that the link was external.
+			// Do not surface shell-launch errors over the Instagram page.
 		}
 	}
-
-	void UpdateInstagramBrowserNavigationButtons()
-	{
-		InstagramBrowserBackButton.IsEnabled = _instagramBrowserView?.CanGoBack == true;
-		InstagramBrowserForwardButton.IsEnabled = _instagramBrowserView?.CanGoForward == true;
-	}
-
-	void OnInstagramBrowserCloseClicked(object? sender, EventArgs e) => CloseInstagramBrowser();
 
 	void CloseInstagramBrowser()
 	{
 		InstagramBrowserOverlay.IsVisible = false;
+		UpdateBrowserState();
 		WebAppView.Focus();
 	}
 
