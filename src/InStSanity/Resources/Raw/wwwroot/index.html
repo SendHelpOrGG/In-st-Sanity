@@ -553,9 +553,13 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   #leavingStickerArt[data-reaction="idle"] svg { animation:leavingSway 4.1s ease-in-out infinite; }
   #leavingStickerArt[data-reaction="sad"] svg { animation:leavingSniffleBody 1.05s ease-in-out infinite; }
   #leavingStickerArt[data-reaction="cackle"] svg { animation:leavingCackleBody .5s ease-in-out infinite alternate; }
+  #leavingStickerArt svg .imp-outer-frame { transform-origin:80px 80px; will-change:transform; }
   #leavingStickerArt svg .imp-face-group { transform-origin:80px 80px; will-change:transform; }
   #leavingStickerArt svg .imp-horns { transform-origin:80px 72px; will-change:transform; }
   #leavingStickerArt svg .imp-eyes-blink { transform-origin:80px 83px; animation:leavingBlink 5.2s ease-in-out infinite; will-change:transform; }
+  #leavingStickerArt svg .imp-eyes-track,
+  #leavingStickerArt .leaving-sad-eyes-track { transform-origin:80px 83px; will-change:transform; }
+  #leavingStickerArt svg .imp-eye-glow-halo { opacity:0; will-change:opacity; pointer-events:none; }
   #leavingStickerArt[data-reaction="sad"] svg .imp-eyes-blink,
   #leavingStickerArt[data-reaction="sad"] svg .imp-grin { opacity:0; animation:none!important; }
   #leavingStickerArt[data-reaction="cackle"] svg .imp-eyes-blink { animation:none!important; }
@@ -595,7 +599,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <button class="nav active" id="libraryNav" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Saved posts</button>
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
-  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.14; open version history" title="Click to view what changed in each version">v.1.14</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
+  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.15; open version history" title="Click to view what changed in each version">v.1.15</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
   <div class="sidebar-resize" id="sidebarResize" role="separator" aria-label="Resize sidebar" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="360" aria-valuenow="244" tabindex="0" onpointerdown="startSidebarResize(event)" onkeydown="keyboardSidebarResize(event)"></div>
 </aside>
 <main>
@@ -2009,7 +2013,7 @@ function cancelImpButtonClickFx(){
 
 function playImpButtonClickRandom(btn,targetX,targetY){
   const appEl=document.getElementById('appShell');
-  if(!stickerVisible||!stickerAnimEnabled||!impActionAnimEnabled||stickerOpacityPercent<=0||(appEl&&appEl.classList.contains('sidebar-hidden'))||document.body.classList.contains('json-throw-active')||isPostCarouselModalOpen()){
+  if(!stickerVisible||!stickerAnimEnabled||!impActionAnimEnabled||stickerOpacityPercent<=0||(appEl&&appEl.classList.contains('sidebar-hidden'))||document.body.classList.contains('json-throw-active')||document.body.classList.contains('leaving-prompt-open')||isPostCarouselModalOpen()){
     return;
   }
   const slot=document.getElementById('sidebarStickerSlot');
@@ -2371,6 +2375,7 @@ document.addEventListener('pointerdown',e=>{
     window._lastStickerCursorX=e.clientX;
     window._lastStickerCursorY=e.clientY;
   }
+  if(document.body.classList.contains('leaving-prompt-open'))return;
   if(e.button&&e.button!==0)return;
   if(isPostCarouselModalOpen()||e.target.closest('#postDetail,#photoFullSizeModal,#igBrowserModal'))return;
   const btn=e.target.closest('button,.settings-card-head,.check,.sort-option');
@@ -2426,7 +2431,7 @@ function playImpJsonGrabAndThrow1B(fileName,totalCount){
   const myRun=++jsonThrowRunId;
   cleanupImpJsonThrow();
   const appEl=document.getElementById('appShell');
-  if(!stickerVisible||!stickerAnimEnabled||!impActionAnimEnabled||stickerOpacityPercent<=0||(appEl&&appEl.classList.contains('sidebar-hidden'))){
+  if(!stickerVisible||!stickerAnimEnabled||!impActionAnimEnabled||stickerOpacityPercent<=0||(appEl&&appEl.classList.contains('sidebar-hidden'))||document.body.classList.contains('leaving-prompt-open')){
     return;
   }
   const slot=document.getElementById('sidebarStickerSlot');
@@ -3157,7 +3162,7 @@ let leavingCackleState=null;
 let leavingPromptReactionEventsBound=false;
 const LEAVING_CACKLE_CYCLE=1450;
 function leavingSadExpressionMarkup(pal){
-  return `<g class="reaction-eyes"><path d="M58 74 Q66 70 76 79 M84 79 Q94 70 102 74" fill="none" stroke="${pal.line}" stroke-width="3" stroke-linecap="round"/><path d="M60 82 Q68 77 76 83 M84 83 Q92 77 100 82" fill="none" stroke="${pal.c1}" stroke-width="4.5" stroke-linecap="round"/><circle cx="68" cy="84" r="2" fill="${pal.mouthFill}"/><circle cx="92" cy="84" r="2" fill="${pal.mouthFill}"/><path d="M61 80 Q68 77 75 80 M85 80 Q92 77 99 80" fill="none" stroke="${pal.pupil}" stroke-width="1.5" stroke-linecap="round"/></g><g class="reaction-mouth"><ellipse cx="80" cy="101" rx="4.2" ry="5.5" fill="${pal.mouthFill}" stroke="${pal.line}" stroke-width="2.5"/><path d="M76 107 Q80 109 84 107" fill="none" stroke="${pal.c1}" stroke-width="2" stroke-linecap="round"/></g><g class="reaction-tears"><path d="M60 85 C57 91 57 96 60 98 C63 96 63 91 60 85Z M100 85 C97 91 97 96 100 98 C103 96 103 91 100 85Z" fill="${pal.c1}"/><path d="M60 99 C57 105 58 108 60 109 C63 108 63 104 60 99Z M100 99 C97 105 98 108 100 109 C103 108 103 104 100 99Z" fill="${pal.c1}" opacity=".9"/></g>`;
+  return `<g class="leaving-sad-eyes-track"><g class="reaction-eyes"><path d="M58 74 Q66 70 76 79 M84 79 Q94 70 102 74" fill="none" stroke="${pal.line}" stroke-width="3" stroke-linecap="round"/><path d="M60 82 Q68 77 76 83 M84 83 Q92 77 100 82" fill="none" stroke="${pal.c1}" stroke-width="4.5" stroke-linecap="round"/><circle cx="68" cy="84" r="2" fill="${pal.mouthFill}"/><circle cx="92" cy="84" r="2" fill="${pal.mouthFill}"/><path d="M61 80 Q68 77 75 80 M85 80 Q92 77 99 80" fill="none" stroke="${pal.pupil}" stroke-width="1.5" stroke-linecap="round"/></g><g class="reaction-tears"><path d="M60 85 C57 91 57 96 60 98 C63 96 63 91 60 85Z M100 85 C97 91 97 96 100 98 C103 96 103 91 100 85Z" fill="${pal.c1}"/><path d="M60 99 C57 105 58 108 60 109 C63 108 63 104 60 99Z M100 99 C97 105 98 108 100 109 C103 108 103 104 100 99Z" fill="${pal.c1}" opacity=".9"/></g></g><g class="reaction-mouth"><ellipse cx="80" cy="101" rx="4.2" ry="5.5" fill="${pal.mouthFill}" stroke="${pal.line}" stroke-width="2.5"/><path d="M76 107 Q80 109 84 107" fill="none" stroke="${pal.c1}" stroke-width="2" stroke-linecap="round"/></g>`;
 }
 function renderLeavingSticker(){
   const target=document.getElementById('leavingStickerArt');
@@ -3173,10 +3178,13 @@ function renderLeavingSticker(){
   svg.setAttribute('aria-hidden','true');
   svg.setAttribute('focusable','false');
   svg.style.pointerEvents='none';
+  const outer=svg.querySelector('.imp-outer-frame');
   const face=svg.querySelector('.imp-face-group');
   const horns=svg.querySelector('.imp-horns');
   const hornPath=horns?.querySelector('path');
+  const eyes=svg.querySelector('.imp-eyes-track');
   const eyesBlink=svg.querySelector('.imp-eyes-blink');
+  const halo=svg.querySelector('.imp-eye-glow-halo');
   const grin=svg.querySelector('.imp-grin');
   const defaultEyes=svg.querySelector('.imp-default-eyes');
   const exprEyes=svg.querySelector('.imp-expr-eyes');
@@ -3187,8 +3195,42 @@ function renderLeavingSticker(){
     sadExpression.setAttribute('class','leaving-sad-expression');
     sadExpression.innerHTML=leavingSadExpressionMarkup(palette);
     face.appendChild(sadExpression);
-    target._leavingNodes={svg,face,horns,hornPath,defaultHornD:hornPath?.getAttribute('d')||'M56 56 L52 72 L71 78 M104 56 L108 72 L89 78',eyesBlink,grin,defaultEyes,exprEyes,defaultMouth,exprMouth,sadExpression,palette};
+    const sadEyesTrack=sadExpression.querySelector('.leaving-sad-eyes-track');
+    target._leavingNodes={svg,outer,face,horns,hornPath,defaultHornD:hornPath?.getAttribute('d')||'M56 56 L52 72 L71 78 M104 56 L108 72 L89 78',eyes,eyesBlink,halo,grin,defaultEyes,exprEyes,defaultMouth,exprMouth,sadExpression,sadEyesTrack,palette};
   }
+}
+function updateLeavingStickerEyes(clientX,clientY){
+  const overlay=document.getElementById('leavingPromptOverlay');
+  const target=document.getElementById('leavingStickerArt');
+  const n=target?target._leavingNodes:null;
+  if(!overlay?.classList.contains('show')||!n?.svg)return;
+  const rect=n.svg.getBoundingClientRect();
+  if(!rect.width||!rect.height)return;
+  const cx=rect.left+rect.width*0.5;
+  const cy=rect.top+rect.height*(83/160);
+  const dx=clientX-cx,dy=clientY-cy;
+  const dist=Math.hypot(dx,dy);
+  const angle=Math.atan2(dy,dx);
+  const strength=Math.min(1,dist/195);
+  const rawProx=Math.max(0,1-dist/420);
+  const prox=rawProx>0?Math.pow(rawProx,1.15):0;
+  const cos=Math.cos(angle)*strength,sin=Math.sin(angle)*strength;
+  const eyeScale=1+prox*0.32;
+  const eyeTransform=`translate3d(${(cos*8.2).toFixed(2)}px,${(sin*6.8).toFixed(2)}px,0) scale(${eyeScale.toFixed(3)})`;
+  if(n.eyes)n.eyes.style.transform=eyeTransform;
+  if(n.sadEyesTrack)n.sadEyesTrack.style.transform=eyeTransform;
+  if(n.outer)n.outer.style.transform=`translate3d(${(cos*-2.0).toFixed(2)}px,${(sin*-1.6).toFixed(2)}px,0)`;
+  if(n.halo)n.halo.style.opacity=prox.toFixed(3);
+}
+function resetLeavingStickerEyes(){
+  const target=document.getElementById('leavingStickerArt');
+  const n=target?target._leavingNodes:null;
+  if(!n)return;
+  const neutral='translate3d(0px,0px,0) scale(1)';
+  if(n.eyes)n.eyes.style.transform=neutral;
+  if(n.sadEyesTrack)n.sadEyesTrack.style.transform=neutral;
+  if(n.outer)n.outer.style.transform='translate3d(0px,0px,0)';
+  if(n.halo)n.halo.style.opacity='0';
 }
 function resetLeavingCackle(state){
   const n=state.nodes;
@@ -3290,6 +3332,7 @@ function handleLeavingPromptKeydown(event){
 function showLeavingPrompt(){
   const overlay=document.getElementById('leavingPromptOverlay');
   if(!overlay||overlay.classList.contains('show'))return;
+  cancelImpButtonClickFx();
   leavingPromptReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
   renderLeavingSticker();
   bindLeavingPromptReactionEvents();
@@ -3297,6 +3340,7 @@ function showLeavingPrompt(){
   document.body.classList.add('leaving-prompt-open');
   overlay.classList.add('show');
   overlay.setAttribute('aria-hidden','false');
+  if(typeof window.syncStickerEyesToLastCursor==='function')window.syncStickerEyesToLastCursor();
   document.addEventListener('keydown',handleLeavingPromptKeydown,true);
 }
 function dismissLeavingPrompt(){
@@ -3305,6 +3349,7 @@ function dismissLeavingPrompt(){
   setLeavingReaction('idle');
   overlay.classList.remove('show');
   overlay.setAttribute('aria-hidden','true');
+  resetLeavingStickerEyes();
   document.body.classList.remove('leaving-prompt-open');
   document.removeEventListener('keydown',handleLeavingPromptKeydown,true);
   if(leavingPromptReturnFocus?.isConnected&&leavingPromptReturnFocus!==document.body){
@@ -3614,17 +3659,20 @@ function resetAllAnimationSettings(){
   window.syncStickerEyesToLastCursor=function(){
     if(typeof window._lastStickerCursorX==='number'&&typeof window._lastStickerCursorY==='number'){
       updateEyesNow(window._lastStickerCursorX,window._lastStickerCursorY);
+      updateLeavingStickerEyes(window._lastStickerCursorX,window._lastStickerCursorY);
     }
   };
   window.addEventListener('pointermove',e=>{
     window._lastStickerCursorX=e.clientX;
     window._lastStickerCursorY=e.clientY;
     updateEyesNow(e.clientX,e.clientY);
+    updateLeavingStickerEyes(e.clientX,e.clientY);
   },{passive:true});
   window.addEventListener('resize',()=>{if(stickerDomCache)stickerDomCache.rectTs=0},{passive:true});
   window.addEventListener('mouseleave',()=>{
     window._lastStickerCursorX=null;
     window._lastStickerCursorY=null;
+    resetLeavingStickerEyes();
     const c=stickerDomCache||cacheSidebarStickerNodes();
     if(!c)return;
     c.cursorFaceTx=0;c.cursorFaceTy=0;c.cursorFaceRot=0;c.cursorFaceScale=1;
@@ -5158,8 +5206,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.14';
+const APP_VERSION='1.15';
 const VERSION_HISTORY=[
+  {version:'1.15',added:'Cursor-tracking eyes on the exit-prompt sticker.',removed:'Sidebar sticker click reactions while the prompt is open.',fixed:'Blocked click and JSON-throw animations during the prompt.'},
   {version:'1.14',added:'No new features.',removed:'Automatic focus in the exit prompt.',fixed:'Matched the title’s brand glitch and gave both actions the primary hover state.'},
   {version:'1.13',added:'No new features.',removed:'The exit button’s direct-close action.',fixed:'Unified exit prompts, matched the sticker size, refined button styling, and timed the prompt before the caught animation ends.'},
   {version:'1.12',added:'Concept 02 exit-prompt sticker reactions.',removed:'The static exit-prompt sticker.',fixed:'Kept the villain cackle continuous and animated the sticker frame.'},
@@ -7708,6 +7757,7 @@ function play(variant, fileName, totalCount){
   myRun = ++animRunId;
 
   try{
+    if(document.body.classList.contains('leaving-prompt-open')) return;
     if(typeof stickerVisible !== 'undefined' && !stickerVisible) return;
     if(typeof stickerAnimEnabled !== 'undefined' && !stickerAnimEnabled) return;
     if(typeof impActionAnimEnabled !== 'undefined' && !impActionAnimEnabled) return;
