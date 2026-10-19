@@ -41,7 +41,22 @@ public static class MauiProgram
 
 				var handle = WindowNative.GetWindowHandle(window);
 				var id = Win32Interop.GetWindowIdFromWindow(handle);
-				var titleBar = AppWindow.GetFromWindowId(id).TitleBar;
+				var appWindow = AppWindow.GetFromWindowId(id);
+
+				// The taskbar and caption must show the imp app icon. ApplicationIcon
+				// covers the exe; this pins the window itself to the same .ico.
+				try
+				{
+					var iconPath = Path.Combine(AppContext.BaseDirectory, "appicon.ico");
+					if (File.Exists(iconPath))
+						appWindow.SetIcon(iconPath);
+				}
+				catch
+				{
+					// The icon is cosmetic; never block window creation over it.
+				}
+
+				var titleBar = appWindow.TitleBar;
 				titleBar.ExtendsContentIntoTitleBar = true;
 				titleBar.PreferredHeightOption = TitleBarHeightOption.Collapsed;
 			}));

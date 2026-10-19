@@ -37,7 +37,7 @@ body[data-theme="v3"] .upload-dropzone-icon,body[data-theme="v3"] .upload-recent
 @media(max-width:900px){.app{grid-template-columns:var(--sidebar-width,244px) minmax(0,1fr)}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:36px 24px 35px}.topbar{margin:0 24px}}@media(max-width:590px){.app{display:block}.sidebar{display:none}main{padding:26px 16px 25px}.topbar{height:62px;margin:0 16px}.heading-row{align-items:flex-start;gap:12px}.heading-row h1{font-size:24px}.heading-row p{max-width:260px;line-height:1.5}.selection-count{white-space:nowrap}.grid{grid-template-columns:1fr 1fr;gap:10px}.photo{height:145px}.card-info{padding:10px}.toolbar{align-items:flex-start;gap:8px;flex-direction:column}.settings-layout{grid-template-columns:1fr}.setting-nav{display:none}.toolbar-right{width:100%;align-items:stretch}.sort-control select{min-width:165px}.toolbar-search-row{width:100%;justify-content:space-between;flex-wrap:wrap}.selection-count{flex-shrink:0}.search{flex:1;min-width:0}.search input{width:115px}}
 
 #settingsLogin,#jsonUploadBtn,#headerLogout{height:38px;min-height:38px;display:inline-flex;align-items:center;justify-content:center}
-.library-footer{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:19px;color:#9fb1c1;font-size:10px}.pagination{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.page-btn{height:32px;min-width:32px;padding:0 10px;border:1px solid rgba(204,251,241,.16);border-radius:8px;background:linear-gradient(105deg,rgba(148,163,184,.10),rgba(45,212,191,.05));color:#cbd5e1;font:inherit;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s}.page-btn:hover:not(:disabled){border-color:rgba(204,251,241,.36);color:#f8fafc}.page-btn.active{background:linear-gradient(105deg,rgba(204,251,241,.24),rgba(45,212,191,.16));border-color:rgba(204,251,241,.42);color:#99f6e4;box-shadow:inset 0 0 0 1px rgba(153,246,228,.18)}.page-btn:disabled{opacity:.38;cursor:not-allowed}.page-ellipsis{color:#9fb1c1;padding:0 4px;font-size:11px;user-select:none}.page-info{color:#99f6e4;font-size:11px;font-weight:600;margin-right:4px}
+.library-footer{display:flex;justify-content:flex-end;align-items:center;gap:14px;flex-wrap:wrap;margin-top:19px;color:#9fb1c1;font-size:10px}.pagination{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.page-btn{height:32px;min-width:32px;padding:0 10px;border:1px solid rgba(204,251,241,.16);border-radius:8px;background:linear-gradient(105deg,rgba(148,163,184,.10),rgba(45,212,191,.05));color:#cbd5e1;font:inherit;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s}.page-btn:hover:not(:disabled){border-color:rgba(204,251,241,.36);color:#f8fafc}.page-btn.active{background:linear-gradient(105deg,rgba(204,251,241,.24),rgba(45,212,191,.16));border-color:rgba(204,251,241,.42);color:#99f6e4;box-shadow:inset 0 0 0 1px rgba(153,246,228,.18)}.page-btn:disabled{opacity:.38;cursor:not-allowed}.page-ellipsis{color:#9fb1c1;padding:0 4px;font-size:11px;user-select:none}.page-info{color:#99f6e4;font-size:11px;font-weight:600;margin-right:4px}
 main::-webkit-scrollbar,.detail-grid::-webkit-scrollbar{width:10px}main::-webkit-scrollbar-track,.detail-grid::-webkit-scrollbar-track{background:linear-gradient(180deg,#131a21,#1a232c);border-left:1px solid #2d3c4a}main::-webkit-scrollbar-thumb,.detail-grid::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#cbd5e1,#99f6e4,#2dd4bf);border:2px solid #161f26;border-radius:8px}main::-webkit-scrollbar-thumb:hover,.detail-grid::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#f8fafc,#99f6e4)}
 
 /* Theme Panel in UI Settings */
@@ -463,14 +463,14 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   #libraryPage { padding-bottom:104px; }
   #libraryPage .library-footer {
     display:none; position:fixed; z-index:80; left:var(--sidebar-width,244px); right:0; bottom:0;
-    max-width:calc(1180px + 84px); margin:0 auto; padding:12px 42px calc(12px + env(safe-area-inset-bottom,0px));
-    align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; min-height:62px;
+    max-width:calc(1180px + 84px); margin:0 auto; padding:12px 80px calc(12px + env(safe-area-inset-bottom,0px)) 42px;
+    align-items:center; justify-content:flex-end; gap:14px; flex-wrap:wrap; min-height:62px;
     border-top:1px solid rgba(255,255,255,.07); background:var(--t-modal-bg,linear-gradient(135deg,rgba(10,15,24,.48),rgba(19,26,33,.42)));
     backdrop-filter:blur(16px); box-shadow:0 -10px 28px rgba(0,0,0,.16);
   }
   #libraryPage .library-footer::before { content:""; position:absolute; left:0; right:0; top:-14px; height:14px; background:linear-gradient(180deg,transparent,rgba(10,15,24,.72)); pointer-events:none; }
   body:not([data-theme]) #libraryPage .library-footer {
-    padding:8px clamp(14px,2.8vw,32px) calc(8px + env(safe-area-inset-bottom,0px));
+    padding:8px 80px calc(8px + env(safe-area-inset-bottom,0px)) clamp(14px,2.8vw,32px);
     gap:8px; min-height:54px;
   }
   body:not([data-theme]) #libraryPage .library-footer::before { background:linear-gradient(180deg,transparent,rgba(10,15,24,.26)); }
@@ -489,7 +489,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   .brand { grid-template-columns:40px minmax(0,1fr); column-gap:8px; height:44px; padding:0 8px; margin-bottom:34px; }
   .brand .logo { width:40px; height:40px; }
   .brand-name { font-size:24.5px; line-height:1.2; text-align:left; justify-self:start; align-self:center; }
-  .app-version-button { align-self:flex-start; border:0; background:transparent; color:var(--t-muted,#94a3b8); font:inherit; font-size:10px; letter-spacing:.5px; text-align:left; cursor:pointer; padding:3px 12px 8px; opacity:.8; }
+  .app-version-button { position:fixed; right:14px; bottom:8px; z-index:85; border:0; background:transparent; color:var(--t-muted,#94a3b8); font:inherit; font-size:10px; letter-spacing:.5px; text-align:right; cursor:pointer; padding:3px 12px 8px; opacity:.8; }
   .app-version-button:hover, .app-version-button:focus-visible { color:var(--t-accent,#38bdf8); opacity:1; outline:none; }
   .version-history-overlay { display:none; position:fixed; inset:0; z-index:100020; align-items:center; justify-content:center; padding:20px; background:rgba(3,7,12,.72); backdrop-filter:blur(9px); }
   .version-history-overlay.show { display:flex; }
@@ -504,7 +504,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   .version-current { color:var(--t-muted,#94a3b8); font-size:10px; text-transform:uppercase; letter-spacing:.8px; }
   .version-entry p { margin:6px 0 0; font-size:12px; line-height:1.5; color:var(--t-muted,#cbd5e1); }
   .version-entry p b { color:var(--t-ink,#f1f5f9); }
-  @media(max-width:900px) { #libraryPage .library-footer { max-width:none; padding-left:24px; padding-right:24px; } }
+  @media(max-width:900px) { #libraryPage .library-footer { max-width:none; padding-left:24px; padding-right:80px; } }
   @media(max-width:590px) { #libraryPage { padding-bottom:100px; } #libraryPage .library-footer { left:0; max-width:none; padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px)); gap:8px; } #paginationBar { justify-content:center; width:100%; } }
 </style>
 <style id="leavingPromptStyles">
@@ -569,7 +569,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
   <button class="nav" id="browserNav" type="button" onclick="openInstagramBrowser()" title="Open Instagram in the in-app browser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Browser</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
-  <div class="side-bottom"><button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.22; open version history" title="Click to view what changed in each version">v.1.22</button><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
+  <div class="side-bottom"><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
   <div class="sidebar-resize" id="sidebarResize" role="separator" aria-label="Resize sidebar" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="360" aria-valuenow="244" tabindex="0" onpointerdown="startSidebarResize(event)" onkeydown="keyboardSidebarResize(event)"></div>
 </aside>
 <div class="main-shell">
@@ -846,6 +846,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.23; open version history" title="Click to view what changed in each version">v.1.23</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -4240,6 +4241,12 @@ function resetAllAnimationSettings(){
     const CAUGHT_PROMPT_LEAD_MS=500;
     let dodge=null, dodgeRaf=0, caughtPromptTimer=0;
 
+    function getStickerNodes(){
+      const c=stickerDomCache;
+      if(c&&c.face&&c.face.isConnected)return c;
+      return cacheSidebarStickerNodes();
+    }
+
     function dodgeAllowed(allowCaughtDuringPrompt=false){
       const appEl=document.getElementById('appShell');
       if(!stickerVisible||stickerOpacityPercent<=0)return false;
@@ -4257,14 +4264,14 @@ function resetAllAnimationSettings(){
     function stopDodge(c){
       dodge=null;
       if(dodgeRaf){cancelAnimationFrame(dodgeRaf);dodgeRaf=0;}
-      const cc=c||stickerDomCache||cacheSidebarStickerNodes();
+      const cc=c||getStickerNodes();
       if(cc&&cc.face){ resetStickerExpressionVisuals(cc); restFace(cc); }
     }
 
     function stepDodge(now){
       dodgeRaf=0;
       if(!dodge)return;
-      const c=stickerDomCache||cacheSidebarStickerNodes();
+      const c=getStickerNodes();
       const allowCaughtDuringPrompt=dodge.n===5&&document.body.classList.contains('leaving-prompt-open');
       if(!c||!c.face||!dodgeAllowed(allowCaughtDuringPrompt)){
         stopDodge(c&&c.face?c:null);
@@ -4279,8 +4286,9 @@ function resetAllAnimationSettings(){
     }
 
     function startDodge(){
+      if(dodge&&dodge.n===5)return;   /* caught plays to the end */
       if(!dodgeAllowed())return;
-      const c=stickerDomCache||cacheSidebarStickerNodes();
+      const c=getStickerNodes();
       if(!c||!c.face)return;
       if(caughtPromptTimer){clearTimeout(caughtPromptTimer);caughtPromptTimer=0;}
       const n=pickAnimationOnClick();
@@ -4806,8 +4814,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.22';
+const APP_VERSION='1.23';
 const VERSION_HISTORY=[
+  {version:'1.23',added:'No new features.',removed:'Loading screens reacting to the Imp idle toggle, and the old bars taskbar icon.',fixed:'Loading screens always animate, sticker clicks advance reliably, the chevrons wordmark matches the glitch screen, and the version sits bottom-right above the right-aligned pages bar.'},
   {version:'1.22',added:'No new features.',removed:'The icon sitting slightly off-center in its button.',fixed:'Centered button icons exactly, pixel for pixel.'},
   {version:'1.21',added:'No new features.',removed:'Post cards drawing over the top-bar divider.',fixed:'Kept scrolling content strictly below the top-bar line.'},
   {version:'1.20',added:'No new features.',removed:'The sticky header background and blur.',fixed:'Kept the header pinned while restoring its transparent appearance.'},
@@ -5597,7 +5606,6 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
   var reduced = false;
   try{ reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(_){}
   var animsOn = true;
-  try{ if(typeof stickerAnimEnabled !== 'undefined' && stickerAnimEnabled === false) animsOn = false; }catch(_){}
 
   var host = document.getElementById('lsBoot');
   var appEl = null;
@@ -6098,7 +6106,7 @@ function v2(sp){
       <circle id="aura${u}" cx="${CX}" cy="${CY}" r="52" fill="none" stroke="${T().accent}" stroke-width="1.6" opacity="0"/>
       <g id="face${u}" transform="translate(${CX},${CY}) scale(0.95) translate(-80,-80)"></g>
       <g id="chev${u}">${chev}</g>
-      ${brandName(u,CX,CY+95,14)}
+      ${brandName(u,CX,H-14,14)}
       <circle id="bloom${u}" cx="${CX}" cy="${CY}" r="10" fill="${T().accent}" opacity="0"/>
       <rect id="flash${u}" width="${W}" height="${H}" fill="${T().accent}" opacity="0"/></svg>`+CAP;
     const q=i=>sp.querySelector('#'+i+u);
