@@ -872,7 +872,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.24; open version history" title="Click to view what changed in each version">v.1.24</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.25; open version history" title="Click to view what changed in each version">v.1.25</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -4918,8 +4918,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.24';
+const APP_VERSION='1.25';
 const VERSION_HISTORY=[
+  {version:'1.25',added:'No new features.',removed:'The flat square background behind the app icon.',fixed:'Black hole loading text rides the sticker and matches the glitch screen; the icon art fills its frame with transparent corners.'},
   {version:'1.24',added:'A themed in-app Browser page with your account in the top bar and My Account settings.',removed:'The separate native browser window that covered the whole app.',fixed:'Docked the browser into the content area and moved Download and Open-folder into the pages bar.'},
   {version:'1.23',added:'No new features.',removed:'Loading screens reacting to the Imp idle toggle, and the old bars taskbar icon.',fixed:'Loading screens always animate, sticker clicks advance reliably, the chevrons wordmark matches the glitch screen, and the version sits bottom-right above the right-aligned pages bar.'},
   {version:'1.22',added:'No new features.',removed:'The icon sitting slightly off-center in its button.',fixed:'Centered button icons exactly, pixel for pixel.'},
@@ -6484,7 +6485,7 @@ function v4(sp){
      sticker sits dead centre on (CX, CY) at the same 0.9 scale the rune and
      drag screens use, so this variant is the same size and in the same place
      as its siblings. The hole is born just under his chin and the wordmark
-     sits below the card, clear of it.
+     rides the card in and out, resting where the glitch screen's wordmark sits.
 
      The story is the one this variant has always told — one orb per saved-post
      pip spirals in, a filament ignites between the palms, the core punches
@@ -6506,7 +6507,6 @@ function v4(sp){
        `translate(CX,CY) scale(0.92)` and the trident screen's 0.86. */
     const CARD=0.95;                  /* same as v2 / v4                      */
     const HX=CX, HY=CY+14;            /* the hole, born at the mouth           */
-    const BRAND_Y=CY+95;              /* the name, below the card (v2)        */
     const NP=28;
     const f1=n=>n.toFixed(1), f2=n=>n.toFixed(2), f3=n=>n.toFixed(3);
     const lerp=(a,b,k)=>a+(b-a)*k;
@@ -6635,7 +6635,7 @@ function v4(sp){
       <g id="orbs${u}" transform="translate(${HX},${HY})">${orbs}</g>
       <g id="suck${u}">
         <g id="face${u}" transform="translate(${CX},${CY}) scale(${CARD}) translate(-80,-80)"></g>
-        <g id="bname${u}">${brandName(u,CX,BRAND_Y,14)}</g>
+        <g id="bname${u}">${brandName(u,CX,H-14,14)}</g>
       </g>
       <g id="parts${u}" transform="translate(${HX},${HY})">${parts}</g>
       <g id="hole${u}" transform="translate(${HX},${HY})">
@@ -6781,8 +6781,10 @@ function v4(sp){
       E.suck.setAttribute('transform',
         `translate(${HX} ${HY}) scale(${f3(1-w2*.97)}) rotate(${f1(w2*26)}) translate(${-HX} ${-HY})`);
       E.suck.setAttribute('opacity',f3(1-w2*.92));
-      /* the name is shredded by the vortex a beat before the hands slam shut */
-      E.bname.setAttribute('opacity',f3(1-win(t,WARP,WARP+.22)));
+      /* the name rides the sticker: same entrance pop about (CX,CY), and it
+         dives into the hole with the card instead of fading in place */
+      E.bname.setAttribute('transform',
+        `translate(${f1(CX)},${f1(CY)}) scale(${f3(intro)}) translate(${f1(-CX)},${f1(-CY)})`);
 
       /* ---- ignition ring, then the clap */
       let shock='';
