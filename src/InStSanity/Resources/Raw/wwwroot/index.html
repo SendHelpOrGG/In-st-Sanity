@@ -891,7 +891,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.28; open version history" title="Click to view what changed in each version">v.1.28</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.29; open version history" title="Click to view what changed in each version">v.1.29</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5006,8 +5006,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.28';
+const APP_VERSION='1.29';
 const VERSION_HISTORY=[
+  {version:'1.29',added:'No new features.',removed:'Build errors around the browser events, cookie expiry copy, and thumbnail decoding.',fixed:'Browser event handlers match their delegates, WebView2 cookie expiry converts from its timestamp, and BitmapDecoder no longer pretends to be disposable.',tone:'yellow'},
   {version:'1.28',added:'The yellow mark now flags releases packed with many small changes.',removed:'Yellow standing only for medium-sized changes.',fixed:'Bundled-fix releases like 1.23 read yellow at a glance.',tone:'green'},
   {version:'1.27',added:'Color-coded version history: every release is soft green, yellow, or red by change size.',removed:'The plain unmarked version numbers in the history.',fixed:'Every release note now shows its change size at a glance.',tone:'green'},
   {version:'1.26',added:'Signed-in resolution via the browser session, restricted-post cards with Retry and Open in Browser, and background warming of the next page.',removed:'Full-size cover downloads for the grid and raw CDN video playback.',fixed:'Page turns no longer stutter, thumbnails are resized in-app, videos replay from cache, and media responses revalidate with 304s.',tone:'red'},

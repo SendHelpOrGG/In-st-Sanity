@@ -26,7 +26,7 @@ public partial class MainPage : ContentPage
 		browserWindow.NavigateRequested += OnInstagramBrowserNavigateRequested;
 		browserWindow.CommandRequested += OnInstagramBrowserCommandRequested;
 		browserWindow.RegionRequested += OnInstagramBrowserRegionRequested;
-		browserWindow.CookieSyncHandler = () => MainThread.InvokeOnMainThreadAsync(SyncInstagramCookiesAsync);
+		browserWindow.CookieSyncHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(SyncInstagramCookiesAsync);
 
 		// Links opened by the app UI belong in the system browser (Windows only; the
 		// guard keeps the platform-specific intent explicit).
@@ -52,7 +52,7 @@ public partial class MainPage : ContentPage
 			"Check the log for the host URL and try again.";
 	}
 
-	void OnInstagramBrowserOpenRequested(string requestedUrl)
+	void OnInstagramBrowserOpenRequested(object? sender, string requestedUrl)
 	{
 		var isFirstOpen = _instagramBrowserView is null;
 		var targetUrl = requestedUrl.Trim();
@@ -82,7 +82,7 @@ public partial class MainPage : ContentPage
 		UpdateBrowserState();
 	}
 
-	void OnInstagramBrowserNavigateRequested(string url)
+	void OnInstagramBrowserNavigateRequested(object? sender, string url)
 	{
 		if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
 			!InstagramBrowserNavigationPolicy.IsAllowed(uri))
@@ -96,7 +96,7 @@ public partial class MainPage : ContentPage
 		UpdateBrowserState();
 	}
 
-	void OnInstagramBrowserCommandRequested(string command)
+	void OnInstagramBrowserCommandRequested(object? sender, string command)
 	{
 		switch (command)
 		{
@@ -138,7 +138,7 @@ public partial class MainPage : ContentPage
 		}
 	}
 
-	void OnInstagramBrowserRegionRequested(InstagramBrowserRegion region)
+	void OnInstagramBrowserRegionRequested(object? sender, InstagramBrowserRegion region)
 	{
 		// Dock the native page over the themed viewport of the Browser tab. The region
 		// arrives in window-relative device-independent pixels, matching MAUI layout.

@@ -27,7 +27,7 @@ internal static class ImageResizer
 			}
 
 			inStream.Seek(0);
-			using var decoder = await BitmapDecoder.CreateAsync(inStream);
+			var decoder = await BitmapDecoder.CreateAsync(inStream);
 			if (decoder.PixelWidth <= targetWidth)
 			{
 				return null; // already small enough

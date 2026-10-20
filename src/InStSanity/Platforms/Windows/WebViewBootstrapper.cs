@@ -257,9 +257,11 @@ internal static class WebViewBootstrapper
 						Secure = cookie.IsSecure,
 						HttpOnly = cookie.IsHttpOnly,
 					};
-					if (cookie.Expires != default)
+					if (cookie.Expires > 0)
 					{
-						copy.Expires = cookie.Expires;
+						// WebView2 hands the expiry over as a Unix-epoch double (seconds).
+						var seconds = cookie.Expires > 100_000_000_000 ? cookie.Expires / 1000.0 : cookie.Expires;
+						copy.Expires = DateTimeOffset.FromUnixTimeSeconds((long)seconds).UtcDateTime;
 					}
 
 					list.Add(copy);
