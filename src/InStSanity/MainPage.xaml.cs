@@ -17,6 +17,9 @@ public partial class MainPage : ContentPage
 
 	// Last confirmed identity: the page probe can miss it on pages without the profile
 	// markup and the account API can be unavailable, so keep the name instead of flapping.
+	const string AccountUsernameKey = "ig_account_username";
+	const string AccountFullNameKey = "ig_account_full_name";
+	const string AccountPicKey = "ig_account_pic";
 	string _knownAccountUsername = string.Empty;
 	string _knownAccountFullName = string.Empty;
 	string _knownAccountPic = string.Empty;
@@ -54,6 +57,8 @@ public partial class MainPage : ContentPage
 #if WINDOWS
 		try
 		{
+			RestoreKnownAccount();
+
 			// Give the window a beat to lay out before the WebView2 control initialises.
 			await Task.Delay(250);
 			EnsureInstagramBrowserView();
@@ -404,8 +409,70 @@ public partial class MainPage : ContentPage
 			_knownAccountPic = string.Empty;
 		}
 
+		if (loggedIn && username.Length > 0)
+		{
+			SaveKnownAccount(username, fullName, profilePicUrl);
+		}
+		else if (!loggedIn)
+		{
+			ClearKnownAccount();
+		}
+
 		_browserWindow.SetAccount(loggedIn, username, fullName, profilePicUrl);
 #endif
+	}
+
+	void RestoreKnownAccount()
+	{
+		try
+		{
+			var username = Preferences.Default.Get(AccountUsernameKey, string.Empty);
+			if (username.Length == 0)
+			{
+				return;
+			}
+
+			_knownAccountUsername = username;
+			_knownAccountFullName = Preferences.Default.Get(AccountFullNameKey, string.Empty);
+			_knownAccountPic = Preferences.Default.Get(AccountPicKey, string.Empty);
+			_browserWindow.SetAccount(
+				true,
+				username,
+				_knownAccountFullName.Length > 0 ? _knownAccountFullName : username,
+				_knownAccountPic);
+		}
+		catch
+		{
+			// best-effort cache of the last confirmed identity
+		}
+	}
+
+	void SaveKnownAccount(string username, string fullName, string profilePicUrl)
+	{
+		try
+		{
+			Preferences.Default.Set(AccountUsernameKey, username);
+			Preferences.Default.Set(AccountFullNameKey, fullName);
+			Preferences.Default.Set(AccountPicKey, profilePicUrl);
+		}
+		catch
+		{
+			// best-effort cache of the last confirmed identity
+		}
+	}
+
+	void ClearKnownAccount()
+	{
+		try
+		{
+			Preferences.Default.Remove(AccountUsernameKey);
+			Preferences.Default.Remove(AccountFullNameKey);
+			Preferences.Default.Remove(AccountPicKey);
+		}
+		catch
+		{
+			// best-effort cache of the last confirmed identity
+		}
 	}
 
 	async Task LogoutInstagramAsync()
@@ -421,9 +488,10 @@ public partial class MainPage : ContentPage
 		}
 
 		await WebViewBootstrapper.ClearInstagramSessionAsync(_instagramBrowserView);
-			_knownAccountUsername = string.Empty;
-			_knownAccountFullName = string.Empty;
-			_knownAccountPic = string.Empty;
+		_knownAccountUsername = string.Empty;
+		_knownAccountFullName = string.Empty;
+		_knownAccountPic = string.Empty;
+		ClearKnownAccount();
 		_instagramHttp.ClearInstagramCookies();
 		_browserWindow.SetAccount(false, string.Empty, string.Empty, string.Empty);
 		UpdateBrowserState();

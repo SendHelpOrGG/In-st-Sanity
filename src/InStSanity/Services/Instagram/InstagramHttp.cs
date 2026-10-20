@@ -188,11 +188,23 @@ public sealed class InstagramHttp
 	public async Task<InstagramIdentity?> FetchCurrentAccountAsync(CancellationToken cancellationToken = default)
 	{
 		var csrf = Cookies.GetCookies(new Uri(InstagramOrigin))["csrftoken"]?.Value;
-		foreach (var url in new[]
+		var urls = new List<string>
 		{
 			"https://i.instagram.com/api/v1/accounts/current_user/?edit=true",
 			"https://www.instagram.com/api/v1/accounts/current_user/?edit=true",
-		})
+		};
+
+		// The session cookie carries the account id; the user info endpoint answers
+		// with the same "user" object and needs no page, markup or navigation at all.
+		var dsUserId = Cookies.GetCookies(new Uri(InstagramOrigin))["ds_user_id"]?.Value
+			?? Cookies.GetCookies(new Uri("https://i.instagram.com/"))["ds_user_id"]?.Value;
+		if (!string.IsNullOrEmpty(dsUserId) && dsUserId.Length <= 20 && dsUserId.All(char.IsDigit))
+		{
+			urls.Add($"https://i.instagram.com/api/v1/users/{dsUserId}/info/");
+			urls.Add($"https://www.instagram.com/api/v1/users/{dsUserId}/info/");
+		}
+
+		foreach (var url in urls)
 		{
 			try
 			{
