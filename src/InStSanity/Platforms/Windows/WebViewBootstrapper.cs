@@ -15,14 +15,9 @@ internal static class WebViewBootstrapper
 	// Same-origin call Instagram's own web app makes; the x-ig-app-id header is the
 	// public one every browser session uses. Page scripts cannot see HttpOnly cookies,
 	// so the login check runs through CoreWebView2.CookieManager instead.
-	const string AccountProbeScript =
-		"(async()=>{try{const cs=(document.cookie.split('; ').find(x=>x.startsWith('csrftoken='))||'').slice(10);" +
-		"const h={'x-ig-app-id':'936619743392459','x-requested-with':'XMLHttpRequest','x-csrftoken':cs};" +
-		"let u=null;try{const r=await fetch('/api/v1/accounts/current_user/?edit=true',{credentials:'include',headers:h});" +
-		"if(r.ok){const j=await r.json();if(j&&j.user)u=j.user}}catch(e){}" +
-		"if(!u){try{const av=document.querySelector('img[alt*=\"profile picture\" i]');" +
-		"const a=av&&av.closest('a');const href=a&&a.getAttribute('href');const m=href&&href.match(/^\\/([A-Za-z0-9_.]+)\\/$/);" +
-		"if(m&&m[1]!=='explore'&&m[1]!=='reels'&&m[1]!=='accounts'){u={username:m[1],full_name:'',profile_pic_url:av.currentSrc||av.src||''}}}catch(e){}}" +
+		const string AccountProbeScript =
+		"(async()=>{try{const cs=(document.cookie.split('; ').find(x=>x.startsWith('csrftoken='))||'').slice(10);const h={'x-ig-app-id':'936619743392459','x-requested-with':'XMLHttpRequest','x-csrftoken':cs};const R='p,reel,reels,tv,explore,stories,direct,accounts,about,developer,legal,settings,terms,privacy,help,directory,emails,sessions,graphql,api,clips,guides'.split(',');let u=null;try{const r=await fetch('/api/v1/accounts/current_user/?edit=true',{credentials:'include',headers:h});if(r.ok){const j=await r.json();if(j&&j.user)u=j.user}}catch(e){}if(!u){try{const av=document.querySelector('img[alt*=\"profile photo\" i],img[alt*=\"profile picture\" i],img[alt*=\"your profile\" i]');const a=av&&av.closest('a');const href=(a&&a.getAttribute('href'))||'';const m=href.match(/^\\/([A-Za-z0-9_.]{1,30})\\/$/);if(m&&!R.includes(m[1].toLowerCase()))u={username:m[1],full_name:'',profile_pic_url:(av.currentSrc||av.src||'')}}catch(e){}}" +
+		"if(!u){try{const pm=location.pathname.match(/^\\/([A-Za-z0-9_.]{1,30})\\/$/);const own=!!document.querySelector('a[href=\"/accounts/edit/\"],a[href^=\"/accounts/edit\"]');if(pm&&own&&!R.includes(pm[1].toLowerCase()))u={username:pm[1],full_name:'',profile_pic_url:''}}catch(e){}}" +
 		"if(!u){const t=document.title||'';const m=t.match(/\\(@([A-Za-z0-9_.]+)\\)/)||t.match(/^([A-Za-z0-9_.]+) \\(/);if(m)u={username:m[1],full_name:'',profile_pic_url:''}}" +
 		"const out=u?JSON.stringify({u:u.username||'',n:u.full_name||u.username||'',p:u.profile_pic_url||''}):'';window.__igAccountProbeResult=out;return out}catch(e){window.__igAccountProbeResult='';return ''}})()";
 

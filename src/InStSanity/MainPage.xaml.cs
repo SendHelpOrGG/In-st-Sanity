@@ -15,6 +15,12 @@ public partial class MainPage : ContentPage
 	WebView? _instagramBrowserView;
 	string? _currentInstagramUrl;
 
+	// Last confirmed identity: the page probe can miss it on pages without the profile
+	// markup and the account API can be unavailable, so keep the name instead of flapping.
+	string _knownAccountUsername = string.Empty;
+	string _knownAccountFullName = string.Empty;
+	string _knownAccountPic = string.Empty;
+
 	public MainPage(MainPageViewModel viewModel, InstagramBrowserWindowService browserWindow, InstagramHttp instagramHttp)
 	{
 		InitializeComponent();
@@ -254,6 +260,10 @@ public partial class MainPage : ContentPage
 			{
 				_currentInstagramUrl = uri.AbsoluteUri;
 				UpdateBrowserState();
+
+				// Instagram navigates like a single-page app, so opening your profile
+				// never raises Navigated; re-probe right away to pick the name up.
+				_ = RefreshInstagramAccountAsync();
 			}
 
 			ticks++;
@@ -363,10 +373,35 @@ public partial class MainPage : ContentPage
 			{
 				fullName = username;
 			}
+
+			if (username.Length == 0)
+			{
+				username = _knownAccountUsername;
+			}
+
+			if (fullName.Length == 0)
+			{
+				fullName = _knownAccountFullName;
+			}
+
+			if (profilePicUrl.Length == 0)
+			{
+				profilePicUrl = _knownAccountPic;
+			}
+
+			if (username.Length > 0)
+			{
+				_knownAccountUsername = username;
+				_knownAccountFullName = fullName;
+				_knownAccountPic = profilePicUrl;
+			}
 		}
 		else
 		{
 			_instagramHttp.ClearInstagramCookies();
+			_knownAccountUsername = string.Empty;
+			_knownAccountFullName = string.Empty;
+			_knownAccountPic = string.Empty;
 		}
 
 		_browserWindow.SetAccount(loggedIn, username, fullName, profilePicUrl);
@@ -386,6 +421,9 @@ public partial class MainPage : ContentPage
 		}
 
 		await WebViewBootstrapper.ClearInstagramSessionAsync(_instagramBrowserView);
+			_knownAccountUsername = string.Empty;
+			_knownAccountFullName = string.Empty;
+			_knownAccountPic = string.Empty;
 		_instagramHttp.ClearInstagramCookies();
 		_browserWindow.SetAccount(false, string.Empty, string.Empty, string.Empty);
 		UpdateBrowserState();
