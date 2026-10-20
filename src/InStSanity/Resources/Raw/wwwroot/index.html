@@ -846,8 +846,8 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
           <div class="background-actions">
           <button type="button" class="outline ui-toggle-btn active" id="lsSoundBtn" aria-pressed="true" onclick="toggleLoadingScreenSound()">Loading screen sound: On</button>
           </div>
-          <label class="field-label opacity-label" for="lsSoundVolume">Sound loudness <strong id="lsSoundVolumeValue">100%</strong></label>
-          <input class="opacity-slider" id="lsSoundVolume" type="range" min="0" max="100" value="100" oninput="setLoadingScreenSoundVolume(this.value)">
+          <label class="field-label opacity-label" for="lsSoundVolume">Sound loudness <strong id="lsSoundVolumeValue">25%</strong></label>
+          <input class="opacity-slider" id="lsSoundVolume" type="range" min="0" max="100" value="25" oninput="setLoadingScreenSoundVolume(this.value)">
           <p class="hint">100% is the level the soundtracks were mixed at. Drop it if the loading screen is too loud, or to 0% to mute it while leaving the sound switched on.</p>
           <p class="side-note" style="margin:12px 4px 0"><strong>Best-effort by design</strong><br>Browsers block audio until you interact with the page, so the soundtrack plays when the browser allows it and stays silent when it does not. Nothing about the loading screen's look or timing changes either way.</p>
           </div>
@@ -893,7 +893,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.40; open version history" title="Click to view what changed in each version">v.1.40</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.41; open version history" title="Click to view what changed in each version">v.1.41</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5012,8 +5012,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.40';
+const APP_VERSION='1.41';
 const VERSION_HISTORY=[
+  {version:'1.41',added:'No new features.',removed:'The loud loading-screen default.',fixed:'The loading-screen soundtrack now starts at 25% instead of 100%.',tone:'green'},
   {version:'1.40',added:'No new features.',removed:'The oversized sticker, the off-color v4 background and the unscaled hands, trident and chevrons.',fixed:'The sticker is 35% smaller (v3 20%), v4 shares the others solid background, hands, trident and chevrons scale with the sticker and v5 elbows connect.',tone:'yellow'},
   {version:'1.39',added:'A Log Out confirmation pop-up.',removed:'The stray middle dot reopening after closing a post and the app forgetting your Instagram username on restart.',fixed:'The account name is remembered between launches and resolved from the signed-in session itself, post cards keep the date left and likes right after closing them, and Log Out asks for confirmation before clearing the session.',tone:'yellow'},
   {version:'1.38',added:'No new features.',removed:'The pop-up floating above the pages bar and the card likes sitting next to the date.',fixed:'The pop-up lives inside the pages bar between the page controls and Download, the card likes sit on the right of the Posted row, and the signed-in username is read from your profile link and profile page URL so the account finally names you.',tone:'yellow'},
@@ -5123,7 +5124,7 @@ function toggleLoadingScreens(){
 }
 
 var lsSoundEnabled = true;
-var lsSoundVolumePercent = 100;         // 100 = the authored master level (0.85)
+var lsSoundVolumePercent = 25;         // 100 = the authored master level (0.85)
 function loadLsSoundSetting(){
   try{
     var v = localStorage.getItem('stillSane.lsSound');
