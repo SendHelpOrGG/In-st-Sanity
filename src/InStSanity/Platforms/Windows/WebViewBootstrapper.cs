@@ -16,10 +16,14 @@ internal static class WebViewBootstrapper
 	// public one every browser session uses. Page scripts cannot see HttpOnly cookies,
 	// so the login check runs through CoreWebView2.CookieManager instead.
 	const string AccountProbeScript =
-		"(async()=>{try{const h={'x-ig-app-id':'936619743392459','x-requested-with':'XMLHttpRequest'};" +
+		"(async()=>{try{const cs=(document.cookie.split('; ').find(x=>x.startsWith('csrftoken='))||'').slice(10);" +
+		"const h={'x-ig-app-id':'936619743392459','x-requested-with':'XMLHttpRequest','x-csrftoken':cs};" +
 		"let u=null;try{const r=await fetch('/api/v1/accounts/current_user/?edit=true',{credentials:'include',headers:h});" +
 		"if(r.ok){const j=await r.json();if(j&&j.user)u=j.user}}catch(e){}" +
-		"if(!u){const m=(document.title||'').match(/\\(@([^)]+)\\)/);if(m)u={username:m[1],full_name:'',profile_pic_url:''}}" +
+		"if(!u){try{const av=document.querySelector('img[alt=\"profile picture\"]');" +
+		"const a=av&&av.closest('a');const href=a&&a.getAttribute('href');const m=href&&href.match(/^\\/([A-Za-z0-9_.]+)\\/$/);" +
+		"if(m&&m[1]!=='explore'&&m[1]!=='reels'&&m[1]!=='accounts'){u={username:m[1],full_name:'',profile_pic_url:av.currentSrc||av.src||''}}}catch(e){}}" +
+		"if(!u){const t=document.title||'';const m=t.match(/\\(@([A-Za-z0-9_.]+)\\)/)||t.match(/^([A-Za-z0-9_.]+) \\(/);if(m)u={username:m[1],full_name:'',profile_pic_url:''}}" +
 		"return u?JSON.stringify({u:u.username||'',n:u.full_name||u.username||'',p:u.profile_pic_url||''}):''}catch(e){return ''}})()";
 
 	static readonly string[] InstagramCookieUris =
@@ -274,5 +278,27 @@ internal static class WebViewBootstrapper
 		}
 
 		return list;
+	}
+
+	/// <summary>Reports URL changes MAUI's Navigated event never sees (Instagram moves between pages with history.pushState).</summary>
+	internal static async Task TrackSourceChangesAsync(WebView webView, Action<string> onSourceChanged)
+	{
+		var core = await WaitForCoreWebView2Async(webView, TimeSpan.FromSeconds(15));
+		if (core is null)
+		{
+			return;
+		}
+
+		core.SourceChanged += (_, _) =>
+		{
+			try
+			{
+				onSourceChanged(core.Source ?? string.Empty);
+			}
+			catch
+			{
+				// state reporting must never throw into WebView2
+			}
+		};
 	}
 }

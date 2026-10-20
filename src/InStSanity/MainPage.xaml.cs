@@ -166,6 +166,16 @@ public partial class MainPage : ContentPage
 
 #if WINDOWS
 		WebViewBootstrapper.AttachInstagramBrowser(browserView);
+		// Instagram navigates with history.pushState, which never raises Navigated;
+		// without this the address bar would freeze on the URL the browser opened with.
+		_ = WebViewBootstrapper.TrackSourceChangesAsync(browserView, url =>
+		{
+			if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && InstagramBrowserNavigationPolicy.IsAllowed(uri))
+			{
+				_currentInstagramUrl = uri.AbsoluteUri;
+				UpdateBrowserState();
+			}
+		});
 #endif
 	}
 
