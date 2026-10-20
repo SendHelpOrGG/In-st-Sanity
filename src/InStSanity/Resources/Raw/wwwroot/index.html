@@ -891,7 +891,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.27; open version history" title="Click to view what changed in each version">v.1.27</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.28; open version history" title="Click to view what changed in each version">v.1.28</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5006,13 +5006,14 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.27';
+const APP_VERSION='1.28';
 const VERSION_HISTORY=[
+  {version:'1.28',added:'The yellow mark now flags releases packed with many small changes.',removed:'Yellow standing only for medium-sized changes.',fixed:'Bundled-fix releases like 1.23 read yellow at a glance.',tone:'green'},
   {version:'1.27',added:'Color-coded version history: every release is soft green, yellow, or red by change size.',removed:'The plain unmarked version numbers in the history.',fixed:'Every release note now shows its change size at a glance.',tone:'green'},
   {version:'1.26',added:'Signed-in resolution via the browser session, restricted-post cards with Retry and Open in Browser, and background warming of the next page.',removed:'Full-size cover downloads for the grid and raw CDN video playback.',fixed:'Page turns no longer stutter, thumbnails are resized in-app, videos replay from cache, and media responses revalidate with 304s.',tone:'red'},
   {version:'1.25',added:'No new features.',removed:'The flat square background behind the app icon.',fixed:'Black hole loading text rides the sticker and matches the glitch screen; the icon art fills its frame with transparent corners.',tone:'green'},
   {version:'1.24',added:'A themed in-app Browser page with your account in the top bar and My Account settings.',removed:'The separate native browser window that covered the whole app.',fixed:'Docked the browser into the content area and moved Download and Open-folder into the pages bar.',tone:'red'},
-  {version:'1.23',added:'No new features.',removed:'Loading screens reacting to the Imp idle toggle, and the old bars taskbar icon.',fixed:'Loading screens always animate, sticker clicks advance reliably, the chevrons wordmark matches the glitch screen, and the version sits bottom-right above the right-aligned pages bar.',tone:'green'},
+  {version:'1.23',added:'No new features.',removed:'Loading screens reacting to the Imp idle toggle, and the old bars taskbar icon.',fixed:'Loading screens always animate, sticker clicks advance reliably, the chevrons wordmark matches the glitch screen, and the version sits bottom-right above the right-aligned pages bar.',tone:'yellow'},
   {version:'1.22',added:'No new features.',removed:'The icon sitting slightly off-center in its button.',fixed:'Centered button icons exactly, pixel for pixel.',tone:'green'},
   {version:'1.21',added:'No new features.',removed:'Post cards drawing over the top-bar divider.',fixed:'Kept scrolling content strictly below the top-bar line.',tone:'green'},
   {version:'1.20',added:'No new features.',removed:'The sticky header background and blur.',fixed:'Kept the header pinned while restoring its transparent appearance.',tone:'green'},
@@ -5020,10 +5021,10 @@ const VERSION_HISTORY=[
   {version:'1.18',added:'Distinctive sticker designs for themes 4, 5, and 8-11.',removed:'The previous crown and frame art in the refreshed themes.',fixed:'Changed only the Theme 4 crown, kept Theme 3 unchanged, and renamed the exit panel to LET ME OUT!.',tone:'green'},
   {version:'1.17',added:'A native in-app Instagram browser.',removed:'The simulated Instagram login form and startup session probe.',fixed:'Routed Instagram browsing through a persistent WebView2 profile; sign-in stays on Instagram.',tone:'red'},
   {version:'1.16',added:'No new features.',removed:'The fixed white “Not yet” label.',fixed:'Made its neutral text follow the active theme.',tone:'green'},
-  {version:'1.15',added:'Cursor-tracking eyes on the exit-prompt sticker.',removed:'Sidebar sticker click reactions while the prompt is open.',fixed:'Blocked click and JSON-throw animations during the prompt.',tone:'green'},
-  {version:'1.14',added:'No new features.',removed:'Automatic focus in the exit prompt.',fixed:'Matched the title’s brand glitch and gave both actions the primary hover state.',tone:'green'},
-  {version:'1.13',added:'No new features.',removed:'The exit button’s direct-close action.',fixed:'Unified exit prompts, matched the sticker size, refined button styling, and timed the prompt before the caught animation ends.',tone:'green'},
-  {version:'1.12',added:'Concept 02 exit-prompt sticker reactions.',removed:'The static exit-prompt sticker.',fixed:'Kept the villain cackle continuous and animated the sticker frame.',tone:'green'},
+  {version:'1.15',added:'Cursor-tracking eyes on the exit-prompt sticker.',removed:'Sidebar sticker click reactions while the prompt is open.',fixed:'Blocked click and JSON-throw animations during the prompt.',tone:'yellow'},
+  {version:'1.14',added:'No new features.',removed:'Automatic focus in the exit prompt.',fixed:'Matched the title’s brand glitch and gave both actions the primary hover state.',tone:'yellow'},
+  {version:'1.13',added:'No new features.',removed:'The exit button’s direct-close action.',fixed:'Unified exit prompts, matched the sticker size, refined button styling, and timed the prompt before the caught animation ends.',tone:'yellow'},
+  {version:'1.12',added:'Concept 02 exit-prompt sticker reactions.',removed:'The static exit-prompt sticker.',fixed:'Kept the villain cackle continuous and animated the sticker frame.',tone:'yellow'},
   {version:'1.11',added:'No new features.',removed:'No brand elements.',fixed:'Corrected the collapsed Windows title-bar API.',tone:'green'},
   {version:'1.10',added:'A caught-imp exit prompt and an optional top-right exit icon.',removed:'The native Windows title bar.',fixed:'Kept the wordmark descender visible and changed the desktop app icon to the sidebar logo.',tone:'red'},
   {version:'1.9',added:'No new features.',removed:'No brand elements.',fixed:'Adjusted the sidebar wordmark size while keeping its starting point beside the logo.',tone:'green'},
@@ -5033,7 +5034,7 @@ const VERSION_HISTORY=[
   {version:'1.5',added:'Moss & Brass, a botanical green and antique-gold theme.',removed:'The former Velvet Cloud/Pink & Pale Lilac-Sky theme 11.',fixed:'Kept saved v11 selections; matched its stickers, startup screen, and restart overlay to the new palette.',tone:'green'},
   {version:'1.4',added:'Icon-only source controls and a larger app wordmark; the sidebar toggle moves to the top bar.',removed:'Text labels inside source toggle buttons.',fixed:'Centered folder/source icons, kept Minimalist Studio page numbers legible on hover, and kept primary-button icons theme-matched.',tone:'green'},
   {version:'1.3',added:'The default-theme pagination panel gets a more compact layout and more transparent glass effect.',removed:'No additional UI elements.',fixed:'Pagination fits more comfortably in the default theme; other themes keep their existing panel appearance.',tone:'green'},
-  {version:'1.2',added:'The saved-post grid gets more room; Open folder is now an icon-only control.',removed:'The library heading and redundant footer status line.',fixed:'Saved posts start higher on screen while pagination remains visible.',tone:'green'},
+  {version:'1.2',added:'The saved-post grid gets more room; Open folder is now an icon-only control.',removed:'The library heading and redundant footer status line.',fixed:'Saved posts start higher on screen while pagination remains visible.',tone:'yellow'},
   {version:'1.1',added:'Startup waits for the loading screen; added the Open folder control and clickable release notes.',removed:'Visible scrollbars and redundant Save settings buttons.',fixed:'Library restoration and post loading no longer compete with the boot animation.',tone:'yellow'},
   {version:'1.0',added:'Initial version-tracking baseline.',removed:'No recorded removals.',fixed:'No recorded fixes before release notes began.'}
 ];
@@ -5044,7 +5045,7 @@ function renderVersionHistory(){
   const currentTone=versionToneOf(VERSION_HISTORY[0]);
   if(label){label.innerHTML=(currentTone?`<span class="version-tone-dot tone-${currentTone}"></span>`:'')+`v.${APP_VERSION}`;label.setAttribute('aria-label',`Version ${APP_VERSION}; open version history`)}
   if(list){
-    const legend='<div class="version-tone-legend"><span><i class="version-tone-swatch tone-green"></i>small changes &middot; UI adjustments</span><span><i class="version-tone-swatch tone-yellow"></i>medium changes</span><span><i class="version-tone-swatch tone-red"></i>new features &middot; reworks</span></div>';
+    const legend='<div class="version-tone-legend"><span><i class="version-tone-swatch tone-green"></i>small changes &middot; UI adjustments</span><span><i class="version-tone-swatch tone-yellow"></i>lots of small changes</span><span><i class="version-tone-swatch tone-red"></i>new features &middot; reworks</span></div>';
     list.innerHTML=legend+VERSION_HISTORY.map((entry,index)=>{
       const tone=versionToneOf(entry);
       const tag=tone?`<strong class="version-tag tone-${tone}">v.${escapeHtml(entry.version)}</strong>`:`<strong>v.${escapeHtml(entry.version)}</strong>`;
