@@ -176,7 +176,58 @@ public partial class MainPage : ContentPage
 				UpdateBrowserState();
 			}
 		});
+
+		_ = WatchInstagramBrowserUrlAsync(browserView);
 #endif
+	}
+
+	/// <summary>
+	/// Instagram moves between pages without real navigations, so event-driven URL
+	/// tracking can miss hops (profile clicks especially). Reading the live location
+	/// once a second keeps the address bar truthful no matter how the page moved.
+	/// </summary>
+	async Task WatchInstagramBrowserUrlAsync(WebView view)
+	{
+		var ticks = 0;
+		while (_instagramBrowserView == view)
+		{
+			await Task.Delay(1000);
+			if (_instagramBrowserView != view)
+			{
+				return;
+			}
+
+			string json;
+			try
+			{
+				var core = await WebViewBootstrapper.WaitForCoreWebView2Async(view, TimeSpan.FromMilliseconds(400));
+				if (core is null)
+				{
+					continue;
+				}
+
+				json = await WebViewBootstrapper.ExecOnUiAsync(core, "location.href");
+			}
+			catch
+			{
+				continue;
+			}
+
+			if (Uri.TryCreate(WebViewBootstrapper.TryUnwrapScriptJson(json), UriKind.Absolute, out var uri) &&
+				InstagramBrowserNavigationPolicy.IsAllowed(uri) &&
+				!string.Equals(_currentInstagramUrl, uri.AbsoluteUri, StringComparison.OrdinalIgnoreCase))
+			{
+				_currentInstagramUrl = uri.AbsoluteUri;
+				UpdateBrowserState();
+			}
+
+			ticks++;
+			if (ticks % 20 == 0)
+			{
+				// Keep the identity fresh without needing a navigation to trigger it.
+				_ = RefreshInstagramAccountAsync();
+			}
+		}
 	}
 
 	void NavigateInstagramBrowser(Uri uri)
@@ -253,15 +304,37 @@ public partial class MainPage : ContentPage
 			return;
 		}
 
-		_browserWindow.SetAccount(snapshot.LoggedIn, snapshot.Username, snapshot.FullName, snapshot.ProfilePicUrl);
-		if (snapshot.LoggedIn)
+		var loggedIn = snapshot.LoggedIn;
+		var username = snapshot.Username;
+		var fullName = snapshot.FullName;
+		var profilePicUrl = snapshot.ProfilePicUrl;
+		if (loggedIn)
 		{
 			await SyncInstagramCookiesAsync();
+			if (username.Length == 0 || profilePicUrl.Length == 0)
+			{
+				// The page probe can miss the identity as Instagram's markup and its
+				// script guards move; the account API over the synced session is reliable.
+				var identity = await _instagramHttp.FetchCurrentAccountAsync();
+				if (identity is not null)
+				{
+					username = username.Length == 0 ? identity.Username : username;
+					fullName = fullName.Length == 0 ? identity.FullName : fullName;
+					profilePicUrl = profilePicUrl.Length == 0 ? identity.ProfilePicUrl : profilePicUrl;
+				}
+			}
+
+			if (fullName.Length == 0)
+			{
+				fullName = username;
+			}
 		}
 		else
 		{
 			_instagramHttp.ClearInstagramCookies();
 		}
+
+		_browserWindow.SetAccount(loggedIn, username, fullName, profilePicUrl);
 #endif
 	}
 

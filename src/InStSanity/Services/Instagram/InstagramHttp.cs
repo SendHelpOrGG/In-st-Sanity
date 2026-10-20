@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 
 namespace InStSanity.Services.Instagram;
 
@@ -178,4 +179,72 @@ public sealed class InstagramHttp
 			}
 		}
 	}
+
+	/// <summary>
+	/// Reads the signed-in account through Instagram's own account API using the session
+	/// cookies copied out of the in-app browser — the same authenticated channel the media
+	/// resolver uses, so identity does not depend on Instagram's DOM or on page-script quirks.
+	/// </summary>
+	public async Task<InstagramIdentity?> FetchCurrentAccountAsync(CancellationToken cancellationToken = default)
+	{
+		var csrf = Cookies.GetCookies(new Uri(InstagramOrigin))["csrftoken"]?.Value;
+		foreach (var url in new[]
+		{
+			"https://i.instagram.com/api/v1/accounts/current_user/?edit=true",
+			"https://www.instagram.com/api/v1/accounts/current_user/?edit=true",
+		})
+		{
+			try
+			{
+				using var request = new HttpRequestMessage(HttpMethod.Get, url);
+				request.Headers.TryAddWithoutValidation("X-IG-App-ID", "936619743392459");
+				request.Headers.TryAddWithoutValidation("Accept", "*/*");
+				if (!string.IsNullOrEmpty(csrf))
+				{
+					request.Headers.TryAddWithoutValidation("X-CSRFToken", csrf);
+				}
+
+				request.Headers.Referrer = new Uri(InstagramOrigin);
+
+				using var response = await Client
+					.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken)
+					.ConfigureAwait(false);
+				if (!response.IsSuccessStatusCode)
+				{
+					continue;
+				}
+
+				var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+				using var document = JsonDocument.Parse(body);
+				if (!document.RootElement.TryGetProperty("user", out var user) ||
+					user.ValueKind != JsonValueKind.Object)
+				{
+					continue;
+				}
+
+				var username = user.TryGetProperty("username", out var u) ? u.GetString() ?? string.Empty : string.Empty;
+				if (username.Length == 0)
+				{
+					continue;
+				}
+
+				var fullName = user.TryGetProperty("full_name", out var n) ? n.GetString() ?? string.Empty : string.Empty;
+				var profilePicUrl = user.TryGetProperty("profile_pic_url", out var p) ? p.GetString() ?? string.Empty : string.Empty;
+				return new InstagramIdentity(username, fullName.Length == 0 ? username : fullName, profilePicUrl);
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
+			}
+			catch
+			{
+				// try the next host
+			}
+		}
+
+		return null;
+	}
 }
+
+/// <summary>Who the signed-in account is, as Instagram's own account API reports it.</summary>
+public sealed record InstagramIdentity(string Username, string FullName, string ProfilePicUrl);

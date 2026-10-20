@@ -20,11 +20,11 @@ internal static class WebViewBootstrapper
 		"const h={'x-ig-app-id':'936619743392459','x-requested-with':'XMLHttpRequest','x-csrftoken':cs};" +
 		"let u=null;try{const r=await fetch('/api/v1/accounts/current_user/?edit=true',{credentials:'include',headers:h});" +
 		"if(r.ok){const j=await r.json();if(j&&j.user)u=j.user}}catch(e){}" +
-		"if(!u){try{const av=document.querySelector('img[alt=\"profile picture\"]');" +
+		"if(!u){try{const av=document.querySelector('img[alt*=\"profile picture\" i]');" +
 		"const a=av&&av.closest('a');const href=a&&a.getAttribute('href');const m=href&&href.match(/^\\/([A-Za-z0-9_.]+)\\/$/);" +
 		"if(m&&m[1]!=='explore'&&m[1]!=='reels'&&m[1]!=='accounts'){u={username:m[1],full_name:'',profile_pic_url:av.currentSrc||av.src||''}}}catch(e){}}" +
 		"if(!u){const t=document.title||'';const m=t.match(/\\(@([A-Za-z0-9_.]+)\\)/)||t.match(/^([A-Za-z0-9_.]+) \\(/);if(m)u={username:m[1],full_name:'',profile_pic_url:''}}" +
-		"return u?JSON.stringify({u:u.username||'',n:u.full_name||u.username||'',p:u.profile_pic_url||''}):''}catch(e){return ''}})()";
+		"const out=u?JSON.stringify({u:u.username||'',n:u.full_name||u.username||'',p:u.profile_pic_url||''}):'';window.__igAccountProbeResult=out;return out}catch(e){window.__igAccountProbeResult='';return ''}})()";
 
 	static readonly string[] InstagramCookieUris =
 	{
@@ -165,20 +165,21 @@ internal static class WebViewBootstrapper
 		{
 			try
 			{
-				var result = await core.ExecuteScriptAsync(AccountProbeScript);
-				if (!string.IsNullOrEmpty(result) && result != "null")
+				var inner = TryUnwrapScriptJson(await ExecOnUiAsync(core, AccountProbeScript));
+				if (string.IsNullOrEmpty(inner))
 				{
-					using var outer = JsonDocument.Parse(result);
-					var inner = outer.RootElement.ValueKind == JsonValueKind.String
-						? outer.RootElement.GetString()
-						: null;
-					if (!string.IsNullOrEmpty(inner))
-					{
-						using var payload = JsonDocument.Parse(inner);
-						if (payload.RootElement.TryGetProperty("u", out var u)) username = u.GetString() ?? string.Empty;
-						if (payload.RootElement.TryGetProperty("n", out var n)) fullName = n.GetString() ?? string.Empty;
-						if (payload.RootElement.TryGetProperty("p", out var p)) profilePicUrl = p.GetString() ?? string.Empty;
-					}
+					// The probe keeps its payload on the page as well: read it back once it
+					// settles, which works no matter how ExecuteScriptAsync treats promises.
+					await Task.Delay(900);
+					inner = TryUnwrapScriptJson(await ExecOnUiAsync(core, "window.__igAccountProbeResult||''"));
+				}
+
+				if (!string.IsNullOrEmpty(inner))
+				{
+					using var payload = JsonDocument.Parse(inner);
+					if (payload.RootElement.TryGetProperty("u", out var u)) username = u.GetString() ?? string.Empty;
+					if (payload.RootElement.TryGetProperty("n", out var n)) fullName = n.GetString() ?? string.Empty;
+					if (payload.RootElement.TryGetProperty("p", out var p)) profilePicUrl = p.GetString() ?? string.Empty;
 				}
 			}
 			catch
@@ -300,5 +301,54 @@ internal static class WebViewBootstrapper
 				// state reporting must never throw into WebView2
 			}
 		};
+
+		// history.pushState raises HistoryChanged; mirror the callback so SPA hops
+		// update the address bar through either event.
+		core.HistoryChanged += (_, _) =>
+		{
+			try
+			{
+				onSourceChanged(core.Source ?? string.Empty);
+			}
+			catch
+			{
+				// state reporting must never throw into WebView2
+			}
+		};
+	}
+
+	/// <summary>Runs a script in the WebView on the UI thread, returning its JSON-encoded result.</summary>
+	internal static Task<string> ExecOnUiAsync(CoreWebView2 core, string script) =>
+		MainThread.InvokeOnMainThreadAsync<string>(async () =>
+		{
+			try
+			{
+				return await core.ExecuteScriptAsync(script) ?? string.Empty;
+			}
+			catch
+			{
+				return string.Empty;
+			}
+		});
+
+	/// <summary>Unwraps the JSON string ExecuteScriptAsync returns for script results that are strings.</summary>
+	internal static string? TryUnwrapScriptJson(string? result)
+	{
+		if (string.IsNullOrEmpty(result) || result == "null")
+		{
+			return null;
+		}
+
+		try
+		{
+			using var outer = JsonDocument.Parse(result);
+			return outer.RootElement.ValueKind == JsonValueKind.String
+				? outer.RootElement.GetString()
+				: null;
+		}
+		catch
+		{
+			return null;
+		}
 	}
 }
