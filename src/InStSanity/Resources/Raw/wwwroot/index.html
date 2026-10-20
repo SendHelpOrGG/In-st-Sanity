@@ -121,6 +121,11 @@ body:not([data-theme]) .sidebar,body:not([data-theme]) .post-modal,body:not([dat
 .account-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
 .account-handle{color:var(--t-muted);font-size:10px}
 #igLogoutBtn{flex:0 0 auto}
+.restricted-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;padding:12px;text-align:center;color:var(--t-muted)}
+.restricted-cover strong{color:var(--t-ink);font-size:12px}
+.restricted-cover span{font-size:10px;line-height:1.45;max-width:230px}
+.restricted-actions{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;justify-content:center}
+.restricted-actions .primary,.restricted-actions .outline{height:28px;padding:0 10px;font-size:10px}
 @property --btn-glow-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes btnGlowOrbit{0%{--btn-glow-angle:0deg}100%{--btn-glow-angle:360deg}}
 @keyframes btnHaloPulse{0%,100%{opacity:calc(.44 * var(--btn-glow-mult,.5))}50%{opacity:calc(.88 * var(--btn-glow-mult,.5))}}
@@ -872,7 +877,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.25; open version history" title="Click to view what changed in each version">v.1.25</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.26; open version history" title="Click to view what changed in each version">v.1.26</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1053,12 +1058,70 @@ async function fetchEndpointJson(endpoint,timeoutMs=12000,initOptions={}){
   }
 }
 function escapeHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function wrapProxiedImageUrl(rawUrl,isThumb=false){if(!rawUrl)return '';if(rawUrl.startsWith('data:'))return rawUrl;if(rawUrl.startsWith('https://wsrv.nl/')){const m=rawUrl.match(/[?&]url=([^&]+)/);rawUrl=m?decodeURIComponent(m[1]):rawUrl}return `/api/image?url=${encodeURIComponent(rawUrl)}`}
+function wrapProxiedImageUrl(rawUrl,isThumb=false){if(!rawUrl)return '';if(rawUrl.startsWith('data:'))return rawUrl;if(rawUrl.startsWith('https://wsrv.nl/')){const m=rawUrl.match(/[?&]url=([^&]+)/);rawUrl=m?decodeURIComponent(m[1]):rawUrl}return `/api/image?url=${encodeURIComponent(rawUrl)}${isThumb?'&w=480':''}`}
 const coverErrorInFlight=new Set();const coverErrorAttempted=new Set();const coverResolveQueue=[];let activeCoverResolves=0;const MAX_CONCURRENT_COVER_RESOLVES=2;
-function pumpCoverResolveQueue(){while(activeCoverResolves<MAX_CONCURRENT_COVER_RESOLVES&&coverResolveQueue.length>0){const lower=coverResolveQueue.shift();activeCoverResolves++;(async()=>{try{const idx=posts.findIndex(p=>String(p?.shortcode||'').toLowerCase()===lower);if(idx>=0&&posts[idx]){const post=posts[idx];if(currentPost===idx){await resolveSinglePostVisual(post,true);if(!hasOnlyUnresolvedMediaUrl(post)){scheduleSaveImportedPostsState();updateCardInDom(idx);renderDetail()}}else{for(const ep of getApiUrls(`/api/resolve-post?summary=1&url=${encodeURIComponent(post.url)}`)){const data=await fetchEndpointJson(ep,10000);if(data&&data.ok&&applyPostSummaryData(post,data)){scheduleSaveImportedPostsState();updateCardInDom(idx);break}}}}else if(urlTabPost&&String(urlTabPost.shortcode||'').toLowerCase()===lower){await resolveSinglePostVisual(urlTabPost,true);if(!hasOnlyUnresolvedMediaUrl(urlTabPost)){saveUrlTabState();renderSaveUrlTab()}}}finally{coverErrorInFlight.delete(lower);activeCoverResolves--;pumpCoverResolveQueue()}})()}}
+function pumpCoverResolveQueue(){while(activeCoverResolves<MAX_CONCURRENT_COVER_RESOLVES&&coverResolveQueue.length>0){const lower=coverResolveQueue.shift();activeCoverResolves++;(async()=>{try{const idx=posts.findIndex(p=>String(p?.shortcode||'').toLowerCase()===lower);if(idx>=0&&posts[idx]){const post=posts[idx];if(currentPost===idx){await resolveSinglePostVisual(post,true);if(!hasOnlyUnresolvedMediaUrl(post)){scheduleSaveImportedPostsState();updateCardInDom(idx);renderDetail()}}else{for(const ep of getApiUrls(`/api/resolve-post?summary=1&url=${encodeURIComponent(post.url)}`)){const data=await fetchEndpointJson(ep,10000);if(data&&data.ok&&applyPostSummaryData(post,data)){post.summaryAttemptedAt=Date.now();post.resolveFailedReason='';scheduleSaveImportedPostsState();updateCardInDom(idx);break}if(data&&data.ok===false){post.summaryAttemptedAt=Date.now();post.resolveFailedReason=String(data.reason||data.error||'no_media');updateCardInDom(idx);break}}}}else if(urlTabPost&&String(urlTabPost.shortcode||'').toLowerCase()===lower){await resolveSinglePostVisual(urlTabPost,true);if(!hasOnlyUnresolvedMediaUrl(urlTabPost)){saveUrlTabState();renderSaveUrlTab()}}}finally{coverErrorInFlight.delete(lower);activeCoverResolves--;pumpCoverResolveQueue()}})()}}
 function triggerCoverErrorResolution(sc){const lower=String(sc||'').toLowerCase();if(!lower||coverErrorInFlight.has(lower)||coverErrorAttempted.has(lower))return;coverErrorInFlight.add(lower);coverErrorAttempted.add(lower);coverResolveQueue.push(lower);pumpCoverResolveQueue()}
+function restrictedCoverLabel(reason){const r=String(reason||'');if(r==='login_wall')return'Private or restricted post';if(r==='http_404'||r==='bad_url')return'Post unavailable';if(r==='no_media')return'No media found';if(r==='timeout'||r==='unreachable')return'Network problem';return'Could not load this post'}
+function buildRestrictedCoverHtml(p){
+  const idx=Number(p&&p._idx)||0;
+  const label=restrictedCoverLabel(p&&p.resolveFailedReason);
+  const hint=String((p&&p.resolveFailedReason)||'')==='login_wall'
+    ?'Sign in on Instagram in the Browser tab, then retry.'
+    :'Open it in the Browser tab with your account, or retry.';
+  return `<div class="restricted-cover"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><strong>${label}</strong><span>${hint}</span><div class="restricted-actions"><button class="primary" type="button" onclick="event.stopPropagation();openInstagramBrowser(posts[${idx}].url)">Open in Browser</button><button class="outline" type="button" onclick="event.stopPropagation();retryPostResolve(${idx})">Retry</button></div></div>`;
+}
+async function retryPostResolve(idx){
+  const p=posts[idx];if(!p)return;
+  p.summaryAttemptedAt=0;p.resolveFailedReason='';delete p._summaryResolveToken;
+  const scLower=String(p.shortcode||'').toLowerCase();
+  coverErrorAttempted.delete(scLower);coverErrorInFlight.delete(scLower);
+  updateCardInDom(idx);
+  for(const ep of getApiUrls(`/api/resolve-post?summary=1&url=${encodeURIComponent(p.url)}`)){
+    const data=await fetchEndpointJson(ep,12000);
+    if(data&&data.ok&&applyPostSummaryData(p,data)){
+      p.summaryAttemptedAt=Date.now();p.resolveFailedReason='';
+      scheduleSaveImportedPostsState();updateCardInDom(idx);return;
+    }
+    if(data&&data.ok===false){
+      p.summaryAttemptedAt=Date.now();p.resolveFailedReason=String(data.reason||data.error||'no_media');
+      updateCardInDom(idx);return;
+    }
+  }
+}
+function handleVideoError(el){
+  if(!el)return;
+  if(!el.dataset.triedRaw&&el.dataset.rawVideo){el.dataset.triedRaw='1';el.src=el.dataset.rawVideo;return}
+  if(el.dataset.retried)return;el.dataset.retried='1';
+  const post=currentPost>=0?posts[currentPost]:null;if(!post)return;
+  (async()=>{await resolveSinglePostVisual(post,true);renderDetail()})();
+}
+let pageWarmToken=0;
+function scheduleNextPageWarm(){
+  const run=()=>{try{warmNextPage()}catch(_){}};
+  if(typeof window.requestIdleCallback==='function')window.requestIdleCallback(run,{timeout:2500});
+  else setTimeout(run,600);
+}
+function warmNextPage(){
+  const list=getFilteredSortedPosts();
+  const nxt=list.slice(currentPage*PAGE_SIZE,(currentPage+1)*PAGE_SIZE);
+  if(!nxt.length)return;
+  const seen={};
+  nxt.forEach(p=>{
+    const raw=String((p&&(p.coverThumbnailUrl||p.coverUrl))||'');
+    if(raw&&!raw.includes('/media/?size=')&&!seen[raw]){
+      seen[raw]=1;
+      try{fetch(wrapProxiedImageUrl(raw,true),{cache:'force-cache'}).catch(()=>{})}catch(_){}
+    }
+  });
+  const unresolved=nxt.filter(p=>p&&p.url&&p.shortcode&&!String(p.shortcode).startsWith('Post #')&&needsSummaryResolution(p)&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken&&!clientSummaryCache[String(p.shortcode||'').toLowerCase()]);
+  if(!unresolved.length)return;
+  const token=++pageWarmToken;
+  unresolved.forEach(p=>{p._summaryResolveToken=token});
+  (async()=>{try{await resolvePostsBatchChunk(unresolved,token,null,true)}finally{unresolved.forEach(p=>{if(p._summaryResolveToken===token)p._summaryResolveToken=0})}})();
+}
 function handlePostImageError(imgEl,sc){if(!imgEl)return;const fb=imgEl.dataset.fallback||'';const mfb=imgEl.dataset.mediaFallback||'';if(fb&&imgEl.src!==fb&&!imgEl.dataset.triedFallback){imgEl.dataset.triedFallback='1';imgEl.src=fb;return}if(mfb&&imgEl.src!==mfb&&!imgEl.dataset.triedMediaFallback){imgEl.dataset.triedMediaFallback='1';imgEl.src=mfb;return}if(imgEl.src!==COVER_FALLBACK_DATA_URI)imgEl.src=COVER_FALLBACK_DATA_URI;if(sc)triggerCoverErrorResolution(sc)}
-function getCardCoverKey(p){if(!p)return 'none';const cover=String(p.coverThumbnailUrl||p.coverUrl||'');if(typeof p.coverArtIndex==='number'&&!cover)return `art:${p.coverArtIndex}`;if(cover&&!cover.includes('/media/?size='))return `url:${cover}|full:${p.coverUrl||''}`;return 'fallback'}
+function getCardCoverKey(p){if(!p)return 'none';const cover=String(p.coverThumbnailUrl||p.coverUrl||'');const fail=p.resolveFailedReason?`|fail:${p.resolveFailedReason}`:'';if(typeof p.coverArtIndex==='number'&&!cover)return `art:${p.coverArtIndex}${fail}`;if(cover&&!cover.includes('/media/?size='))return `url:${cover}|full:${p.coverUrl||''}${fail}`;return `fallback${fail}`}
 /* ---------- Media source badges: Direct (scontent / wsrv) vs API (/api/image) ---------- */
 const SRC_LABELS={direct:'Direct',api:'API',mixed:'Mixed',unknown:'—'};
 let showSourceBadges=true;
@@ -1219,6 +1282,7 @@ function renderCardCoverMarkup(p){
   const fullCover=String(p.coverUrl||'');
   const rawCover=String(p.coverThumbnailUrl||fullCover);
   if(typeof p.coverArtIndex==='number'&&!rawCover&&art[p.coverArtIndex])return art[p.coverArtIndex];
+  if(p.resolveFailedReason&&!rawCover)return buildRestrictedCoverHtml(p);
   if(rawCover&&!rawCover.includes('/media/?size=')){
     const thumbSrc=wrapProxiedImageUrl(rawCover,true);
     const apiImgPath=`/api/image?url=${encodeURIComponent(fullCover||rawCover)}`;
@@ -1243,7 +1307,8 @@ function renderPictureMarkup(pic,post,slideIdx=0,allowVideoPlayer=false){
   const secondSrc=isRawDirectMedia?'':(serverProxyUrl&&serverProxyUrl!==primarySrc?serverProxyUrl:'');
   if(allowVideoPlayer&&pic.isVideo&&pic.videoUrl){
     const posterSrc=posterUrl||wsrvUrl||primarySrc;
-    return `<video src="${escapeHtml(pic.videoUrl)}" poster="${escapeHtml(posterSrc)}" controls preload="metadata" playsinline onclick="event.stopPropagation()" style="width:100%;height:100%;object-fit:cover;display:block;background:#0c1011"></video>`;
+    const videoSrc=wrapProxiedImageUrl(pic.videoUrl,false)||pic.videoUrl;
+    return `<video src="${escapeHtml(videoSrc)}" data-raw-video="${escapeHtml(pic.videoUrl)}" poster="${escapeHtml(posterSrc)}" controls preload="metadata" playsinline onerror="handleVideoError(this)" onclick="event.stopPropagation()" style="width:100%;height:100%;object-fit:cover;display:block;background:#0c1011"></video>`;
   }
   if(primarySrc)return `<img src="${escapeHtml(primarySrc)}" data-fallback="${escapeHtml(secondSrc)}" onload="markMediaSource(this,'${escapeHtml(sc)}',${slideIdx})" onerror="handlePostImageError(this,'${escapeHtml(sc)}')" alt="${escapeHtml(post?.title||'Instagram post media')}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
   if(typeof pic.artIndex==='number'&&art[pic.artIndex])return art[pic.artIndex];
@@ -1259,7 +1324,7 @@ function normSearchStr(s){try{return String(s||'').normalize('NFKC').toLowerCase
 function getPostSearchHaystack(p,idx){if(!p)return '';const scLower=String(p.shortcode||'').toLowerCase();if(scLower&&clientSummaryCache[scLower]&&(needsSummaryResolution(p)||(!p.fullCaption&&clientSummaryCache[scLower].caption))){applyPostSummaryData(p,clientSummaryCache[scLower])}const mediaType=(p.videoCount>0&&p.photoCount===0)?'reel video':(p.videoCount>0?'carousel photo video':'photo post');return normSearchStr([p.title,p.fullCaption,p.location,p.owner,p.ownerFull,p.shortcode,p.url,p.date,p.likes,p.rawJsonText,mediaType,`#${idx+1}`].filter(Boolean).join(' '))}
 function getFilteredSortedPosts(){const rawQ=(document.getElementById('search')?.value||'').trim();const q=normSearchStr(rawQ);const qTokens=q?q.split(/\s+/).filter(Boolean):[];const selectedOnly=filter==='selected';const list=[];for(let i=0;i<posts.length;i++){const p=posts[i];if(!p)continue;p._idx=i;if(selectedOnly&&getPostSelectedCount(p)<=0)continue;if(qTokens.length){const hay=getPostSearchHaystack(p,i);const hayBare=hay.replace(/[@#]/g,'');const matched=qTokens.every(tok=>{if(hay.includes(tok))return true;const bareTok=tok.replace(/^[@#]+/,'');return Boolean(bareTok&&hayBare.includes(bareTok))});if(!matched)continue}list.push(p)}if(sortMode==='oldest')list.reverse();else if(sortMode==='likes')list.sort((a,b)=>likesAsNumber(b.likes)-likesAsNumber(a.likes));return list}
 function buildPaginationHtml(totalFiltered,totalPages,startIdx){const endIdx=Math.min(startIdx+PAGE_SIZE,totalFiltered);const rangeLabel=totalFiltered?`Showing ${startIdx+1}–${endIdx} of ${totalFiltered} · Page ${currentPage} of ${totalPages}`:`Page 1 of 1`;const pages=[];if(totalPages<=7){for(let p=1;p<=totalPages;p++)pages.push(p)}else{pages.push(1);let left=Math.max(2,currentPage-1),right=Math.min(totalPages-1,currentPage+1);if(currentPage<=3){left=2;right=4}else if(currentPage>=totalPages-2){left=totalPages-3;right=totalPages-1}if(left>2)pages.push('…');for(let p=left;p<=right;p++)pages.push(p);if(right<totalPages-1)pages.push('…');pages.push(totalPages)}return `<span class="page-info">${rangeLabel}</span><button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage<=1?'disabled':''}>← Prev</button>${pages.map(p=>p==='…'?'<span class="page-ellipsis">…</span>':`<button class="page-btn ${p===currentPage?'active':''}" onclick="goToPage(${p})">${p}</button>`).join('')}<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage>=totalPages?'disabled':''}>Next →</button>`}
-function goToPage(page){const list=getFilteredSortedPosts();const totalPages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));const next=Math.min(Math.max(1,Number(page)||1),totalPages);if(next===currentPage)return;currentPage=next;render();loadCurrentPagePosts();document.querySelector('main')?.scrollTo({top:0,behavior:'smooth'})}
+function goToPage(page){const list=getFilteredSortedPosts();const totalPages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));const next=Math.min(Math.max(1,Number(page)||1),totalPages);if(next===currentPage)return;currentPage=next;const mainEl=document.querySelector('main');if(mainEl)mainEl.scrollTop=0;const swap=()=>{render()};if(typeof document.startViewTransition==='function'){try{document.startViewTransition(swap)}catch(_){swap()}}else{swap()}loadCurrentPagePosts();scheduleNextPageWarm()}
 const LIKES_HEART_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:11px;height:11px;display:inline-block;vertical-align:-1px;margin-right:2px"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6z"/></svg>';
 function buildPostAccountText(post){
   // Makes it explicit which value is the account that published the post.
@@ -1611,13 +1676,13 @@ function saveImportedPostsState(){
 }
 function scheduleSaveImportedPostsState(){if(!activeImportFileName)return;if(saveStateTimer)clearTimeout(saveStateTimer);saveStateTimer=setTimeout(()=>saveImportedPostsState(),450)}
 async function restoreImportedPostsState(){let restored=false;try{try{const kindsRaw=localStorage.getItem('stillSane.sourceKindsV1');if(kindsRaw){window.__savedSourceKinds=JSON.parse(kindsRaw)||{}}}catch(_){}['V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12'].forEach(v=>localStorage.removeItem('stillSane.importedPosts'+v));const raw=localStorage.getItem('stillSane.importedPostsV13');if(raw){const saved=JSON.parse(raw);if(saved&&Array.isArray(saved.posts)&&saved.posts.length){activeImportFileName=saved.fileName||'imported.json';lastImportedJsonHash=String(saved.sourceHash||'');lastImportedJsonSavedAt=Number(saved.importedAt)||0;posts=saved.posts.map((p,idx)=>{const scLower=String(p.shortcode||'').toLowerCase();if(scLower==='dewe8ltizn2'){return{title:seeds[0][0],fullCaption:seeds[0][0],owner:'s0meii0',ownerFull:'소히 ソヒ',rawJsonText:p.rawJsonText||'',location:seeds[0][1],date:seeds[0][2],likes:seeds[0][3],url:p.url||seeds[0][4],shortcode:'DeWe8lTiZN2',savedAt:p.savedAt||(Date.now()-idx*60000),photoCount:9,videoCount:0,coverArtIndex:6,coverUrl:'',coverIsVideo:false,summaryResolved:true,mediaLoaded:false,selectedIndices:Array.isArray(p.selectedIndices)?p.selectedIndices:[],pictures:[]}}const legacyPics=Array.isArray(p.pictures)?p.pictures:[];const isReel=/\/(?:reel|reels|tv)\//i.test(String(p.url||''));let photoCount=typeof p.photoCount==='number'?p.photoCount:(legacyPics.length?legacyPics.filter(x=>!Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?0:1));let videoCount=typeof p.videoCount==='number'?p.videoCount:(legacyPics.length?legacyPics.filter(x=>Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?1:0));if(photoCount===0&&videoCount===0)photoCount=1;let selectedIndices=Array.isArray(p.selectedIndices)?p.selectedIndices:[];if(!selectedIndices.length&&legacyPics.length){let ord=0;legacyPics.forEach(lp=>{if(!lp||lp.isVideo)return;if(lp.selected)selectedIndices.push(ord);ord++})}const srcCover=p.coverPic||legacyPics[0]||null;const rawCover=String(p.coverUrl||srcCover?.rawUrl||srcCover?.imgUrl||'');const validCover=rawCover&&!rawCover.includes('/media/?size=')?rawCover:'';const coverIsVideo=Boolean(p.coverIsVideo||srcCover?.isVideo||isVideoCdnUrl(validCover)||(videoCount>0&&photoCount===0));const dateClean=p.date==='Loading…'?'Recently':(p.date||'Recently');const summaryResolved=Boolean((p.summaryResolved||p.fullResolved||legacyPics.length>1)&&validCover);const built={title:fixInstagramMojibake(p.title||`${isReel?'Instagram reel':'Instagram post'} · ${p.shortcode}`),fullCaption:fixInstagramMojibake(p.fullCaption||p.title||''),owner:fixInstagramMojibake(p.owner||''),ownerFull:fixInstagramMojibake(p.ownerFull||''),rawJsonText:fixInstagramMojibake(p.rawJsonText||''),location:fixInstagramMojibake(p.location||''),date:dateClean,likes:p.likes||'—',url:p.url,shortcode:p.shortcode,savedAt:p.savedAt||(Date.now()-idx*60000),photoCount,videoCount,coverUrl:validCover,coverThumbnailUrl:String(p.coverThumbnailUrl||''),coverIsVideo,summaryResolved,summaryAttemptedAt:Number(p.summaryAttemptedAt)||0,mediaLoaded:false,loading:false,selectedIndices,pictures:[]};if(scLower&&clientSummaryCache[scLower])applyPostSummaryData(built,clientSummaryCache[scLower]);return built});restored=true}}}catch(_){}if(!restored)for(const cacheUrl of getApiUrls('/api/cached-posts')){try{const data=await fetchEndpointJson(cacheUrl,10000);if(data){const bySc=data.resolvedByShortcode||data.by_shortcode||{};Object.entries(bySc).forEach(([k,v])=>{if(v&&(v.summaryResolved||v.fullResolved))clientSummaryCache[k.toLowerCase()]=v});if(!restored&&Array.isArray(data.entries)&&data.entries.length){activeImportFileName=data.fileName||'imported.json';posts=data.entries.map((entry,idx)=>buildPostFromEntry(entry,idx,false));restored=true}if(restored){posts.forEach((p,idx)=>{if(currentPost===idx)return;const k=String(p.shortcode||'').toLowerCase();if(k&&clientSummaryCache[k])applyPostSummaryData(p,clientSummaryCache[k])})}break}}catch(_){}}if(restored){scheduleSaveImportedPostsState();const summary=document.getElementById('jsonFileSummary');if(summary)summary.value=`${activeImportFileName} (${posts.length} post${posts.length===1?'':'s'})`;render();loadCurrentPagePosts();updateSrcStatusNote()}}
-async function resolvePostsBatchChunk(chunk,token,signal=null){
+async function resolvePostsBatchChunk(chunk,token,signal=null,isWarm=false){
   if(!chunk.length)return false;
   const urlsParam=chunk.map(p=>p.url).join(',');
   const batchEndpoints=getApiUrls(`/api/resolve-batch?urls=${encodeURIComponent(urlsParam)}`);
   for(const ep of batchEndpoints){
     const data=await fetchEndpointJson(ep,16000,signal?{signal}:{});
-    if(token!==currentPageLoadToken)return false;
+    if(!isWarm&&token!==currentPageLoadToken)return false;
     if(data&&(data.byShortcode||Array.isArray(data.posts))){
       const bySc=data.byShortcode||{};
       if(Array.isArray(data.posts))data.posts.forEach(r=>{if(r&&r.shortcode)bySc[String(r.shortcode).toLowerCase()]=r});
@@ -1626,7 +1691,15 @@ async function resolvePostsBatchChunk(chunk,token,signal=null){
         if(!post||currentPost===post._idx)return;
         const k=String(post.shortcode||'').toLowerCase();
         const res=bySc[k];
+        if(res&&res.ok===false){
+          post.summaryAttemptedAt=Date.now();
+          post.resolveFailedReason=String(res.reason||res.error||'no_media');
+          if(typeof post._idx==='number')updateCardInDom(post._idx);
+          return;
+        }
         if(res&&res.ok&&applyPostSummaryData(post,res)){
+          post.summaryAttemptedAt=Date.now();
+          post.resolveFailedReason='';
           changed=true;
           if(typeof post._idx==='number'){updateCardInDom(post._idx);updateCardSrcBadge(post._idx)}
         }
@@ -1634,7 +1707,7 @@ async function resolvePostsBatchChunk(chunk,token,signal=null){
       if(changed){
         scheduleSaveImportedPostsState();
         const activeQuery=(document.getElementById('search')?.value||'').trim();
-        if(activeQuery)render();
+        if(activeQuery&&!isWarm)render();
       }
       return true;
     }
@@ -2805,6 +2878,7 @@ function browserGo(){const input=document.getElementById('browserAddressInput');
 window.addEventListener('resize',function(){if(document.getElementById('browserPage')&&document.getElementById('browserPage').style.display==='block')reportBrowserRegion()});
 document.querySelector('main').addEventListener('scroll',function(){if(document.getElementById('browserPage')&&document.getElementById('browserPage').style.display==='block')reportBrowserRegion()});
 setTimeout(loadInstagramSession,1200);
+setTimeout(scheduleNextPageWarm,4000);
 setInterval(loadInstagramSession,30000);
 function openCurrentPostInBuiltInBrowser(){if(currentPost<0||!posts[currentPost])return false;return openInstagramBrowser(posts[currentPost].url)}
 const APP_THEME_NAMES={
@@ -4918,8 +4992,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.25';
+const APP_VERSION='1.26';
 const VERSION_HISTORY=[
+  {version:'1.26',added:'Signed-in resolution via the browser session, restricted-post cards with Retry and Open in Browser, and background warming of the next page.',removed:'Full-size cover downloads for the grid and raw CDN video playback.',fixed:'Page turns no longer stutter, thumbnails are resized in-app, videos replay from cache, and media responses revalidate with 304s.'},
   {version:'1.25',added:'No new features.',removed:'The flat square background behind the app icon.',fixed:'Black hole loading text rides the sticker and matches the glitch screen; the icon art fills its frame with transparent corners.'},
   {version:'1.24',added:'A themed in-app Browser page with your account in the top bar and My Account settings.',removed:'The separate native browser window that covered the whole app.',fixed:'Docked the browser into the content area and moved Download and Open-folder into the pages bar.'},
   {version:'1.23',added:'No new features.',removed:'Loading screens reacting to the Imp idle toggle, and the old bars taskbar icon.',fixed:'Loading screens always animate, sticker clicks advance reliably, the chevrons wordmark matches the glitch screen, and the version sits bottom-right above the right-aligned pages bar.'},

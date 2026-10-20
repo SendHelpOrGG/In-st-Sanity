@@ -1,5 +1,6 @@
 using InStSanity.Platforms.Windows;
 using InStSanity.Services.Browser;
+using InStSanity.Services.Instagram;
 using InStSanity.ViewModels;
 using Microsoft.Maui.ApplicationModel;
 
@@ -10,19 +11,22 @@ public partial class MainPage : ContentPage
 	const string InstagramHomeUrl = "https://www.instagram.com/";
 
 	readonly InstagramBrowserWindowService _browserWindow;
+	readonly InstagramHttp _instagramHttp;
 	WebView? _instagramBrowserView;
 	string? _currentInstagramUrl;
 
-	public MainPage(MainPageViewModel viewModel, InstagramBrowserWindowService browserWindow)
+	public MainPage(MainPageViewModel viewModel, InstagramBrowserWindowService browserWindow, InstagramHttp instagramHttp)
 	{
 		InitializeComponent();
 
 		BindingContext = viewModel;
 		_browserWindow = browserWindow;
+		_instagramHttp = instagramHttp;
 		browserWindow.OpenRequested += OnInstagramBrowserOpenRequested;
 		browserWindow.NavigateRequested += OnInstagramBrowserNavigateRequested;
 		browserWindow.CommandRequested += OnInstagramBrowserCommandRequested;
 		browserWindow.RegionRequested += OnInstagramBrowserRegionRequested;
+		browserWindow.CookieSyncHandler = () => MainThread.InvokeOnMainThreadAsync(SyncInstagramCookiesAsync);
 
 		// Links opened by the app UI belong in the system browser (Windows only; the
 		// guard keeps the platform-specific intent explicit).
@@ -240,6 +244,14 @@ public partial class MainPage : ContentPage
 		}
 
 		_browserWindow.SetAccount(snapshot.LoggedIn, snapshot.Username, snapshot.FullName, snapshot.ProfilePicUrl);
+		if (snapshot.LoggedIn)
+		{
+			await SyncInstagramCookiesAsync();
+		}
+		else
+		{
+			_instagramHttp.ClearInstagramCookies();
+		}
 #endif
 	}
 
@@ -256,8 +268,34 @@ public partial class MainPage : ContentPage
 		}
 
 		await WebViewBootstrapper.ClearInstagramSessionAsync(_instagramBrowserView);
+		_instagramHttp.ClearInstagramCookies();
 		_browserWindow.SetAccount(false, string.Empty, string.Empty, string.Empty);
 		UpdateBrowserState();
+#endif
+	}
+
+	async Task<bool> SyncInstagramCookiesAsync()
+	{
+#if WINDOWS
+		// The WebView2 profile is the login surface; the resolver reads the same session
+		// through InstagramHttp so restricted posts resolve as the signed-in account.
+		EnsureInstagramBrowserView();
+		if (_instagramBrowserView is null)
+		{
+			return false;
+		}
+
+		var cookies = await WebViewBootstrapper.CopyInstagramCookiesAsync(_instagramBrowserView);
+		if (cookies is null)
+		{
+			return false;
+		}
+
+		_instagramHttp.ApplySessionCookies(cookies);
+		return true;
+#else
+		await Task.CompletedTask;
+		return false;
 #endif
 	}
 

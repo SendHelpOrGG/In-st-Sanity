@@ -1,3 +1,4 @@
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using InStSanity.Services.Browser;
@@ -226,5 +227,50 @@ internal static class WebViewBootstrapper
 		{
 			// Storage cleanup is best-effort; the cookies are what hold the session.
 		}
+	}
+
+	/// <summary>Reads the Instagram session cookies (HttpOnly included) out of the persistent browser profile.</summary>
+	internal static async Task<List<Cookie>?> CopyInstagramCookiesAsync(WebView webView)
+	{
+		var core = await WaitForCoreWebView2Async(webView, TimeSpan.FromSeconds(5));
+		if (core is null)
+		{
+			return null;
+		}
+
+		var list = new List<Cookie>();
+		foreach (var uri in InstagramCookieUris)
+		{
+			try
+			{
+				var cookies = await core.CookieManager.GetCookiesAsync(uri);
+				foreach (var cookie in cookies)
+				{
+					if (string.IsNullOrEmpty(cookie.Name))
+					{
+						continue;
+					}
+
+					var domain = string.IsNullOrEmpty(cookie.Domain) ? "instagram.com" : cookie.Domain;
+					var copy = new Cookie(cookie.Name, cookie.Value ?? string.Empty, cookie.Path ?? "/", domain)
+					{
+						Secure = cookie.IsSecure,
+						HttpOnly = cookie.IsHttpOnly,
+					};
+					if (cookie.Expires != default)
+					{
+						copy.Expires = cookie.Expires;
+					}
+
+					list.Add(copy);
+				}
+			}
+			catch
+			{
+				// keep copying from the remaining origins
+			}
+		}
+
+		return list;
 	}
 }

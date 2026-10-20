@@ -69,6 +69,46 @@ public sealed class InstagramBrowserWindowService
 		}
 	}
 
+	/// <summary>Set by MainPage: copies the WebView2 profile's Instagram cookies into InstagramHttp. False when no browser page is attached.</summary>
+	public Func<Task<bool>>? CookieSyncHandler { get; set; }
+
+	readonly object _syncLock = new();
+	DateTimeOffset _lastCookieSync = DateTimeOffset.MinValue;
+
+	/// <summary>
+	/// Pulls the Browser tab's Instagram session into the shared HTTP cookie jar, at most
+	/// once per throttle window unless forced. False when nothing could be synced (no
+	/// desktop page attached) — callers proceed anonymously.
+	/// </summary>
+	public async Task<bool> EnsureSessionCookiesAsync(bool force = false)
+	{
+		Func<Task<bool>>? handler;
+		lock (_syncLock)
+		{
+			if (!force && DateTimeOffset.UtcNow - _lastCookieSync < TimeSpan.FromSeconds(45))
+			{
+				return true;
+			}
+
+			handler = CookieSyncHandler;
+			_lastCookieSync = DateTimeOffset.UtcNow;
+		}
+
+		if (handler is null)
+		{
+			return false;
+		}
+
+		try
+		{
+			return await handler();
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
 	static bool Raise<T>(EventHandler<T>? handler, T args)
 	{
 		if (handler is null)

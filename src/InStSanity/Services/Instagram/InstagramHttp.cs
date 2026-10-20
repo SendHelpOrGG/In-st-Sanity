@@ -118,4 +118,64 @@ public sealed class InstagramHttp
 
 		return request;
 	}
+
+	/// <summary>True when the shared cookie jar carries an Instagram session (the user signed in on the Browser tab).</summary>
+	public bool HasInstagramSession
+	{
+		get
+		{
+			try
+			{
+				foreach (Cookie cookie in Cookies.GetCookies(new Uri(InstagramOrigin)))
+				{
+					if (string.Equals(cookie.Name, "sessionid", StringComparison.Ordinal) &&
+						!string.IsNullOrEmpty(cookie.Value))
+					{
+						return true;
+					}
+				}
+			}
+			catch (CookieException)
+			{
+				// malformed stored cookie: treat as signed out
+			}
+
+			return false;
+		}
+	}
+
+	/// <summary>Merges cookies copied out of the embedded Instagram browser profile.</summary>
+	public void ApplySessionCookies(IEnumerable<Cookie> cookies)
+	{
+		foreach (var cookie in cookies)
+		{
+			try
+			{
+				Cookies.Add(cookie);
+			}
+			catch (CookieException)
+			{
+				// skip malformed entries
+			}
+		}
+	}
+
+	/// <summary>Expires every Instagram cookie in the jar (Log Out).</summary>
+	public void ClearInstagramCookies()
+	{
+		foreach (var host in new[] { "https://www.instagram.com/", "https://i.instagram.com/" })
+		{
+			try
+			{
+				foreach (Cookie cookie in Cookies.GetCookies(new Uri(host)))
+				{
+					cookie.Expired = true;
+				}
+			}
+			catch (CookieException)
+			{
+				// ignored
+			}
+		}
+	}
 }

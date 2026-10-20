@@ -148,6 +148,9 @@ public sealed class InstagramResolver
 	int _failed;
 	string _lastFailure = string.Empty;
 
+	/// <summary>Why the last resolve of a shortcode failed, for the UI's restricted cards.</summary>
+	readonly ConcurrentDictionary<string, string> _failureReasons = new(StringComparer.OrdinalIgnoreCase);
+
 	sealed class CacheEntry
 	{
 		public CacheEntry(ResolvedPost? post, DateTimeOffset expires)
@@ -239,6 +242,18 @@ public sealed class InstagramResolver
 	public Task<ResolvedPost?> ResolveSummaryAsync(string? url, CancellationToken cancellationToken) =>
 		ResolveAsync(url, summaryOnly: true, cancellationToken);
 
+	/// <summary>Shortcode carried by a post URL, or "" (the API layer keys failure entries with it).</summary>
+	public string ShortcodeFromUrl(string? url) => TryGetShortcode(url) ?? string.Empty;
+
+	/// <summary>Why the last resolve of this URL failed (login_wall, http_404, …), or null.</summary>
+	public string? FailureReasonFor(string? url)
+	{
+		var shortcode = TryGetShortcode(url);
+		return shortcode is not null && _failureReasons.TryGetValue(shortcode, out var reason)
+			? reason
+			: null;
+	}
+
 	async Task<ResolvedPost?> ResolveAsync(
 		string? url,
 		bool summaryOnly,
@@ -282,6 +297,7 @@ public sealed class InstagramResolver
 		{
 			Interlocked.Increment(ref _failed);
 			Volatile.Write(ref _lastFailure, reason);
+			_failureReasons[shortcode] = reason;
 			_logger.LogInformation("Resolve failed for {Shortcode}: {Reason}", shortcode, reason);
 		}
 
@@ -447,17 +463,36 @@ public sealed class InstagramResolver
 		bool summaryOnly,
 		CancellationToken cancellationToken)
 	{
+		// Signed in (the Browser tab's session is synced into InstagramHttp): ask
+		// Instagram's own media-info JSON first — with a session it is the only layer that
+		// sees follower-only and age-restricted posts, and it is the lightest request here.
+		ResolvedPost? authedPartial = null;
+		var authed = _http.HasInstagramSession;
+		if (authed)
+		{
+			var (info, _) = await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
+			authedPartial = info;
+			if (info is not null && !NeedsSaveFree(info, summaryOnly))
+			{
+				return (WithShortcodeTimestamp(info, shortcode), string.Empty);
+			}
+		}
+
+		// Anonymous reads use the crawler identity (Instagram serves those the real page);
+		// signed-in reads use the browser identity so the logged-in HTML comes back.
+		var pageUserAgent = authed ? null : InstagramHttp.BotUserAgent;
+
 		// Both pages at once. They answer different things — the embed carries the
 		// carousel JSON, the post page carries the Open Graph tags — and asking for them
 		// in sequence doubles the time a failing post costs the batch.
 		var embedTask = FetchHtmlAsync(
 			$"https://www.instagram.com/p/{shortcode}/embed/captioned/",
-			InstagramHttp.BotUserAgent,
+			pageUserAgent,
 			cancellationToken);
 
 		var pageTask = FetchHtmlAsync(
 			$"https://www.instagram.com/p/{shortcode}/",
-			InstagramHttp.BotUserAgent,
+			pageUserAgent,
 			cancellationToken);
 
 		var embed = await embedTask.ConfigureAwait(false);
@@ -512,14 +547,16 @@ public sealed class InstagramResolver
 		}
 
 		// 5. Last resort: the JSON media endpoint, which sometimes answers when both HTML
-		//    paths were refused.
-		var info = await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
-		if (info.Post is not null)
+		//    paths were refused (already fetched above when signed in).
+		var (infoPost, infoReason) = authedPartial is not null
+			? (authedPartial, string.Empty)
+			: await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
+		if (infoPost is not null)
 		{
-			return (WithShortcodeTimestamp(info.Post, shortcode), string.Empty);
+			return (WithShortcodeTimestamp(infoPost, shortcode), string.Empty);
 		}
 
-		return (null, reason.Length > 0 ? reason : info.Reason.Length > 0 ? info.Reason : "no_media");
+		return (null, reason.Length > 0 ? reason : infoReason.Length > 0 ? infoReason : "no_media");
 	}
 
 	/// <summary>
@@ -637,7 +674,7 @@ public sealed class InstagramResolver
 
 	async Task<(string? Html, string Reason)> FetchHtmlAsync(
 		string url,
-		string userAgent,
+		string? userAgent,
 		CancellationToken cancellationToken)
 	{
 		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
