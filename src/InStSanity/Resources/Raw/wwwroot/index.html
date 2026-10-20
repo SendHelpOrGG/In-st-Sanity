@@ -891,7 +891,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.32; open version history" title="Click to view what changed in each version">v.1.32</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.33; open version history" title="Click to view what changed in each version">v.1.33</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5013,8 +5013,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.32';
+const APP_VERSION='1.33';
 const VERSION_HISTORY=[
+  {version:'1.33',added:'No new features.',removed:'The XAML parse error that stopped the app building.',fixed:'The version footer escapes its ampersand, so the shell XAML parses and the project compiles again.',tone:'green'},
   {version:'1.32',added:'No new features.',removed:'The address bar freeze and the anonymous Signed in label.',fixed:'The URL bar tracks every page you open, including Instagram in-app transitions, and the account probe finds your username and profile picture so the top-right button and Settings show your name.',tone:'green'},
   {version:'1.31',added:'No new features.',removed:'The Browser tab heading block, Go and close buttons and hint, the Save via URL card header and notes, and the empty strip above the Saved posts toolbar.',fixed:'The Browser tab is nearly all viewport, Save via URL is just the link field with a themed input and a matching IG icon, and the toolbar sits right under the top bar.',tone:'yellow'},
   {version:'1.30',added:'No new features.',removed:'The static Account and My profile labels, the plain top-right icon, and the undersized Log Out button.',fixed:'Your profile pic and name head the account card with a green-dot Signed in or red-dot signed-out status, Log Out matches Open Browser, and the top-right button shows your username and profile pic.',tone:'yellow'},
