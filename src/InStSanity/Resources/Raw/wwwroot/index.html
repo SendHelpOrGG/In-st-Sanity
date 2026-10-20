@@ -120,7 +120,11 @@ body:not([data-theme]) .sidebar,body:not([data-theme]) .post-modal,body:not([dat
 .account-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid var(--t-line);flex:0 0 auto}
 .account-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
 .account-handle{color:var(--t-muted);font-size:10px}
-#igLogoutBtn{flex:0 0 auto}
+#igLogoutBtn{flex:0 0 auto;padding:10px 16px;font-size:12px;font-weight:650;border-radius:8px}
+.account-avatar-fallback{display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--t-muted) 18%,transparent);color:var(--t-muted)}
+.account-status{display:inline-flex;align-items:center;gap:6px}
+.status-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;background:#f87171}
+.account-status.is-in .status-dot{background:#6ee7b7}
 .restricted-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;padding:12px;text-align:center;color:var(--t-muted)}
 .restricted-cover strong{color:var(--t-ink);font-size:12px}
 .restricted-cover span{font-size:10px;line-height:1.45;max-width:230px}
@@ -650,7 +654,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
             </div>
             <span class="settings-card-chevron" aria-hidden="true">▾</span>
           </div></div>
-          <div class="setting-body"><label class="field-label">Account</label><div class="input-row account-row"><img id="igAccountAvatar" class="account-avatar" alt="" hidden><div class="account-text"><strong id="igAccountName">Not signed in</strong><span id="igAccountHandle" class="account-handle">Sign in from the Browser tab</span></div><button class="primary" onclick="openInstagramBrowser()">Open Browser</button><button class="outline" id="igLogoutBtn" onclick="logOutInstagram()">Log Out</button></div><p class="hint" id="igSettingsHint">Instagram handles sign-in directly. The app does not collect your password, and browser sign-in is not currently shared with Save via URL or saved-post resolution. Log Out clears the Instagram session kept in the app's browser profile on this PC.</p></div>
+          <div class="setting-body"><div class="input-row account-row"><img id="igAccountAvatar" class="account-avatar" alt="" hidden><span class="account-avatar account-avatar-fallback" id="igAccountAvatarFallback" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><div class="account-text"><strong id="igAccountName">No account linked</strong><span id="igAccountHandle" class="account-handle account-status is-out"><i class="status-dot"></i><span id="igAccountStatusText">You are not signed in</span></span></div><button class="primary" onclick="openInstagramBrowser()">Open Browser</button><button class="outline" id="igLogoutBtn" onclick="logOutInstagram()">Log Out</button></div><p class="hint" id="igSettingsHint">Instagram handles sign-in directly. The app does not collect your password, and your browser sign-in also unlocks restricted posts in saved-post resolution. Log Out clears the Instagram session kept in the app's browser profile on this PC.</p></div>
         </div>
         <div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
@@ -891,7 +895,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.29; open version history" title="Click to view what changed in each version">v.1.29</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.30; open version history" title="Click to view what changed in each version">v.1.30</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -2820,7 +2824,7 @@ var igSession={loggedIn:false,username:'',fullName:'',profilePicUrl:''};
 function applyInstagramSession(data){
   igSession={loggedIn:Boolean(data&&data.loggedIn),username:String((data&&data.username)||''),fullName:String((data&&(data.fullName||data.username))||''),profilePicUrl:String((data&&data.profilePicUrl)||'')};
   const displayName=igSession.username?('@'+igSession.username):(igSession.fullName||'');
-  const shown=igSession.loggedIn?(igSession.fullName||displayName||'My profile'):'Log in';
+  const shown=igSession.loggedIn?(displayName||igSession.fullName||'Signed in'):'Log in';
   const label=document.getElementById('topLoginBtnLabel');
   const btn=document.getElementById('topLoginBtn');
   const avatar=document.getElementById('topAccountAvatar');
@@ -2834,10 +2838,14 @@ function applyInstagramSession(data){
   const nameEl=document.getElementById('igAccountName');
   const handleEl=document.getElementById('igAccountHandle');
   const avEl=document.getElementById('igAccountAvatar');
+  const avFallback=document.getElementById('igAccountAvatarFallback');
   const outBtn=document.getElementById('igLogoutBtn');
-  if(nameEl)nameEl.textContent=igSession.loggedIn?(igSession.fullName||displayName||'My profile'):'Not signed in';
-  if(handleEl)handleEl.textContent=igSession.loggedIn?(displayName||'Signed in on this PC'):'Sign in from the Browser tab';
-  if(avEl){if(igSession.loggedIn&&igSession.profilePicUrl){avEl.src='/api/image?url='+encodeURIComponent(igSession.profilePicUrl);avEl.hidden=false}else{avEl.hidden=true;avEl.removeAttribute('src')}}
+  const statusText=igSession.loggedIn?'Signed in':'You are not signed in';
+  if(nameEl)nameEl.textContent=igSession.loggedIn?(displayName||igSession.fullName||'Signed in'):'No account linked';
+  if(handleEl){handleEl.className='account-handle account-status '+(igSession.loggedIn?'is-in':'is-out');handleEl.innerHTML='<i class="status-dot"></i><span id="igAccountStatusText">'+statusText+'</span>'}
+  const hasPic=igSession.loggedIn&&Boolean(igSession.profilePicUrl);
+  if(avEl){if(hasPic){avEl.src='/api/image?url='+encodeURIComponent(igSession.profilePicUrl);avEl.hidden=false}else{avEl.hidden=true;avEl.removeAttribute('src')}}
+  if(avFallback)avFallback.hidden=hasPic;
   if(outBtn)outBtn.disabled=!igSession.loggedIn;
 }
 async function loadInstagramSession(){
@@ -5006,8 +5014,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.29';
+const APP_VERSION='1.30';
 const VERSION_HISTORY=[
+  {version:'1.30',added:'No new features.',removed:'The static Account and My profile labels, the plain top-right icon, and the undersized Log Out button.',fixed:'Your profile pic and name head the account card with a green-dot Signed in or red-dot signed-out status, Log Out matches Open Browser, and the top-right button shows your username and profile pic.',tone:'yellow'},
   {version:'1.29',added:'No new features.',removed:'Build errors around the browser events, cookie expiry copy, and thumbnail decoding.',fixed:'Browser event handlers match their delegates, WebView2 cookie expiry converts from its timestamp, and BitmapDecoder no longer pretends to be disposable.',tone:'yellow'},
   {version:'1.28',added:'The yellow mark now flags releases packed with many small changes.',removed:'Yellow standing only for medium-sized changes.',fixed:'Bundled-fix releases like 1.23 read yellow at a glance.',tone:'green'},
   {version:'1.27',added:'Color-coded version history: every release is soft green, yellow, or red by change size.',removed:'The plain unmarked version numbers in the history.',fixed:'Every release note now shows its change size at a glance.',tone:'green'},
