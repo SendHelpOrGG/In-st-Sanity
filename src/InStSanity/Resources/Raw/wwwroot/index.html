@@ -706,7 +706,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
             <div class="settings-card-head-inner">
             <div class="settings-card-head-text">
               <h2>Theme</h2>
-              <p>Switch between the Default theme and 11 custom UI themes across the entire app.</p>
+              <p>Switch between the Default theme and 15 custom UI themes across the entire app.</p>
             </div>
             <span class="settings-card-chevron" aria-hidden="true">▾</span>
           </div></div>
@@ -770,6 +770,26 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
               <button type="button" class="theme-option" data-theme-id="v11" onclick="setAppTheme('v11')">
                 <span class="theme-swatch" style="background:linear-gradient(150deg,#11170f,#1a2115 58%,#10150e)"><span class="theme-swatch-side" style="background:linear-gradient(180deg,#151a10,#0d120a)"></span><span class="theme-swatch-main"><span class="theme-swatch-pill" style="background:linear-gradient(90deg,#A98D45,#8BA64E)"></span><span class="theme-swatch-dots"><span style="background:#D6C16D"></span><span style="background:#A9C46A"></span></span></span></span>
                 <span class="theme-meta"><strong>11. Moss &amp; Brass</strong><small>Botanical Green &amp; Antique Gold</small></span>
+                <span class="theme-active-dot"></span>
+              </button>
+              <button type="button" class="theme-option" data-theme-id="v12" onclick="setAppTheme('v12')">
+                <span class="theme-swatch" style="background:#0f0f0f"><span class="theme-swatch-side" style="background:#1a160f"></span><span class="theme-swatch-main"><span class="theme-swatch-pill" style="background:linear-gradient(90deg,#d6b46a,#ff7a18)"></span><span class="theme-swatch-dots"><span style="background:#d6b46a"></span><span style="background:#ff7a18"></span></span></span></span>
+                <span class="theme-meta"><strong>12. Cinderforge Kiln</strong><small>Brass Soot &amp; Ember</small></span>
+                <span class="theme-active-dot"></span>
+              </button>
+              <button type="button" class="theme-option" data-theme-id="v13" onclick="setAppTheme('v13')">
+                <span class="theme-swatch" style="background:#0f0f1a"><span class="theme-swatch-side" style="background:#151422"></span><span class="theme-swatch-main"><span class="theme-swatch-pill" style="background:linear-gradient(90deg,#a78bfa,#6df0c8)"></span><span class="theme-swatch-dots"><span style="background:#a78bfa"></span><span style="background:#6df0c8"></span></span></span></span>
+                <span class="theme-meta"><strong>13. Kelp Cathedral</strong><small>Brine Violet &amp; Bloom</small></span>
+                <span class="theme-active-dot"></span>
+              </button>
+              <button type="button" class="theme-option" data-theme-id="v14" onclick="setAppTheme('v14')">
+                <span class="theme-swatch" style="background:#0a0f1e"><span class="theme-swatch-side" style="background:#12182e"></span><span class="theme-swatch-main"><span class="theme-swatch-pill" style="background:linear-gradient(90deg,#f59e0b,#fef3c7)"></span><span class="theme-swatch-dots"><span style="background:#f59e0b"></span><span style="background:#0a0f1e"></span></span></span></span>
+                <span class="theme-meta"><strong>14. Wasteland Carnival</strong><small>Fairground Gold &amp; Midnight</small></span>
+                <span class="theme-active-dot"></span>
+              </button>
+              <button type="button" class="theme-option" data-theme-id="v15" onclick="setAppTheme('v15')">
+                <span class="theme-swatch" style="background:#0a0f14"><span class="theme-swatch-side" style="background:#0e141e"></span><span class="theme-swatch-main"><span class="theme-swatch-pill" style="background:linear-gradient(90deg,#1e3a5f,#a8ffd1)"></span><span class="theme-swatch-dots"><span style="background:#1e3a5f"></span><span style="background:#a8ffd1"></span></span></span></span>
+                <span class="theme-meta"><strong>15. Frostbound Sanctuary</strong><small>Deep Frost &amp; Aurora</small></span>
                 <span class="theme-active-dot"></span>
               </button>
             </div>
@@ -927,7 +947,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.44; open version history" title="Click to view what changed in each version">v.1.44</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.46; open version history" title="Click to view what changed in each version">v.1.46</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5062,8 +5082,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.45';
+const APP_VERSION='1.46';
 const VERSION_HISTORY=[
+  {version:'1.46',added:'No new features.',removed:'No removals.',fixed:'Theme picker now shows the four new themes (12-15) that were already in the build.',tone:'green'},
   {version:'1.45',added:'Four new themes: 12 Cinderforge Brass Soot (Twin Strike hammers+anvil), 13 Kelp Cathedral Brine Violet (Crystal Orbit), 14 Carnival Fairground Gold (Coin Medallion), 15 Sanctuary Deep Frost (Shrine Dome) with matched loading and restart art.',removed:'No removals.',fixed:'Download text now matches the sidebar button text in all four new themes (#fdf0d6/#e6e0f5/#fef3c7/#d6e2f5), and each theme carries its unique sticker shape.',tone:'yellow'},
   {version:'1.44',added:'No new features.',removed:'The wrapped pagination bar.',fixed:'The pages bar and Download now stay on one line and scroll instead of wrapping. On small screens the bar no longer stacks.',tone:'green'},
   {version:'1.43',added:'No new features.',removed:'The small click-tridents and close-in chevrons.',fixed:'Click animations keep their original trident and hand size (loading screens stay 35% smaller), the frozen arm is still fixed, and the loading-screen chevrons now sit at 60px from the centre.',tone:'green'},
