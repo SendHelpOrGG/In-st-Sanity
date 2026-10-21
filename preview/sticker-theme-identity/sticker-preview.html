@@ -255,26 +255,25 @@ footer.page b{color:#a9bccb;font-weight:650}
 /* theme 12 — embers drifting off the forge */
 @keyframes impEmber{0%{transform:translateY(0);opacity:0}18%{opacity:.95}100%{transform:translateY(-16px);opacity:0}}
 .anim-on .imp-ember{animation:impEmber 2.6s ease-out infinite}
-/* theme 09 — glitch burst. The layer is invisible at rest; every 5.2 s it snaps
-   on for about a third of a second in three staggered slices, then vanishes again. */
-@keyframes impGlitch{0%,36.5%{opacity:0;transform:translate(0,0)}36.6%{opacity:1;transform:translate(-4px,0)}37%{opacity:1;transform:translate(2px,0)}37.3%{opacity:0;transform:translate(0,0)}81.9%{opacity:0;transform:translate(0,0)}82%{opacity:1;transform:translate(-9px,-1px)}82.7%{opacity:1;transform:translate(7px,1px)}83.3%{opacity:1;transform:translate(-3px,0)}83.9%{opacity:0;transform:translate(0,0)}84.6%{opacity:1;transform:translate(-6px,0)}85.3%{opacity:1;transform:translate(6px,-1px)}86%{opacity:0;transform:translate(0,0)}86.7%{opacity:1;transform:translate(-2px,1px)}87.5%{opacity:1;transform:translate(5px,0)}88.2%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch{animation:impGlitch 5.2s steps(1,end) infinite}
-@keyframes impTearA{0%,81.9%{opacity:0;transform:translate(0,0)}82%{opacity:1;transform:translate(-6px,0)}82.6%{opacity:1;transform:translate(4px,0)}83.2%{opacity:1;transform:translate(-2px,0)}83.9%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch-a{animation:impTearA 5.2s steps(1,end) infinite}
-@keyframes impSliceA{0%,81.9%{transform:translate(0,0)}82%{transform:translate(12px,0)}82.3%{transform:translate(-8px,0)}82.6%{transform:translate(15px,0)}82.9%{transform:translate(-5px,0)}83.2%{transform:translate(9px,0)}83.5%,100%{transform:translate(0,0)}}
-.anim-on .imp-glitch-a .imp-glitch-slice{animation:impSliceA 5.2s steps(1,end) infinite}
-@keyframes impTearB{0%,84.5%{opacity:0;transform:translate(0,0)}84.6%{opacity:1;transform:translate(6px,0)}85%{opacity:1;transform:translate(-5px,0)}85.4%{opacity:1;transform:translate(3px,0)}86%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch-b{animation:impTearB 5.2s steps(1,end) infinite}
-@keyframes impSliceB{0%,84.5%{transform:translate(0,0)}84.6%{transform:translate(-10px,0)}84.85%{transform:translate(7px,0)}85.1%{transform:translate(-12px,0)}85.35%{transform:translate(5px,0)}85.6%{transform:translate(-3px,0)}85.9%,100%{transform:translate(0,0)}}
-.anim-on .imp-glitch-b .imp-glitch-slice{animation:impSliceB 5.2s steps(1,end) infinite}
-@keyframes impTearC{0%,36.5%{opacity:0;transform:translate(0,0)}36.6%{opacity:1;transform:translate(-5px,0)}37.1%{opacity:1;transform:translate(3px,0)}37.3%{opacity:0;transform:translate(0,0)}86.6%{opacity:0;transform:translate(0,0)}86.7%{opacity:1;transform:translate(-4px,0)}87.2%{opacity:1;transform:translate(6px,0)}87.7%{opacity:1;transform:translate(-2px,0)}88.2%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch-c{animation:impTearC 5.2s steps(1,end) infinite}
-@keyframes impSliceC{0%,36.5%{transform:translate(0,0)}36.6%{transform:translate(9px,0)}36.9%{transform:translate(-6px,0)}37.2%{transform:translate(3px,0)}37.4%,86.6%{transform:translate(0,0)}86.7%{transform:translate(-8px,0)}87%{transform:translate(11px,0)}87.3%{transform:translate(-4px,0)}87.6%{transform:translate(6px,0)}88%,100%{transform:translate(0,0)}}
-.anim-on .imp-glitch-c .imp-glitch-slice{animation:impSliceC 5.2s steps(1,end) infinite}
-@keyframes impPx{0%,81.9%{opacity:0}82%,82.4%{opacity:1}82.5%,83.1%{opacity:0}83.2%,83.5%{opacity:1}83.6%,84.6%{opacity:0}84.7%,85%{opacity:1}85.1%,85.5%{opacity:0}85.6%,86%{opacity:1}86.1%,86.7%{opacity:0}86.8%,87.1%{opacity:1}87.2%,87.8%{opacity:0}87.9%,88.2%{opacity:1}88.3%,100%{opacity:0}}
-.anim-on .imp-glitch-px{animation:impPx 5.2s steps(1,end) infinite}
-@keyframes impGlitchGhost{0%,81.9%{opacity:0;transform:translate(0,0)}82%{opacity:.9;transform:translate(8px,0)}82.6%{opacity:.6;transform:translate(-7px,0)}83.2%{opacity:.85;transform:translate(5px,0)}83.9%{opacity:0;transform:translate(0,0)}84.6%{opacity:.9;transform:translate(-8px,0)}85.2%{opacity:.55;transform:translate(7px,0)}85.9%{opacity:0;transform:translate(0,0)}86.7%{opacity:.8;transform:translate(-6px,0)}87.4%{opacity:.6;transform:translate(6px,0)}88.1%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch-ghost{animation:impGlitchGhost 5.2s steps(1,end) infinite}
+/* theme 09 — slice-displacement glitch. Dead at rest; every 6 s the art tears
+   for about half a second: three bands cut it, the cut slides sideways,
+   cyan/magenta fringes mark the tear lines, a chroma copy jumps behind. */
+@keyframes impBandA{0%,81.9%{opacity:0}82%{opacity:1}84%{opacity:0}84.8%{opacity:1}86.8%{opacity:0}87.6%{opacity:1}89.6%,100%{opacity:0}}
+@keyframes impBandB{0%,81.9%{opacity:0}82%{opacity:1}84%{opacity:0}84.8%{opacity:1}86.8%{opacity:0}87.6%{opacity:1}89.6%,100%{opacity:0}}
+@keyframes impBandC{0%,36.5%{opacity:0}36.6%{opacity:1}37.1%{opacity:0}81.9%{opacity:0}82%{opacity:1}84%{opacity:0}84.8%{opacity:1}86.8%{opacity:0}87.6%{opacity:1}89.6%,100%{opacity:0}}
+.anim-on .imp-glitch-band-a{animation:impBandA 6s steps(1,end) infinite}
+.anim-on .imp-glitch-band-b{animation:impBandB 6s steps(1,end) infinite}
+.anim-on .imp-glitch-band-c{animation:impBandC 6s steps(1,end) infinite}
+@keyframes impShiftA{0%,81.9%{transform:translate(0,0)}82%{transform:translate(17px,0)}84%{transform:translate(-14px,0)}84.8%{transform:translate(10px,0)}86.8%{transform:translate(-19px,0)}87.6%{transform:translate(7px,0)}89.6%,100%{transform:translate(0,0)}}
+@keyframes impShiftB{0%,81.9%{transform:translate(0,0)}82%{transform:translate(-12px,0)}84%{transform:translate(16px,0)}84.8%{transform:translate(-9px,0)}86.8%{transform:translate(21px,0)}87.6%{transform:translate(-11px,0)}89.6%,100%{transform:translate(0,0)}}
+@keyframes impShiftC{0%,36.5%{transform:translate(0,0)}36.6%{transform:translate(12px,0)}37.1%,81.9%{transform:translate(0,0)}82%{transform:translate(-10px,0)}84%{transform:translate(19px,0)}84.8%{transform:translate(-15px,0)}86.8%{transform:translate(8px,0)}87.6%{transform:translate(-17px,0)}89.6%,100%{transform:translate(0,0)}}
+.anim-on .imp-glitch-band-a .imp-glitch-shift{animation:impShiftA 6s steps(1,end) infinite}
+.anim-on .imp-glitch-band-b .imp-glitch-shift{animation:impShiftB 6s steps(1,end) infinite}
+.anim-on .imp-glitch-band-c .imp-glitch-shift{animation:impShiftC 6s steps(1,end) infinite}
+@keyframes impPx{0%,81.9%{opacity:0}82%,83.2%{opacity:1}83.3%,84.8%{opacity:0}84.9%,86%{opacity:1}86.1%,87.6%{opacity:0}87.7%,88.6%{opacity:1}88.7%,100%{opacity:0}}
+.anim-on .imp-glitch-px{animation:impPx 6s steps(1,end) infinite}
+@keyframes impGlitchGhost{0%,81.9%{opacity:0;transform:translate(0,0)}82%{opacity:.85;transform:translate(9px,0)}84%{opacity:.5;transform:translate(-8px,0)}84.8%{opacity:.9;transform:translate(11px,0)}86.8%{opacity:.45;transform:translate(-10px,0)}87.6%{opacity:.8;transform:translate(8px,0)}89.6%,100%{opacity:0;transform:translate(0,0)}}
+.anim-on .imp-glitch-ghost{animation:impGlitchGhost 6s steps(1,end) infinite}
 /* theme 06 — three strike spots, one picked at random on a random 1–3 s beat */
 @keyframes impThunderStrike{0%,100%{opacity:0}6%,60%{opacity:1}20%{opacity:.3}34%,48%{opacity:1}}
 @keyframes impThunderFlash{0%,100%{opacity:0}8%{opacity:1}30%{opacity:.55}55%{opacity:1}}
@@ -343,14 +342,15 @@ footer.page b{color:#a9bccb;font-weight:650}
   <header>
     <div class="head-row">
       <div>
-        <p class="kicker">Sticker identity pass · rev 8 · proposal</p>
+        <p class="kicker">Sticker identity pass · rev 9 · proposal</p>
         <h1>Every theme gets a sticker that <em>says what it is</em></h1>
         <p class="lede">
-          Eighth pass: 09's glitch only exists during the burst now. Every ~5 s the sticker
-          breaks for about a third of a second — three sliced bands, chroma fringing, stray pixels
-          and a displaced copy of the rings all snap in and out — and between bursts it is clean.
-          Everything else is exactly as you approved it in rev 6/7. <b>Nothing in the app has been
-          touched</b> — this page is still the menu.
+          Ninth pass: 09's glitch is rebuilt as a real slice-displacement tear. Every 6 s the art
+          is cut by three horizontal bands, the cut content slides sideways inside each band, cyan
+          and magenta fringes flash on the tear lines and a chroma copy of the rings jumps behind —
+          for about half a second, then it is clean again. Nothing glitchy is visible at rest.
+          Everything else is exactly as you approved it. <b>Nothing in the app has been touched</b> —
+          this page is still the menu.
         </p>
       </div>
       <div class="stamp">
@@ -436,7 +436,7 @@ footer.page b{color:#a9bccb;font-weight:650}
         <li><b>imp-face-group</b> · <b>imp-head-circle</b></li>
         <li><b>imp-horns</b> · <b>imp-eyes-track</b> → <b>imp-eyes-blink</b> · <b>imp-grin</b></li>
       </ul>
-      <p style="margin-top:8px">Eye tracking, blinking, the click-dodge and the JSON-throw cinematics keep working — they only need those class names. rev 2 adds two tiny animations (<b>imp-eq-bar</b>, <b>imp-ember</b>), rev 4 the thunder hit (<b>imp-thunder</b>, <b>imp-thunder-flash</b>, <b>imp-thunder-ring</b>) and rev 5 the hammer clash (<b>imp-hammer-l</b>, <b>imp-hammer-r</b>, <b>imp-clash</b>) and rev 8 the glitch burst (<b>imp-glitch</b>, <b>imp-glitch-ghost</b>) — a few lines of CSS. The random 1–3 s beats come from two tiny timers on this page (`fireThunder`, `fireClash`).</p>
+      <p style="margin-top:8px">Eye tracking, blinking, the click-dodge and the JSON-throw cinematics keep working — they only need those class names. rev 2 adds two tiny animations (<b>imp-eq-bar</b>, <b>imp-ember</b>), rev 4 the thunder hit (<b>imp-thunder</b>, <b>imp-thunder-flash</b>, <b>imp-thunder-ring</b>) and rev 5 the hammer clash (<b>imp-hammer-l</b>, <b>imp-hammer-r</b>, <b>imp-clash</b>) and rev 9 the glitch burst (<b>imp-glitch-band-a/b/c</b>, <b>imp-glitch-shift</b>) — a few lines of CSS. The random 1–3 s beats come from two tiny timers on this page (`fireThunder`, `fireClash`).</p>
     </div>
     <div class="note">
       <h3>Identity, not decoration</h3>
@@ -948,72 +948,65 @@ window.STICKER_CURRENT = {
 
   /* =========================================================================
      09 — CYBER CHERRY & CYAN   (glitch pass)
-     The original neon rings, crosshair ticks and dots are untouched. Signal
-     damage is added around them: two dark tears with chroma edges, stray
-     pixels, a displaced copy of the rings that flashes in, and a stepped
-     jitter that snaps the whole glitch layer sideways for a few frames.
+     The original neon rings, crosshair ticks and dots are untouched. The glitch
+     is a real slice displacement: three horizontal bands cut the art, the cut
+     content slides sideways inside the band, and each tear is fringed with
+     cyan/magenta. All of it is invisible at rest — the CSS burst flicks it on
+     for a few frames every 6 s.
      ====================================================================== */
+  var v9RingArt =
+    '<circle cx="80" cy="80" r="67" fill="none" stroke="#ff2a5f" stroke-width="2.7" stroke-dasharray="72 10 36 10" transform="rotate(-12 80 80)"/>' +
+    '<circle cx="80" cy="80" r="59" fill="none" stroke="#00f0ff" stroke-width="2.4" stroke-dasharray="54 12" transform="rotate(18 80 80)"/>' +
+    '<circle cx="80" cy="80" r="49" fill="none" stroke="#ff2a5f" stroke-opacity=".68" stroke-width="1.4" stroke-dasharray="2 5"/>' +
+    '<path d="M80 10 V24 M80 136 V150 M10 80 H24 M136 80 H150 M31 31 L41 41 M119 119 L129 129 M129 31 L119 41 M41 119 L31 129" stroke="#00f0ff" stroke-width="2.2" stroke-linecap="round"/>';
+
+  var v9Band = function (key, y1, y2) {
+    return '<g class="imp-glitch-band imp-glitch-band-' + key + '" opacity="0">' +
+      '<g mask="url(#st_v9Band' + key + '_{uid})">' +
+        '<rect x="0" y="' + y1 + '" width="160" height="' + (y2 - y1) + '" fill="#090b10"/>' +
+        '<g class="imp-glitch-shift">' + v9RingArt + '</g>' +
+        '<path d="M0 ' + (y1 + 0.6) + ' H160" stroke="#00f0ff" stroke-width="1.15" stroke-opacity=".85"/>' +
+        '<path d="M0 ' + (y2 - 0.6) + ' H160" stroke="#ff2a5f" stroke-width="1.15" stroke-opacity=".85"/>' +
+      '</g>' +
+    '</g>';
+  };
+
+  /* one mask per band: the band rectangle minus the face circle, so a tear
+     never cuts across the eyes or the grin */
+  var v9Defs = '';
+  [['a', 37.5, 44], ['b', 104, 110.5], ['c', 123.5, 130]].forEach(function (b) {
+    v9Defs += '<mask id="st_v9Band' + b[0] + '_{uid}" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160">' +
+      '<rect x="0" y="' + b[1] + '" width="160" height="' + (b[2] - b[1]) + '" fill="#ffffff"/>' +
+      '<circle cx="80" cy="80" r="41" fill="#000000"/>' +
+      '</mask>';
+  });
+
   var v9 = assemble(
-    '',
+    v9Defs,
     /* original frame, verbatim */
     '<circle cx="80" cy="80" r="67" fill="rgba(13,17,26,.38)" stroke="#ff2a5f" stroke-width="2.7" stroke-dasharray="72 10 36 10" transform="rotate(-12 80 80)"/>' +
     '<circle cx="80" cy="80" r="59" fill="none" stroke="#00f0ff" stroke-width="2.4" stroke-dasharray="54 12" transform="rotate(18 80 80)"/>' +
     '<circle cx="80" cy="80" r="49" fill="none" stroke="#ff2a5f" stroke-opacity=".68" stroke-width="1.4" stroke-dasharray="2 5"/>',
-    /* original decor, verbatim */
+    /* original decor, verbatim — plus the glitch layer, dead at rest */
     '<path d="M80 10 V24 M80 136 V150 M10 80 H24 M136 80 H150 M31 31 L41 41 M119 119 L129 129 M129 31 L119 41 M41 119 L31 129" stroke="#00f0ff" stroke-width="2.2" stroke-linecap="round"/>' +
     '<circle cx="80" cy="13" r="3" fill="#ff2a5f"/>' +
     '<circle cx="147" cy="80" r="3" fill="#00f0ff"/>' +
     '<circle cx="80" cy="147" r="3" fill="#ff2a5f"/>' +
     '<circle cx="13" cy="80" r="3" fill="#00f0ff"/>' +
-    /* Glitch layer. Everything here is invisible at rest (`opacity="0"`); the
-       CSS burst flicks it on for a few frames, then it is gone again. */
-    '<g class="imp-glitch" opacity="0">' +
-      /* tear A — upper left band, clear of the face */
-      '<g class="imp-glitch-tear imp-glitch-a" opacity="0">' +
-        '<rect x="16" y="46.6" width="36" height="4.2" fill="rgba(8,11,18,.94)"/>' +
-        '<path d="M16 46.6 H52" stroke="#00f0ff" stroke-width="1" stroke-opacity=".65"/>' +
-        '<path d="M16 50.8 H52" stroke="#ff2a5f" stroke-width="1" stroke-opacity=".6"/>' +
-        '<g class="imp-glitch-slice">' +
-          '<path d="M30.2 46.6 Q28.8 48.7 28.2 50.8" stroke="#00f0ff" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
-          '<path d="M41.5 46.9 Q40.4 48.7 39.9 50.5" stroke="#ff2a5f" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-opacity=".8"/>' +
-          '<rect x="20" y="47.4" width="7" height="1.7" fill="#ff2a5f" fill-opacity=".85"/>' +
-          '<rect x="46" y="47.8" width="4" height="1.2" fill="#ffffff" fill-opacity=".5"/>' +
-        '</g>' +
-      '</g>' +
-      /* tear B — right band, starts at the edge of the head */
-      '<g class="imp-glitch-tear imp-glitch-b" opacity="0">' +
-        '<rect x="108" y="111" width="38" height="4.2" fill="rgba(8,11,18,.94)"/>' +
-        '<path d="M108 111 H146" stroke="#ff2a5f" stroke-width="1" stroke-opacity=".65"/>' +
-        '<path d="M108 115.2 H146" stroke="#00f0ff" stroke-width="1" stroke-opacity=".6"/>' +
-        '<g class="imp-glitch-slice">' +
-          '<path d="M132.4 111 Q131.4 113 130.1 115" stroke="#ff2a5f" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
-          '<path d="M120.8 111.2 Q119.9 113 118.9 114.8" stroke="#00f0ff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-opacity=".8"/>' +
-          '<rect x="112" y="111.8" width="6" height="1.7" fill="#00f0ff" fill-opacity=".8"/>' +
-          '<rect x="139" y="112.2" width="4" height="1.1" fill="#ffffff" fill-opacity=".5"/>' +
-        '</g>' +
-      '</g>' +
-      /* tear C — lower left band, below the chin */
-      '<g class="imp-glitch-tear imp-glitch-c" opacity="0">' +
-        '<rect x="18" y="126.4" width="50" height="4" fill="rgba(8,11,18,.94)"/>' +
-        '<path d="M18 126.4 H68" stroke="#00f0ff" stroke-width="1" stroke-opacity=".6"/>' +
-        '<path d="M18 130.4 H68" stroke="#ff2a5f" stroke-width="1" stroke-opacity=".65"/>' +
-        '<g class="imp-glitch-slice">' +
-          '<path d="M37.7 126.4 Q39.6 128.4 41.9 130.4" stroke="#00f0ff" stroke-width="2.1" fill="none" stroke-linecap="round"/>' +
-          '<path d="M25.4 126.7 Q27 128.4 28.9 130.1" stroke="#ff2a5f" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-opacity=".8"/>' +
-          '<rect x="52" y="127.6" width="6" height="1.2" fill="#ffffff" fill-opacity=".45"/>' +
-        '</g>' +
-      '</g>' +
+    '<g class="imp-glitch">' +
+      v9Band('a', 37.5, 44) +
+      v9Band('b', 104, 110.5) +
+      v9Band('c', 123.5, 130) +
       /* stray pixels, all outside the face */
       '<g class="imp-glitch-px" opacity="0">' +
         '<g fill="#00f0ff"><rect x="20" y="55.4" width="3" height="3"/><rect x="135" y="103.4" width="2.6" height="2.6"/><rect x="28" y="42" width="2" height="2" opacity=".8"/></g>' +
         '<g fill="#ff2a5f"><rect x="132.5" y="57" width="3" height="3"/><rect x="23" y="101" width="2.6" height="2.6"/><rect x="112" y="119" width="2.2" height="2.2" opacity=".85"/></g>' +
       '</g>' +
-    '</g>' +
-    /* displaced chroma copy of the rings — only during the burst */
-    '<g class="imp-glitch-ghost" opacity="0">' +
-      '<circle cx="80" cy="80" r="67" fill="none" stroke="#00f0ff" stroke-width="1.9" stroke-dasharray="16 7 5 13" stroke-opacity=".9"/>' +
-      '<circle cx="80" cy="80" r="59" fill="none" stroke="#ff2a5f" stroke-width="1.9" stroke-dasharray="10 9 18 6" stroke-opacity=".9"/>' +
-      '<circle cx="80" cy="80" r="49" fill="none" stroke="#00f0ff" stroke-width="1" stroke-dasharray="3 9" stroke-opacity=".55"/>' +
+      /* displaced chroma copy of the rings */
+      '<g class="imp-glitch-ghost" opacity="0">' +
+        '<circle cx="80" cy="80" r="67" fill="none" stroke="#00f0ff" stroke-width="1.6" stroke-dasharray="16 7 5 13" stroke-opacity=".8"/>' +
+        '<circle cx="80" cy="80" r="59" fill="none" stroke="#ff2a5f" stroke-width="1.6" stroke-dasharray="10 9 18 6" stroke-opacity=".8"/>' +
+      '</g>' +
     '</g>',
     face({
       fill: 'rgba(20,26,41,.66)', stroke: '#00f0ff', sw: 2.4,
@@ -1482,8 +1475,8 @@ window.STICKER_CURRENT = {
     {
       id: 'v9', tag: 'revised', index: 9, badge: '09', name: 'Cyber Cherry & Cyan', subtitle: 'Gunmetal Arcade Dual-Neon',
       palette: { c1: '#ff2a5f', c2: '#00f0ff', bg: '#090b10', side: '#111520', ink: '#ececf2', muted: '#8890a3' },
-      cues: ['dashed rings + crosshair', 'glitch burst every ~5 s', 'clean between bursts'],
-      note: 'The original dashed rings, crosshair ticks and dots stay exactly as they ship. Every ~5 s a glitch burst runs for about a third of a second — three sliced bands with cyan/magenta chroma edges, stray pixels, a displaced chroma copy of the rings and a stepped sideways jitter — then everything snaps back to clean. Nothing glitchy is visible at rest. All CSS, no JS.',
+      cues: ['dashed rings + crosshair', 'slice-displacement burst', 'clean between bursts'],
+      note: 'The original dashed rings, crosshair ticks and dots stay exactly as they ship. Every 6 s the art tears for about half a second: three horizontal bands cut the rings, the cut content slides sideways inside each band (a real displaced copy, clipped to the band and to the face), cyan/magenta fringes flash on the tear lines, and a chroma copy of the rings jumps behind it. Nothing glitchy is visible at rest. All CSS, no JS.',
       art: v9
     },
     {

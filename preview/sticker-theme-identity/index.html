@@ -255,26 +255,25 @@ footer.page b{color:#a9bccb;font-weight:650}
 /* theme 12 — embers drifting off the forge */
 @keyframes impEmber{0%{transform:translateY(0);opacity:0}18%{opacity:.95}100%{transform:translateY(-16px);opacity:0}}
 .anim-on .imp-ember{animation:impEmber 2.6s ease-out infinite}
-/* theme 09 — glitch burst. The layer is invisible at rest; every 5.2 s it snaps
-   on for about a third of a second in three staggered slices, then vanishes again. */
-@keyframes impGlitch{0%,36.5%{opacity:0;transform:translate(0,0)}36.6%{opacity:1;transform:translate(-4px,0)}37%{opacity:1;transform:translate(2px,0)}37.3%{opacity:0;transform:translate(0,0)}81.9%{opacity:0;transform:translate(0,0)}82%{opacity:1;transform:translate(-9px,-1px)}82.7%{opacity:1;transform:translate(7px,1px)}83.3%{opacity:1;transform:translate(-3px,0)}83.9%{opacity:0;transform:translate(0,0)}84.6%{opacity:1;transform:translate(-6px,0)}85.3%{opacity:1;transform:translate(6px,-1px)}86%{opacity:0;transform:translate(0,0)}86.7%{opacity:1;transform:translate(-2px,1px)}87.5%{opacity:1;transform:translate(5px,0)}88.2%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch{animation:impGlitch 5.2s steps(1,end) infinite}
-@keyframes impTearA{0%,81.9%{opacity:0;transform:translate(0,0)}82%{opacity:1;transform:translate(-6px,0)}82.6%{opacity:1;transform:translate(4px,0)}83.2%{opacity:1;transform:translate(-2px,0)}83.9%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch-a{animation:impTearA 5.2s steps(1,end) infinite}
-@keyframes impSliceA{0%,81.9%{transform:translate(0,0)}82%{transform:translate(12px,0)}82.3%{transform:translate(-8px,0)}82.6%{transform:translate(15px,0)}82.9%{transform:translate(-5px,0)}83.2%{transform:translate(9px,0)}83.5%,100%{transform:translate(0,0)}}
-.anim-on .imp-glitch-a .imp-glitch-slice{animation:impSliceA 5.2s steps(1,end) infinite}
-@keyframes impTearB{0%,84.5%{opacity:0;transform:translate(0,0)}84.6%{opacity:1;transform:translate(6px,0)}85%{opacity:1;transform:translate(-5px,0)}85.4%{opacity:1;transform:translate(3px,0)}86%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch-b{animation:impTearB 5.2s steps(1,end) infinite}
-@keyframes impSliceB{0%,84.5%{transform:translate(0,0)}84.6%{transform:translate(-10px,0)}84.85%{transform:translate(7px,0)}85.1%{transform:translate(-12px,0)}85.35%{transform:translate(5px,0)}85.6%{transform:translate(-3px,0)}85.9%,100%{transform:translate(0,0)}}
-.anim-on .imp-glitch-b .imp-glitch-slice{animation:impSliceB 5.2s steps(1,end) infinite}
-@keyframes impTearC{0%,36.5%{opacity:0;transform:translate(0,0)}36.6%{opacity:1;transform:translate(-5px,0)}37.1%{opacity:1;transform:translate(3px,0)}37.3%{opacity:0;transform:translate(0,0)}86.6%{opacity:0;transform:translate(0,0)}86.7%{opacity:1;transform:translate(-4px,0)}87.2%{opacity:1;transform:translate(6px,0)}87.7%{opacity:1;transform:translate(-2px,0)}88.2%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch-c{animation:impTearC 5.2s steps(1,end) infinite}
-@keyframes impSliceC{0%,36.5%{transform:translate(0,0)}36.6%{transform:translate(9px,0)}36.9%{transform:translate(-6px,0)}37.2%{transform:translate(3px,0)}37.4%,86.6%{transform:translate(0,0)}86.7%{transform:translate(-8px,0)}87%{transform:translate(11px,0)}87.3%{transform:translate(-4px,0)}87.6%{transform:translate(6px,0)}88%,100%{transform:translate(0,0)}}
-.anim-on .imp-glitch-c .imp-glitch-slice{animation:impSliceC 5.2s steps(1,end) infinite}
-@keyframes impPx{0%,81.9%{opacity:0}82%,82.4%{opacity:1}82.5%,83.1%{opacity:0}83.2%,83.5%{opacity:1}83.6%,84.6%{opacity:0}84.7%,85%{opacity:1}85.1%,85.5%{opacity:0}85.6%,86%{opacity:1}86.1%,86.7%{opacity:0}86.8%,87.1%{opacity:1}87.2%,87.8%{opacity:0}87.9%,88.2%{opacity:1}88.3%,100%{opacity:0}}
-.anim-on .imp-glitch-px{animation:impPx 5.2s steps(1,end) infinite}
-@keyframes impGlitchGhost{0%,81.9%{opacity:0;transform:translate(0,0)}82%{opacity:.9;transform:translate(8px,0)}82.6%{opacity:.6;transform:translate(-7px,0)}83.2%{opacity:.85;transform:translate(5px,0)}83.9%{opacity:0;transform:translate(0,0)}84.6%{opacity:.9;transform:translate(-8px,0)}85.2%{opacity:.55;transform:translate(7px,0)}85.9%{opacity:0;transform:translate(0,0)}86.7%{opacity:.8;transform:translate(-6px,0)}87.4%{opacity:.6;transform:translate(6px,0)}88.1%{opacity:0;transform:translate(0,0)}100%{opacity:0;transform:translate(0,0)}}
-.anim-on .imp-glitch-ghost{animation:impGlitchGhost 5.2s steps(1,end) infinite}
+/* theme 09 — slice-displacement glitch. Dead at rest; every 6 s the art tears
+   for about half a second: three bands cut it, the cut slides sideways,
+   cyan/magenta fringes mark the tear lines, a chroma copy jumps behind. */
+@keyframes impBandA{0%,81.9%{opacity:0}82%{opacity:1}84%{opacity:0}84.8%{opacity:1}86.8%{opacity:0}87.6%{opacity:1}89.6%,100%{opacity:0}}
+@keyframes impBandB{0%,81.9%{opacity:0}82%{opacity:1}84%{opacity:0}84.8%{opacity:1}86.8%{opacity:0}87.6%{opacity:1}89.6%,100%{opacity:0}}
+@keyframes impBandC{0%,36.5%{opacity:0}36.6%{opacity:1}37.1%{opacity:0}81.9%{opacity:0}82%{opacity:1}84%{opacity:0}84.8%{opacity:1}86.8%{opacity:0}87.6%{opacity:1}89.6%,100%{opacity:0}}
+.anim-on .imp-glitch-band-a{animation:impBandA 6s steps(1,end) infinite}
+.anim-on .imp-glitch-band-b{animation:impBandB 6s steps(1,end) infinite}
+.anim-on .imp-glitch-band-c{animation:impBandC 6s steps(1,end) infinite}
+@keyframes impShiftA{0%,81.9%{transform:translate(0,0)}82%{transform:translate(17px,0)}84%{transform:translate(-14px,0)}84.8%{transform:translate(10px,0)}86.8%{transform:translate(-19px,0)}87.6%{transform:translate(7px,0)}89.6%,100%{transform:translate(0,0)}}
+@keyframes impShiftB{0%,81.9%{transform:translate(0,0)}82%{transform:translate(-12px,0)}84%{transform:translate(16px,0)}84.8%{transform:translate(-9px,0)}86.8%{transform:translate(21px,0)}87.6%{transform:translate(-11px,0)}89.6%,100%{transform:translate(0,0)}}
+@keyframes impShiftC{0%,36.5%{transform:translate(0,0)}36.6%{transform:translate(12px,0)}37.1%,81.9%{transform:translate(0,0)}82%{transform:translate(-10px,0)}84%{transform:translate(19px,0)}84.8%{transform:translate(-15px,0)}86.8%{transform:translate(8px,0)}87.6%{transform:translate(-17px,0)}89.6%,100%{transform:translate(0,0)}}
+.anim-on .imp-glitch-band-a .imp-glitch-shift{animation:impShiftA 6s steps(1,end) infinite}
+.anim-on .imp-glitch-band-b .imp-glitch-shift{animation:impShiftB 6s steps(1,end) infinite}
+.anim-on .imp-glitch-band-c .imp-glitch-shift{animation:impShiftC 6s steps(1,end) infinite}
+@keyframes impPx{0%,81.9%{opacity:0}82%,83.2%{opacity:1}83.3%,84.8%{opacity:0}84.9%,86%{opacity:1}86.1%,87.6%{opacity:0}87.7%,88.6%{opacity:1}88.7%,100%{opacity:0}}
+.anim-on .imp-glitch-px{animation:impPx 6s steps(1,end) infinite}
+@keyframes impGlitchGhost{0%,81.9%{opacity:0;transform:translate(0,0)}82%{opacity:.85;transform:translate(9px,0)}84%{opacity:.5;transform:translate(-8px,0)}84.8%{opacity:.9;transform:translate(11px,0)}86.8%{opacity:.45;transform:translate(-10px,0)}87.6%{opacity:.8;transform:translate(8px,0)}89.6%,100%{opacity:0;transform:translate(0,0)}}
+.anim-on .imp-glitch-ghost{animation:impGlitchGhost 6s steps(1,end) infinite}
 /* theme 06 — three strike spots, one picked at random on a random 1–3 s beat */
 @keyframes impThunderStrike{0%,100%{opacity:0}6%,60%{opacity:1}20%{opacity:.3}34%,48%{opacity:1}}
 @keyframes impThunderFlash{0%,100%{opacity:0}8%{opacity:1}30%{opacity:.55}55%{opacity:1}}
@@ -343,14 +342,15 @@ footer.page b{color:#a9bccb;font-weight:650}
   <header>
     <div class="head-row">
       <div>
-        <p class="kicker">Sticker identity pass · rev 8 · proposal</p>
+        <p class="kicker">Sticker identity pass · rev 9 · proposal</p>
         <h1>Every theme gets a sticker that <em>says what it is</em></h1>
         <p class="lede">
-          Eighth pass: 09's glitch only exists during the burst now. Every ~5 s the sticker
-          breaks for about a third of a second — three sliced bands, chroma fringing, stray pixels
-          and a displaced copy of the rings all snap in and out — and between bursts it is clean.
-          Everything else is exactly as you approved it in rev 6/7. <b>Nothing in the app has been
-          touched</b> — this page is still the menu.
+          Ninth pass: 09's glitch is rebuilt as a real slice-displacement tear. Every 6 s the art
+          is cut by three horizontal bands, the cut content slides sideways inside each band, cyan
+          and magenta fringes flash on the tear lines and a chroma copy of the rings jumps behind —
+          for about half a second, then it is clean again. Nothing glitchy is visible at rest.
+          Everything else is exactly as you approved it. <b>Nothing in the app has been touched</b> —
+          this page is still the menu.
         </p>
       </div>
       <div class="stamp">
@@ -436,7 +436,7 @@ footer.page b{color:#a9bccb;font-weight:650}
         <li><b>imp-face-group</b> · <b>imp-head-circle</b></li>
         <li><b>imp-horns</b> · <b>imp-eyes-track</b> → <b>imp-eyes-blink</b> · <b>imp-grin</b></li>
       </ul>
-      <p style="margin-top:8px">Eye tracking, blinking, the click-dodge and the JSON-throw cinematics keep working — they only need those class names. rev 2 adds two tiny animations (<b>imp-eq-bar</b>, <b>imp-ember</b>), rev 4 the thunder hit (<b>imp-thunder</b>, <b>imp-thunder-flash</b>, <b>imp-thunder-ring</b>) and rev 5 the hammer clash (<b>imp-hammer-l</b>, <b>imp-hammer-r</b>, <b>imp-clash</b>) and rev 8 the glitch burst (<b>imp-glitch</b>, <b>imp-glitch-ghost</b>) — a few lines of CSS. The random 1–3 s beats come from two tiny timers on this page (`fireThunder`, `fireClash`).</p>
+      <p style="margin-top:8px">Eye tracking, blinking, the click-dodge and the JSON-throw cinematics keep working — they only need those class names. rev 2 adds two tiny animations (<b>imp-eq-bar</b>, <b>imp-ember</b>), rev 4 the thunder hit (<b>imp-thunder</b>, <b>imp-thunder-flash</b>, <b>imp-thunder-ring</b>) and rev 5 the hammer clash (<b>imp-hammer-l</b>, <b>imp-hammer-r</b>, <b>imp-clash</b>) and rev 9 the glitch burst (<b>imp-glitch-band-a/b/c</b>, <b>imp-glitch-shift</b>) — a few lines of CSS. The random 1–3 s beats come from two tiny timers on this page (`fireThunder`, `fireClash`).</p>
     </div>
     <div class="note">
       <h3>Identity, not decoration</h3>

@@ -456,72 +456,65 @@
 
   /* =========================================================================
      09 — CYBER CHERRY & CYAN   (glitch pass)
-     The original neon rings, crosshair ticks and dots are untouched. Signal
-     damage is added around them: two dark tears with chroma edges, stray
-     pixels, a displaced copy of the rings that flashes in, and a stepped
-     jitter that snaps the whole glitch layer sideways for a few frames.
+     The original neon rings, crosshair ticks and dots are untouched. The glitch
+     is a real slice displacement: three horizontal bands cut the art, the cut
+     content slides sideways inside the band, and each tear is fringed with
+     cyan/magenta. All of it is invisible at rest — the CSS burst flicks it on
+     for a few frames every 6 s.
      ====================================================================== */
+  var v9RingArt =
+    '<circle cx="80" cy="80" r="67" fill="none" stroke="#ff2a5f" stroke-width="2.7" stroke-dasharray="72 10 36 10" transform="rotate(-12 80 80)"/>' +
+    '<circle cx="80" cy="80" r="59" fill="none" stroke="#00f0ff" stroke-width="2.4" stroke-dasharray="54 12" transform="rotate(18 80 80)"/>' +
+    '<circle cx="80" cy="80" r="49" fill="none" stroke="#ff2a5f" stroke-opacity=".68" stroke-width="1.4" stroke-dasharray="2 5"/>' +
+    '<path d="M80 10 V24 M80 136 V150 M10 80 H24 M136 80 H150 M31 31 L41 41 M119 119 L129 129 M129 31 L119 41 M41 119 L31 129" stroke="#00f0ff" stroke-width="2.2" stroke-linecap="round"/>';
+
+  var v9Band = function (key, y1, y2) {
+    return '<g class="imp-glitch-band imp-glitch-band-' + key + '" opacity="0">' +
+      '<g mask="url(#st_v9Band' + key + '_{uid})">' +
+        '<rect x="0" y="' + y1 + '" width="160" height="' + (y2 - y1) + '" fill="#090b10"/>' +
+        '<g class="imp-glitch-shift">' + v9RingArt + '</g>' +
+        '<path d="M0 ' + (y1 + 0.6) + ' H160" stroke="#00f0ff" stroke-width="1.15" stroke-opacity=".85"/>' +
+        '<path d="M0 ' + (y2 - 0.6) + ' H160" stroke="#ff2a5f" stroke-width="1.15" stroke-opacity=".85"/>' +
+      '</g>' +
+    '</g>';
+  };
+
+  /* one mask per band: the band rectangle minus the face circle, so a tear
+     never cuts across the eyes or the grin */
+  var v9Defs = '';
+  [['a', 37.5, 44], ['b', 104, 110.5], ['c', 123.5, 130]].forEach(function (b) {
+    v9Defs += '<mask id="st_v9Band' + b[0] + '_{uid}" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160">' +
+      '<rect x="0" y="' + b[1] + '" width="160" height="' + (b[2] - b[1]) + '" fill="#ffffff"/>' +
+      '<circle cx="80" cy="80" r="41" fill="#000000"/>' +
+      '</mask>';
+  });
+
   var v9 = assemble(
-    '',
+    v9Defs,
     /* original frame, verbatim */
     '<circle cx="80" cy="80" r="67" fill="rgba(13,17,26,.38)" stroke="#ff2a5f" stroke-width="2.7" stroke-dasharray="72 10 36 10" transform="rotate(-12 80 80)"/>' +
     '<circle cx="80" cy="80" r="59" fill="none" stroke="#00f0ff" stroke-width="2.4" stroke-dasharray="54 12" transform="rotate(18 80 80)"/>' +
     '<circle cx="80" cy="80" r="49" fill="none" stroke="#ff2a5f" stroke-opacity=".68" stroke-width="1.4" stroke-dasharray="2 5"/>',
-    /* original decor, verbatim */
+    /* original decor, verbatim — plus the glitch layer, dead at rest */
     '<path d="M80 10 V24 M80 136 V150 M10 80 H24 M136 80 H150 M31 31 L41 41 M119 119 L129 129 M129 31 L119 41 M41 119 L31 129" stroke="#00f0ff" stroke-width="2.2" stroke-linecap="round"/>' +
     '<circle cx="80" cy="13" r="3" fill="#ff2a5f"/>' +
     '<circle cx="147" cy="80" r="3" fill="#00f0ff"/>' +
     '<circle cx="80" cy="147" r="3" fill="#ff2a5f"/>' +
     '<circle cx="13" cy="80" r="3" fill="#00f0ff"/>' +
-    /* Glitch layer. Everything here is invisible at rest (`opacity="0"`); the
-       CSS burst flicks it on for a few frames, then it is gone again. */
-    '<g class="imp-glitch" opacity="0">' +
-      /* tear A — upper left band, clear of the face */
-      '<g class="imp-glitch-tear imp-glitch-a" opacity="0">' +
-        '<rect x="16" y="46.6" width="36" height="4.2" fill="rgba(8,11,18,.94)"/>' +
-        '<path d="M16 46.6 H52" stroke="#00f0ff" stroke-width="1" stroke-opacity=".65"/>' +
-        '<path d="M16 50.8 H52" stroke="#ff2a5f" stroke-width="1" stroke-opacity=".6"/>' +
-        '<g class="imp-glitch-slice">' +
-          '<path d="M30.2 46.6 Q28.8 48.7 28.2 50.8" stroke="#00f0ff" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
-          '<path d="M41.5 46.9 Q40.4 48.7 39.9 50.5" stroke="#ff2a5f" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-opacity=".8"/>' +
-          '<rect x="20" y="47.4" width="7" height="1.7" fill="#ff2a5f" fill-opacity=".85"/>' +
-          '<rect x="46" y="47.8" width="4" height="1.2" fill="#ffffff" fill-opacity=".5"/>' +
-        '</g>' +
-      '</g>' +
-      /* tear B — right band, starts at the edge of the head */
-      '<g class="imp-glitch-tear imp-glitch-b" opacity="0">' +
-        '<rect x="108" y="111" width="38" height="4.2" fill="rgba(8,11,18,.94)"/>' +
-        '<path d="M108 111 H146" stroke="#ff2a5f" stroke-width="1" stroke-opacity=".65"/>' +
-        '<path d="M108 115.2 H146" stroke="#00f0ff" stroke-width="1" stroke-opacity=".6"/>' +
-        '<g class="imp-glitch-slice">' +
-          '<path d="M132.4 111 Q131.4 113 130.1 115" stroke="#ff2a5f" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
-          '<path d="M120.8 111.2 Q119.9 113 118.9 114.8" stroke="#00f0ff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-opacity=".8"/>' +
-          '<rect x="112" y="111.8" width="6" height="1.7" fill="#00f0ff" fill-opacity=".8"/>' +
-          '<rect x="139" y="112.2" width="4" height="1.1" fill="#ffffff" fill-opacity=".5"/>' +
-        '</g>' +
-      '</g>' +
-      /* tear C — lower left band, below the chin */
-      '<g class="imp-glitch-tear imp-glitch-c" opacity="0">' +
-        '<rect x="18" y="126.4" width="50" height="4" fill="rgba(8,11,18,.94)"/>' +
-        '<path d="M18 126.4 H68" stroke="#00f0ff" stroke-width="1" stroke-opacity=".6"/>' +
-        '<path d="M18 130.4 H68" stroke="#ff2a5f" stroke-width="1" stroke-opacity=".65"/>' +
-        '<g class="imp-glitch-slice">' +
-          '<path d="M37.7 126.4 Q39.6 128.4 41.9 130.4" stroke="#00f0ff" stroke-width="2.1" fill="none" stroke-linecap="round"/>' +
-          '<path d="M25.4 126.7 Q27 128.4 28.9 130.1" stroke="#ff2a5f" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-opacity=".8"/>' +
-          '<rect x="52" y="127.6" width="6" height="1.2" fill="#ffffff" fill-opacity=".45"/>' +
-        '</g>' +
-      '</g>' +
+    '<g class="imp-glitch">' +
+      v9Band('a', 37.5, 44) +
+      v9Band('b', 104, 110.5) +
+      v9Band('c', 123.5, 130) +
       /* stray pixels, all outside the face */
       '<g class="imp-glitch-px" opacity="0">' +
         '<g fill="#00f0ff"><rect x="20" y="55.4" width="3" height="3"/><rect x="135" y="103.4" width="2.6" height="2.6"/><rect x="28" y="42" width="2" height="2" opacity=".8"/></g>' +
         '<g fill="#ff2a5f"><rect x="132.5" y="57" width="3" height="3"/><rect x="23" y="101" width="2.6" height="2.6"/><rect x="112" y="119" width="2.2" height="2.2" opacity=".85"/></g>' +
       '</g>' +
-    '</g>' +
-    /* displaced chroma copy of the rings — only during the burst */
-    '<g class="imp-glitch-ghost" opacity="0">' +
-      '<circle cx="80" cy="80" r="67" fill="none" stroke="#00f0ff" stroke-width="1.9" stroke-dasharray="16 7 5 13" stroke-opacity=".9"/>' +
-      '<circle cx="80" cy="80" r="59" fill="none" stroke="#ff2a5f" stroke-width="1.9" stroke-dasharray="10 9 18 6" stroke-opacity=".9"/>' +
-      '<circle cx="80" cy="80" r="49" fill="none" stroke="#00f0ff" stroke-width="1" stroke-dasharray="3 9" stroke-opacity=".55"/>' +
+      /* displaced chroma copy of the rings */
+      '<g class="imp-glitch-ghost" opacity="0">' +
+        '<circle cx="80" cy="80" r="67" fill="none" stroke="#00f0ff" stroke-width="1.6" stroke-dasharray="16 7 5 13" stroke-opacity=".8"/>' +
+        '<circle cx="80" cy="80" r="59" fill="none" stroke="#ff2a5f" stroke-width="1.6" stroke-dasharray="10 9 18 6" stroke-opacity=".8"/>' +
+      '</g>' +
     '</g>',
     face({
       fill: 'rgba(20,26,41,.66)', stroke: '#00f0ff', sw: 2.4,
@@ -990,8 +983,8 @@
     {
       id: 'v9', tag: 'revised', index: 9, badge: '09', name: 'Cyber Cherry & Cyan', subtitle: 'Gunmetal Arcade Dual-Neon',
       palette: { c1: '#ff2a5f', c2: '#00f0ff', bg: '#090b10', side: '#111520', ink: '#ececf2', muted: '#8890a3' },
-      cues: ['dashed rings + crosshair', 'glitch burst every ~5 s', 'clean between bursts'],
-      note: 'The original dashed rings, crosshair ticks and dots stay exactly as they ship. Every ~5 s a glitch burst runs for about a third of a second — three sliced bands with cyan/magenta chroma edges, stray pixels, a displaced chroma copy of the rings and a stepped sideways jitter — then everything snaps back to clean. Nothing glitchy is visible at rest. All CSS, no JS.',
+      cues: ['dashed rings + crosshair', 'slice-displacement burst', 'clean between bursts'],
+      note: 'The original dashed rings, crosshair ticks and dots stay exactly as they ship. Every 6 s the art tears for about half a second: three horizontal bands cut the rings, the cut content slides sideways inside each band (a real displaced copy, clipped to the band and to the face), cyan/magenta fringes flash on the tear lines, and a chroma copy of the rings jumps behind it. Nothing glitchy is visible at rest. All CSS, no JS.',
       art: v9
     },
     {
