@@ -3471,7 +3471,8 @@ function dismissLeavingPrompt(){
   document.body.classList.remove('leaving-prompt-open');
   document.removeEventListener('keydown',handleLeavingPromptKeydown,true);
   if(leavingPromptReturnFocus?.isConnected&&leavingPromptReturnFocus!==document.body){
-    try{leavingPromptReturnFocus.focus({preventScroll:true}) try{const bp=document.getElementById('browserPage'); if(bp && bp.dataset.prevDisplay!==undefined){bp.style.display=bp.dataset.prevDisplay||''; delete bp.dataset.prevDisplay;} }catch(_){}}catch(_){}
+    try{leavingPromptReturnFocus.focus({preventScroll:true})}catch(_){}
+    try{const bp=document.getElementById('browserPage'); if(bp && bp.dataset.prevDisplay!==undefined){bp.style.display=bp.dataset.prevDisplay||''; delete bp.dataset.prevDisplay;} }catch(_){}
   }
   leavingPromptReturnFocus=null;
 }
@@ -3601,7 +3602,6 @@ function applyStickerSettings(save=true){
   // kick off after a short delay so first paint is done
   setTimeout(fireClash, 1200);
   setTimeout(fireThunder, 1400);
-})();
 })();
 
 
@@ -5212,9 +5212,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.74';
+const APP_VERSION='1.75';
 const VERSION_HISTORY=[
-  {version:'1.72',added:'Reworked image source badges — provenance now drives the verdict.',removed:'Broken transport-sniffing that marked every proxied image as API and let card/detail disagree.',fixed:'Direct means every slide came from Instagram scontent, API means save-free had to supply it, Mixed is hybrid (direct+api in one post) or a photo+video carousel; card and detail tiles now share the same per-slide origin, video-only stays Direct, and the stray API-mislabelling/unknown fallthrough is gone.',tone:'red'}, {version:'1.73',added:'No new features.',removed:'No removals.',fixed:'Card now shows the correct photo/video count before you open it — a summary that came from Open Graph alone no longer freezes the badge at 1. The batch summary now falls back to save-free for counts, API-single guesses retry quickly, and opening a post heals and persists the true count.',tone:'red'}, {version:'1.74',added:'One-click Save from Browser.',removed:'No removals.',fixed:'Browser URL bar now has a Save button at its end — it sends the current Instagram post or reel to Save via URL instantly; other pages show a quick warning toast.',tone:'red'},
+  {version:'1.72',added:'Reworked image source badges — provenance now drives the verdict.',removed:'Broken transport-sniffing that marked every proxied image as API and let card/detail disagree.',fixed:'Direct means every slide came from Instagram scontent, API means save-free had to supply it, Mixed is hybrid (direct+api in one post) or a photo+video carousel; card and detail tiles now share the same per-slide origin, video-only stays Direct, and the stray API-mislabelling/unknown fallthrough is gone.',tone:'red'}, {version:'1.73',added:'No new features.',removed:'No removals.',fixed:'Card now shows the correct photo/video count before you open it — a summary that came from Open Graph alone no longer freezes the badge at 1. The batch summary now falls back to save-free for counts, API-single guesses retry quickly, and opening a post heals and persists the true count.',tone:'red'}, {version:'1.74',added:'One-click Save from Browser.',removed:'No removals.',fixed:'Browser URL bar now has a Save button at its end — it sends the current Instagram post or reel to Save via URL instantly; other pages show a quick warning toast.',tone:'red'}, {version:'1.75',added:'No new features.',removed:'No removals.',fixed:'Fixed blank black screen in preview and desktop — two syntax errors in the leaving-prompt and sticker-settings IIFE left the app unable to start; preview now loads again.',tone:'red'},
   {version:'1.71',added:'No new features.',removed:'No removals.',fixed:'Video tile no longer shows a browser Download in its three-dot menu — stopping the stray download to the system folder and the top-right pop-up so only the chosen save folder is used.',tone:'green'},
   {version:'1.70',added:'No new features.',removed:'No removals.',fixed:'Save via URL tab no longer remembers the last post after reload — clearing its stored state on save and restore.',tone:'green'},
   {version:'1.69',added:'No new features.',removed:'No removals.',fixed:'Renamed historical versions 1.1–1.9 to 1.01–1.09 for consistent two-digit minor formatting.',tone:'green'},
