@@ -5005,30 +5005,24 @@ function getThemedPeekHeadParts(){
       if(head.fill.indexOf('{uid}')!==-1) head.fill=head.fill.replace(/{uid}/g, tid);
       if(head.stroke.indexOf('{uid}')!==-1) head.stroke=head.stroke.replace(/{uid}/g, tid);
     }
-    var hornsM=svg.match(/<g class="imp-horns">([\s\S]*?)<\/g>/);
-    var horns=null;
-    if(hornsM){
-      var hg=hornsM[1];
-      var dMatches=[...hg.matchAll(/d="([^"]+)"/g)];
-      if(dMatches.length){
-        // Prefer a path that contains M56/M62/M57 - the actual horn stroke, not a small circle
-        var best=null;
-        for(var i=0;i<dMatches.length;i++){
-          var d=dMatches[i][1];
-          if(d.indexOf('M56')!==-1||d.indexOf('M62')!==-1||d.indexOf('M57.1')!==-1||d.indexOf('M62 58')!==-1||d.indexOf('M62 60')!==-1) { best=d; break; }
+    // Extract horns group with depth-aware parsing (handles nested <g> like v10 tip circles)
+    var hornsHtml=null;
+    try{
+      var openH = svg.indexOf('<g class="imp-horns">');
+      if(openH>=0){
+        var i = svg.indexOf('>', openH)+1, depth=1, n=svg.length;
+        while(i<n){
+          if(svg.charAt(i)==='<' && svg.charAt(i+1)==='g' && (svg.charAt(i+2)===' '||svg.charAt(i+2)==='>')){ depth++; i+=2; }
+          else if(svg.substr(i,4)==='</g>'){ depth--; if(depth===0){ hornsHtml = svg.slice(svg.indexOf('>',openH)+1, i).replace(/{uid}/g, tid); break; } i+=4; }
+          else i++;
         }
-        if(!best) best=dMatches[0][1];
-        // Extract stroke and width for that path
-        var pathTag=hg.match(/<path[^>]*d="[^"]*"[^>]*>/g)||[];
-        var chosenTag=null;
-        for(var j=0;j<pathTag.length;j++){ if(pathTag[j].indexOf(best)!==-1){ chosenTag=pathTag[j]; break; } }
-        var stroke2=(chosenTag? (chosenTag.match(/stroke="([^"]+)"/)||[])[1]: null)||'#1e3a5f';
-        var sw2=(chosenTag? (chosenTag.match(/stroke-width="([^"]+)"/)||[])[1]: null)||'3.4';
-        if(stroke2&&stroke2.indexOf('{uid}')!==-1) stroke2=stroke2.replace(/{uid}/g,tid);
-        horns={d:best,stroke:stroke2,sw:sw2};
       }
+    }catch(_){ hornsHtml=null; }
+    if(!hornsHtml){
+      var fm=svg.match(/<g class="imp-horns">([\s\S]*?)<\/g>/);
+      if(fm) hornsHtml = fm[1].replace(/{uid}/g, tid);
     }
-    return {head:head,horns:horns};
+    return {head:head,hornsHtml:hornsHtml};
   }catch(_){return null;}
 }
 
@@ -5157,11 +5151,9 @@ function getThemedPeekHeadParts(){
 
     var peekParts=getThemedPeekHeadParts();
     var headCircle=peekParts&&peekParts.head? `<circle cx="${peekParts.head.cx}" cy="${peekParts.head.cy}" r="${peekParts.head.r}" fill="${peekParts.head.fill}" stroke="${peekParts.head.stroke}" stroke-width="${peekParts.head.sw}"/>` : `<circle cx="80" cy="80" r="41" fill="${mouthFill}" stroke="${c1}" stroke-width="3.0"/>`;
-    var hornPath=peekParts&&peekParts.horns? peekParts.horns.d : 'M56 56 L52 72 L71 78 M104 56 L108 72 L89 78';
-    var hornStroke=peekParts&&peekParts.horns? peekParts.horns.stroke : line;
-    var hornSW=peekParts&&peekParts.horns? peekParts.horns.sw : '3.4';
-    // For horns that are single path with multiple Ms (v10/v11), keep as is; for two-path horns (v13) we already combined
-    return `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)}) rotate(${rotDeg.toFixed(1)}) scale(${scale.toFixed(3)}) translate(-80,-80)">${headCircle}<g transform="rotate(${hornWiggle.toFixed(2)},80,72)"><path d="${hornPath}" stroke="${hornStroke}" stroke-width="${hornSW}" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>${eyesAndMouth}</g>`;
+    var hornsContent = (peekParts && peekParts.hornsHtml) ? peekParts.hornsHtml : `<path d="M56 56 L52 72 L71 78 M104 56 L108 72 L89 78" stroke="${line}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
+    // Preserve the themed horns exactly as they are in the side-panel sticker (multi-path for v1/v10/v13 etc.)
+    return `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)}) rotate(${rotDeg.toFixed(1)}) scale(${scale.toFixed(3)}) translate(-80,-80)">${headCircle}<g transform="rotate(${hornWiggle.toFixed(2)},80,72)">${hornsContent}</g>${eyesAndMouth}</g>`;
   }
 
   window.startPostModalSneakPeek=function(){
@@ -5290,8 +5282,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.77';
+const APP_VERSION='1.78';
 const VERSION_HISTORY=[
+  {version:'1.78',added:'No new features.',removed:'No removals.',fixed:'Detail-window sticker now uses the exact side-panel horns: post-modal peek clones the full themed imp-horns (including v1 double-layer, v10 6×C with tip circles, v13 twin fills) via depth-aware extraction instead of a single-path approximation.',tone:'red'},
   {version:'1.77',added:'No new features.',removed:'Cursor eye-tracking that moved the face/outer/halo with the pointer (rev9).',fixed:'Remaining JSON-devour horn detachment: trident laugh now leaves themed horns untouched (only the original default V is stretched) and all JSON variants hide decor while active — stray diamonds gone; sticker eye tracking reverted to pre-rework static eyes.',tone:'red'},
   {version:'1.76',added:'No new features.',removed:'No removals.',fixed:'Sticker horn now stays attached through all animations — JSON-throw, facial expressions and leaving cackle now respect the themed horn shape (2→1+1, 6→3+3, dual-path) instead of hard-coded default; carousel peek head now uses the same themed sticker (face + horns) as the side panel, eliminating mismatched old appearance and stray decor diamonds.',tone:'red'},
   {version:'1.75',added:'No new features.',removed:'No removals.',fixed:'Fixed blank black screen in preview and desktop — two syntax errors in the leaving-prompt and sticker-settings IIFE left the app unable to start; preview now loads again.',tone:'green'},
