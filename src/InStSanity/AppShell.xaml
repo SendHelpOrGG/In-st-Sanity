@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.49  ·  Unified shoulder origins + v3 arms over sticker"
+                   Text="v1.50  ·  Trident shifted slightly right on loading screen"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>

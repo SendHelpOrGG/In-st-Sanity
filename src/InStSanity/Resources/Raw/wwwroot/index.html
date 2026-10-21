@@ -5094,8 +5094,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.49';
+const APP_VERSION='1.50';
 const VERSION_HISTORY=[
+  {version:'1.50',added:'No new features.',removed:'No removals.',fixed:'Trident loading screen nudge — fork/shaft moved ~6px right (CX+30.2→CX+36.2) so the prongs breathe clear of the sticker frame.',tone:'green'},
   {version:'1.49',added:'No new features.',removed:'No removals.',fixed:'All sticker arms now start from the same shoulder points (34,118/126,118) as the JSON-devour reference — v1 Trident (CX+27.5,CY+22.7), v3 Haul now over the sticker (dual 30.7,105.8/93.3,105.8), v5 (34,118), click poke (0.2125/0.7875×0.7375) and devour Trident/Snap unified; arm length and thickness unchanged.',tone:'yellow'},
   {version:'1.48',added:'No new features.',removed:'No removals.',fixed:'Loading screens for 12-15 now use their correct dark solids (#0f0f0f/#0f0f1a/#0a0f1e/#0a0f14) instead of falling back to the accent highlight.',tone:'green'},
   {version:'1.47',added:'No new features.',removed:'No removals.',fixed:'Download and Log in text on the warm themes (12-14) is now dark (#1a160f/#0f0f1a/#0a0f1e) instead of light for readable contrast on the light buttons.',tone:'green'},
@@ -6395,7 +6396,7 @@ function stickerParts(u,o={}){
       else if(t<SLAM+0.22) gy=lerp(CY+8,CY+44,ease.in(hit));
       else                 gy=lerp(CY+44,CY+34,rec);
       const TILT=lerp(-3,8,win(t,1.75,SLAM))*Math.PI/180, DIST=33.8, POM=27.3; // POM = butt, below the fist
-      const gx=CX+30.2;
+      const gx=CX+36.2;
       const tipX=gx+Math.sin(TILT)*DIST, tipY=gy-Math.cos(TILT)*DIST;   // fork end, up in the air
       const pomX=gx-Math.sin(TILT)*POM,  pomY=gy+Math.cos(TILT)*POM;    // butt end, strikes the floor
       E.tri.innerHTML=tridentFork(u,CX+27.5,CY+22.7,gx,gy,tipX,tipY,false,18.2,0.65); // unified: 126,118 @0.598 (was CX+16.9,CY+6)
