@@ -1459,7 +1459,7 @@ function renderPictureMarkup(pic,post,slideIdx=0,allowVideoPlayer=false){
   if(allowVideoPlayer&&pic.isVideo&&pic.videoUrl){
     const posterSrc=posterUrl||wsrvUrl||primarySrc;
     const videoSrc=wrapProxiedImageUrl(pic.videoUrl,false)||pic.videoUrl;
-    return `<video src="${escapeHtml(videoSrc)}" data-raw-video="${escapeHtml(pic.videoUrl)}" poster="${escapeHtml(posterSrc)}" controls preload="metadata" playsinline onerror="handleVideoError(this)" onclick="event.stopPropagation()" style="width:100%;height:100%;object-fit:cover;display:block;background:#0c1011"></video>`;
+    return `<video src="${escapeHtml(videoSrc)}" data-raw-video="${escapeHtml(pic.videoUrl)}" poster="${escapeHtml(posterSrc)}" controls controlsList="nodownload" disablePictureInPicture preload="metadata" playsinline oncontextmenu="return false;" onerror="handleVideoError(this)" onclick="event.stopPropagation()" style="width:100%;height:100%;object-fit:cover;display:block;background:#0c1011"></video>`;
   }
   if(primarySrc)return `<img src="${escapeHtml(primarySrc)}" data-fallback="${escapeHtml(secondSrc)}" onload="markMediaSource(this,'${escapeHtml(sc)}',${slideIdx})" onerror="handlePostImageError(this,'${escapeHtml(sc)}')" alt="${escapeHtml(post?.title||'Instagram post media')}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
   if(typeof pic.artIndex==='number'&&art[pic.artIndex])return art[pic.artIndex];
@@ -5213,8 +5213,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.70';
+const APP_VERSION='1.71';
 const VERSION_HISTORY=[
+  {version:'1.71',added:'No new features.',removed:'No removals.',fixed:'Video tile no longer shows a browser Download in its three-dot menu — stopping the stray download to the system folder and the top-right pop-up so only the chosen save folder is used.',tone:'green'},
   {version:'1.70',added:'No new features.',removed:'No removals.',fixed:'Save via URL tab no longer remembers the last post after reload — clearing its stored state on save and restore.',tone:'green'},
   {version:'1.69',added:'No new features.',removed:'No removals.',fixed:'Renamed historical versions 1.1–1.9 to 1.01–1.09 for consistent two-digit minor formatting.',tone:'green'},
   {version:'1.68',added:'No new features.',removed:'No removals.',fixed:'Bundled UI fixes: collapse window button top-right with doubled gap, open-folder after Download, version dot after version, Open in App rename + font fix, video toggle replaces source labels (hide video-only / hide videos in mixed), revert sticker horns & eye tracking to pre-rev9, Browser exit no longer hides browser, loading sticker sizing + JSON import dyi link + Doc popup.',tone:'yellow'},

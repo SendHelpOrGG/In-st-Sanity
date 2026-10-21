@@ -72,6 +72,14 @@ internal static class WebViewBootstrapper
 
 	static void Configure(CoreWebView2 core, bool isInstagramBrowser)
 	{
+		core.DownloadStarting += (_, args) =>
+		{
+			// Video <video controls> native Download would otherwise save to the OS default folder
+			// and show a top-right download pop-up, bypassing the chosen save folder (Settings
+			// -> /api/download-selected). Cancel it here — the viewer is view-only.
+			try { args.Cancel = true; } catch { }
+		};
+
 		core.NewWindowRequested += (sender, args) =>
 		{
 			args.Handled = true;

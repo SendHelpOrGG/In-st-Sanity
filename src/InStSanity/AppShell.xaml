@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.70  ·  Save via URL tab no longer persists after reload"
+                   Text="v1.71  ·  Video tile no longer offers a native download outside the chosen save folder"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>
