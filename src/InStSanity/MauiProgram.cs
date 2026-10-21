@@ -93,6 +93,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IApiEndpoint, DownloadSelectedEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenDownloadFolderEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ExitAppEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, CollapseWindowEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenInstagramBrowserEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, InstagramBrowserViewEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, InstagramSessionEndpoint>();

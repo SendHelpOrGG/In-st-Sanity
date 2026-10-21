@@ -1286,6 +1286,8 @@ function getCardCoverKey(p){if(!p)return 'none';const cover=String(p.coverThumbn
 const SRC_LABELS={direct:'Direct',api:'API',mixed:'Mixed',unknown:'—'};
 let showSourceBadges=true;
 try{showSourceBadges=localStorage.getItem('stillSane.showSource')!=='0'}catch(_){}
+let hideVideos=false;
+try{hideVideos=localStorage.getItem('stillSane.hideVideos')==='1'}catch(_){}
 function srcKindLabel(k){return SRC_LABELS[k]||'—'}
 function sourceKindFromUrl(u){
   const s=String(u||'');
@@ -1380,7 +1382,7 @@ function updateSrcStatusNote(){
     total++;
     if(p.sourceKind)known++;
   }
-  el.textContent=known===total?`source ${known}/${total}`:`source labels on demand`;
+  el.textContent=known===total?`source ${known}/${total}`:'';
   el.title=known===total
     ? `All ${total} posts have a Direct / API / Mixed verdict.`
     : `${known} of ${total} posts have a Direct / API / Mixed verdict. Remaining labels are resolved as posts are viewed; the app does not fetch the whole library in the background.`;
@@ -1417,9 +1419,20 @@ function toggleSourceBadges(){
   updateAllCardSrcBadges();
   updateSrcStatusNote();
 }
-function toggleVideoVisibility(){return toggleSourceBadges();}
+function toggleVideoVisibility(){
+  hideVideos=!hideVideos;
+  try{localStorage.setItem('stillSane.hideVideos',hideVideos?'1':'0')}catch(_){}
+  document.body.classList.toggle('videos-hidden',hideVideos);
+  const label=hideVideos?'Show videos':'Hide videos';
+  const btns=document.querySelectorAll('[data-role="source-toggle"]');
+  for(const b of btns){b.title=label;b.setAttribute('aria-label',label);b.setAttribute('aria-pressed',String(!hideVideos))}
+  if(currentPost>=0)renderDetail();
+  if(typeof urlTabPost!=='undefined' && urlTabPost)renderSaveUrlTab();
+  render();
+}
 function initSourceBadges(){
   applySourceVisibility();
+  try{document.body.classList.toggle('videos-hidden',hideVideos)}catch(_){}
   updateAllCardSrcBadges();
   updateTileSrcBadges();
 }
@@ -2013,7 +2026,7 @@ function loadCurrentPagePosts(){
   const hint=document.getElementById('jsonImportHint');
   if(hint)hint.textContent=`Page ${currentPage} ready (${pagePosts.length} post${pagePosts.length===1?'':'s'} on this page · ${posts.length} total in ${activeImportFileName}). Click any post to load its photos and videos.`;
 }
-function openUploadJsonModal(){const modal=document.getElementById('uploadJsonModal');const sum=document.getElementById('uploadJsonModalSummary');const mainSum=document.getElementById('jsonFileSummary');if(sum&&mainSum){ if(mainSum.value) sum.value=mainSum.value; else sum.value=''; const linkWrap=document.getElementById('dyiLinkWrap'); if(linkWrap) linkWrap.style.display = mainSum.value ? 'none' : 'flex'; }refreshLastJsonUi();if(modal)modal.classList.add('show')}
+function openUploadJsonModal(){const modal=document.getElementById('uploadJsonModal');const sum=document.getElementById('uploadJsonModalSummary');const mainSum=document.getElementById('jsonFileSummary');if(sum&&mainSum){ if(mainSum.value) sum.value=mainSum.value; else sum.value=''; const linkWrap=document.getElementById('dyiLinkWrap'); if(linkWrap) linkWrap.style.display = (activeImportFileName && posts.length>0) ? 'none' : 'flex'; }refreshLastJsonUi();if(modal)modal.classList.add('show')}
 function openDyiDocPopup(){document.getElementById('dyiDocPopup')?.classList.add('show')}function closeDyiDocPopup(){document.getElementById('dyiDocPopup')?.classList.remove('show')}
 function closeUploadJsonModal(){document.getElementById('uploadJsonModal')?.classList.remove('show');document.getElementById('uploadJsonDropzone')?.classList.remove('drag-over')}
 function handleJsonDragOver(e){e.preventDefault();e.stopPropagation();document.getElementById('uploadJsonDropzone')?.classList.add('drag-over')}
@@ -3449,7 +3462,6 @@ function handleLeavingPromptKeydown(event){
 function showLeavingPrompt(){
   const overlay=document.getElementById('leavingPromptOverlay');
   if(!overlay||overlay.classList.contains('show'))return;
-  sendBrowserView({action:'hide'});
   cancelImpButtonClickFx();
   leavingPromptReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
   renderLeavingSticker();
@@ -3460,6 +3472,9 @@ function showLeavingPrompt(){
   overlay.setAttribute('aria-hidden','false');
   if(typeof window.syncStickerEyesToLastCursor==='function')window.syncStickerEyesToLastCursor();
   document.addEventListener('keydown',handleLeavingPromptKeydown,true);
+}
+function collapseAppWindow(){
+  try{fetch('/api/collapse-window',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>{if(!r.ok)throw new Error('no endpoint');}).catch(()=>toast('Collapse is available in the desktop app. Press Alt+Space+N to minimize.'))}catch(_){toast('Collapse is available in the desktop app.') }
 }
 function dismissLeavingPrompt(){
   const overlay=document.getElementById('leavingPromptOverlay');
@@ -3472,7 +3487,6 @@ function dismissLeavingPrompt(){
   document.removeEventListener('keydown',handleLeavingPromptKeydown,true);
   if(leavingPromptReturnFocus?.isConnected&&leavingPromptReturnFocus!==document.body){
     try{leavingPromptReturnFocus.focus({preventScroll:true})}catch(_){}
-    try{const bp=document.getElementById('browserPage'); if(bp && bp.dataset.prevDisplay!==undefined){bp.style.display=bp.dataset.prevDisplay||''; delete bp.dataset.prevDisplay;} }catch(_){}
   }
   leavingPromptReturnFocus=null;
 }
