@@ -1,11 +1,12 @@
 # Sticker identity pass — preview only
 
 **Nothing in the app was changed.** This folder is a standalone, offline preview. No file under
-`src/` was edited, and nothing was committed or pushed. It exists so the new art can be judged
-before a single line goes into `THEME_STICKER_SVGS`.
+`src/` was edited. It exists so the new art can be judged before a single line goes into
+`THEME_STICKER_SVGS`.
 
-**Rev 7** — 09 gets a glitch pass: signal tears, stray pixels, a chroma ghost of the rings and a
-stepped jitter. Everything else is unchanged from rev 6.
+**Rev 8** — 09's glitch is now a burst instead of a permanent overlay: nothing glitchy is visible at
+rest, and every ~5 s the sticker breaks for about a third of a second before snapping back to clean.
+Everything else is unchanged from rev 6/7.
 
 ```
 preview/sticker-theme-identity/
@@ -62,7 +63,7 @@ at 96 px in the picker:
 | 06 | Cyber Yellow & Lime | **revised** | hazard corners, caution tape and a **thunder hit that picks its own spot**: three strike points (right shoulder, left shoulder, crown), one chosen at random every 1–3 s. Nothing sits on the sticker at rest — bolt, flash, star and ring exist only for the hit (`imp-strike.is-hit`, `imp-thunder*`) |
 | 07 | Molten Amber & Copper | kept | basalt octagon, caldera, lava beads, brick kiln |
 | 08 | Abyssal Cobalt | **revised** | original scalloped shell and wakes restored + angler lure, bubbles, new head treatment |
-| 09 | Cyber Cherry & Cyan | **revised** | original dashed rings, crosshair and dots kept, plus a **glitch pass** — two signal tears with cyan/magenta chroma edges, stray pixels, a displaced chroma copy of the rings that flashes in, and a stepped sideways jitter every 4.4 s (`imp-glitch`, `imp-glitch-ghost`) |
+| 09 | Cyber Cherry & Cyan | **revised** | original dashed rings, crosshair and dots kept, plus a **glitch burst** — three sliced bands with cyan/magenta chroma edges, stray pixels, a displaced chroma copy of the rings and a stepped sideways jitter, all of it invisible at rest and alive for ~0.35 s every 5.2 s (`imp-glitch`, `imp-glitch-a/b/c`, `imp-glitch-ghost`) |
 | 10 | Nordic Twilight | kept | aurora ribbons, snow-capped fjord, layered firs, antlers |
 | 11 | Moss & Brass | kept | laurel wreath, leaf-antlers, acorns, brass rings |
 | 12 | Cinderforge Kiln | **improved** | hammers sit at their **shipping start position** (top corners, heads out) and swing at each other from there, **clashing at random every 1–3 s** (`imp-hammer-l`, `imp-hammer-r`, `imp-clash`); banded heads, anvil with horn and billet, coal bed, drifting embers |
@@ -99,8 +100,11 @@ A few optional micro-animations were added in rev 2 and rev 4, all plain CSS:
 
 ```css
 .imp-eq-bar          /* theme 01 — the equaliser strips level (scaleY, staggered) */
-.imp-glitch          /* theme 09 — the tears snap sideways in bursts */
-.imp-glitch-ghost    /* theme 09 — offset chroma copy of the rings, flickers in */
+.imp-glitch          /* theme 09 — the burst gate: hidden, then on for a few frames */
+.imp-glitch-a/b/c    /* theme 09 — the three sliced bands, staggered inside the burst */
+.imp-glitch-slice    /* theme 09 — the dashes inside a band, sliding sideways */
+.imp-glitch-px       /* theme 09 — stray pixels, flickering */
+.imp-glitch-ghost    /* theme 09 — offset chroma copy of the rings, only mid-burst */
 .imp-ember           /* theme 12 — embers drift up off the forge */
 .imp-strike          /* theme 06 — one of three strike spots, hidden at rest */
 .imp-thunder         /* theme 06 — the bolt, visible only while .is-hit is on */
