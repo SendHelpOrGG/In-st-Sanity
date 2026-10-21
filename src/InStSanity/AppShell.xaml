@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.54  ·  Aatrox laugh to 2.9s"
+                   Text="v1.55  ·  2 laughs weighted 65/35 + hall + fade"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>

@@ -5094,8 +5094,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.54';
+const APP_VERSION='1.55';
 const VERSION_HISTORY=[
+  {version:'1.55',added:'Added second laugh — Aatrox_Original_Laugh_0.ogg (no cuts) joins fight-me; weighted random 65%/35%, both through big hall with fade.',tone:'yellow'},
   {version:'1.54',added:'No new features.',removed:'No removals.',fixed:'Aatrox laugh extended to ~2.9s (was 2.5s) for even longer cut.',tone:'green'},
   {version:'1.53',added:'No new features.',removed:'No removals.',fixed:'Aatrox laugh extended to ~2.5s and starts ~0.38s earlier so it lands before the screen fades on all 5 variants.',tone:'green'},
   {version:'1.52',added:'No new features.',removed:'No removals.',fixed:'Loading-screen laugh swapped — Aatrox fight-me first ~2s (faded) replaces the synth demon laugh, still through the big 3.4s hall.',tone:'green'},
@@ -5549,8 +5550,9 @@ function syl(t,o){
   osc.start(t); osc.stop(t+dur+0.05);
   tapRoom(pan(out,o.pan||0), (o.verb==null?0.45:o.verb), o.sendHp||0, o.sendLp||0, o.room);
 }
-// --- AATROX SAMPLE: first ~2s laugh with fade + big room (same hall as old demon) ---
+// --- AATROX SAMPLES: 2 laughs, weighted random, both through same big hall ---
 var aatroxBuf=null, aatroxReady=null;
+var aatroxBuf2=null, aatroxReady2=null;
 function ensureAatrox(){
   if(aatroxBuf) return Promise.resolve(aatroxBuf);
   if(aatroxReady) return aatroxReady;
@@ -5561,20 +5563,55 @@ function ensureAatrox(){
     .catch(function(e){ console.warn('aatrox sample failed', e); return null; });
   return aatroxReady;
 }
-try{ if(window.AudioContext||window.webkitAudioContext) setTimeout(function(){ try{ ensureAatrox(); }catch(e){} }, 420); }catch(e){}
+function ensureAatrox2(){
+  if(aatroxBuf2) return Promise.resolve(aatroxBuf2);
+  if(aatroxReady2) return aatroxReady2;
+  try{ ensureAudio(); }catch(e){}
+  var url2='Aatrox_Original_Laugh_0.ogg';
+  aatroxReady2 = fetch(url2).then(function(r){ if(!r.ok) throw new Error('fetch '+r.status); return r.arrayBuffer(); })
+    .then(function(ab){ return new Promise(function(res,rej){ try{ ctx.decodeAudioData(ab, function(b){ aatroxBuf2=b; res(b); }, rej); }catch(e){ rej(e); } }); })
+    .catch(function(e){ console.warn('aatrox Original Laugh failed', e); return null; });
+  return aatroxReady2;
+}
+try{ if(window.AudioContext||window.webkitAudioContext) setTimeout(function(){ try{ ensureAatrox(); ensureAatrox2(); }catch(e){} }, 420); }catch(e){}
 function playAatroxLaugh(t0){
   var room=laughRoom();
   if(!ctx) try{ ensureAudio(); }catch(e){}
-  if(!aatroxBuf){
-    ensureAatrox().then(function(b){ if(b) playAatroxLaugh(t0); });
+  // 65% fight-me (2.9s cut), 35% Original Laugh (no cuts, full)
+  var useFightMe = Math.random() < 0.65;
+  var buf = useFightMe ? aatroxBuf : aatroxBuf2;
+  var isFightMe = useFightMe;
+  if(!buf){
+    // try to load picked one, fallback to other if available
+    var need = isFightMe ? ensureAatrox() : ensureAatrox2();
+    need.then(function(b){ if(b) playAatroxLaugh(t0); else {
+      // fallback to the other buffer if it exists
+      var other = isFightMe ? aatroxBuf2 : aatroxBuf;
+      var otherNeed = isFightMe ? ensureAatrox2() : ensureAatrox();
+      if(other) { // we have other already - temporarily flip chance for this retry
+        // force play of available one
+        var tmp = aatroxBuf; aatroxBuf = aatroxBuf2; aatroxBuf2 = tmp; // swap to trick recursion pick
+        playAatroxLaugh(t0);
+        aatroxBuf2 = aatroxBuf; aatroxBuf = tmp;
+      } else otherNeed.then(function(b2){ if(b2) playAatroxLaugh(t0); });
+    }});
     return;
   }
-  var t = t0 - 0.38; // start ~0.38s earlier so laugh lands before fade-out on all 5 screens
+  var t = t0 - 0.38;
   if(t < ctx.currentTime) t = ctx.currentTime + 0.02;
-  var startOff=0.02, dur=2.90; // first ~2.9s as requested
-  if(aatroxBuf.duration < startOff+dur) dur=Math.max(0.4, aatroxBuf.duration-startOff);
-  var fadeDur=0.44, fadeStart=t+dur-fadeDur;
-  var src=ctx.createBufferSource(); src.buffer=aatroxBuf;
+  var startOff, dur, fadeDur;
+  if(isFightMe){
+    startOff=0.02; dur=2.90;
+    if(buf.duration < startOff+dur) dur=Math.max(0.4, buf.duration-startOff);
+    fadeDur=0.44;
+  } else {
+    // Original Laugh_0 - no cuts, play full with fade at end
+    startOff=0.0; dur=buf.duration;
+    // keep a little headroom, fade last ~0.42s (or 30% of short clips)
+    fadeDur = dur > 1.2 ? 0.42 : Math.max(0.18, dur*0.32);
+  }
+  var fadeStart=t+dur-fadeDur;
+  var src=ctx.createBufferSource(); src.buffer=buf;
   var g=ctx.createGain();
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(0.88, t+0.03);
