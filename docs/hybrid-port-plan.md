@@ -48,9 +48,10 @@ const SERVER_API_BASE="https://1ddc5d8b8d7a67.lhr.life"   // ← dead dev tunnel
 - It calls a backend on **port 8000** with 10 `/api/*` routes (§4).
 - When the backend is absent it falls back to third-party scrapers (`microlink.io`, `r.jina.ai`)
   and an image proxy (`wsrv.nl`) — which is also how the author ran it in a browser.
-- Its "built-in Instagram browser" is **not** an iframe: `POST /api/browser/action` and
-  `GET /api/browser/state?screenshot=1` mean the backend ran a **headless browser** and shipped
-  screenshots to the UI, which renders them.
+- The legacy Python backend's browser used `POST /api/browser/action` and
+  `GET /api/browser/state?screenshot=1` to run a **headless browser** and ship screenshots to its
+  UI. Those routes were not registered by the MAUI host; its old login card was only a mock. v1.17
+  removes that form and opens Instagram's real site in a native WebView2 overlay.
 
 **Consequence:** a faithful desktop port is mostly *native work* — the MAUI app must **become that
 backend**. The web layer then needs almost no changes (§6), which is exactly why fidelity is 100%.
@@ -78,13 +79,17 @@ backend**. The web layer then needs almost no changes (§6), which is exactly wh
 │  │    /api/resolve-post|batch|owners|cached-posts   → Instagram (direct HTTP) │  │
 │  │    /api/image|download-photo|download-selected   → media + file writing    │  │
 │  │    /api/save-imported-list                       → %LOCALAPPDATA% store    │  │
-│  │    /api/browser/action|state                     → hidden WebView2 session │  │
+│  │    /api/open-instagram-browser                   → show native overlay      │  │
 │  └──────────────────────────────────────────────────┬─────────────────────────┘  │
 │                                                     │                          │
-│  ┌──────────────────────────┐   cookies    ┌────────▼───────────────────────┐   │
-│  │ HttpClient + CookieJar   │◄─────────────│  Hidden WebView2 = IG session  │   │
-│  │ (direct, no proxies)     │              │  login, cookies, screenshots   │   │
-│  └──────────────────────────┘              └────────────────────────────────┘   │
+│  ┌──────────────────────────┐    HTTPS     ┌───────▼────────────────────────┐   │
+│  │ HttpClient + resolver    │──────────────►│ Instagram public endpoints     │   │
+│  │ (direct, no proxies)     │               └─────────────────────────────────┘   │
+│  └──────────────────────────┘                                                   │
+│  ┌───────────────────────────────────────────────────────────────────────────┐  │
+│  │ Lazy MAUI WebView2 overlay = real Instagram/Meta pages + persistent login │  │
+│  │ Separate from the resolver; browser cookies are not mirrored to HttpClient│  │
+│  └───────────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -98,10 +103,10 @@ Five moving parts:
    so the web app takes its intended "local backend" fast path.
 3. **WebView2 hosting the web app** — Chromium, so glass (`backdrop-filter`), gradients,
    `clip-path`, keyframes, SVG animation and WebAudio all behave exactly as in the browser.
-4. **Hidden WebView2 as the Instagram session** — real login, real cookies, and
-   `CoreWebView2.CapturePreviewAsync` provides the screenshots the legacy `/api/browser/*`
-   contract expects. This is also where "direct HTTP" gets its teeth: session cookies are mirrored
-   into the `HttpClient` cookie jar, so C# fetches see the same logged-in view as the browser.
+4. **Native Instagram browser overlay** — a second WebView2 is created lazily by `MainPage` and
+   loads Instagram's actual site (with Instagram/Meta-only top-level navigation). Its persistent
+   WebView2 profile keeps sign-in cookies on this PC. The resolver does not yet read or mirror those
+   cookies, so browsing and post resolution remain separate.
 5. **Native file services** — folder/file pickers, a download sink (`WebView2.DownloadStarting`),
    media writing, and the persisted "imported list" store.
 
@@ -126,7 +131,7 @@ src/InStSanity/
 ├─ InStSanity.csproj
 ├─ MauiProgram.cs                    DI: host, services, api, window
 ├─ App.xaml(.cs)                     dark theme, window creation
-├─ MainPage.xaml(.cs)                hosts the WebView2 (no longer an empty placeholder)
+├─ MainPage.xaml(.cs)                app WebView + lazy Instagram WebView2 overlay
 ├─ Services/
 │  ├─ WebHost/                       TcpListener micro-server (statics + routing + ranges)
 │  ├─ Api/
@@ -134,7 +139,7 @@ src/InStSanity/
 │  │  ├─ MediaProxy.cs               image / download-photo (streaming, direct fetch)
 │  │  ├─ DownloadService.cs          download-selected → files on disk
 │  │  ├─ PostStore.cs                save-imported-list / cached-posts
-│  │  └─ IgSessionService.cs         browser/action + browser/state (hidden WebView2)
+│  ├─ Browser/                        native browser-window bridge + URL policy
 │  ├─ Instagram/                     direct HTTP: embed parse, Polaris/graphql parse, cookie jar
 │  └─ Platform/                      pickers, download sink, single instance, title bar
 ├─ ViewModels/                       MainPageViewModel (view-facing state only)
@@ -163,10 +168,10 @@ Every route the web app calls, as the JS actually uses it:
 | `/api/cached-posts` | GET | — | cached post records | JSON file in `%LOCALAPPDATA%\InStSanity\cache` |
 | `/api/image` | GET | `?url=<mediaUrl>` | image bytes | Streaming proxy with `Referer`/UA headers so Instagram CDN links resolve; caches to disk |
 | `/api/download-photo` | GET | `?url=<mediaUrl>` | file bytes | Same as `/api/image` with `Content-Disposition: attachment` |
-| `/api/download-selected` | POST | `{folder, items[]}` | `{ok, files:[{filename,…}]}` | **Native**: expand `~/…`, create folder, download each item (HTTP or reuse cache), write files, return the written paths. Folder picker offered when the path is invalid |
+| `/api/download-selected` | POST | `{folder, items[]}` | `{ok, savedCount, failedCount, files:[{filename,ok,error}]}` | **Native**: expand `~/…`, create folder, decode image data or fetch trusted Instagram media URLs (reusing cache), save each file, and report confirmed per-item results. |
+| `/api/browse-folder` | POST | — | `{ok, path}` or `{ok, cancelled}` | Opens the Windows `FolderPicker` owned by the MAUI window; returns the selected path to the settings UI. |
 | `/api/save-imported-list` | POST | imported list JSON | ok | Atomic write to the app data store (replaces browser-only persistence) |
-| `/api/browser/action` | POST | `{action:'navigate'\|'login'\|…, url, username, password}` | browser state (§ below) | Drives the **hidden WebView2** |
-| `/api/browser/state` | GET | `?screenshot=1` | `{loggedIn, username, url, screenshot}` | `loggedIn`/`username`/`url` from the hidden WebView2 + `CapturePreviewAsync` → base64 PNG for `screenshot` |
+| `/api/open-instagram-browser` | POST | `{url?}` (empty opens/reuses current page) | `{ok}` | Opens the lazy native WebView2 overlay; accepts secure Instagram/Meta URLs only |
 
 Notes for the implementer:
 
@@ -192,9 +197,9 @@ Notes for the implementer:
 | JSON import (file picker + drag-drop) | **web layer** | none — WebView2 supports both natively |
 | Persistence (23 `localStorage` keys, IndexedDB GIF) | **web layer** | none — pinned WebView2 user-data folder |
 | `save-imported-list`, `cached-posts` | **native API** | implement + store |
-| Post/media resolution (10 endpoints) | **native API** | direct HTTP, cookie-aware |
+| Post/media resolution (10 endpoints) | **native API** | direct HTTP; browser-cookie bridge not yet implemented |
 | Downloads to a folder, media proxy/cache | **native API** | streaming + disk cache |
-| Instagram session (login, cookies, screenshots) | **native API + hidden WebView2** | replaces the original headless browser |
+| Instagram browsing/sign-in | **native MAUI WebView2 overlay** | persistent profile; no app credential form or cookie bridge |
 | Folder/file pickers, external links (`window.open`), `<a download>` sink | **native platform** | `FolderPicker`, `NewWindowRequested`, `DownloadStarting` |
 | Window chrome, single instance, icon, packaging | **native platform** | MAUI + WinUI |
 
@@ -229,9 +234,9 @@ Each phase is independently buildable and testable on your Windows machine, and 
 own. Sizes are relative effort, not calendar time.
 
 ### Phase 1 — Native host boots the app · ✅ done
-- `MainPage` hosts a `WebView`; loopback micro-server serves `wwwroot` statics with ranges + MIME.
+- `MainPage` hosts the app `WebView` and lazily creates the native Instagram browser overlay; loopback serves `wwwroot` statics with ranges + MIME.
 - Window: dark chrome, 1440×900 default, min size, title, icon; single-instance guard.
-- WebView2 user-data folder pinned to `%LOCALAPPDATA%\InStSanity\WebView2` (keeps localStorage/IndexedDB).
+- WebView2 user-data folder pinned to `%LOCALAPPDATA%\InStSanity\WebView2` (keeps localStorage/IndexedDB and browser sign-in cookies).
 - `NewWindowRequested` → system browser; Debug builds enable dev tools.
 - **Verified in CI** (`build` + `smoke` jobs green): the app compiles, publishes self-contained,
   boots, serves the web document with range support, answers the `/api/*` pipeline, and the
@@ -250,8 +255,8 @@ Implementation notes that came out of building it:
   readable from anywhere.
 
 ### Phase 2 — Files & downloads · `M`
-- `/api/image`, `/api/download-photo`, `/api/download-selected`, `/api/save-imported-list`, `/api/cached-posts`.
-- Native folder picker + path expansion (`~/Pictures/Instagram`), atomic JSON writes, disk cache.
+- `/api/image`, `/api/download-photo`, `/api/download-selected`, `/api/browse-folder`, `/api/save-imported-list`, `/api/cached-posts`.
+- Native folder picker + path expansion (`~/Pictures/Instagram`), selected-photo writes, atomic JSON writes, disk cache.
 - `DownloadStarting` sink for the one `<a download>` path; failures toast in the UI as today.
 - **Done when:** selecting posts and hitting Download writes real image files to the chosen folder
   and the UI reports the same per-file results it used to get from the backend.
@@ -261,12 +266,14 @@ Implementation notes that came out of building it:
   against the public captioned embed, no session required (`InstagramResolver.cs`). An opened
   post, a page of cards and the owner index all resolve; see *Post resolution* in
   `docs/web-layer.md`.
-- Remaining: hidden WebView2 login (`/api/browser/action|state`, `CapturePreviewAsync` screenshots).
-- Cookie mirror WebView2 → `CookieContainer` → `HttpClient`.
-- `/api/resolve-post`, `/api/resolve-batch`, `/api/resolve-owners` with concurrency caps,
-  disk cache, and graceful `ok:false` so the app's own source badges/status notes still apply.
-- **Done when:** the in-app browser modal logs in, resolution fills owner/media/metadata for a page
-  of posts, and blocked/failed posts degrade exactly as the web app already handles them.
+- **3b added in v1.17:** a lazily created native WebView2 overlay loads Instagram's real website;
+  sign-in happens on Instagram and the shared app profile persists across restarts. The old simulated
+  credential form and startup `/api/browser/state` probe are removed.
+- Remaining: optional WebView2-cookie → `CookieContainer` bridge, if needed for authenticated
+  post resolution. Until then, browser sign-in does not alter the resolver's public/unauthenticated
+  behavior.
+- **Done when:** the browser's real Instagram pages remain usable and, if the cookie bridge is later
+  implemented, resolution fills owner/media/metadata while blocked posts degrade gracefully.
 
 ### Phase 4 — Polish & distribution · `M`
 - Externalise base64 assets (§6.3); boot/splash parity with the web app's loading screens.
@@ -300,7 +307,7 @@ I cannot compile Windows MAUI targets in this Linux sandbox — no .NET SDK here
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Instagram blocks unauthenticated scraping | Resolution partially fails | Session cookies from the hidden WebView2; disk cache; `ok:false` → app's existing badges/degraded states; JSON import stays the reliable path |
+| Instagram blocks unauthenticated scraping | Resolution partially fails | The persistent browser profile permits normal Instagram browsing, but its cookies are not yet used by the resolver; `ok:false` → app's existing badges/degraded states; JSON import stays the reliable path |
 | WebView2 Runtime missing on target machine | App won't render | Evergreen runtime ships with Windows 11 / most Windows 10; MSIX declares the dependency; add a friendly first-run check |
 | Port 8000 occupied | API calls fail | Probe free port, serve there (relative paths still resolve); surface the chosen port in logs |
 | Third-party dependency on Chromium behaviour | — | none: the web layer already targets Chromium |

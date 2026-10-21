@@ -35,6 +35,8 @@ public sealed class LoopbackHost : IAsyncDisposable
 	const int MaxBodyBytes = 64 * 1024 * 1024;
 	const int AcceptBacklog = 64;
 	static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
+	static readonly TimeSpan FolderPickerTimeout = TimeSpan.FromMinutes(5);
+	static readonly TimeSpan SelectedDownloadTimeout = TimeSpan.FromMinutes(5);
 	static readonly byte[] HeadTerminator = { 13, 10, 13, 10 };
 
 	readonly IReadOnlyDictionary<string, IApiEndpoint> _endpoints;
@@ -261,6 +263,16 @@ public sealed class LoopbackHost : IAsyncDisposable
 				if (request is null)
 				{
 					return;
+				}
+
+				// Native dialogs and media downloads can outlive the short static/API timeout.
+				if (request.Path.Equals("/api/browse-folder", StringComparison.OrdinalIgnoreCase))
+				{
+					timeout.CancelAfter(FolderPickerTimeout);
+				}
+				else if (request.Path.Equals("/api/download-selected", StringComparison.OrdinalIgnoreCase))
+				{
+					timeout.CancelAfter(SelectedDownloadTimeout);
 				}
 
 				var response = await RouteAsync(request, token).ConfigureAwait(false);

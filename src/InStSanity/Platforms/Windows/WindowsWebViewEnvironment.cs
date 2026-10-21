@@ -9,8 +9,8 @@ namespace InStSanity.Platforms.Windows;
 /// <list type="bullet">
 ///   <item><description>
 ///     <c>WEBVIEW2_USER_DATA_FOLDER</c> — pins the browser profile to the app's own folder.
-///     Without it the web layer's <c>localStorage</c> settings, its IndexedDB background GIF
-///     and its Instagram session would be scattered or lost between runs.
+///     Without it the web layer's <c>localStorage</c> settings, its IndexedDB background GIF,
+///     and the in-app browser's Instagram sign-in cookies would be lost between runs.
 ///   </description></item>
 ///   <item><description>
 ///     <c>--autoplay-policy=no-user-gesture-required</c> — the UI sounds are synthesised with

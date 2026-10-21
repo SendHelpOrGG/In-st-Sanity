@@ -16,7 +16,8 @@
 		<!-- App identity -->
 		<ApplicationTitle>In-st-Sanity</ApplicationTitle>
 		<ApplicationId>com.instsanity.app</ApplicationId>
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationIcon>Resources\AppIcon\appicon.ico</ApplicationIcon>
+		<ApplicationDisplayVersion>1.69</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<!-- Unpackaged desktop app: run it straight from the build output (F5 / dotnet run), no MSIX required. -->
@@ -26,6 +27,8 @@
 	<ItemGroup>
 		<!-- App icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#15181D" />
+		<!-- Win32 icon for the exe + a copy at the app root so the window can pin the same icon. -->
+		<Content Include="Resources\AppIcon\appicon.ico" CopyToOutputDirectory="PreserveNewest" TargetPath="appicon.ico" />
 
 		<!-- Splash screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#111318" BaseSize="128,128" />

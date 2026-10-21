@@ -8,7 +8,7 @@
 
     <!--
         RequestedTheme="Dark" puts the native Windows controls (fly-out pane,
-        text boxes, scrollbars, window title bar) in dark mode so they match
+        text boxes and scrollbars) in dark mode so they match
         Resources/Styles/Colors.xaml.
     -->
 

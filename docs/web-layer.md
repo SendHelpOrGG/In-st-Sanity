@@ -227,9 +227,17 @@ afterwards. That is what the three resolve routes are for:
 | route | caller | job |
 | --- | --- | --- |
 | `GET /api/resolve-post?url=…[&summary=1]` | an opened post, a cover that failed | one post, summary or full carousel |
-| `GET /api/resolve-batch?urls=a,b,c` | the card grid (chunks of 10) | summary for a page of posts |
-| `GET /api/resolve-owners?urls=a,b,c` | whole-library search index (chunks of 20) | account name only |
-| `GET /api/cached-posts` | startup restore | what is already resolved |
+| `GET /api/resolve-batch?urls=a,b,c` | the card grid (chunks of 5) | summary for the visible page |
+| `GET /api/resolve-owners?urls=a,b,c` | explicit whole-library account search (chunks of 20) | account name only |
+| `GET /api/cached-posts` | fallback startup restore | server-side resolved posts when no local library is available |
+
+The imported JSON is kept in IndexedDB as the most-recent upload, while a compact copy of the
+library (including resolved card summaries and selections) is kept in `localStorage`. Startup
+restores that compact copy without re-indexing all posts; it silently imports the recent JSON only
+when the compact copy is missing. Owner-name indexing is opt-in from an empty search, and media
+source labels are resolved as posts are viewed. Failed visible-page summary lookups are persisted
+with a six-hour retry cooldown, so restarting or revisiting a page does not immediately repeat the
+same failed requests.
 
 `InstagramResolver` fetches two public pages **in parallel**, and asks for them as a
 link-preview crawler rather than a browser:
@@ -246,7 +254,17 @@ the original `server.py` did with `BOT_UAS`. With a browser UA every fetch ended
 `i.instagram.com/api/v1/media/{id}/info/` JSON endpoint remains as a last resort after both
 HTML paths fail.
 
-Each fetch is capped at 7 s, so a post costs at most one timeout instead of two. The resolver then walks the JSON blobs the page embeds (`contextJSON`, the
+Each fetch is capped at 7 s, so a post costs at most one timeout instead of two.
+
+When neither page yields a usable result — or the carousel is incomplete, or a video has no
+playable URL — the resolver asks **save-free.net** (`POST /api/ajaxSearch`), the same third
+party `server.py` used. That response is Hunter-encoded JS, so `SaveFreeClient` decodes it
+(`eval(function(p,a,c,k,e,d){…})` → `innerHTML = "…"` → markup), unwraps the base64url
+`token=` download links into real CDN URLs, and detects video slides from `icon-dlvideo`,
+`Download Video`, `.mp4`, or the `efg` parameter. It is a last resort and capped at 6 s;
+the batch deadline cancels it rather than letting it outlive the caller.
+
+The resolver then walks the JSON blobs the page embeds (`contextJSON`, the
 `data-sjs` `xdt_shortcode_media` payload, the older Polaris `image_versions2` one) for the
 first object that has **both** an id (`code`/`shortcode`/`pk`) and media, which is what makes
 a carousel resolve as a whole instead of as one slide. Missing `display_url` on a carousel
@@ -278,12 +296,14 @@ outage. That distinction is exactly what used to print *server unreachable* unde
 
 ```json
 {"ok":true,"port":8000,"url":"http://localhost:8000/?v=…",
- "endpoints":["/api/cached-posts","/api/download-photo","/api/image",
-              "/api/resolve-batch","/api/resolve-owners","/api/resolve-post"],
+ "endpoints":["/api/browse-folder","/api/cached-posts","/api/download-photo","/api/download-selected",
+              "/api/image","/api/resolve-batch","/api/resolve-owners","/api/resolve-post"],
  "resolve":{"attempts":40,"resolved":37,"failed":3,"cached":37,"lastFailure":"http_429"}}
 ```
 
 - `/api/resolve-*` missing from `endpoints` → the executable is an older build.
+- `/api/browse-folder` is the Windows-owned native picker used by Settings; the static preview deliberately does not implement it.
+- `/api/download-selected` writes the selected photo payloads into the chosen folder; the static preview deliberately does not implement downloads.
 - `attempts: 0` after the library loads → the page never called resolve.
 - `lastFailure: "unreachable"`/`"timeout"` → Instagram is not reachable from that machine.
 - `lastFailure: "login_wall"` → Instagram refused the logged-out view; that is what the
@@ -363,10 +383,9 @@ change.
 
 ## What the patch does *not* fix
 
-The removed endpoints (`/api/resolve-post`, `/api/resolve-batch`, `/api/resolve-owners`,
-`/api/cached-posts`, `/api/download-selected`, `/api/save-imported-list`, `/api/browser/*`) currently
-answer `501 not_implemented`, which the app already handles: it shows its own source badges and
-fallback artwork. They are implemented in phases 2 and 3 of the plan.
+The static preview does not implement `/api/*`: the Python preview server returns `501` by design.
+In the Windows app, `/api/download-selected` and `/api/browse-folder` are native routes; the remaining
+unimplemented routes include `/api/save-imported-list` and `/api/browser/*`.
 
 ## Five JSON-devour cinematics
 
@@ -428,3 +447,17 @@ inside `.imp-grin` and hides the plain grin path instead; the drawing is identic
 
 To see a specific variant, append `?jsonThrow=1..5` or set `localStorage['stillSane.jsonThrowVariant']`
 to a number; without an override the roll is uniform.
+
+## Page navigation and media loading
+
+The library still renders only the current 20-post page. Its background summary resolver now batches up
+to 10 posts per request (instead of five) and cancels the previous page's pending request when the
+user navigates again. This prevents responses for an old page from continuing to occupy the resolver
+while the new page is loading.
+
+When the desktop resolver sees Instagram's sized image candidates, it keeps the full-resolution URL
+for detail photos and downloads, and exposes the largest cover candidate no wider than 480 px for
+library cards. Video cards and detail-player posters use that smaller still image; video playback
+URLs and selected-photo download URLs are unchanged. Cards remain lazy-loaded and request low
+priority. If Instagram supplies no smaller candidate, the UI falls back to the original cover URL.
+The `/api/image` proxy still serves the requested upstream bytes as-is; it does not resize images.

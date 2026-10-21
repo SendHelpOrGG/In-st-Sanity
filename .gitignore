@@ -55,6 +55,13 @@ coverage*.xml
 *.coverage
 *.coveragexml
 
+# ── Instagram credentials ────────────────────────────────────────────────────
+# ig_session.json holds live session cookies. Committing it would hand anyone with
+# read access your logged-in Instagram account. Keep it local, or keep it nowhere.
+ig_session.json
+*_session.json
+cookies*.json
+
 # ── OS junk ──────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

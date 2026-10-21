@@ -1,3 +1,19 @@
 <svg width="456" height="456" viewBox="0 0 456 456" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="456" height="456" fill="#15181D"/>
+  <defs>
+    <linearGradient id="brandGradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="456" y2="456">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  <!-- maximized sticker: the badge's stroke outer edge fills the canvas, corners transparent -->
+  <g transform="translate(228 228) scale(1.19060) translate(-228 -228)">
+    <rect x="44" y="44" width="368" height="368" rx="92" fill="#0f172a" stroke="url(#brandGradient)" stroke-width="15"/>
+    <g transform="translate(127.2 127.2) scale(8.4)" stroke="url(#brandGradient)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5.8 5.8 5.5 8 10.6 10.2M18.2 5.8 18.5 8 13.4 10.2"/>
+      <circle cx="8.3" cy="11.6" r="1.35" fill="url(#brandGradient)" stroke="none"/>
+      <circle cx="15.7" cy="11.6" r="1.35" fill="url(#brandGradient)" stroke="none"/>
+      <path d="M6.4 14.3Q12 19.5 17.6 14.3"/>
+    </g>
+  </g>
 </svg>

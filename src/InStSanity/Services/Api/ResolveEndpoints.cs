@@ -23,6 +23,7 @@ static class ResolveJson
 		photoCount = post.PhotoCount,
 		videoCount = post.VideoCount,
 		coverUrl = post.CoverUrl,
+		coverThumbnailUrl = post.CoverThumbnailUrl,
 		coverIsVideo = post.CoverIsVideo,
 		summaryOnly = true,
 		summaryResolved = post.SummaryResolved,
@@ -42,8 +43,13 @@ static class ResolveJson
 public sealed class ResolvePostEndpoint : IApiEndpoint
 {
 	readonly InstagramResolver _resolver;
+	readonly Services.Browser.InstagramBrowserWindowService _browserWindow;
 
-	public ResolvePostEndpoint(InstagramResolver resolver) => _resolver = resolver;
+	public ResolvePostEndpoint(InstagramResolver resolver, Services.Browser.InstagramBrowserWindowService browserWindow)
+	{
+		_resolver = resolver;
+		_browserWindow = browserWindow;
+	}
 
 	public string Route => "/api/resolve-post";
 
@@ -61,13 +67,20 @@ public sealed class ResolvePostEndpoint : IApiEndpoint
 		}
 
 		var summary = string.Equals(request.QueryValue("summary"), "1", StringComparison.Ordinal);
+		await _browserWindow.EnsureSessionCookiesAsync().ConfigureAwait(false);
 		var post = summary
 			? await _resolver.ResolveSummaryAsync(url, cancellationToken).ConfigureAwait(false)
 			: await _resolver.ResolveAsync(url, cancellationToken).ConfigureAwait(false);
 
 		if (post is null)
 		{
-			return HttpResponseInfo.Json(new { ok = false, error = "unresolved", url });
+			return HttpResponseInfo.Json(new
+			{
+				ok = false,
+				error = "unresolved",
+				url,
+				reason = _resolver.FailureReasonFor(url) ?? "unresolved",
+			});
 		}
 
 		return HttpResponseInfo.Json(summary ? ResolveJson.Summarize(post) : post);
@@ -95,8 +108,13 @@ public sealed class ResolveBatchEndpoint : IApiEndpoint
 	static readonly TimeSpan Deadline = TimeSpan.FromSeconds(9);
 
 	readonly InstagramResolver _resolver;
+	readonly Services.Browser.InstagramBrowserWindowService _browserWindow;
 
-	public ResolveBatchEndpoint(InstagramResolver resolver) => _resolver = resolver;
+	public ResolveBatchEndpoint(InstagramResolver resolver, Services.Browser.InstagramBrowserWindowService browserWindow)
+	{
+		_resolver = resolver;
+		_browserWindow = browserWindow;
+	}
 
 	public string Route => "/api/resolve-batch";
 
@@ -125,6 +143,8 @@ public sealed class ResolveBatchEndpoint : IApiEndpoint
 		{
 			return EmptyBatch();
 		}
+
+		await _browserWindow.EnsureSessionCookiesAsync().ConfigureAwait(false);
 
 		using var gate = new SemaphoreSlim(Parallelism);
 		using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -164,6 +184,24 @@ public sealed class ResolveBatchEndpoint : IApiEndpoint
 		foreach (var post in resolved)
 		{
 			byShortcode[post.Shortcode] = post;
+		}
+
+		// Tell the grid why a post is missing, so its card can say "restricted" instead
+		// of silently keeping the fallback artwork.
+		foreach (var url in urls)
+		{
+			var shortcode = _resolver.ShortcodeFromUrl(url);
+			if (shortcode.Length == 0 || byShortcode.ContainsKey(shortcode))
+			{
+				continue;
+			}
+
+			byShortcode[shortcode] = new
+			{
+				ok = false,
+				shortcode,
+				reason = _resolver.FailureReasonFor(url) ?? "unresolved",
+			};
 		}
 
 		return HttpResponseInfo.Json(new { ok = true, byShortcode, posts = resolved });

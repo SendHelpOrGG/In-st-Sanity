@@ -924,7 +924,9 @@ function play(variant, fileName, totalCount){
   let finaleStart = -1;
   let tetherRaised = false;
   // Anchor the forearm at the sticker's lower-right shoulder, outside the face circle.
-  const shoulderX = impPos.x + 54, shoulderY = impPos.y + 48;
+  // Unified shoulder — right imaginary shoulder same as devour (126,118)
+  const _unifiedShC = (function(){ try{ let e=document.getElementById('imp-sh-R'); if(!e){ e=document.createElementNS('http://www.w3.org/2000/svg','circle'); e.setAttribute('id','imp-sh-R'); e.setAttribute('class','imp-extra'); e.setAttribute('cx','126'); e.setAttribute('cy','118'); e.setAttribute('r','0.6'); e.setAttribute('fill','none'); if(svg) svg.appendChild(e);} const r=e.getBoundingClientRect(); return {x:r.left+r.width/2, y:r.top+r.height/2}; }catch(_){ return {x:impPos.x+30, y:impPos.y+25}; }})();
+  const shoulderX = _unifiedShC.x, shoulderY = _unifiedShC.y;
   const fileX = startFilePos.x, fileY = startFilePos.y;
   const hitTip = { x: fileX, y: fileY + 3 };
   const aimAngleRad = Math.atan2(hitTip.y - shoulderY, hitTip.x - shoulderX);
@@ -1499,7 +1501,9 @@ function play(variant, fileName, totalCount){
         const finishRaw = cardsManifested ? clamp01((postSnapAge - finishStartAfterSnap) / finishDuration) : 0;
         const finish = easeInOutCubic(finishRaw);
         const finishing = cardsManifested && postSnapAge >= finishStartAfterSnap;
-        const shoulderX = impPos.x + 50, shoulderY = impPos.y + 43; // Start the arm slightly nearer the head.
+        // Unified shoulder — right imaginary shoulder same as devour (126,118)
+        const shoulderX = (function(){ try{ let e=document.getElementById('imp-sh-R'); if(!e){ e=document.createElementNS('http://www.w3.org/2000/svg','circle'); e.setAttribute('id','imp-sh-R'); e.setAttribute('class','imp-extra'); e.setAttribute('cx','126'); e.setAttribute('cy','118'); e.setAttribute('r','0.6'); e.setAttribute('fill','none'); if(svg) svg.appendChild(e);} const r=e.getBoundingClientRect(); return r.left+r.width/2; }catch(_){ return impPos.x+30; }})();
+        const shoulderY = (function(){ try{ let e=document.getElementById('imp-sh-R'); const r=e.getBoundingClientRect(); return r.top+r.height/2; }catch(_){ return impPos.y+25; }})();
         const handReturn = finishing ? finish : 0;
         const handX = impPos.x + 95 + snapQ * 15 - handReturn * 22;
         const handY = impPos.y + 34 - snapQ * 14 + handReturn * 18;

@@ -1,43 +1,53 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="InStSanity.MainPage"
-             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:InStSanity.ViewModels"
-             x:DataType="vm:MainPageViewModel"
-             Title="{Binding Title}"
-             BackgroundColor="{StaticResource AppBackground}">
+             x:Class="InStSanity.MainPage"
+             Shell.NavBarIsVisible="False"
+             Title="In[st]Sanity">
 
-    <!--
-        ════════════════════════════════════════════════════════════════════════
-        Host page for the ported web layer.
-
-        The whole In[st]Sanity UI (side panel, library, animations, sounds) is the
-        web app served by InStSanity.Services.WebHost.LoopbackHost; this page only
-        frames it. Loopback start, WebView2 profile and link handling are set up in
-        MauiProgram / Platforms/Windows.
-        ════════════════════════════════════════════════════════════════════════
-    -->
+    <!-- Root grid so the startup overlay and the native Instagram browser can stack above
+         the WebView that hosts the ported web app. -->
     <Grid>
-
+        <!-- The ported web app is served by LoopbackHost; MainPageViewModel provides the URL. -->
         <WebView x:Name="WebAppView"
                  Source="{Binding AppUrl}"
                  Navigated="OnWebAppNavigated" />
 
-        <!-- Shown until the web layer has loaded; also used to report a failed start. -->
-        <VerticalStackLayout x:Name="StartupOverlay"
-                             Padding="32"
-                             Spacing="14"
-                             HorizontalOptions="Center"
-                             VerticalOptions="Center">
-            <ActivityIndicator x:Name="StartupSpinner"
-                               IsRunning="True"
-                               Color="{StaticResource Primary}"
-                               HorizontalOptions="Center" />
-            <Label x:Name="StartupMessage"
-                   Text="Starting In-st-Sanity…"
-                   Style="{StaticResource EmptyStateMessage}" />
-        </VerticalStackLayout>
+        <!-- First-launch overlay: kept until the WebView reports a successful navigation,
+             so the user never sees a blank window while the loopback host comes up. -->
+        <Border x:Name="StartupOverlay"
+                ZIndex="30"
+                BackgroundColor="{AppThemeBinding Light=White, Dark=#0B0F14}"
+                Padding="24"
+                HorizontalOptions="Fill"
+                VerticalOptions="Fill">
+            <VerticalStackLayout Spacing="14"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center">
+                <Label x:Name="StartupMessage"
+                       Text="Loading In[st]Sanity…"
+                       FontSize="15"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light=#0B0F14, Dark=#F1F5F9}" />
+                <ActivityIndicator x:Name="StartupSpinner"
+                                   IsRunning="True"
+                                   Color="{AppThemeBinding Light=#0B0F14, Dark=#F1F5F9}" />
+            </VerticalStackLayout>
+        </Border>
 
+        <!-- The browser WebView is created on first open, not during app startup.
+             It docks over the themed viewport of the web layer's Browser page (the
+             region is pushed via POST /api/browser-view), instead of covering the app. -->
+        <Grid x:Name="InstagramBrowserOverlay"
+              IsVisible="False"
+              ZIndex="20"
+              BackgroundColor="Transparent"
+              HorizontalOptions="Start"
+              VerticalOptions="Start"
+              WidthRequest="0"
+              HeightRequest="0">
+            <ContentView x:Name="InstagramBrowserHost" BackgroundColor="Transparent" />
+        </Grid>
     </Grid>
 
 </ContentPage>
