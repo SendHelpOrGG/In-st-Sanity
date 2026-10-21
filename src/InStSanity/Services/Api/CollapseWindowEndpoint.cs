@@ -25,13 +25,16 @@ public sealed class CollapseWindowEndpoint : IApiEndpoint
 			{
 				try
 				{
-					var window = Microsoft.Maui.ApplicationModel.Platform.Application.Current?.Windows.FirstOrDefault();
-					if (window?.Handler?.PlatformView is Microsoft.UI.Xaml.Window win)
+					var mauiWindow = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
+					if (mauiWindow?.Handler?.PlatformView is Microsoft.UI.Xaml.Window platformWindow)
 					{
-						var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(win);
-						var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
-						var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(id);
-						appWindow?.Minimize();
+						var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(platformWindow);
+						var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
+						var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+						if (appWindow?.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+						{
+							presenter.Minimize();
+						}
 					}
 				}
 				catch
