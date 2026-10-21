@@ -3601,6 +3601,52 @@ function applyStickerSettings(save=true){
   setTimeout(fireClash, 1200);
   setTimeout(fireThunder, 1400);
 })();
+// --- Sticker eye tracking (rev9) — eyes follow cursor when animations enabled ---
+(function(){
+  var liveStickers = [];
+  function refreshLiveStickers(){
+    liveStickers = [];
+    document.querySelectorAll('.sidebar-sticker-slot svg, .main-bg-sticker svg').forEach(function(svg){
+      if(!svg) return;
+      svg.querySelectorAll('.imp-face-group').forEach(function(face){
+        var eyes = face.querySelector('.imp-eyes-track');
+        if(eyes) liveStickers.push({svg:svg, eyes:eyes});
+      });
+    });
+  }
+  // refresh after sticker theme changes
+  var _origRefresh = window.refreshLiveStickers;
+  refreshLiveStickers();
+  // update live list on theme changes and periodically
+  try{
+    var obs = new MutationObserver(function(){ refreshLiveStickers(); });
+    var slot = document.getElementById('sidebarStickerSlot');
+    if(slot) obs.observe(slot, {childList:true, subtree:true});
+    var bgSlot = document.getElementById('mainBgSticker');
+    if(bgSlot) obs.observe(bgSlot, {childList:true, subtree:true});
+  }catch(_){}
+  document.addEventListener('mousemove', function(ev){
+    try{
+      var enabled = !document.body.classList.contains('sticker-anim-off') && !document.body.classList.contains('animations-disabled') && !document.body.classList.contains('imp-anim-disabled') && !document.body.classList.contains('sticker-hidden');
+      if(!enabled) return;
+      liveStickers.forEach(function(item){
+        var r = item.svg.getBoundingClientRect();
+        if(!r.width) return;
+        var dx = ev.clientX - (r.left + r.width/2);
+        var dy = ev.clientY - (r.top + r.height/2);
+        var dist = Math.hypot(dx, dy) || 1;
+        var amp = Math.min(1, dist/190) * 3.4;
+        item.eyes.style.transform = 'translate(' + ((dx/dist)*amp).toFixed(2) + 'px,' + ((dy/dist)*amp).toFixed(2) + 'px)';
+      });
+    }catch(_){}
+  }, {passive:true});
+  document.addEventListener('mouseleave', function(){
+    liveStickers.forEach(function(item){ try{ item.eyes.style.transform=''; }catch(_){} });
+  });
+  // expose for manual refresh if needed
+  window._refreshStickerEyes = refreshLiveStickers;
+})();
+
 
   document.body.style.setProperty('--sticker-opacity',(clamped/100).toFixed(2));
   if(!effVisible||!stickerAnimEnabled)resetStickerTransforms();
@@ -5209,8 +5255,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.66';
+const APP_VERSION='1.67';
 const VERSION_HISTORY=[
+  {version:'1.67',added:'No new features.',removed:'No removals.',fixed:'Sticker eyes now track cursor (rev9) — liveStickers refresh on theme change, respects sticker-anim-off.',tone:'green'},
   {version:'1.66',added:'All 16 sidepanel stickers rebuilt — rev9 identity pass with new silhouettes, props and live animations (equaliser, embers, glitch, thunder, hammer clash).',removed:'No removals.',fixed:'Implemented sticker-preview rev9 for every theme (default + v1–v15); added CSS keyframes + JS timers for thunder/clash and eye tracking.',tone:'red'},
   {version:'1.65',added:'No new features.',removed:'The Showing X–Y of Z page count and the Typography label/hint inside UI scale.',fixed:'UI settings Font size → UI scale (beta); Background moved to second below Theme; pagination now shows only Prev/Next + page numbers.',tone:'yellow'},
   {version:'1.64',added:'No new features.',removed:'No new features.',fixed:'Second Aatrox laugh (40% Original Laugh) 10% quieter — 0.792→0.713, fight-me stays 0.792.',tone:'green'},
