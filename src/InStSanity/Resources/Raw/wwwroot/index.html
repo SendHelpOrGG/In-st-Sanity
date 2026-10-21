@@ -5094,8 +5094,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.51';
+const APP_VERSION='1.52';
 const VERSION_HISTORY=[
+  {version:'1.52',added:'No new features.',removed:'No removals.',fixed:'Loading-screen laugh swapped — Aatrox fight-me first ~2s (faded) replaces the synth demon laugh, still through the big 3.4s hall.',tone:'green'},
   {version:'1.51',added:'No new features.',removed:'No removals.',fixed:'Boot v3 Haul shoulders now ride with the sticker — tx/ty/rot/scale tracked per-frame so arms stay pinned to 34,118/126,118 through the bob + 12px drag.',tone:'green'},
   {version:'1.50',added:'No new features.',removed:'No removals.',fixed:'Trident loading screen nudge — fork/shaft moved ~6px right (CX+30.2→CX+36.2) so the prongs breathe clear of the sticker frame.',tone:'green'},
   {version:'1.49',added:'No new features.',removed:'No removals.',fixed:'All sticker arms now start from the same shoulder points (34,118/126,118) as the JSON-devour reference — v1 Trident (CX+27.5,CY+22.7), v3 Haul now over the sticker (dual 30.7,105.8/93.3,105.8), v5 (34,118), click poke (0.2125/0.7875×0.7375) and devour Trident/Snap unified; arm length and thickness unchanged.',tone:'yellow'},
@@ -5546,7 +5547,42 @@ function syl(t,o){
   osc.start(t); osc.stop(t+dur+0.05);
   tapRoom(pan(out,o.pan||0), (o.verb==null?0.45:o.verb), o.sendHp||0, o.sendLp||0, o.room);
 }
-function laughDeep(t0){
+// --- AATROX SAMPLE: first ~2s laugh with fade + big room (same hall as old demon) ---
+var aatroxBuf=null, aatroxReady=null;
+function ensureAatrox(){
+  if(aatroxBuf) return Promise.resolve(aatroxBuf);
+  if(aatroxReady) return aatroxReady;
+  try{ ensureAudio(); }catch(e){}
+  var url='aatrox-fight-me.mp3';
+  aatroxReady = fetch(url).then(function(r){ if(!r.ok) throw new Error('fetch '+r.status); return r.arrayBuffer(); })
+    .then(function(ab){ return new Promise(function(res,rej){ try{ ctx.decodeAudioData(ab, function(b){ aatroxBuf=b; res(b); }, rej); }catch(e){ rej(e); } }); })
+    .catch(function(e){ console.warn('aatrox sample failed', e); return null; });
+  return aatroxReady;
+}
+try{ if(window.AudioContext||window.webkitAudioContext) setTimeout(function(){ try{ ensureAatrox(); }catch(e){} }, 420); }catch(e){}
+function playAatroxLaugh(t0){
+  var room=laughRoom();
+  if(!ctx) try{ ensureAudio(); }catch(e){}
+  if(!aatroxBuf){
+    ensureAatrox().then(function(b){ if(b) playAatroxLaugh(t0); });
+    return;
+  }
+  var startOff=0.02, dur=2.05;
+  if(aatroxBuf.duration < startOff+dur) dur=Math.max(0.4, aatroxBuf.duration-startOff);
+  var fadeDur=0.38, fadeStart=t0+dur-fadeDur;
+  var src=ctx.createBufferSource(); src.buffer=aatroxBuf;
+  var g=ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(0.88, t0+0.03);
+  g.gain.setValueAtTime(0.88, fadeStart);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  src.connect(g);
+  var p2=pan(g, 0);
+  tapRoom(p2, 0.84, 220, 3200, room);
+  try{ src.start(t0, startOff, dur); src.stop(t0+dur+0.08); }catch(e){ try{ src.start(t0); }catch(_){} }
+}
+
+function laughDeepLegacy(t0){
   var room=laughRoom();
   [0,0.175,0.345,0.535,0.775].forEach(function(d,i){
     var L=(i===4), f=74*Math.pow(0.955,i);
@@ -5567,6 +5603,7 @@ function laughDeep(t0){
   noise({t:t0+0.85, dur:2.10, type:'bandpass', f:420, f2:880, sweep:1.60, q:0.8,
          atk:0.30, peak:0.055, verb:1.00, to:room});
 }
+function laughDeep(t0){ return playAatroxLaugh(t0); }
 
 /* EVIL rune bell.
    Everything here is chosen to read as "wrong" rather than "pretty":
