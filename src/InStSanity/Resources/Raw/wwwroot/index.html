@@ -947,7 +947,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.47; open version history" title="Click to view what changed in each version">v.1.47</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.48; open version history" title="Click to view what changed in each version">v.1.48</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5082,8 +5082,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.47';
+const APP_VERSION='1.48';
 const VERSION_HISTORY=[
+  {version:'1.48',added:'No new features.',removed:'No removals.',fixed:'Loading screens for 12-15 now use their correct dark solids (#0f0f0f/#0f0f1a/#0a0f1e/#0a0f14) instead of falling back to the accent highlight.',tone:'green'},
   {version:'1.47',added:'No new features.',removed:'No removals.',fixed:'Download and Log in text on the warm themes (12-14) is now dark (#1a160f/#0f0f1a/#0a0f1e) instead of light for readable contrast on the light buttons.',tone:'green'},
   {version:'1.46',added:'No new features.',removed:'No removals.',fixed:'Theme picker now shows the four new themes (12-15) that were already in the build.',tone:'green'},
   {version:'1.45',added:'Four new themes: 12 Cinderforge Brass Soot (Twin Strike hammers+anvil), 13 Kelp Cathedral Brine Violet (Crystal Orbit), 14 Carnival Fairground Gold (Coin Medallion), 15 Sanctuary Deep Frost (Shrine Dome) with matched loading and restart art.',removed:'No removals.',fixed:'Download text now matches the sidebar button text in all four new themes (#fdf0d6/#e6e0f5/#fef3c7/#d6e2f5), and each theme carries its unique sticker shape.',tone:'yellow'},
@@ -5928,7 +5929,7 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
 
   /* ---------- helpers: colours ---------- */
   var LS_SOLID={default:'#0a0f18',v1:'#130f1c',v2:'#161f26',v3:'#090a0c',v4:'#0e090b',v5:'#150e27',
-                v6:'#141909',v7:'#1b120b',v8:'#0b152c',v9:'#121722',v10:'#181c2b',v11:'#11170f'};
+                v6:'#141909',v7:'#1b120b',v8:'#0b152c',v9:'#121722',v10:'#181c2b',v11:'#11170f',v12:'#0f0f0f',v13:'#0f0f1a',v14:'#0a0f1e',v15:'#0a0f14'};
   function lsHex(v,fall){
     v=String(v||'').trim();
     var m=v.match(/^#([0-9a-fA-F]{6})$/); if(m) return v;
