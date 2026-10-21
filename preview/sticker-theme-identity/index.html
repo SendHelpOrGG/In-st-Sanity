@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>In[st]Sanity — sticker identity pass (16 themes)</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#070b11;
+  --panel:#101823;
+  --panel-2:#141d2a;
+  --line:#243341;
+  --ink:#eef4f9;
+  --muted:#8fa3b4;
+  --accent:#67d8e8;
+  --accent-2:#f1a7cf;
+  --gold:#d6c16d;
+  --radius:16px;
+  --stage:212px;
+  --font:"Segoe UI Variable Text","Segoe UI",Inter,-apple-system,system-ui,Roboto,sans-serif;
+  --mono:"Cascadia Code",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;min-height:100vh;color:var(--ink);font:15px/1.55 var(--font);
+  background:
+    radial-gradient(1100px 520px at 8% -8%,rgba(56,189,248,.11),transparent 62%),
+    radial-gradient(900px 520px at 96% 2%,rgba(236,72,153,.09),transparent 58%),
+    radial-gradient(760px 460px at 50% 108%,rgba(214,180,106,.06),transparent 60%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+.shell{width:min(1460px,100%);margin:0 auto;padding:38px 34px 72px}
+
+/* ---------- header ---------- */
+.kicker{margin:0 0 10px;color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase}
+h1{margin:0;font-size:clamp(27px,3.6vw,43px);line-height:1.03;letter-spacing:-.045em;font-weight:700}
+h1 em{font-style:normal;background:linear-gradient(100deg,#67d8e8,#a5b4fc 46%,#f1a7cf);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:840px;margin:15px 0 0;color:var(--muted);font-size:14.5px}
+.lede b{color:#d8e4ee;font-weight:650}
+.head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:26px;flex-wrap:wrap}
+.stamp{
+  flex:0 0 auto;padding:10px 14px;border:1px solid rgba(241,167,207,.3);border-radius:12px;
+  background:rgba(241,167,207,.07);color:#f3c9e1;font-size:11.5px;line-height:1.45;max-width:270px;
+}
+.stamp b{display:block;color:#ffe4f2;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+
+/* ---------- controls ---------- */
+.controls{
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  margin:26px 0 10px;padding:13px 16px;border:1px solid var(--line);border-radius:14px;
+  background:linear-gradient(150deg,rgba(22,32,45,.92),rgba(12,18,26,.92));
+}
+.ctrl{display:flex;align-items:center;gap:9px;font-size:12.5px;color:#c3d3df}
+.ctrl label{user-select:none;cursor:pointer;display:flex;align-items:center;gap:8px}
+.ctrl input[type=range]{width:132px;accent-color:#67d8e8}
+.ctrl .val{font-variant-numeric:tabular-nums;color:var(--accent);font-size:11.5px;min-width:44px}
+input[type=checkbox]{
+  appearance:none;width:17px;height:17px;border-radius:5px;border:1px solid #3a4b5b;
+  background:#0d141c;cursor:pointer;position:relative;transition:border-color .15s,background .15s;
+}
+input[type=checkbox]:checked{background:linear-gradient(140deg,#67d8e8,#4cb9cf);border-color:#8ee6f2}
+input[type=checkbox]:checked::after{content:"";position:absolute;left:4.5px;top:1.5px;width:5px;height:9px;border:2px solid #06222a;border-top:0;border-left:0;transform:rotate(38deg)}
+.controls .divider{width:1px;height:24px;background:var(--line)}
+.stage.split .art-holder{position:absolute;left:0;top:0;width:50%;height:100%;display:grid;place-items:center;z-index:2}
+.stage.split .art-holder .art{width:calc(var(--stage) * .8)!important;height:calc(var(--stage) * .8)!important}
+.stage.split .before{position:absolute;right:0;top:0;bottom:auto;width:50%;height:100%;padding:0;border:0;border-left:1px dashed rgba(255,255,255,.13);border-radius:0;background:transparent;backdrop-filter:none;box-shadow:none;display:grid;place-items:center;z-index:2}
+.stage.split .before svg{width:calc(var(--stage) * .8)!important;height:calc(var(--stage) * .8)!important;max-width:none}
+.stage.split .before-label{display:none}
+.stage.split::after{display:none}
+.controls .spacer{flex:1 1 auto}
+.hint-key{font-family:var(--mono);font-size:11px;color:#8fa3b4;border:1px solid #2b3a49;border-radius:6px;padding:1px 6px;background:#0d141c}
+
+/* ---------- section headings ---------- */
+.section-head{display:flex;align-items:center;gap:14px;margin:44px 0 16px}
+.section-head h2{margin:0;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#9db2c2;font-weight:750}
+.section-head .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.section-head .count{font-size:11.5px;color:var(--muted)}
+
+/* ---------- in-context demo ---------- */
+.demo{
+  display:grid;grid-template-columns:236px 1fr;min-height:330px;overflow:hidden;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--demo-bg,#0a0f18);box-shadow:0 26px 70px rgba(0,0,0,.4);
+  transition:background .3s;
+}
+.demo-side{
+  display:flex;flex-direction:column;gap:10px;padding:16px 14px 14px;
+  background:var(--demo-side,#141e30);border-right:1px solid var(--demo-line,rgba(255,255,255,.07));
+  min-width:0;
+}
+.demo-brand{font-weight:750;font-size:13.5px;letter-spacing:-.02em;color:var(--demo-ink,#f1f5f9)}
+.demo-brand span{color:var(--demo-accent,#38bdf8)}
+.demo-nav{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.demo-nav div{
+  font-size:11.5px;color:var(--demo-muted,#8fa3b4);padding:7px 9px;border-radius:7px;
+  border:1px solid transparent;display:flex;align-items:center;gap:8px;
+}
+.demo-nav div.on{
+  color:var(--demo-accent,#38bdf8);background:var(--demo-soft,rgba(56,189,248,.12));
+  border-color:var(--demo-accent-soft,rgba(56,189,248,.3));font-weight:650;
+}
+.demo-nav i{width:6px;height:6px;border-radius:2px;background:currentColor;opacity:.8;display:block}
+.demo-slot{
+  flex:1 1 auto;display:grid;place-items:center;min-height:170px;margin:4px 0;
+  filter:drop-shadow(0 10px 22px rgba(0,0,0,.34));
+}
+.demo-slot svg{width:172px;height:172px;display:block;overflow:visible}
+.demo-user{display:flex;align-items:center;gap:9px;padding-top:10px;border-top:1px solid var(--demo-line,rgba(255,255,255,.08))}
+.demo-user .av{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,var(--demo-accent,#38bdf8),var(--demo-accent2,#ec4899));display:grid;place-items:center;font-size:11px;font-weight:800;color:#08121a}
+.demo-user small{display:block;font-size:9.5px;color:var(--demo-muted,#8fa3b4);line-height:1.25}
+.demo-user strong{font-size:11px;color:var(--demo-ink,#f1f5f9);font-weight:650}
+.demo-main{padding:18px 22px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.demo-top{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--demo-line,rgba(255,255,255,.08));padding-bottom:12px}
+.demo-top strong{font-size:12px;color:var(--demo-ink,#f1f5f9);letter-spacing:.02em}
+.demo-top .crumbs{font-size:11px;color:var(--demo-muted,#8fa3b4)}
+.demo-select{
+  appearance:none;font:inherit;font-size:11.5px;color:var(--demo-ink,#f1f5f9);
+  background:var(--demo-soft,rgba(255,255,255,.06));border:1px solid var(--demo-line,rgba(255,255,255,.14));
+  border-radius:8px;padding:6px 26px 6px 10px;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 13px) 52%,calc(100% - 9px) 52%;
+  background-size:4px 4px,4px 4px;background-repeat:no-repeat;
+}
+.demo-select option{background:#10161f;color:#e8f0f6}
+.demo-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;flex:1}
+.demo-card{
+  border:1px solid var(--demo-line,rgba(255,255,255,.1));border-radius:10px;overflow:hidden;
+  background:var(--demo-card,rgba(255,255,255,.03));display:flex;flex-direction:column;
+}
+.demo-card .thumb{height:78px;background:var(--demo-thumb,rgba(255,255,255,.05))}
+.demo-card .meta{padding:8px 9px;display:flex;flex-direction:column;gap:5px}
+.demo-card .bar{height:5px;border-radius:3px;background:var(--demo-ink,#f1f5f9);opacity:.5}
+.demo-card .bar.short{width:58%;opacity:.28}
+.demo-badge{
+  font-size:10px;padding:3px 7px;border-radius:5px;border:1px solid var(--demo-line,rgba(255,255,255,.12));
+  color:var(--demo-ink,#f1f5f9);background:var(--demo-soft,rgba(255,255,255,.06));
+}
+
+/* ---------- card grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card{
+  min-width:0;display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid var(--line);border-radius:18px;
+  background:linear-gradient(158deg,rgba(20,29,41,.98),rgba(10,15,22,.98));
+  box-shadow:0 16px 44px rgba(0,0,0,.28);
+  transition:border-color .18s,transform .18s,box-shadow .18s;
+}
+.card:hover{transform:translateY(-2px);border-color:#3b5163;box-shadow:0 22px 56px rgba(0,0,0,.36)}
+.card-head{display:flex;align-items:flex-start;gap:11px;padding:15px 16px 0}
+.num{
+  flex:0 0 auto;min-width:27px;height:27px;padding:0 6px;border-radius:8px;display:grid;place-items:center;
+  font-size:10.5px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  color:var(--c1,#67d8e8);border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.05);
+  border-color:color-mix(in srgb,var(--c1,#67d8e8) 42%,transparent);
+  background:color-mix(in srgb,var(--c1,#67d8e8) 13%,transparent);
+}
+.num.plain{color:#9db2c2;border-color:#334454;background:rgba(148,163,184,.08)}
+.titles{min-width:0;flex:1}
+.titles strong{display:block;font-size:14px;font-weight:700;letter-spacing:-.012em;line-height:1.25}
+.titles small{display:block;margin-top:2px;font-size:11px;color:var(--muted)}
+.chip{
+  flex:0 0 auto;font-size:9.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;
+  padding:4px 7px;border-radius:6px;border:1px solid rgba(103,216,232,.34);
+  background:rgba(103,216,232,.1);color:#9ce6f2;
+}
+.chip.keep{border-color:rgba(214,193,109,.4);background:rgba(214,193,109,.12);color:#e7d492}
+.chip.old{opacity:.85;border-color:#37474f;background:rgba(148,163,184,.08);color:#9db2c2}
+
+.stage{
+  position:relative;display:grid;place-items:center;overflow:hidden;
+  margin:12px 13px 0;border-radius:13px;border:1px solid rgba(255,255,255,.06);
+  min-height:calc(var(--stage) + 14px);
+  background:linear-gradient(150deg,var(--bg),#05080c);
+  background:
+    radial-gradient(circle at 50% 26%,color-mix(in srgb,var(--c1) 17%,transparent),transparent 62%),
+    radial-gradient(circle at 82% 88%,color-mix(in srgb,var(--c2) 14%,transparent),transparent 58%),
+    linear-gradient(150deg,var(--bg),color-mix(in srgb,var(--bg) 62%,#000));
+}
+.stage::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.34;
+  background-image:radial-gradient(color-mix(in srgb,var(--c1) 55%,transparent) .55px,transparent .55px);
+  background-size:9px 9px;
+  mask-image:linear-gradient(to bottom,transparent,#000 40%,transparent 94%);
+}
+.stage::after{
+  content:"";position:absolute;left:50%;bottom:20px;width:132px;height:26px;transform:translateX(-50%);
+  border-radius:50%;background:color-mix(in srgb,var(--c1) 30%,transparent);filter:blur(15px);opacity:.5;
+}
+.stage .art{width:212px;height:212px;position:relative;z-index:2;display:block;overflow:visible;filter:drop-shadow(0 14px 22px rgba(0,0,0,.4));transform-origin:50% 74%}
+.stage .before{
+  position:absolute;z-index:3;right:9px;bottom:9px;width:74px;height:74px;padding:4px;
+  border-radius:11px;border:1px solid rgba(255,255,255,.16);background:rgba(6,11,17,.72);
+  backdrop-filter:blur(6px);display:grid;place-items:center;box-shadow:0 8px 20px rgba(0,0,0,.4);
+}
+.stage .before svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 3px 6px rgba(0,0,0,.4))}
+.stage .before-label{
+  position:absolute;z-index:4;right:9px;bottom:88px;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:#b9c9d6;background:rgba(6,11,17,.72);border:1px solid rgba(255,255,255,.12);
+  border-radius:5px;padding:2px 5px;font-weight:750;
+}
+
+.cues{display:flex;flex-wrap:wrap;gap:6px;padding:12px 15px 0}
+.cue{
+  font-size:10.5px;color:#c6d5e1;padding:4px 8px;border-radius:6px;
+  border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.cue::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--c1);opacity:.85}
+.card-note{padding:9px 16px 0;margin:0;font-size:11.5px;color:#93a7b7;line-height:1.5}
+.card-foot{display:flex;align-items:center;gap:8px;padding:13px 15px 15px;margin-top:auto}
+.ghost{
+  font:inherit;font-size:11px;font-weight:650;color:#cfdde8;padding:7px 11px;border-radius:8px;
+  border:1px solid #334654;background:rgba(148,163,184,.07);cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,background .15s,color .15s;
+}
+.ghost:hover{border-color:#4a6274;background:rgba(148,163,184,.13);color:#fff}
+.ghost:active{transform:translateY(1px)}
+.ghost.copied{border-color:rgba(103,216,232,.5);color:#9ce6f2}
+.card-foot .pill{margin-left:auto;font-size:10px;color:#7f93a4;font-family:var(--mono)}
+
+/* ---------- notes ---------- */
+.notes{
+  margin-top:44px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;
+}
+.note{
+  border:1px solid var(--line);border-radius:14px;padding:17px 18px;
+  background:linear-gradient(155deg,rgba(18,27,38,.9),rgba(10,16,23,.9));
+}
+.note h3{margin:0 0 7px;font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#a9bccb;font-weight:750}
+.note p{margin:0;font-size:12.5px;color:#8fa3b4;line-height:1.6}
+.note code{font-family:var(--mono);font-size:11px;color:#a7e4ee;background:rgba(103,216,232,.08);border:1px solid rgba(103,216,232,.16);border-radius:4px;padding:0 4px}
+.note ul{margin:7px 0 0;padding-left:16px;font-size:12.5px;color:#8fa3b4;line-height:1.7}
+.note li b{color:#cfdde8;font-weight:650}
+
+footer.page{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;color:#6f8394;font-size:11.5px}
+footer.page b{color:#a9bccb;font-weight:650}
+
+/* ---------- sticker motion (mirrors the app's sidebar sticker) ---------- */
+/* every visible sticker animates: the card art and the current-art half
+   promoted to split view, and the in-context sidebar sticker */
+.anim-on .stage .art,.anim-on .stage.split .before svg,.anim-on .demo-slot svg{animation:impBounce 3.2s ease-in-out infinite}
+.anim-on .stage .art .imp-head-circle,.anim-on .stage.split .before svg .imp-head-circle,.anim-on .demo-slot svg .imp-head-circle{transform-origin:80px 80px;animation:impAura 2.8s ease-in-out infinite}
+.anim-on .stage .art .imp-decor,.anim-on .stage.split .before svg .imp-decor,.anim-on .demo-slot svg .imp-decor{transform-origin:80px 80px;animation:impDecor 2.6s ease-in-out infinite}
+.anim-on .stage .art .imp-eyes-blink,.anim-on .stage.split .before svg .imp-eyes-blink,.anim-on .demo-slot svg .imp-eyes-blink{transform-origin:80px 83px;animation:impBlink 6.4s ease-in-out infinite}
+.anim-on .stage .art .imp-grin,.anim-on .stage.split .before svg .imp-grin,.anim-on .demo-slot svg .imp-grin{transform-origin:80px 98px;animation:impSmirk 5.1s ease-in-out infinite}
+.anim-on .stage .art .imp-horns,.anim-on .stage.split .before svg .imp-horns,.anim-on .demo-slot svg .imp-horns{transform-origin:80px 72px;animation:impHorn 7.2s ease-in-out infinite}
+
+/* theme 01 — the equaliser strips actually level */
+@keyframes impEq{0%{transform:scaleY(.35)}100%{transform:scaleY(1)}}
+.anim-on .imp-eq-bar{transform-box:fill-box;transform-origin:50% 100%;animation:impEq 1.05s ease-in-out infinite alternate}
+/* theme 12 — embers drifting off the forge */
+@keyframes impEmber{0%{transform:translateY(0);opacity:0}18%{opacity:.95}100%{transform:translateY(-16px);opacity:0}}
+.anim-on .imp-ember{animation:impEmber 2.6s ease-out infinite}
+/* theme 09 — signal glitch: a stepped sideways snap plus a chroma ghost */
+@keyframes impGlitch{0%,86%,100%{transform:translate(0,0)}88%{transform:translate(3px,0)}89%{transform:translate(-4px,1px)}90%{transform:translate(2px,0)}91%{transform:translate(-1px,-1px)}92%,94%{transform:translate(0,0)}95%{transform:translate(5px,0)}96%{transform:translate(0,0)}}
+.anim-on .imp-glitch{animation:impGlitch 4.4s steps(1,end) infinite}
+@keyframes impGlitchGhost{0%,86%,100%{opacity:0}87%,90%{opacity:.85}91%{opacity:.3}92%{opacity:.75}93%{opacity:0}}
+.anim-on .imp-glitch-ghost{animation:impGlitchGhost 4.4s steps(1,end) infinite}
+/* theme 06 — three strike spots, one picked at random on a random 1–3 s beat */
+@keyframes impThunderStrike{0%,100%{opacity:0}6%,60%{opacity:1}20%{opacity:.3}34%,48%{opacity:1}}
+@keyframes impThunderFlash{0%,100%{opacity:0}8%{opacity:1}30%{opacity:.55}55%{opacity:1}}
+@keyframes impThunderRing{0%{transform:scale(.3);opacity:0}10%{opacity:.95}80%,100%{transform:scale(2.4);opacity:0}}
+.imp-strike.is-hit .imp-thunder{animation:impThunderStrike .52s linear}
+.imp-strike.is-hit .imp-thunder-flash{animation:impThunderFlash .52s linear}
+.imp-strike.is-hit .imp-thunder-ring{transform-box:fill-box;transform-origin:center;animation:impThunderRing .52s ease-out}
+/* theme 12 — the hammers swing at each other when .clash lands (random, 1–3 s) */
+@keyframes impHammerL{0%{transform:rotate(0)}12%{transform:rotate(-8deg)}34%{transform:rotate(65deg)}42%{transform:rotate(57deg)}50%{transform:rotate(65deg)}72%{transform:rotate(0)}100%{transform:rotate(0)}}
+@keyframes impHammerR{0%{transform:rotate(0)}12%{transform:rotate(8deg)}34%{transform:rotate(-65deg)}42%{transform:rotate(-57deg)}50%{transform:rotate(-65deg)}72%{transform:rotate(0)}100%{transform:rotate(0)}}
+.imp-hammer-l,.imp-hammer-r{transform-box:fill-box;transform-origin:50% 100%}
+.clash .imp-hammer-l{animation:impHammerL .72s cubic-bezier(.4,0,.2,1)}
+.clash .imp-hammer-r{animation:impHammerR .72s cubic-bezier(.4,0,.2,1)}
+@keyframes impClash{0%,30%{opacity:0;transform:scale(.35)}36%{opacity:1;transform:scale(1)}48%{opacity:1;transform:scale(1.1)}60%,100%{opacity:0;transform:scale(1.25)}}
+.clash .imp-clash{transform-box:fill-box;transform-origin:center;animation:impClash .72s ease-out}
+.stage .art .imp-eyes-track,.stage.split .before svg .imp-eyes-track,.demo-slot svg .imp-eyes-track{transform-box:view-box;transition:transform .12s ease-out}
+@keyframes impBounce{0%,100%{transform:translate3d(0,0,0) scale(1)}25%{transform:translate3d(2.2px,-6px,0) scale(1.02)}50%{transform:translate3d(0,-8.5px,0) scale(1.035)}75%{transform:translate3d(-2.2px,-5px,0) scale(1.02)}}
+@keyframes impAura{0%,100%{transform:scale(1)}50%{transform:scale(1.028)}}
+@keyframes impDecor{0%,100%{transform:scale(.95) rotate(-1.6deg);opacity:.8}50%{transform:scale(1.06) rotate(1.6deg);opacity:1}}
+@keyframes impBlink{0%,16%,32%,68%,74%,100%{transform:scale(1,1)}22%,28%{transform:scale(1.08,.7)}50%{transform:scale(1.03,1.03)}71%{transform:scale(1,.06)}}
+@keyframes impSmirk{0%,15%,35%,100%{transform:translateY(0) rotate(0) scale(1,1)}20%{transform:translateY(-1.8px) rotate(-2deg) scale(1.1,1.2)}25%{transform:translateY(.4px) rotate(1deg) scale(1.04,1.07)}30%{transform:translateY(-1.6px) rotate(-1.6deg) scale(1.11,1.22)}}
+@keyframes impHorn{0%,16%,34%,100%{transform:translateY(0) rotate(0) scale(1)}20%{transform:translateY(-2.4px) rotate(-2.6deg) scale(1.06,1.08)}25%{transform:translateY(-.8px) rotate(2.4deg) scale(1.03,1.05)}30%{transform:translateY(-2.4px) rotate(-1.6deg) scale(1.06,1.08)}}
+
+/* ---------- responsive ---------- */
+@media(max-width:1180px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .notes{grid-template-columns:1fr 1fr}
+}
+@media(max-width:820px){
+  .shell{padding:26px 18px 56px}
+  .grid,.notes,.demo-cards{grid-template-columns:1fr}
+  .demo{grid-template-columns:1fr}
+  .demo-side{border-right:0;border-bottom:1px solid var(--demo-line,rgba(255,255,255,.07));flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px}
+  .demo-nav{flex-direction:row;flex-wrap:wrap;margin-top:0}
+  .demo-slot{min-height:150px;flex:1 1 130px}
+  .demo-user{border-top:0;padding-top:0}
+  .demo-cards{display:none}
+  :root{--stage:190px}
+}
+@media(prefers-reduced-motion:reduce){
+  .anim-on .stage .art,.anim-on .stage .art *{animation:none!important}
+  .card,.stage .art,.ghost{transition:none!important}
+}
+.dl{position:fixed;right:18px;bottom:18px;z-index:60;display:inline-flex;align-items:center;gap:8px;
+  padding:10px 15px;border-radius:999px;font:inherit;font-size:12px;font-weight:700;text-decoration:none;
+  color:#06222a;background:linear-gradient(140deg,#8ee6f2,#4cb9cf);border:1px solid rgba(255,255,255,.3);
+  box-shadow:0 12px 30px rgba(0,0,0,.4);cursor:pointer;transition:filter .15s,transform .15s}
+.dl:hover{filter:brightness(1.09);transform:translateY(-1px)}
+.dl-fallback{position:fixed;right:18px;bottom:70px;z-index:61;width:320px;max-width:calc(100vw - 36px);
+  display:flex;flex-direction:column;gap:9px;padding:14px 15px;border-radius:14px;font-size:12.5px;line-height:1.45;
+  color:#dbe6ee;background:rgba(9,15,23,.97);border:1px solid rgba(125,211,252,.28);
+  box-shadow:0 20px 50px rgba(0,0,0,.55)}
+.dl-fallback[hidden]{display:none}
+.dl-fallback b{color:#8ee6f2;font-size:12.5px}
+.dl-fallback input{width:100%;padding:8px 9px;border-radius:8px;border:1px solid rgba(125,211,252,.25);
+  background:rgba(255,255,255,.05);color:#bcd4e2;font:inherit;font-size:11px}
+.dl-row{display:flex;gap:8px}
+.dl-row button{flex:1;padding:7px 10px;border-radius:8px;border:1px solid rgba(125,211,252,.3);
+  background:rgba(125,211,252,.12);color:#d7eef7;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+.dl-row button:hover{background:rgba(125,211,252,.22)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div class="head-row">
+      <div>
+        <p class="kicker">Sticker identity pass · rev 7 · proposal</p>
+        <h1>Every theme gets a sticker that <em>says what it is</em></h1>
+        <p class="lede">
+          Seventh pass: 09 gets a glitch pass — signal tears, stray pixels and a chroma ghost of
+          the rings that snaps sideways in bursts. Everything else is exactly as you approved it in
+          rev 6. <b>Nothing in the app has been touched</b> — this page is still the menu.
+        </p>
+      </div>
+      <div class="stamp">
+        <b>Preview only</b>
+        No app files were edited, nothing was committed or pushed. Everything lives in
+        <code>preview/sticker-theme-identity/</code>.
+      </div>
+    </div>
+  </header>
+
+  <div class="controls" role="group" aria-label="Preview controls">
+    <div class="ctrl">
+      <label for="sizeRange">Sticker size</label>
+      <input id="sizeRange" type="range" min="132" max="248" step="4" value="212">
+      <span class="val" id="sizeVal">212 px</span>
+    </div>
+    <div class="divider"></div>
+    <div class="ctrl"><label><input id="animToggle" type="checkbox" checked> Animate</label></div>
+    <div class="ctrl"><label><input id="trackToggle" type="checkbox" checked> Eyes follow cursor</label></div>
+    <div class="spacer"></div>
+    <div class="ctrl" style="color:#8fa3b4;font-size:11.5px">
+      Every card is a split view — new art on the left, the sticker shipping today on the right
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>In context</h2>
+    <span class="count">the sidebar slot, 177&nbsp;px, with the theme applied</span>
+    <span class="rule"></span>
+  </div>
+
+  <div class="demo" id="demo">
+    <aside class="demo-side">
+      <div class="demo-brand">In<span>[st]</span>Sanity</div>
+      <div class="demo-nav">
+        <div class="on"><i></i>Library</div>
+        <div><i></i>Saved posts</div>
+        <div><i></i>Downloads</div>
+        <div><i></i>Settings</div>
+      </div>
+      <div class="demo-slot" id="demoSlot" aria-label="Sticker in the sidebar slot"></div>
+      <div class="demo-user">
+        <div class="av">S</div>
+        <div><strong>@s0meii0</strong><small>connected</small></div>
+      </div>
+    </aside>
+    <div class="demo-main">
+      <div class="demo-top">
+        <div>
+          <strong>Library</strong>
+          <div class="crumbs" id="demoCrumbs">Home / Saved</div>
+        </div>
+        <select class="demo-select" id="demoTheme" aria-label="Theme shown in the demo"></select>
+      </div>
+      <div class="demo-cards" aria-hidden="true">
+        <div class="demo-card"><div class="thumb"></div><div class="meta"><div class="bar"></div><div class="bar short"></div></div></div>
+        <div class="demo-card"><div class="thumb"></div><div class="meta"><div class="bar"></div><div class="bar short"></div></div></div>
+        <div class="demo-card"><div class="thumb"></div><div class="meta"><div class="bar"></div><div class="bar short"></div></div></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="demo-badge" id="demoBadge">12 selected</span>
+        <span class="demo-badge">Import JSON</span>
+        <span class="demo-badge">Download</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>All sixteen</h2>
+    <span class="count">default + 15 themes · new art, same anatomy</span>
+    <span class="rule"></span>
+  </div>
+
+  <main class="grid" id="grid"></main>
+
+  <section class="notes">
+    <div class="note">
+      <h3>Same skeleton, so it drops in</h3>
+      <p>Every badge keeps the hooks the rest of the app already drives:</p>
+      <ul>
+        <li><b>imp-outer-frame</b> badge edge</li>
+        <li><b>imp-decor</b> themed props</li>
+        <li><b>imp-face-group</b> · <b>imp-head-circle</b></li>
+        <li><b>imp-horns</b> · <b>imp-eyes-track</b> → <b>imp-eyes-blink</b> · <b>imp-grin</b></li>
+      </ul>
+      <p style="margin-top:8px">Eye tracking, blinking, the click-dodge and the JSON-throw cinematics keep working — they only need those class names. rev 2 adds two tiny animations (<b>imp-eq-bar</b>, <b>imp-ember</b>), rev 4 the thunder hit (<b>imp-thunder</b>, <b>imp-thunder-flash</b>, <b>imp-thunder-ring</b>) and rev 5 the hammer clash (<b>imp-hammer-l</b>, <b>imp-hammer-r</b>, <b>imp-clash</b>) and rev 7 the glitch (<b>imp-glitch</b>, <b>imp-glitch-ghost</b>) — a few lines of CSS. The random 1–3 s beats come from two tiny timers on this page (`fireThunder`, `fireClash`).</p>
+    </div>
+    <div class="note">
+      <h3>Identity, not decoration</h3>
+      <p>Each theme carries its own silhouette as well as its own props, so the badges stay
+      distinguishable at 96&nbsp;px in the theme picker and at 310&nbsp;px behind the library:</p>
+      <ul>
+        <li>silhouette: arch · shield · hex · slab · CRT · shell</li>
+        <li>head variant: crystal, basalt, stone, screen, shell</li>
+        <li>horns: tubes, pipes, antlers, icicles, kelp, bells</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>Copy out what you like</h3>
+      <p><span class="hint-key">Copy SVG</span> gives you the exact markup with unique gradient ids, ready to paste into
+      <code>THEME_STICKER_SVGS</code>. The palette per theme matches the app's <code>--t-*</code> variables, so
+      nothing clashes when the theme switches.</p>
+      <p style="margin-top:8px">Tell me which ones survive and I'll wire them into the app — one theme, all themes, or just the heads.</p>
+    </div>
+  </section>
+
+  <footer class="page">
+    <div><b>In[st]Sanity</b> — sticker identity proposals, generated from the shipping sticker anatomy in
+      <code>Resources/Raw/wwwroot/index.html</code>.</div>
+    <div>Preview only · nothing committed</div>
+  </footer>
+</div>
+
+<script src="current.js"></script>
+<script src="stickers.js"></script>
+<script>
+(function(){
+  'use strict';
+  var THEMES = window.STICKER_THEMES || [];
+  var CUR = window.STICKER_CURRENT || {};
+  THEMES.forEach(function(t){
+    t.current = (t.status === 'keep') ? null : (CUR[t.id] || null);
+  });
+
+  var grid = document.getElementById('grid');
+  var demo = document.getElementById('demo');
+  var uidCounter = 0;
+  var animOn = true, trackOn = true;   // split view is the only mode
+  var stagePx = 212;
+  var cards = [];
+  var liveStickers = [];
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+  function uid(){ uidCounter += 1; return 'pv' + uidCounter; }
+  function tag(markup, cls){
+    return markup.replace(/<svg /, '<svg class="' + cls + '" ');
+  }
+  function art(t){ return tag(t.art.replace(/\{uid\}/g, uid()), 'art'); }
+  function currentArt(t){ return tag((t.current || '').replace(/\{uid\}/g, uid()), 'cur'); }
+  function applyVars(el, t){
+    el.style.setProperty('--c1', t.palette.c1);
+    el.style.setProperty('--c2', t.palette.c2);
+    el.style.setProperty('--bg', t.palette.bg);
+  }
+  function hexA(hex, a){
+    hex = String(hex || '#67d8e8').replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(function(c){ return c + c; }).join('');
+    var n = parseInt(hex, 16);
+    if (isNaN(n)) return 'rgba(103,216,232,' + a + ')';
+    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+  }
+
+  /* ---------------- cards ---------------- */
+  THEMES.forEach(function(t){
+    var card = document.createElement('article');
+    card.className = 'card';
+    card.setAttribute('data-theme', t.id);
+    applyVars(card, t);
+
+    var cues = t.cues.map(function(c){ return '<span class="cue">' + esc(c) + '</span>'; }).join('');
+    var tag = t.tag || 'new';
+    var chipCls = tag === 'kept' ? ' keep' : (tag === 'revised' || tag === 'reworked' ? ' old' : '');
+    card.innerHTML =
+      '<div class="card-head">' +
+        '<span class="num' + (t.index ? '' : ' plain') + '">' + esc(t.badge) + '</span>' +
+        '<div class="titles"><strong>' + esc(t.name) + '</strong><small>' + esc(t.subtitle) + '</small></div>' +
+        '<span class="chip' + chipCls + '">' + esc(tag) + '</span>' +
+      '</div>' +
+      '<div class="stage">' +
+        '<div class="art-holder"></div>' +
+        '<span class="before-label">now</span>' +
+        '<div class="before" aria-hidden="true"></div>' +
+      '</div>' +
+      '<div class="cues">' + cues + '</div>' +
+      '<p class="card-note">' + esc(t.note) + '</p>' +
+      '<div class="card-foot">' +
+        '<button class="ghost copy" type="button">Copy SVG</button>' +
+        '<span class="pill">' + esc(t.id) + '</span>' +
+      '</div>';
+
+    var entry = {
+      t: t,
+      stage: card.querySelector('.stage'),
+      holder: card.querySelector('.art-holder'),
+      before: card.querySelector('.before'),
+      beforeLabel: card.querySelector('.before-label')
+    };
+
+    if (t.current) {
+      entry.before.innerHTML = currentArt(t);
+    } else {
+      entry.before.style.display = 'none';
+      entry.beforeLabel.style.display = 'none';
+    }
+
+    entry.paint = function(){
+      entry.holder.innerHTML = art(t);
+      entry.stage.classList.toggle('split', !!t.current);
+      if (!t.current) {
+        entry.before.style.display = 'none';
+        entry.beforeLabel.style.display = 'none';
+      }
+      markLive();
+    };
+
+    var copy = card.querySelector('.copy');
+    copy.addEventListener('click', function(){
+      copyText(t.art.replace(/\{uid\}/g, t.id)).then(function(){
+        copy.textContent = 'Copied';
+        copy.classList.add('copied');
+        setTimeout(function(){ copy.textContent = 'Copy SVG'; copy.classList.remove('copied'); }, 1600);
+      });
+    });
+
+    cards.push(entry);
+    grid.appendChild(card);
+  });
+
+  function copyText(text){
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return new Promise(function(resolve){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch(_) {}
+      document.body.removeChild(ta); resolve();
+    });
+  }
+
+  /* ---------------- demo ---------------- */
+  var demoSelect = document.getElementById('demoTheme');
+  var demoSlot = document.getElementById('demoSlot');
+  var demoTheme = null;
+
+  THEMES.forEach(function(t){
+    var option = document.createElement('option');
+    option.value = t.id;
+    option.textContent = (t.index ? t.index + '. ' : '') + t.name;
+    demoSelect.appendChild(option);
+  });
+
+  function paintDemo(){
+    var t = demoTheme;
+    if (!t) return;
+    demo.style.setProperty('--demo-bg', t.palette.bg);
+    demo.style.setProperty('--demo-side', t.palette.side);
+    demo.style.setProperty('--demo-ink', t.palette.ink);
+    demo.style.setProperty('--demo-muted', t.palette.muted || '#8fa3b4');
+    demo.style.setProperty('--demo-accent', t.palette.c1);
+    demo.style.setProperty('--demo-accent2', t.palette.c2);
+    demo.style.setProperty('--demo-soft', hexA(t.palette.c1, 0.13));
+    demo.style.setProperty('--demo-line', hexA(t.palette.ink, 0.12));
+    demo.style.setProperty('--demo-card', hexA(t.palette.ink, 0.045));
+    demo.style.setProperty('--demo-thumb', 'linear-gradient(135deg,' + hexA(t.palette.c1, .36) + ',' + hexA(t.palette.c2, .26) + ')');
+    demoSlot.innerHTML = art(t);
+    document.getElementById('demoCrumbs').textContent = 'Home / Saved · ' + t.name;
+    document.getElementById('demoBadge').textContent = (10 + (t.index % 4)) + ' selected';
+    markLive();
+  }
+
+  demoSelect.addEventListener('change', function(){
+    demoTheme = THEMES.filter(function(x){ return x.id === demoSelect.value; })[0] || THEMES[0];
+    paintDemo();
+  });
+  demoTheme = THEMES[0] || null;
+  if (demoTheme) { demoSelect.value = demoTheme.id; }
+
+  /* ---------------- eye tracking ---------------- */
+  function markLive(){
+    liveStickers = [];
+    Array.prototype.forEach.call(document.querySelectorAll('.stage .art, .stage.split .before svg, .demo-slot svg'), function(svg){
+      if (!svg) return;
+      Array.prototype.forEach.call(svg.querySelectorAll('.imp-face-group'), function(face){
+        var eyes = face.querySelector('.imp-eyes-track');
+        if (eyes) liveStickers.push({ svg: svg, eyes: eyes });
+      });
+    });
+  }
+
+  document.addEventListener('mousemove', function(ev){
+    if (!trackOn) return;
+    liveStickers.forEach(function(item){
+      var r = item.svg.getBoundingClientRect();
+      if (!r.width) return;
+      var dx = ev.clientX - (r.left + r.width / 2);
+      var dy = ev.clientY - (r.top + r.height / 2);
+      var dist = Math.hypot(dx, dy) || 1;
+      var amp = Math.min(1, dist / 190) * 3.4;
+      item.eyes.style.transform =
+        'translate(' + ((dx / dist) * amp).toFixed(2) + 'px,' + ((dy / dist) * amp).toFixed(2) + 'px)';
+    });
+  }, { passive: true });
+
+  document.addEventListener('mouseleave', function(){
+    liveStickers.forEach(function(item){ item.eyes.style.transform = ''; });
+  });
+
+  /* ---------------- controls ---------------- */
+  var sizeRange = document.getElementById('sizeRange');
+  var sizeVal = document.getElementById('sizeVal');
+  function syncSize(){
+    stagePx = parseInt(sizeRange.value, 10);
+    sizeVal.textContent = stagePx + ' px';
+    document.documentElement.style.setProperty('--stage', stagePx + 'px');
+    Array.prototype.forEach.call(document.querySelectorAll('.stage .art'), function(svg){
+      svg.style.width = stagePx + 'px';
+      svg.style.height = stagePx + 'px';
+    });
+  }
+  sizeRange.addEventListener('input', syncSize);
+
+  var animToggle = document.getElementById('animToggle');
+  animToggle.addEventListener('change', function(){
+    animOn = animToggle.checked;
+    document.body.classList.toggle('anim-on', animOn);
+  });
+
+  var trackToggle = document.getElementById('trackToggle');
+  trackToggle.addEventListener('change', function(){
+    trackOn = trackToggle.checked;
+    if (!trackOn) liveStickers.forEach(function(item){ item.eyes.removeAttribute('transform'); });
+  });
+
+  function repaint(){
+    cards.forEach(function(card){ card.paint(); });
+    paintDemo();
+    syncSize();
+  }
+
+  /* ---------------- theme 12: random hammer clash every 1–3 s ---------------- */
+  function fireClash(){
+    if (animOn) {
+      Array.prototype.forEach.call(document.querySelectorAll('.stage .art, .demo-slot svg'), function(svg){
+        if (!svg.querySelector('.imp-hammer-l')) return;
+        svg.classList.add('clash');
+        window.setTimeout(function(){ svg.classList.remove('clash'); }, 800);
+      });
+    }
+    window.setTimeout(fireClash, 1000 + Math.random() * 2000);
+  }
+  fireClash();
+
+  /* ---------------- theme 06: one random strike spot, random 1–3 s ---------------- */
+  function fireThunder(){
+    if (animOn) {
+      Array.prototype.forEach.call(document.querySelectorAll('.stage .art, .demo-slot svg'), function(svg){
+        var spots = svg.querySelectorAll('.imp-strike');
+        if (!spots.length) return;
+        var spot = spots[Math.floor(Math.random() * spots.length)];
+        spot.classList.add('is-hit');
+        window.setTimeout(function(){ spot.classList.remove('is-hit'); }, 560);
+      });
+    }
+    window.setTimeout(fireThunder, 1000 + Math.random() * 2000);
+  }
+  fireThunder();
+
+  /* ---------------- first paint ---------------- */
+  document.body.classList.toggle('anim-on', animOn);
+  repaint();
+  window.addEventListener('resize', markLive);
+})();
+</script>
+  <a class="dl" id="dlBtn" href="download/In-st-Sanity-sticker-preview.html"
+     download="In-st-Sanity-sticker-preview.html" rel="noopener">↓ Download this preview (.html)</a>
+  <div class="dl-fallback" id="dlFallback" hidden>
+    <b>The browser blocked the download inside this frame.</b>
+    <span>Open the preview in its own tab and press the button there — or copy this link:</span>
+    <input id="dlUrl" readonly spellcheck="false">
+    <div class="dl-row">
+      <button id="dlCopy" type="button">Copy link</button>
+      <button id="dlClose" type="button">Close</button>
+    </div>
+  </div>
+  <script>
+  (function () {
+    var btn = document.getElementById('dlBtn');
+    var box = document.getElementById('dlFallback');
+    var url = document.getElementById('dlUrl');
+    if (!btn || !box) return;
+    var href = new URL(btn.getAttribute('href'), location.href).href;
+    url.value = href;
+    function fail() { box.hidden = false; }
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (window.self !== window.top) {
+        var w = null;
+        try { w = window.open(href, '_blank', 'noopener'); } catch (err) { w = null; }
+        if (!w) fail();
+        return;
+      }
+      if (!window.fetch || !window.Blob || !window.URL || !URL.createObjectURL) { fail(); return; }
+      try {
+        fetch(href, { cache: 'no-store' }).then(function (r) {
+          if (!r.ok) throw new Error('http ' + r.status);
+          return r.blob();
+        }).then(function (b) {
+          var u = URL.createObjectURL(b);
+          var a = document.createElement('a');
+          a.href = u;
+          a.download = 'In-st-Sanity-sticker-preview.html';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
+        }).catch(fail);
+      } catch (err) { fail(); }
+    });
+    document.getElementById('dlCopy').addEventListener('click', function () {
+      url.select();
+      try { document.execCommand('copy'); } catch (err) {}
+      this.textContent = 'Copied';
+    });
+    document.getElementById('dlClose').addEventListener('click', function () { box.hidden = true; });
+  })();
+  </script>
+</body>
+</html>
