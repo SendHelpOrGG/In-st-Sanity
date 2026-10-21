@@ -796,21 +796,30 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
             </div>
           </div>
         </div>
-        <div class="settings-card collapsed">
+                <div class="settings-card collapsed">
+          <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
+            <div class="settings-card-head-inner">
+            <div class="settings-card-head-text">
+              <h2>Background</h2>
+              <p>Choose a photo or animated GIF. Crop photos, and use the shared opacity control for either.</p>
+            </div>
+            <span class="settings-card-chevron" aria-hidden="true">▾</span>
+          </div></div>
+          <div class="setting-body"><div class="background-actions"><button class="outline" onclick="document.getElementById('backgroundFile').click()">Choose picture…</button><button class="outline" onclick="document.getElementById('backgroundGifFile').click()">Choose GIF…</button><button class="outline" onclick="resetBackground()">Default theme</button><input id="backgroundFile" type="file" accept="image/jpeg,image/png,image/webp,image/bmp" hidden onchange="importBackground(event)"><input id="backgroundGifFile" type="file" accept="image/gif,.gif" hidden onchange="importBackgroundGif(event)"></div><label class="field-label opacity-label" for="backgroundOpacity">Background opacity <strong id="backgroundOpacityValue">30%</strong></label><input class="opacity-slider" id="backgroundOpacity" type="range" min="0" max="80" value="30" oninput="setBackgroundOpacity(this.value)"><p class="hint">The original dark gradient stays underneath the image.</p></div>
+        </div>
+<div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
             <div class="settings-card-head-inner">
               <div class="settings-card-head-text">
-                <h2>Font size</h2>
+                <h2>UI scale (beta)</h2>
                 <p>Scale text across the entire app. Affects headings, cards, and controls.</p>
               </div>
               <span class="settings-card-chevron" aria-hidden="true">▾</span>
             </div></div>
           <div class="setting-body">
             <div class="anim-group">
-              <div class="anim-group-title">Typography</div>
-              <label class="field-label opacity-label" for="appFontScale">Font size <strong id="appFontScaleValue">100%</strong></label>
+              <label class="field-label opacity-label" for="appFontScale">UI scale <strong id="appFontScaleValue">100%</strong></label>
               <input class="opacity-slider" id="appFontScale" type="range" min="75" max="140" value="100" oninput="setAppFontScale(this.value)">
-              <p class="hint">100% is the default. Scales all text sizes.</p>
               <div class="background-actions" style="margin-top:12px">
                 <button type="button" class="outline" onclick="resetAppFontScale()">Reset to default</button>
               </div>
@@ -874,17 +883,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 
           </div>
           </div>
-        <div class="settings-card collapsed">
-          <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
-            <div class="settings-card-head-inner">
-            <div class="settings-card-head-text">
-              <h2>Background</h2>
-              <p>Choose a photo or animated GIF. Crop photos, and use the shared opacity control for either.</p>
-            </div>
-            <span class="settings-card-chevron" aria-hidden="true">▾</span>
-          </div></div>
-          <div class="setting-body"><div class="background-actions"><button class="outline" onclick="document.getElementById('backgroundFile').click()">Choose picture…</button><button class="outline" onclick="document.getElementById('backgroundGifFile').click()">Choose GIF…</button><button class="outline" onclick="resetBackground()">Default theme</button><input id="backgroundFile" type="file" accept="image/jpeg,image/png,image/webp,image/bmp" hidden onchange="importBackground(event)"><input id="backgroundGifFile" type="file" accept="image/gif,.gif" hidden onchange="importBackgroundGif(event)"></div><label class="field-label opacity-label" for="backgroundOpacity">Background opacity <strong id="backgroundOpacityValue">30%</strong></label><input class="opacity-slider" id="backgroundOpacity" type="range" min="0" max="80" value="30" oninput="setBackgroundOpacity(this.value)"><p class="hint">The original dark gradient stays underneath the image.</p></div>
-        </div>
+
         <div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
             <div class="settings-card-head-inner">
@@ -1414,7 +1413,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSortMenu()});
 function normSearchStr(s){try{return String(s||'').normalize('NFKC').toLowerCase()}catch(_){return String(s||'').toLowerCase()}}
 function getPostSearchHaystack(p,idx){if(!p)return '';const scLower=String(p.shortcode||'').toLowerCase();if(scLower&&clientSummaryCache[scLower]&&(needsSummaryResolution(p)||(!p.fullCaption&&clientSummaryCache[scLower].caption))){applyPostSummaryData(p,clientSummaryCache[scLower])}const mediaType=(p.videoCount>0&&p.photoCount===0)?'reel video':(p.videoCount>0?'carousel photo video':'photo post');return normSearchStr([p.title,p.fullCaption,p.location,p.owner,p.ownerFull,p.shortcode,p.url,p.date,p.likes,p.rawJsonText,mediaType,`#${idx+1}`].filter(Boolean).join(' '))}
 function getFilteredSortedPosts(){const rawQ=(document.getElementById('search')?.value||'').trim();const q=normSearchStr(rawQ);const qTokens=q?q.split(/\s+/).filter(Boolean):[];const selectedOnly=filter==='selected';const list=[];for(let i=0;i<posts.length;i++){const p=posts[i];if(!p)continue;p._idx=i;if(selectedOnly&&getPostSelectedCount(p)<=0)continue;if(qTokens.length){const hay=getPostSearchHaystack(p,i);const hayBare=hay.replace(/[@#]/g,'');const matched=qTokens.every(tok=>{if(hay.includes(tok))return true;const bareTok=tok.replace(/^[@#]+/,'');return Boolean(bareTok&&hayBare.includes(bareTok))});if(!matched)continue}list.push(p)}if(sortMode==='oldest')list.reverse();else if(sortMode==='likes')list.sort((a,b)=>likesAsNumber(b.likes)-likesAsNumber(a.likes));return list}
-function buildPaginationHtml(totalFiltered,totalPages,startIdx){const endIdx=Math.min(startIdx+PAGE_SIZE,totalFiltered);const rangeLabel=totalFiltered?`Showing ${startIdx+1}–${endIdx} of ${totalFiltered} · Page ${currentPage} of ${totalPages}`:`Page 1 of 1`;const pages=[];if(totalPages<=7){for(let p=1;p<=totalPages;p++)pages.push(p)}else{pages.push(1);let left=Math.max(2,currentPage-1),right=Math.min(totalPages-1,currentPage+1);if(currentPage<=3){left=2;right=4}else if(currentPage>=totalPages-2){left=totalPages-3;right=totalPages-1}if(left>2)pages.push('…');for(let p=left;p<=right;p++)pages.push(p);if(right<totalPages-1)pages.push('…');pages.push(totalPages)}return `<span class="page-info">${rangeLabel}</span><button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage<=1?'disabled':''}>← Prev</button>${pages.map(p=>p==='…'?'<span class="page-ellipsis">…</span>':`<button class="page-btn ${p===currentPage?'active':''}" onclick="goToPage(${p})">${p}</button>`).join('')}<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage>=totalPages?'disabled':''}>Next →</button>`}
+function buildPaginationHtml(totalFiltered,totalPages,startIdx){const pages=[];if(totalPages<=7){for(let p=1;p<=totalPages;p++)pages.push(p)}else{pages.push(1);let left=Math.max(2,currentPage-1),right=Math.min(totalPages-1,currentPage+1);if(currentPage<=3){left=2;right=4}else if(currentPage>=totalPages-2){left=totalPages-3;right=totalPages-1}if(left>2)pages.push('…');for(let p=left;p<=right;p++)pages.push(p);if(right<totalPages-1)pages.push('…');pages.push(totalPages)}return `<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage<=1?'disabled':''}>← Prev</button>${pages.map(p=>p==='…'?'<span class="page-ellipsis">…</span>':`<button class="page-btn ${p===currentPage?'active':''}" onclick="goToPage(${p})">${p}</button>`).join('')}<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage>=totalPages?'disabled':''}>Next →</button>`}
 function goToPage(page){const list=getFilteredSortedPosts();const totalPages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));const next=Math.min(Math.max(1,Number(page)||1),totalPages);if(next===currentPage)return;currentPage=next;const mainEl=document.querySelector('main');if(mainEl)mainEl.scrollTop=0;const swap=()=>{render()};if(typeof document.startViewTransition==='function'){try{document.startViewTransition(swap)}catch(_){swap()}}else{swap()}loadCurrentPagePosts();scheduleNextPageWarm()}
 const LIKES_HEART_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:11px;height:11px;display:inline-block;vertical-align:-1px;margin-right:2px"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6z"/></svg>';
 function buildPostAccountText(post){
@@ -5115,8 +5114,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.64';
+const APP_VERSION='1.65';
 const VERSION_HISTORY=[
+  {version:'1.65',added:'No new features.',removed:'The Showing X–Y of Z page count and the Typography label/hint inside UI scale.',fixed:'UI settings Font size → UI scale (beta); Background moved to second below Theme; pagination now shows only Prev/Next + page numbers.',tone:'yellow'},
   {version:'1.64',added:'No new features.',removed:'No new features.',fixed:'Second Aatrox laugh (40% Original Laugh) 10% quieter — 0.792→0.713, fight-me stays 0.792.',tone:'green'},
   {version:'1.63',added:'No new features.',removed:'No new features.',fixed:'Restore loading screen — revert broken text-wrapper scaling, keep wordmark fixed everywhere via font-size scaling.',tone:'green'},
   {version:'1.62',added:'No new features.',removed:'No new features.',fixed:'Fix font scaling that froze the loading screen — wrap only body text and skip title/head/svg so the boot animation can finish.',tone:'green'},
@@ -5380,7 +5380,7 @@ function setAppFontScale(val){
 function resetAppFontScale(){
   appFontScalePercent = 100;
   applyAppFontScale(true);
-  try{ if(typeof toast==='function') toast('Font size reset to 100%'); }catch(_){}
+  try{ if(typeof toast==='function') toast('UI scale reset to 100%'); }catch(_){}
 }
 loadAppFontScale();
 (function setupFontScale(){
