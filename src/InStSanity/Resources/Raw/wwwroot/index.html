@@ -5115,8 +5115,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.60';
+const APP_VERSION='1.61';
 const VERSION_HISTORY=[
+  {version:'1.61',added:'No new features.',removed:'No new features.',fixed:'Font scaling now leaves the In[st]Sanity wordmark everywhere untouched and scales only text (via inline text wrappers + transform) so buttons, cards and modals keep their size and proportions.',tone:'green'},
   {version:'1.60',added:'No new features.',removed:'The whole-UI zoom on font scaling.',fixed:'Font size now scales only text (per-element font-size via --app-font-scale) instead of zooming the entire layout; slider hint updated.',tone:'green'},
   {version:'1.59',added:'Font size control in UI settings with reset to default.',removed:'Best-effort by design notice.',fixed:'Loading-screen loudness now 13% by default; post carousels Select all photos and Download now share the same 35px button size.',tone:'yellow'},
   {version:'1.58',added:'No new features.',removed:'No removals.',fixed:'Reduce both Aatrox laughs by 10% — volume 0.88→0.792.',tone:'green'},
@@ -5296,30 +5297,55 @@ function loadAppFontScale(){
     if(isFinite(n)) appFontScalePercent = Math.max(75, Math.min(140, n));
   }catch(_){}
 }
-function captureOriginalFontSizes(root){
+function isAppNameNode(node){
+  try{
+    if(!node) return false;
+    var el = node.nodeType===1 ? node : node.parentElement;
+    if(!el || !el.closest) return false;
+    if(el.closest('#sidebarBrandName, .brand-name, .brand, .logo, .app-version-button, #lsBoot, [data-text="In[st]Sanity"]')) return true;
+    var txt = (node.textContent || node.nodeValue || '').trim();
+    if(txt === 'In[st]Sanity') return true;
+    // SVG brandName in loading screens contains this text
+    if(el.closest('svg') && txt.indexOf('In[st]Sanity')!==-1) return true;
+  }catch(_){}
+  return false;
+}
+function wrapTextNodesForScaling(root){
   root = root || document;
-  var els = root.querySelectorAll ? root.querySelectorAll('*') : [];
-  for(var i=0;i<els.length;i++){
-    var el = els[i];
-    if(el.dataset.origFontSize) continue;
-    var cs = null;
-    try{ cs = getComputedStyle(el); }catch(_){}
-    if(!cs) continue;
-    var fs = cs.fontSize;
-    if(!fs || fs.indexOf('px') === -1) continue;
-    var n = parseFloat(fs);
-    if(!isFinite(n) || n<=0) continue;
-    el.dataset.origFontSize = String(n);
-  }
-  if(root !== document && root.dataset && !root.dataset.origFontSize){
-    try{
-      var cs2 = getComputedStyle(root);
-      var fs2 = cs2.fontSize;
-      if(fs2 && fs2.indexOf('px')!==-1){
-        var n2 = parseFloat(fs2);
-        if(isFinite(n2) && n2>0) root.dataset.origFontSize = String(n2);
-      }
-    }catch(_){}
+  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(node){
+      try{
+        if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var parent = node.parentElement;
+        if(!parent) return NodeFilter.FILTER_REJECT;
+        var tag = parent.tagName;
+        if(tag==='SCRIPT' || tag==='STYLE' || tag==='NOSCRIPT' || tag==='CODE' || tag==='PRE') return NodeFilter.FILTER_REJECT;
+        if(parent.closest && parent.closest('svg')) return NodeFilter.FILTER_REJECT;
+        if(isAppNameNode(node) || isAppNameNode(parent)) return NodeFilter.FILTER_REJECT;
+        if(parent.dataset && parent.dataset.fontScaleText === '1') return NodeFilter.FILTER_REJECT;
+        // already wrapped?
+        if(parent.hasAttribute && parent.hasAttribute('data-font-scale-wrapped')) return NodeFilter.FILTER_REJECT;
+      }catch(_){}
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  var nodes = [];
+  var n;
+  while(n = walker.nextNode()) nodes.push(n);
+  for(var i=0;i<nodes.length;i++){
+    var textNode = nodes[i];
+    var parent = textNode.parentElement;
+    if(!parent) continue;
+    // don't wrap if parent is already a scaling wrapper
+    if(parent.dataset.fontScaleText === '1') continue;
+    var span = document.createElement('span');
+    span.setAttribute('data-font-scale-text','1');
+    span.style.display = 'inline-block';
+    span.style.transformOrigin = 'left center';
+    span.style.willChange = 'transform';
+    // preserve original text
+    span.textContent = textNode.nodeValue;
+    try{ parent.replaceChild(span, textNode); }catch(_){}
   }
 }
 function applyAppFontScale(save){
@@ -5329,18 +5355,26 @@ function applyAppFontScale(save){
   try{
     document.documentElement.style.setProperty('--app-font-scale', scale.toFixed(3));
     document.body.style.zoom = '';
+    // cleanup legacy per-element fontSize from 1.60 (keep layout fixed)
+    var legacy = document.querySelectorAll('[data-orig-font-size]');
+    for(var i=0;i<legacy.length;i++){
+      try{ legacy[i].style.fontSize = ''; }catch(_){}
+    }
     if(!document.body.dataset.fontScaleCaptured){
-      captureOriginalFontSizes(document);
+      wrapTextNodesForScaling(document);
       document.body.dataset.fontScaleCaptured = '1';
     }
   }catch(_){}
   try{
-    var els = document.querySelectorAll('[data-orig-font-size]');
+    var els = document.querySelectorAll('[data-font-scale-text]');
     for(var i=0;i<els.length;i++){
       var el = els[i];
-      var orig = parseFloat(el.dataset.origFontSize);
-      if(!isFinite(orig)) continue;
-      el.style.fontSize = (orig * scale).toFixed(2) + 'px';
+      if(isAppNameNode(el)) continue;
+      if(scale === 1){
+        el.style.transform = '';
+      } else {
+        el.style.transform = 'scale(' + scale.toFixed(3) + ')';
+      }
     }
   }catch(_){}
   var sl = document.getElementById('appFontScale');
@@ -5361,29 +5395,25 @@ function resetAppFontScale(){
 loadAppFontScale();
 (function setupFontScale(){
   function init(){
-    try{ captureOriginalFontSizes(document); document.body.dataset.fontScaleCaptured='1'; }catch(_){}
+    try{ wrapTextNodesForScaling(document); document.body.dataset.fontScaleCaptured='1'; }catch(_){}
     applyAppFontScale(false);
     try{
       var obs = new MutationObserver(function(muts){
+        var needsWrap = false;
         for(var i=0;i<muts.length;i++){
           var m = muts[i];
           for(var j=0;j<m.addedNodes.length;j++){
             var n = m.addedNodes[j];
-            if(n.nodeType!==1) continue;
-            captureOriginalFontSizes(n);
-            var scale = appFontScalePercent/100;
-            if(n.dataset.origFontSize){
-              var orig = parseFloat(n.dataset.origFontSize);
-              if(isFinite(orig)) n.style.fontSize = (orig*scale).toFixed(2)+'px';
-            }
-            var inner = n.querySelectorAll ? n.querySelectorAll('[data-orig-font-size]') : [];
-            for(var k=0;k<inner.length;k++){
-              var el2 = inner[k];
-              var o2 = parseFloat(el2.dataset.origFontSize);
-              if(isFinite(o2)) el2.style.fontSize = (o2*scale).toFixed(2)+'px';
+            if(n.nodeType===1 || n.nodeType===3){
+              needsWrap = true;
+              break;
             }
           }
+          if(needsWrap) break;
         }
+        if(!needsWrap) return;
+        try{ wrapTextNodesForScaling(document); }catch(_){}
+        try{ applyAppFontScale(false); }catch(_){}
       });
       obs.observe(document.documentElement, {childList:true, subtree:true});
     }catch(_){}
