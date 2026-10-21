@@ -5094,8 +5094,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.55';
+const APP_VERSION='1.56';
 const VERSION_HISTORY=[
+  {version:'1.56',added:'No new features.',removed:'No removals.',fixed:'Loading-screen trident hand 30% smaller on v1 — impHand inside tridentFork now scaleFac*0.7.',tone:'green'},
   {version:'1.55',added:'Added second laugh — Aatrox_Original_Laugh_0.ogg (no cuts) joins fight-me; weighted random 65%/35%, both through big hall with fade.',tone:'yellow'},
   {version:'1.54',added:'No new features.',removed:'No removals.',fixed:'Aatrox laugh extended to ~2.9s (was 2.5s) for even longer cut.',tone:'green'},
   {version:'1.53',added:'No new features.',removed:'No removals.',fixed:'Aatrox laugh extended to ~2.5s and starts ~0.38s earlier so it lands before the screen fades on all 5 variants.',tone:'green'},
@@ -6303,7 +6304,7 @@ function stickerParts(u,o={}){
         <line x1="0" y1="0" x2="${shaftEnd.toFixed(1)}" y2="0" stroke="${c1}" stroke-width="${(7*hs).toFixed(1)}" stroke-linecap="round"/>
         <line x1="0" y1="0" x2="${shaftEnd.toFixed(1)}" y2="0" stroke="#ffffff" stroke-width="${(2.6*hs).toFixed(1)}" stroke-linecap="round"/>
         ${rings}
-        ${impHand(u,isLeft,scaleFac)}
+        ${impHand(u,isLeft,scaleFac*0.7)}
         ${prongs(u,shaftEnd,scaleFac)}
       </g></g>`;
   }
