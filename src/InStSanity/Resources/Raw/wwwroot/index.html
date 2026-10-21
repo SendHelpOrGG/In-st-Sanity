@@ -3401,7 +3401,7 @@ function drawLeavingCackle(state,now){
   const topY=92.5,botY=96.5+mouthOpen*1.45,pal=n.palette;
   n.face.style.transform=`translate3d(${headShakeX.toFixed(2)}px,${headBounceY.toFixed(2)}px,0) rotate(${headTilt.toFixed(2)}deg) scale(1.065)`;
   if(n.horns)n.horns.style.transform=`translate3d(0px,${(-wave*3.2).toFixed(2)}px,0)`;
-  if(n.hornPath)n.hornPath.setAttribute('d','M56 56 L52 72 L71 80.5 M104 56 L108 72 L89 80.5');
+  if(n.hornPath && n.defaultHornD==='M56 56 L52 72 L71 78 M104 56 L108 72 L89 78')n.hornPath.setAttribute('d','M56 56 L52 72 L71 80.5 M104 56 L108 72 L89 80.5');
   if(n.eyesBlink)n.eyesBlink.style.transform=`translate3d(0px,${(-wave).toFixed(2)}px,0)`;
   if(n.defaultEyes)n.defaultEyes.style.display='none';
   if(n.exprEyes)n.exprEyes.innerHTML=`<polygon points="60,79.5 75,83.5 71.5,87.8 60.5,85" fill="${pal.c1}"/><polygon points="100,79.5 85,83.5 88.5,87.8 99.5,85" fill="${pal.c2}"/><circle cx="68.5" cy="83.8" r="1.6" fill="${pal.pupil}"/><circle cx="91.5" cy="83.8" r="1.6" fill="${pal.pupil}"/>`;
@@ -4006,7 +4006,7 @@ function resetAllAnimationSettings(){
 
         c.face.style.transform=`translate3d(${baseTx.toFixed(2)}px,${bounceY.toFixed(2)}px,0) rotate(${tilt.toFixed(2)}deg) scale(${popScale.toFixed(3)})`;
         if(c.horns)c.horns.style.transform=`translate3d(0px,${(-cackleWave*3.2).toFixed(2)}px,0)`;
-        if(c.hornsPath)c.hornsPath.setAttribute('d',`M56 56 L52 72 L71 ${(78+laughEnv*2.4).toFixed(1)} M104 56 L108 72 L89 ${(78+laughEnv*2.4).toFixed(1)}`);
+        if(c.hornsPath && c.defaultHornsD==='M56 56 L52 72 L71 78 M104 56 L108 72 L89 78')c.hornsPath.setAttribute('d',`M56 56 L52 72 L71 ${(78+laughEnv*2.4).toFixed(1)} M104 56 L108 72 L89 ${(78+laughEnv*2.4).toFixed(1)}`);
 
         if(c.eyesBlink)c.eyesBlink.style.transform=`translate3d(0px,${(-cackleWave).toFixed(2)}px,0)`;
         if(laughEnv>0.2){
@@ -4122,7 +4122,7 @@ function resetAllAnimationSettings(){
 
       c.face.style.transform=`translate3d(${headShakeX.toFixed(2)}px,${headBounceY.toFixed(2)}px,0) rotate(${headTilt.toFixed(2)}deg) scale(${(baseScale*(1+env*0.065)).toFixed(3)})`;
       if(c.horns)c.horns.style.transform=`translate3d(0px,${(-cackleWave*3.2*env).toFixed(2)}px,0)`;
-      if(c.hornsPath)c.hornsPath.setAttribute('d',`M56 56 L52 72 L71 ${(78+env*2.5).toFixed(1)} M104 56 L108 72 L89 ${(78+env*2.5).toFixed(1)}`);
+      if(c.hornsPath && c.defaultHornsD==='M56 56 L52 72 L71 78 M104 56 L108 72 L89 78')c.hornsPath.setAttribute('d',`M56 56 L52 72 L71 ${(78+env*2.5).toFixed(1)} M104 56 L108 72 L89 ${(78+env*2.5).toFixed(1)}`);
       if(c.eyesBlink)c.eyesBlink.style.transform=`translate3d(0px,${(-cackleWave).toFixed(2)}px,0)`;
 
       if(env>0.18){
@@ -4154,7 +4154,7 @@ function resetAllAnimationSettings(){
 
       c.face.style.transform=`translate3d(${headLeanX.toFixed(2)}px,${headLeanY.toFixed(2)}px,0) rotate(${(baseRot+lookShift*-0.45).toFixed(2)}deg) scale(${zoom.toFixed(3)})`;
       if(c.hornsPath){
-        c.hornsPath.setAttribute('d',`M56 ${(56+env*2.5).toFixed(1)} L52 ${(72+env*2.5).toFixed(1)} L71 ${(78+env*2.2).toFixed(1)} M104 ${(56-env*2.5).toFixed(1)} L108 ${(72-env*2.0).toFixed(1)} L89 ${(78-env*2.2).toFixed(1)}`);
+        if(c.defaultHornsD==='M56 56 L52 72 L71 78 M104 56 L108 72 L89 78') c.hornsPath.setAttribute('d',`M56 ${(56+env*2.5).toFixed(1)} L52 ${(72+env*2.5).toFixed(1)} L71 ${(78+env*2.2).toFixed(1)} M104 ${(56-env*2.5).toFixed(1)} L108 ${(72-env*2.0).toFixed(1)} L89 ${(78-env*2.2).toFixed(1)}`);
       }
       // Move the entire eyesBlink container (which includes .imp-eye-glow-halo AND the squinting eyes) together!
       if(c.eyesBlink){
@@ -4182,7 +4182,7 @@ function resetAllAnimationSettings(){
 
       c.face.style.transform=`translate3d(${baseTx.toFixed(2)}px,${headDropY.toFixed(2)}px,0) rotate(${baseRot.toFixed(2)}deg) scale(${zoom.toFixed(3)})`;
       if(c.hornsPath){
-        c.hornsPath.setAttribute('d',`M56 ${(56-env*1.5).toFixed(1)} L52 72 L71 ${(78+env*1.8).toFixed(1)} M104 ${(56-env*1.5).toFixed(1)} L108 72 L89 ${(78+env*1.8).toFixed(1)}`);
+        if(c.defaultHornsD==='M56 56 L52 72 L71 78 M104 56 L108 72 L89 78') c.hornsPath.setAttribute('d',`M56 ${(56-env*1.5).toFixed(1)} L52 72 L71 ${(78+env*1.8).toFixed(1)} M104 ${(56-env*1.5).toFixed(1)} L108 72 L89 ${(78+env*1.8).toFixed(1)}`);
       }
       if(c.defaultEyes)c.defaultEyes.style.display='none';
       if(c.exprEyes){
@@ -4252,6 +4252,7 @@ function resetAllAnimationSettings(){
        independent left/right tilts are baked into the d attribute. */
     const HORN_L=[[56,56],[52,72],[71,78]], HORN_R=[[104,56],[108,72],[89,78]];
     function hornPath(tiltL,tiltR,lift){
+      try{ var curD=(typeof c!=='undefined'&&c&&c.defaultHornsD)?c.defaultHornsD:(typeof stickerDomCache!=='undefined'&&stickerDomCache&&stickerDomCache.defaultHornsD?stickerDomCache.defaultHornsD:''); if(curD && curD!=='M56 56 L52 72 L71 78 M104 56 L108 72 L89 78') return null; }catch(_){}
       const rot=(p,cx,cy,deg)=>{
         const r=deg*Math.PI/180, c=Math.cos(r), s=Math.sin(r);
         return [cx+(p[0]-cx)*c-(p[1]-cy)*s, cy+(p[0]-cx)*s+(p[1]-cy)*c];
@@ -4981,6 +4982,54 @@ window.getImpOverlayHeadScale=function(){
     return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rotDeg.toFixed(1)}) scale(1.18)" opacity="${opacity.toFixed(2)}"><rect x="-8" y="-5" width="16" height="10" rx="5" fill="${pal.mouthFill}" stroke="${pal.c1}" stroke-width="2.2"/><path d="M -5 -4 L -7 -10 M 0 -5 L 0 -11 M 5 -4 L 7 -10" stroke="${pal.line}" stroke-width="2.2" stroke-linecap="round" fill="none"/></g>`;
   }
 
+
+function getThemedPeekHeadParts(){
+  try{
+    var tid=(typeof currentStickerThemeId!=='undefined'&&currentStickerThemeId)?currentStickerThemeId:(typeof THEME_ORDER!=='undefined'?THEME_ORDER[0]:'default');
+    var svg=(typeof THEME_STICKER_SVGS!=='undefined'?THEME_STICKER_SVGS[tid]:null);
+    if(!svg) return null;
+    var headM=svg.match(/<circle class="imp-head-circle"[^>]*>/);
+    var head=null;
+    if(headM){
+      var hm=headM[0];
+      var cx=(hm.match(/cx="([^"]+)"/)||[])[1]||'80';
+      var cy=(hm.match(/cy="([^"]+)"/)||[])[1]||'80';
+      var r=(hm.match(/r="([^"]+)"/)||[])[1]||'41';
+      var fill=(hm.match(/fill="([^"]+)"/)||[])[1]||'rgba(15,23,42,.92)';
+      var stroke=(hm.match(/stroke="([^"]+)"/)||[])[1]||'#a78bfa';
+      var sw=(hm.match(/stroke-width="([^"]+)"/)||[])[1]||'2.4';
+      head={cx:cx,cy:cy,r:r,fill:fill,stroke:stroke,sw:sw};
+      // fix uid placeholder
+      if(head.fill.indexOf('{uid}')!==-1) head.fill=head.fill.replace(/{uid}/g, tid);
+      if(head.stroke.indexOf('{uid}')!==-1) head.stroke=head.stroke.replace(/{uid}/g, tid);
+    }
+    var hornsM=svg.match(/<g class="imp-horns">([\s\S]*?)<\/g>/);
+    var horns=null;
+    if(hornsM){
+      var hg=hornsM[1];
+      var dMatches=[...hg.matchAll(/d="([^"]+)"/g)];
+      if(dMatches.length){
+        // Prefer a path that contains M56/M62/M57 - the actual horn stroke, not a small circle
+        var best=null;
+        for(var i=0;i<dMatches.length;i++){
+          var d=dMatches[i][1];
+          if(d.indexOf('M56')!==-1||d.indexOf('M62')!==-1||d.indexOf('M57.1')!==-1||d.indexOf('M62 58')!==-1||d.indexOf('M62 60')!==-1) { best=d; break; }
+        }
+        if(!best) best=dMatches[0][1];
+        // Extract stroke and width for that path
+        var pathTag=hg.match(/<path[^>]*d="[^"]*"[^>]*>/g)||[];
+        var chosenTag=null;
+        for(var j=0;j<pathTag.length;j++){ if(pathTag[j].indexOf(best)!==-1){ chosenTag=pathTag[j]; break; } }
+        var stroke2=(chosenTag? (chosenTag.match(/stroke="([^"]+)"/)||[])[1]: null)||'#1e3a5f';
+        var sw2=(chosenTag? (chosenTag.match(/stroke-width="([^"]+)"/)||[])[1]: null)||'3.4';
+        if(stroke2&&stroke2.indexOf('{uid}')!==-1) stroke2=stroke2.replace(/{uid}/g,tid);
+        horns={d:best,stroke:stroke2,sw:sw2};
+      }
+    }
+    return {head:head,horns:horns};
+  }catch(_){return null;}
+}
+
   function renderPeekImpHead(exprKey,cx,cy,scale,rotDeg,lookX,lookY,now,localP,pal){
     let eyesAndMouth='';
     let hornWiggle=0;
@@ -5104,7 +5153,13 @@ window.getImpOverlayHeadScale=function(){
       `;
     }
 
-    return `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)}) rotate(${rotDeg.toFixed(1)}) scale(${scale.toFixed(3)}) translate(-80,-80)"><circle cx="80" cy="80" r="41" fill="${mouthFill}" stroke="${c1}" stroke-width="3.0"/><g transform="rotate(${hornWiggle.toFixed(2)},80,72)"><path d="M56 56 L52 72 L71 78 M104 56 L108 72 L89 78" stroke="${line}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>${eyesAndMouth}</g>`;
+    var peekParts=getThemedPeekHeadParts();
+    var headCircle=peekParts&&peekParts.head? `<circle cx="${peekParts.head.cx}" cy="${peekParts.head.cy}" r="${peekParts.head.r}" fill="${peekParts.head.fill}" stroke="${peekParts.head.stroke}" stroke-width="${peekParts.head.sw}"/>` : `<circle cx="80" cy="80" r="41" fill="${mouthFill}" stroke="${c1}" stroke-width="3.0"/>`;
+    var hornPath=peekParts&&peekParts.horns? peekParts.horns.d : 'M56 56 L52 72 L71 78 M104 56 L108 72 L89 78';
+    var hornStroke=peekParts&&peekParts.horns? peekParts.horns.stroke : line;
+    var hornSW=peekParts&&peekParts.horns? peekParts.horns.sw : '3.4';
+    // For horns that are single path with multiple Ms (v10/v11), keep as is; for two-path horns (v13) we already combined
+    return `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)}) rotate(${rotDeg.toFixed(1)}) scale(${scale.toFixed(3)}) translate(-80,-80)">${headCircle}<g transform="rotate(${hornWiggle.toFixed(2)},80,72)"><path d="${hornPath}" stroke="${hornStroke}" stroke-width="${hornSW}" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>${eyesAndMouth}</g>`;
   }
 
   window.startPostModalSneakPeek=function(){
@@ -5233,8 +5288,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.75';
+const APP_VERSION='1.76';
 const VERSION_HISTORY=[
+  {version:'1.76',added:'No new features.',removed:'No removals.',fixed:'Sticker horn now stays attached through all animations — JSON-throw, facial expressions and leaving cackle now respect the themed horn shape (2→1+1, 6→3+3, dual-path) instead of hard-coded default; carousel peek head now uses the same themed sticker (face + horns) as the side panel, eliminating mismatched old appearance and stray decor diamonds.',tone:'red'},
   {version:'1.75',added:'No new features.',removed:'No removals.',fixed:'Fixed blank black screen in preview and desktop — two syntax errors in the leaving-prompt and sticker-settings IIFE left the app unable to start; preview now loads again.',tone:'green'},
   {version:'1.74',added:'One-click Save from Browser.',removed:'No removals.',fixed:'Browser URL bar now has a Save button at its end — it sends the current Instagram post or reel to Save via URL instantly; other pages show a quick warning toast.',tone:'green'},
   {version:'1.73',added:'No new features.',removed:'No removals.',fixed:'Card now shows the correct photo/video count before you open it — a summary that came from Open Graph alone no longer freezes the badge at 1. The batch summary now falls back to save-free for counts, API-single guesses retry quickly, and opening a post heals and persists the true count.',tone:'green'},
@@ -7923,7 +7979,7 @@ function buildImp(root){
   var browL = hornPaths[0] || null, browR = hornPaths[1] || null;
   var browClone = null, hornD = browL ? browL.getAttribute('d') : null;
   if(browL && !browR){
-    var d = hornD || '', cut = d.indexOf('M', 1);
+    var d = hornD || '', cut = (function(){ var idx=[]; for(var i=0;i<d.length;i++) if(d[i]==='M') idx.push(i); if(idx.length<=1) return -1; var mid=Math.floor(idx.length/2); return idx[mid]; })();
     if(cut > 0){
       browClone = browL.cloneNode(false);
       browClone.setAttribute('class', 'imp-extra');
