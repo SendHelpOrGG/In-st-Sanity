@@ -2149,11 +2149,23 @@ function playImpButtonClickRandom(btn,targetX,targetY){
   const headCenterX=svgRect.left+svgRect.width*0.5;
   const headCenterY=svgRect.top+svgRect.height*0.48;
   const isTargetLeft=targetX<headCenterX-10;
-  // Invisible shoulder spot below/beside the Imp's jaw (no visible shoulder geometry!)
-  const shoulder={
-    x:svgRect.left+svgRect.width*(isTargetLeft?0.29:0.71),
-    y:svgRect.top+svgRect.height*0.78
-  };
+  // Unified shoulder — same imaginary points as JSON-devour (34,118 / 126,118 in sticker 160×160)
+  function unifiedClickShoulder(isLeft){
+    try{
+      const tag = isLeft ? 'imp-sh-L' : 'imp-sh-R';
+      let el = document.getElementById(tag);
+      if(!el && svg){
+        el = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        el.setAttribute('id',tag); el.setAttribute('class','imp-extra');
+        el.setAttribute('cx', isLeft ? '34' : '126'); el.setAttribute('cy','118');
+        el.setAttribute('r','0.6'); el.setAttribute('fill','none');
+        svg.appendChild(el);
+      }
+      if(el){ const r=el.getBoundingClientRect(); return {x:r.left+r.width/2, y:r.top+r.height/2}; }
+    }catch(_){}
+    return { x:svgRect.left+svgRect.width*(isLeft?0.2125:0.7875), y:svgRect.top+svgRect.height*0.7375 };
+  }
+  const shoulder=unifiedClickShoulder(isTargetLeft);
 
   const dx=targetX-shoulder.x;
   const dy=targetY-shoulder.y;
@@ -5082,8 +5094,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.48';
+const APP_VERSION='1.49';
 const VERSION_HISTORY=[
+  {version:'1.49',added:'No new features.',removed:'No removals.',fixed:'All sticker arms now start from the same shoulder points (34,118/126,118) as the JSON-devour reference — v1 Trident (CX+27.5,CY+22.7), v3 Haul now over the sticker (dual 30.7,105.8/93.3,105.8), v5 (34,118), click poke (0.2125/0.7875×0.7375) and devour Trident/Snap unified; arm length and thickness unchanged.',tone:'yellow'},
   {version:'1.48',added:'No new features.',removed:'No removals.',fixed:'Loading screens for 12-15 now use their correct dark solids (#0f0f0f/#0f0f1a/#0a0f1e/#0a0f14) instead of falling back to the accent highlight.',tone:'green'},
   {version:'1.47',added:'No new features.',removed:'No removals.',fixed:'Download and Log in text on the warm themes (12-14) is now dark (#1a160f/#0f0f1a/#0a0f1e) instead of light for readable contrast on the light buttons.',tone:'green'},
   {version:'1.46',added:'No new features.',removed:'No removals.',fixed:'Theme picker now shows the four new themes (12-15) that were already in the build.',tone:'green'},
@@ -6385,7 +6398,7 @@ function stickerParts(u,o={}){
       const gx=CX+30.2;
       const tipX=gx+Math.sin(TILT)*DIST, tipY=gy-Math.cos(TILT)*DIST;   // fork end, up in the air
       const pomX=gx-Math.sin(TILT)*POM,  pomY=gy+Math.cos(TILT)*POM;    // butt end, strikes the floor
-      E.tri.innerHTML=tridentFork(u,CX+16.9,CY+6,gx,gy,tipX,tipY,false,18.2,0.65);
+      E.tri.innerHTML=tridentFork(u,CX+27.5,CY+22.7,gx,gy,tipX,tipY,false,18.2,0.65); // unified: 126,118 @0.598 (was CX+16.9,CY+6)
       const ip=win(t,SLAM,SLAM+0.52);
       E.burst.innerHTML=(t>=SLAM&&ip<1)?`<circle cx="${pomX.toFixed(1)}" cy="${pomY.toFixed(1)}" r="${(8+ip*46).toFixed(1)}" fill="none" stroke="${T().accent2}" stroke-width="3" stroke-dasharray="10 6" opacity="${(1-ip).toFixed(2)}"/><circle cx="${pomX.toFixed(1)}" cy="${pomY.toFixed(1)}" r="${(4+ip*27).toFixed(1)}" fill="none" stroke="#ffffff" stroke-width="2.6" opacity="${((1-ip)*0.9).toFixed(2)}"/>`:'';
       E.flash.setAttribute('opacity',(t>=SLAM?0.5*Math.max(0,1-(t-SLAM)/0.16):0).toFixed(3));
@@ -6461,7 +6474,10 @@ function v2(sp){
   function v3(sp){
     const T1=6.4, u=++uid;
     const REACH=0.15, GRAB=0.70, PULL_S=0.95, PULL_E=2.95, LETGO=2.20, LAND=2.95, FA=3.20, FB=3.80;
-    const SHX=Math.min(65.6, W*0.208), SHY=CY+4, HX0=Math.min(62, W*0.20), HS=0.68;
+    const HX0=Math.min(62, W*0.20), HS=0.68;
+    // Unified shoulders: sticker 34,118 / 126,118 → boot space (preserve arm length, just re-anchored)
+    const SH_L={x:HX0+(34-80)*HS, y:CY+(118-80)*HS},
+          SH_R={x:HX0+(126-80)*HS, y:CY+(118-80)*HS};
     const SURGE=[[PULL_S,1.50,0.30],[1.60,2.18,0.36],[2.26,PULL_E,0.34]];
     const app=appEl;
     const EDGE0 = -OX/VK, PANW = vw/VK;          // the real .app's left edge / width, in viewBox units
@@ -6480,8 +6496,8 @@ function v2(sp){
       <rect id="eglo${u}" x="0" y="0" width="30" height="${H}" fill="url(#eg${u})" opacity="0"/>
       <line id="elin${u}" x1="0" y1="0" x2="0" y2="${H}" stroke="#ffffff" stroke-width="1.6" opacity="0"/>
       <g id="dust${u}">${dust}</g>
-      <g id="arms${u}"></g>
       <g id="face${u}" transform="translate(${HX0},${CY}) scale(${HS}) translate(-80,-80)"></g>
+      <g id="arms${u}"></g>
       <g id="dbg${u}">${db}</g>
       ${sw}
       <g id="burst${u}"></g>
@@ -6525,8 +6541,8 @@ function v2(sp){
       const gxA=lerp(W+52,gx,reach), gxB=lerp(W+52,gx+6,reach);
       const handOp=t<GRAB?reach:(t<LETGO?1:Math.max(0,1-(t-LETGO)/0.26));
       E.arms.innerHTML = handOp>0.02
-        ? armToHand(u,SHX,SHY-7,gxA,CY-36,true,handOp*intro,undefined,0.8)
-         +armToHand(u,SHX,SHY+9,gxB,CY+30,false,handOp*intro,undefined,0.8)
+        ? armToHand(u,SH_L.x,SH_L.y,gxA,CY-36,true,handOp*intro,undefined,0.8)
+         +armToHand(u,SH_R.x,SH_R.y,gxB,CY+30,false,handOp*intro,undefined,0.8)
         : '';
 
       const egOn=(edge>-30&&edge<W+30)?(held?1:Math.max(0,1-(t-LETGO)/0.3)):0;
@@ -6950,7 +6966,8 @@ function v4(sp){
       const hy=HY+2+2*cup-2*spinP+trem*.5;
       const hOp=enterArm*(1-Math.pow(warpP,3));
       /* imp-outer-frame is x14 y14 w132 h132: its bottom corners are 14,146 / 146,146 */
-      const shL=cardPoint(14,146,cardScale,0), shR=cardPoint(146,146,cardScale,0);
+      // Unified shoulders: 34,118 / 126,118 (same as JSON-devour), not outer corners 14,146
+      const shL=cardPoint(34,118,cardScale,0), shR=cardPoint(126,118,cardScale,0);
       E.arms.innerHTML=hOp>.02
         ? armToHandAimed(u,shL.x,shL.y,HX-gap,hy,HX,HY,true ,hOp,0.65)
          +armToHandAimed(u,shR.x,shR.y,HX+gap,hy,HX,HY,false,hOp,0.65)
@@ -8044,7 +8061,9 @@ function play(variant, fileName, totalCount){
   let finaleStart = -1;
   let tetherRaised = false;
   // Anchor the forearm at the sticker's lower-right shoulder, outside the face circle.
-  const shoulderX = impPos.x + 54, shoulderY = impPos.y + 48;
+  // Unified shoulder — right imaginary shoulder same as devour (126,118)
+  const _unifiedShC = (function(){ try{ let e=document.getElementById('imp-sh-R'); if(!e){ e=document.createElementNS('http://www.w3.org/2000/svg','circle'); e.setAttribute('id','imp-sh-R'); e.setAttribute('class','imp-extra'); e.setAttribute('cx','126'); e.setAttribute('cy','118'); e.setAttribute('r','0.6'); e.setAttribute('fill','none'); if(svg) svg.appendChild(e);} const r=e.getBoundingClientRect(); return {x:r.left+r.width/2, y:r.top+r.height/2}; }catch(_){ return {x:impPos.x+30, y:impPos.y+25}; }})();
+  const shoulderX = _unifiedShC.x, shoulderY = _unifiedShC.y;
   const fileX = startFilePos.x, fileY = startFilePos.y;
   const hitTip = { x: fileX, y: fileY + 3 };
   const aimAngleRad = Math.atan2(hitTip.y - shoulderY, hitTip.x - shoulderX);
@@ -8619,7 +8638,9 @@ function play(variant, fileName, totalCount){
         const finishRaw = cardsManifested ? clamp01((postSnapAge - finishStartAfterSnap) / finishDuration) : 0;
         const finish = easeInOutCubic(finishRaw);
         const finishing = cardsManifested && postSnapAge >= finishStartAfterSnap;
-        const shoulderX = impPos.x + 50, shoulderY = impPos.y + 43; // Start the arm slightly nearer the head.
+        // Unified shoulder — right imaginary shoulder same as devour (126,118)
+        const shoulderX = (function(){ try{ let e=document.getElementById('imp-sh-R'); if(!e){ e=document.createElementNS('http://www.w3.org/2000/svg','circle'); e.setAttribute('id','imp-sh-R'); e.setAttribute('class','imp-extra'); e.setAttribute('cx','126'); e.setAttribute('cy','118'); e.setAttribute('r','0.6'); e.setAttribute('fill','none'); if(svg) svg.appendChild(e);} const r=e.getBoundingClientRect(); return r.left+r.width/2; }catch(_){ return impPos.x+30; }})();
+        const shoulderY = (function(){ try{ let e=document.getElementById('imp-sh-R'); const r=e.getBoundingClientRect(); return r.top+r.height/2; }catch(_){ return impPos.y+25; }})();
         const handReturn = finishing ? finish : 0;
         const handX = impPos.x + 95 + snapQ * 15 - handReturn * 22;
         const handY = impPos.y + 34 - snapQ * 14 + handReturn * 18;
