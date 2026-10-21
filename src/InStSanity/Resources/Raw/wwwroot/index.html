@@ -5094,8 +5094,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.57';
+const APP_VERSION='1.58';
 const VERSION_HISTORY=[
+  {version:'1.58',added:'No new features.',removed:'No removals.',fixed:'Reduce both Aatrox laughs by 10% — volume 0.88→0.792.',tone:'green'},
   {version:'1.57',added:'No new features.',removed:'No removals.',fixed:'Tweak laugh odds to 60/40 — fight-me 60%, Original Laugh 40%.',tone:'green'},
   {version:'1.56',added:'No new features.',removed:'No removals.',fixed:'Loading-screen trident hand 30% smaller on v1 — impHand inside tridentFork now scaleFac*0.7.',tone:'green'},
   {version:'1.55',added:'Added second laugh — Aatrox_Original_Laugh_0.ogg (no cuts) joins fight-me; weighted random 65%/35%, both through big hall with fade.',tone:'yellow'},
@@ -5616,8 +5617,8 @@ function playAatroxLaugh(t0){
   var src=ctx.createBufferSource(); src.buffer=buf;
   var g=ctx.createGain();
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.88, t+0.03);
-  g.gain.setValueAtTime(0.88, fadeStart);
+  g.gain.exponentialRampToValueAtTime(0.792, t+0.03);
+  g.gain.setValueAtTime(0.792, fadeStart);
   g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
   src.connect(g);
   var p2=pan(g, 0);
