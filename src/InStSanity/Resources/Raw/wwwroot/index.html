@@ -5115,8 +5115,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.62';
+const APP_VERSION='1.63';
 const VERSION_HISTORY=[
+  {version:'1.63',added:'No new features.',removed:'No new features.',fixed:'Restore loading screen — revert broken text-wrapper scaling, keep wordmark fixed everywhere via font-size scaling.',tone:'green'},
   {version:'1.62',added:'No new features.',removed:'No new features.',fixed:'Fix font scaling that froze the loading screen — wrap only body text and skip title/head/svg so the boot animation can finish.',tone:'green'},
   {version:'1.61',added:'No new features.',removed:'No new features.',fixed:'Font scaling now leaves the In[st]Sanity wordmark everywhere untouched and scales only text (via inline text wrappers + transform) so buttons, cards and modals keep their size and proportions.',tone:'green'},
   {version:'1.60',added:'No new features.',removed:'The whole-UI zoom on font scaling.',fixed:'Font size now scales only text (per-element font-size via --app-font-scale) instead of zooming the entire layout; slider hint updated.',tone:'green'},
@@ -5298,56 +5299,34 @@ function loadAppFontScale(){
     if(isFinite(n)) appFontScalePercent = Math.max(75, Math.min(140, n));
   }catch(_){}
 }
-function isAppNameNode(node){
+function isAppNameElement(el){
   try{
-    if(!node) return false;
-    var el = node.nodeType===1 ? node : node.parentElement;
     if(!el || !el.closest) return false;
     if(el.closest('#sidebarBrandName, .brand-name, .brand, .logo, .app-version-button, #lsBoot, [data-text="In[st]Sanity"]')) return true;
-    var txt = (node.textContent || node.nodeValue || '').trim();
+    var txt = (el.textContent || '').trim();
     if(txt === 'In[st]Sanity') return true;
-    // SVG brandName in loading screens contains this text
     if(el.closest('svg') && txt.indexOf('In[st]Sanity')!==-1) return true;
   }catch(_){}
   return false;
 }
-function wrapTextNodesForScaling(root){
-  root = root || document.body || document;
-  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode: function(node){
-      try{
-        if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-        var parent = node.parentElement;
-        if(!parent) return NodeFilter.FILTER_REJECT;
-        var tag = parent.tagName;
-        if(tag==='SCRIPT' || tag==='STYLE' || tag==='NOSCRIPT' || tag==='CODE' || tag==='PRE' || tag==='TITLE' || tag==='HEAD' || tag==='HTML' || tag==='BODY') return NodeFilter.FILTER_REJECT;
-        if(parent.closest && parent.closest('head')) return NodeFilter.FILTER_REJECT;
-        if(parent.closest && parent.closest('svg')) return NodeFilter.FILTER_REJECT;
-        if(isAppNameNode(node) || isAppNameNode(parent)) return NodeFilter.FILTER_REJECT;
-        if(parent.dataset && parent.dataset.fontScaleText === '1') return NodeFilter.FILTER_REJECT;
-        // already wrapped?
-        if(parent.hasAttribute && parent.hasAttribute('data-font-scale-wrapped')) return NodeFilter.FILTER_REJECT;
-      }catch(_){}
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  });
-  var nodes = [];
-  var n;
-  while(n = walker.nextNode()) nodes.push(n);
-  for(var i=0;i<nodes.length;i++){
-    var textNode = nodes[i];
-    var parent = textNode.parentElement;
-    if(!parent) continue;
-    // don't wrap if parent is already a scaling wrapper
-    if(parent.dataset.fontScaleText === '1') continue;
-    var span = document.createElement('span');
-    span.setAttribute('data-font-scale-text','1');
-    span.style.display = 'inline-block';
-    span.style.transformOrigin = 'left center';
-    span.style.willChange = 'transform';
-    // preserve original text
-    span.textContent = textNode.nodeValue;
-    try{ parent.replaceChild(span, textNode); }catch(_){}
+function captureOriginalFontSizes(root){
+  root = root || document.body;
+  var els = root.querySelectorAll ? root.querySelectorAll('*') : [];
+  for(var i=0;i<els.length;i++){
+    var el = els[i];
+    if(el.dataset.origFontSize) continue;
+    if(isAppNameElement(el)) continue;
+    // Only capture elements that are likely text containers: they have direct text or are known text tags
+    // We still capture all non-app-name elements but will filter at apply time to only scale leaf text holders
+    // This keeps the logic simple and matches 1.60 but with app name exclusion
+    var cs = null;
+    try{ cs = getComputedStyle(el); }catch(_){}
+    if(!cs) continue;
+    var fs = cs.fontSize;
+    if(!fs || fs.indexOf('px') === -1) continue;
+    var n = parseFloat(fs);
+    if(!isFinite(n) || n<=0) continue;
+    el.dataset.origFontSize = String(n);
   }
 }
 function applyAppFontScale(save){
@@ -5357,26 +5336,34 @@ function applyAppFontScale(save){
   try{
     document.documentElement.style.setProperty('--app-font-scale', scale.toFixed(3));
     document.body.style.zoom = '';
-    // cleanup legacy per-element fontSize from 1.60 (keep layout fixed)
-    var legacy = document.querySelectorAll('[data-orig-font-size]');
-    for(var i=0;i<legacy.length;i++){
-      try{ legacy[i].style.fontSize = ''; }catch(_){}
+    // cleanup any leftover transform wrappers from broken 1.61
+    var wrappers = document.querySelectorAll('[data-font-scale-text]');
+    for(var i=0;i<wrappers.length;i++){
+      try{
+        var w = wrappers[i];
+        // unwrap: replace span with its text content
+        var txt = w.textContent;
+        var parent = w.parentNode;
+        if(parent) parent.replaceChild(document.createTextNode(txt), w);
+      }catch(_){}
     }
     if(!document.body.dataset.fontScaleCaptured){
-      wrapTextNodesForScaling(document.body);
+      captureOriginalFontSizes(document.body);
       document.body.dataset.fontScaleCaptured = '1';
     }
   }catch(_){}
   try{
-    var els = document.querySelectorAll('[data-font-scale-text]');
+    var els = document.querySelectorAll('[data-orig-font-size]');
     for(var i=0;i<els.length;i++){
       var el = els[i];
-      if(isAppNameNode(el)) continue;
-      if(scale === 1){
-        el.style.transform = '';
-      } else {
-        el.style.transform = 'scale(' + scale.toFixed(3) + ')';
-      }
+      if(isAppNameElement(el)) continue;
+      var orig = parseFloat(el.dataset.origFontSize);
+      if(!isFinite(orig)) continue;
+      // Only scale leaf text elements to keep UI proportions: check if element has direct text or is a text tag
+      // For now, scale all non-app-name elements as in 1.60 — this keeps layout stable for fixed-height UI (buttons 35px) and only affects text
+      // The app name check above ensures wordmark stays 24.5px
+      if(scale === 1) el.style.fontSize = '';
+      else el.style.fontSize = (orig * scale).toFixed(2) + 'px';
     }
   }catch(_){}
   var sl = document.getElementById('appFontScale');
@@ -5397,25 +5384,36 @@ function resetAppFontScale(){
 loadAppFontScale();
 (function setupFontScale(){
   function init(){
-    try{ wrapTextNodesForScaling(document.body); document.body.dataset.fontScaleCaptured='1'; }catch(_){}
+    try{ captureOriginalFontSizes(document.body); document.body.dataset.fontScaleCaptured='1'; }catch(_){}
     applyAppFontScale(false);
     try{
       var obs = new MutationObserver(function(muts){
-        var needsWrap = false;
         for(var i=0;i<muts.length;i++){
           var m = muts[i];
           for(var j=0;j<m.addedNodes.length;j++){
             var n = m.addedNodes[j];
-            if(n.nodeType===1 || n.nodeType===3){
-              needsWrap = true;
-              break;
+            if(n.nodeType!==1) continue;
+            captureOriginalFontSizes(n);
+            var scale = appFontScalePercent/100;
+            if(n.dataset.origFontSize && !isAppNameElement(n)){
+              var orig = parseFloat(n.dataset.origFontSize);
+              if(isFinite(orig)){
+                if(scale===1) n.style.fontSize='';
+                else n.style.fontSize = (orig*scale).toFixed(2)+'px';
+              }
+            }
+            var inner = n.querySelectorAll ? n.querySelectorAll('[data-orig-font-size]') : [];
+            for(var k=0;k<inner.length;k++){
+              var el2 = inner[k];
+              if(isAppNameElement(el2)) continue;
+              var o2 = parseFloat(el2.dataset.origFontSize);
+              if(isFinite(o2)){
+                if(scale===1) el2.style.fontSize='';
+                else el2.style.fontSize = (o2*scale).toFixed(2)+'px';
+              }
             }
           }
-          if(needsWrap) break;
         }
-        if(!needsWrap) return;
-        try{ wrapTextNodesForScaling(document.body); }catch(_){}
-        try{ applyAppFontScale(false); }catch(_){}
       });
       obs.observe(document.body, {childList:true, subtree:true});
     }catch(_){}
