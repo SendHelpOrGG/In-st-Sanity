@@ -29,7 +29,7 @@ body.sticker-anim-off .sidebar-sticker-slot svg,body.sticker-anim-off .sidebar-s
 .sidebar-sticker-slot svg .imp-eyes-blink, .main-bg-sticker svg .imp-eyes-blink{transform-origin:80px 83px;animation:impBlink 6.4s ease-in-out infinite}
 .sidebar-sticker-slot svg .imp-grin, .main-bg-sticker svg .imp-grin{transform-origin:80px 98px;animation:impSmirk 5.1s ease-in-out infinite}
 .sidebar-sticker-slot svg .imp-horns, .main-bg-sticker svg .imp-horns{transform-origin:80px 72px;animation:impHorn 7.2s ease-in-out infinite}
-.sidebar-sticker-slot svg .imp-eyes-track, .main-bg-sticker svg .imp-eyes-track{transform-box:view-box;transition:transform .03s linear}
+.sidebar-sticker-slot svg .imp-eyes-track, .main-bg-sticker svg .imp-eyes-track{transform-box:view-box}
 body.sticker-anim-off .sidebar-sticker-slot svg .imp-head-circle, body.sticker-anim-off .main-bg-sticker svg .imp-head-circle,
 body.animations-disabled .sidebar-sticker-slot svg .imp-head-circle, body.animations-disabled .main-bg-sticker svg .imp-head-circle,
 body.imp-anim-disabled .sidebar-sticker-slot svg .imp-head-circle, body.imp-anim-disabled .main-bg-sticker svg .imp-head-circle{animation:none!important}
@@ -3808,32 +3808,26 @@ function resetAllAnimationSettings(){
   function updateEyesNow(clientX,clientY){
     if(!stickerVisible||!stickerAnimEnabled||stickerOpacityPercent<=0||document.body.classList.contains('json-throw-active')||isPostCarouselModalOpen())return;
     const c=stickerDomCache||cacheSidebarStickerNodes();
-    if(!c||!c.slot)return;
-    const now=performance.now();
-    if(!c.rect||!c.rect.width||(now-c.rectTs)>300){
-      c.rect=c.slot.getBoundingClientRect();
-      c.rectTs=now;
-    }
-    const rect=c.rect;
+    if(!c||!c.slot||!c.svg)return;
+    const rect=c.svg.getBoundingClientRect();
     if(!rect.width||!rect.height)return;
     const cx=rect.left+rect.width*0.5;
     const cy=rect.top+rect.height*(83/160);
-    const dx=clientX-cx;
-    const dy=clientY-cy;
+    const dx=clientX-cx,dy=clientY-cy;
     const dist=Math.hypot(dx,dy);
     const angle=Math.atan2(dy,dx);
     const strength=Math.min(1,dist/195);
     const rawProx=Math.max(0,1-dist/420);
     const prox=rawProx>0?Math.pow(rawProx,1.15):0;
-    const cos=Math.cos(angle)*strength;
-    const sin=Math.sin(angle)*strength;
+    const cos=Math.cos(angle)*strength,sin=Math.sin(angle)*strength;
     const eyeScale=1+prox*0.32;
     const faceScale=1+prox*0.04;
+    const eyeTransform=`translate3d(${(cos*8.2).toFixed(2)}px,${(sin*6.8).toFixed(2)}px,0) scale(${eyeScale.toFixed(3)})`;
     c.cursorFaceTx=cos*4.0;
     c.cursorFaceTy=sin*3.2;
     c.cursorFaceRot=cos*5.4;
     c.cursorFaceScale=faceScale;
-    if(c.eyes)c.eyes.style.transform=`translate3d(${(cos*8.2).toFixed(2)}px,${(sin*6.8).toFixed(2)}px,0) scale(${eyeScale.toFixed(3)})`;
+    if(c.eyes)c.eyes.style.transform=eyeTransform;
     if(c.face)c.face.style.transform=`translate3d(${(cos*4.0).toFixed(2)}px,${(sin*3.2).toFixed(2)}px,0) rotate(${(cos*5.4).toFixed(2)}deg) scale(${faceScale.toFixed(3)})`;
     if(c.outer)c.outer.style.transform=`translate3d(${(cos*-2.0).toFixed(2)}px,${(sin*-1.6).toFixed(2)}px,0)`;
     if(c.halo)c.halo.style.opacity=prox.toFixed(3);
@@ -5286,8 +5280,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.80';
+const APP_VERSION='1.81';
 const VERSION_HISTORY=[
+  {version:'1.81',added:'No new features.',removed:'No removals.',fixed:'Unified sticker eye-tracking — side-panel now uses the exact same instant tracking as exit prompt (svg bounding rect, no CSS transition, eyes + face + outer + halo in sync).',tone:'green'},
   {version:'1.80',added:'No new features.',removed:'No removals.',fixed:'Tightened sticker eye-tracking — side-panel eyes now snap with .03s linear (was .12s ease-out) and face updates instantly; exit-prompt sticker now moves head with eyes (face translate/rotate/scale + outer) to match side-panel.',tone:'green'},
   {version:'1.79',added:'No new features.',removed:'No removals.',fixed:'Restored sticker eye-tracking to pre-rework rev9 behaviour — sidebar eyes, face and outer frame follow cursor with proximity scaling as in 1.67; detail-window horns fix from 1.78 retained.',tone:'green'},
   {version:'1.78',added:'No new features.',removed:'No removals.',fixed:'Detail-window sticker now uses the exact side-panel horns: post-modal peek clones the full themed imp-horns (including v1 double-layer, v10 6×C with tip circles, v13 twin fills) via depth-aware extraction instead of a single-path approximation.',tone:'red'},
