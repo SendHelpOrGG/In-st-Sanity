@@ -29,7 +29,7 @@ body.sticker-anim-off .sidebar-sticker-slot svg,body.sticker-anim-off .sidebar-s
 .sidebar-sticker-slot svg .imp-eyes-blink, .main-bg-sticker svg .imp-eyes-blink{transform-origin:80px 83px;animation:impBlink 6.4s ease-in-out infinite}
 .sidebar-sticker-slot svg .imp-grin, .main-bg-sticker svg .imp-grin{transform-origin:80px 98px;animation:impSmirk 5.1s ease-in-out infinite}
 .sidebar-sticker-slot svg .imp-horns, .main-bg-sticker svg .imp-horns{transform-origin:80px 72px;animation:impHorn 7.2s ease-in-out infinite}
-.sidebar-sticker-slot svg .imp-eyes-track, .main-bg-sticker svg .imp-eyes-track{transform-box:view-box;transition:transform .12s ease-out}
+.sidebar-sticker-slot svg .imp-eyes-track, .main-bg-sticker svg .imp-eyes-track{transform-box:view-box;transition:transform .03s linear}
 body.sticker-anim-off .sidebar-sticker-slot svg .imp-head-circle, body.sticker-anim-off .main-bg-sticker svg .imp-head-circle,
 body.animations-disabled .sidebar-sticker-slot svg .imp-head-circle, body.animations-disabled .main-bg-sticker svg .imp-head-circle,
 body.imp-anim-disabled .sidebar-sticker-slot svg .imp-head-circle, body.imp-anim-disabled .main-bg-sticker svg .imp-head-circle{animation:none!important}
@@ -3354,10 +3354,12 @@ function updateLeavingStickerEyes(clientX,clientY){
   const prox=rawProx>0?Math.pow(rawProx,1.15):0;
   const cos=Math.cos(angle)*strength,sin=Math.sin(angle)*strength;
   const eyeScale=1+prox*0.32;
+  const faceScale=1+prox*0.04;
   const eyeTransform=`translate3d(${(cos*8.2).toFixed(2)}px,${(sin*6.8).toFixed(2)}px,0) scale(${eyeScale.toFixed(3)})`;
   if(n.eyes)n.eyes.style.transform=eyeTransform;
   if(n.sadEyesTrack)n.sadEyesTrack.style.transform=eyeTransform;
   if(n.outer)n.outer.style.transform=`translate3d(${(cos*-2.0).toFixed(2)}px,${(sin*-1.6).toFixed(2)}px,0)`;
+  if(n.face)n.face.style.transform=`translate3d(${(cos*4.0).toFixed(2)}px,${(sin*3.2).toFixed(2)}px,0) rotate(${(cos*5.4).toFixed(2)}deg) scale(${faceScale.toFixed(3)})`;
   if(n.halo)n.halo.style.opacity=prox.toFixed(3);
 }
 function resetLeavingStickerEyes(){
@@ -3367,6 +3369,7 @@ function resetLeavingStickerEyes(){
   const neutral='translate3d(0px,0px,0) scale(1)';
   if(n.eyes)n.eyes.style.transform=neutral;
   if(n.sadEyesTrack)n.sadEyesTrack.style.transform=neutral;
+  if(n.face)n.face.style.transform='translate3d(0px,0px,0) rotate(0deg) scale(1)';
   if(n.outer)n.outer.style.transform='translate3d(0px,0px,0)';
   if(n.halo)n.halo.style.opacity='0';
 }
@@ -3831,6 +3834,7 @@ function resetAllAnimationSettings(){
     c.cursorFaceRot=cos*5.4;
     c.cursorFaceScale=faceScale;
     if(c.eyes)c.eyes.style.transform=`translate3d(${(cos*8.2).toFixed(2)}px,${(sin*6.8).toFixed(2)}px,0) scale(${eyeScale.toFixed(3)})`;
+    if(c.face)c.face.style.transform=`translate3d(${(cos*4.0).toFixed(2)}px,${(sin*3.2).toFixed(2)}px,0) rotate(${(cos*5.4).toFixed(2)}deg) scale(${faceScale.toFixed(3)})`;
     if(c.outer)c.outer.style.transform=`translate3d(${(cos*-2.0).toFixed(2)}px,${(sin*-1.6).toFixed(2)}px,0)`;
     if(c.halo)c.halo.style.opacity=prox.toFixed(3);
   }
@@ -5282,8 +5286,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.79';
+const APP_VERSION='1.80';
 const VERSION_HISTORY=[
+  {version:'1.80',added:'No new features.',removed:'No removals.',fixed:'Tightened sticker eye-tracking — side-panel eyes now snap with .03s linear (was .12s ease-out) and face updates instantly; exit-prompt sticker now moves head with eyes (face translate/rotate/scale + outer) to match side-panel.',tone:'green'},
   {version:'1.79',added:'No new features.',removed:'No removals.',fixed:'Restored sticker eye-tracking to pre-rework rev9 behaviour — sidebar eyes, face and outer frame follow cursor with proximity scaling as in 1.67; detail-window horns fix from 1.78 retained.',tone:'green'},
   {version:'1.78',added:'No new features.',removed:'No removals.',fixed:'Detail-window sticker now uses the exact side-panel horns: post-modal peek clones the full themed imp-horns (including v1 double-layer, v10 6×C with tip circles, v13 twin fills) via depth-aware extraction instead of a single-path approximation.',tone:'red'},
   {version:'1.77',added:'No new features.',removed:'Cursor eye-tracking that moved the face/outer/halo with the pointer (rev9).',fixed:'Remaining JSON-devour horn detachment: trident laugh now leaves themed horns untouched (only the original default V is stretched) and all JSON variants hide decor while active — stray diamonds gone; sticker eye tracking reverted to pre-rework static eyes.',tone:'red'},
