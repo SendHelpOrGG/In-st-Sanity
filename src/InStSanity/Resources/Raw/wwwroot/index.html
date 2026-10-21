@@ -5094,8 +5094,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.53';
+const APP_VERSION='1.54';
 const VERSION_HISTORY=[
+  {version:'1.54',added:'No new features.',removed:'No removals.',fixed:'Aatrox laugh extended to ~2.9s (was 2.5s) for even longer cut.',tone:'green'},
   {version:'1.53',added:'No new features.',removed:'No removals.',fixed:'Aatrox laugh extended to ~2.5s and starts ~0.38s earlier so it lands before the screen fades on all 5 variants.',tone:'green'},
   {version:'1.52',added:'No new features.',removed:'No removals.',fixed:'Loading-screen laugh swapped — Aatrox fight-me first ~2s (faded) replaces the synth demon laugh, still through the big 3.4s hall.',tone:'green'},
   {version:'1.51',added:'No new features.',removed:'No removals.',fixed:'Boot v3 Haul shoulders now ride with the sticker — tx/ty/rot/scale tracked per-frame so arms stay pinned to 34,118/126,118 through the bob + 12px drag.',tone:'green'},
@@ -5570,7 +5571,7 @@ function playAatroxLaugh(t0){
   }
   var t = t0 - 0.38; // start ~0.38s earlier so laugh lands before fade-out on all 5 screens
   if(t < ctx.currentTime) t = ctx.currentTime + 0.02;
-  var startOff=0.02, dur=2.52; // first ~2.5s as requested
+  var startOff=0.02, dur=2.90; // first ~2.9s as requested
   if(aatroxBuf.duration < startOff+dur) dur=Math.max(0.4, aatroxBuf.duration-startOff);
   var fadeDur=0.44, fadeStart=t+dur-fadeDur;
   var src=ctx.createBufferSource(); src.buffer=aatroxBuf;
