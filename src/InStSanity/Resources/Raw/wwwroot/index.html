@@ -209,6 +209,12 @@ body:not([data-theme]) .sidebar,body:not([data-theme]) .post-modal,body:not([dat
 .browser-bar{display:flex;align-items:center;gap:8px;margin:0 0 12px}
 .browser-bar .icon-btn{flex:0 0 auto;font-size:16px}
 .browser-address{flex:1 1 auto;min-width:0}
+.browser-address-wrap{position:relative;flex:1 1 auto;min-width:0;display:flex;align-items:center}
+.browser-address-wrap .browser-address{flex:1 1 auto;width:100%;padding-right:46px}
+.browser-save-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);height:26px;min-width:26px;width:34px;padding:0;border:1px solid var(--t-line);border-radius:7px;background:linear-gradient(105deg,rgba(148,163,184,.08),rgba(45,212,191,.04));color:var(--t-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s,transform .08s}
+.browser-save-btn:hover{background:linear-gradient(105deg,rgba(204,251,241,.18),rgba(45,212,191,.12));border-color:rgba(204,251,241,.38);color:#99f6e4}
+.browser-save-btn:active{transform:translateY(-50%) scale(.96)}
+.browser-save-btn svg{width:14px;height:14px;display:block}
 .browser-viewport{position:relative;width:100%;height:clamp(320px,calc(100vh - 180px),1400px);border:1px solid var(--t-line);border-radius:14px;background:var(--t-card-bg);overflow:hidden}
 .browser-viewport-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--t-muted);font-size:11px;pointer-events:none}
 .top-account-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid var(--t-line)}
@@ -725,7 +731,10 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
       <button class="icon-btn" id="browserBackBtn" type="button" onclick="browserBack()" title="Back" aria-label="Back">‹</button>
       <button class="icon-btn" id="browserForwardBtn" type="button" onclick="browserForward()" title="Forward" aria-label="Forward">›</button>
       <button class="icon-btn" id="browserReloadBtn" type="button" onclick="browserReload()" title="Reload" aria-label="Reload">↻</button>
-      <input class="text-input browser-address" id="browserAddressInput" type="text" spellcheck="false" autocomplete="off" placeholder="https://www.instagram.com/ or @username" onkeydown="if(event.key==='Enter'){event.preventDefault();browserGo()}">
+      <div class="browser-address-wrap">
+        <input class="text-input browser-address" id="browserAddressInput" type="text" spellcheck="false" autocomplete="off" placeholder="https://www.instagram.com/ or @username" onkeydown="if(event.key==='Enter'){event.preventDefault();browserGo()}">
+        <button class="browser-save-btn" id="browserSaveBtn" type="button" onclick="browserSaveViaUrl()" title="Save this post via URL" aria-label="Save this post via URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/><path d="M12 8v8"/><path d="M8.5 12l3.5 3.5 3.5-3.5"/></svg></button>
+      </div>
     </div>
     <div class="browser-viewport" id="browserViewport"><div class="browser-viewport-placeholder">Instagram opens here in the Windows desktop app.</div></div>
   </section>
@@ -3040,6 +3049,7 @@ async function loadBrowserState(){
 function browserBack(){sendBrowserView({action:'back'});setTimeout(loadBrowserState,250)}
 function browserForward(){sendBrowserView({action:'forward'});setTimeout(loadBrowserState,250)}
 function browserReload(){sendBrowserView({action:'reload'})}
+function browserSaveViaUrl(){const input=document.getElementById('browserAddressInput');let url=String((input&&input.value)||'').trim();if(!url){toast('No URL in the browser address bar.');return}const postRe=/instagram\.com\/(?:share\/)?(?:[^/?#]+\/)?(?:p|reel|reels|tv)\/[^/?#]+/i;if(!postRe.test(url)){toast('This page is not an Instagram post or reel — open a post or reel to save it.');return}showPage('save-url');const direct=document.getElementById('directPostUrlInput');if(direct){direct.value=url;onDirectPostUrlInput();}savePostViaUrl();}
 function browserGo(){const input=document.getElementById('browserAddressInput');const url=String((input&&input.value)||'').trim();if(!url){toast('Enter an Instagram URL, @username, or search term.');return}sendBrowserView({action:'navigate',url:url});setTimeout(loadBrowserState,350)}
 window.addEventListener('resize',function(){if(document.getElementById('browserPage')&&document.getElementById('browserPage').style.display==='block')reportBrowserRegion()});
 document.querySelector('main').addEventListener('scroll',function(){if(document.getElementById('browserPage')&&document.getElementById('browserPage').style.display==='block')reportBrowserRegion()});
@@ -5202,9 +5212,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.73';
+const APP_VERSION='1.74';
 const VERSION_HISTORY=[
-  {version:'1.72',added:'Reworked image source badges — provenance now drives the verdict.',removed:'Broken transport-sniffing that marked every proxied image as API and let card/detail disagree.',fixed:'Direct means every slide came from Instagram scontent, API means save-free had to supply it, Mixed is hybrid (direct+api in one post) or a photo+video carousel; card and detail tiles now share the same per-slide origin, video-only stays Direct, and the stray API-mislabelling/unknown fallthrough is gone.',tone:'red'}, {version:'1.73',added:'No new features.',removed:'No removals.',fixed:'Card now shows the correct photo/video count before you open it — a summary that came from Open Graph alone no longer freezes the badge at 1. The batch summary now falls back to save-free for counts, API-single guesses retry quickly, and opening a post heals and persists the true count.',tone:'red'},
+  {version:'1.72',added:'Reworked image source badges — provenance now drives the verdict.',removed:'Broken transport-sniffing that marked every proxied image as API and let card/detail disagree.',fixed:'Direct means every slide came from Instagram scontent, API means save-free had to supply it, Mixed is hybrid (direct+api in one post) or a photo+video carousel; card and detail tiles now share the same per-slide origin, video-only stays Direct, and the stray API-mislabelling/unknown fallthrough is gone.',tone:'red'}, {version:'1.73',added:'No new features.',removed:'No removals.',fixed:'Card now shows the correct photo/video count before you open it — a summary that came from Open Graph alone no longer freezes the badge at 1. The batch summary now falls back to save-free for counts, API-single guesses retry quickly, and opening a post heals and persists the true count.',tone:'red'}, {version:'1.74',added:'One-click Save from Browser.',removed:'No removals.',fixed:'Browser URL bar now has a Save button at its end — it sends the current Instagram post or reel to Save via URL instantly; other pages show a quick warning toast.',tone:'red'},
   {version:'1.71',added:'No new features.',removed:'No removals.',fixed:'Video tile no longer shows a browser Download in its three-dot menu — stopping the stray download to the system folder and the top-right pop-up so only the chosen save folder is used.',tone:'green'},
   {version:'1.70',added:'No new features.',removed:'No removals.',fixed:'Save via URL tab no longer remembers the last post after reload — clearing its stored state on save and restore.',tone:'green'},
   {version:'1.69',added:'No new features.',removed:'No removals.',fixed:'Renamed historical versions 1.1–1.9 to 1.01–1.09 for consistent two-digit minor formatting.',tone:'green'},
