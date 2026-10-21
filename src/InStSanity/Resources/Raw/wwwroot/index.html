@@ -810,7 +810,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
               <div class="anim-group-title">Typography</div>
               <label class="field-label opacity-label" for="appFontScale">Font size <strong id="appFontScaleValue">100%</strong></label>
               <input class="opacity-slider" id="appFontScale" type="range" min="75" max="140" value="100" oninput="setAppFontScale(this.value)">
-              <p class="hint">100% is the default. Scales all fonts via app zoom.</p>
+              <p class="hint">100% is the default. Scales all text sizes.</p>
               <div class="background-actions" style="margin-top:12px">
                 <button type="button" class="outline" onclick="resetAppFontScale()">Reset to default</button>
               </div>
@@ -5115,8 +5115,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.59';
+const APP_VERSION='1.60';
 const VERSION_HISTORY=[
+  {version:'1.60',added:'No new features.',removed:'The whole-UI zoom on font scaling.',fixed:'Font size now scales only text (per-element font-size via --app-font-scale) instead of zooming the entire layout; slider hint updated.',tone:'green'},
   {version:'1.59',added:'Font size control in UI settings with reset to default.',removed:'Best-effort by design notice.',fixed:'Loading-screen loudness now 13% by default; post carousels Select all photos and Download now share the same 35px button size.',tone:'yellow'},
   {version:'1.58',added:'No new features.',removed:'No removals.',fixed:'Reduce both Aatrox laughs by 10% — volume 0.88→0.792.',tone:'green'},
   {version:'1.57',added:'No new features.',removed:'No removals.',fixed:'Tweak laugh odds to 60/40 — fight-me 60%, Original Laugh 40%.',tone:'green'},
@@ -5295,12 +5296,52 @@ function loadAppFontScale(){
     if(isFinite(n)) appFontScalePercent = Math.max(75, Math.min(140, n));
   }catch(_){}
 }
+function captureOriginalFontSizes(root){
+  root = root || document;
+  var els = root.querySelectorAll ? root.querySelectorAll('*') : [];
+  for(var i=0;i<els.length;i++){
+    var el = els[i];
+    if(el.dataset.origFontSize) continue;
+    var cs = null;
+    try{ cs = getComputedStyle(el); }catch(_){}
+    if(!cs) continue;
+    var fs = cs.fontSize;
+    if(!fs || fs.indexOf('px') === -1) continue;
+    var n = parseFloat(fs);
+    if(!isFinite(n) || n<=0) continue;
+    el.dataset.origFontSize = String(n);
+  }
+  if(root !== document && root.dataset && !root.dataset.origFontSize){
+    try{
+      var cs2 = getComputedStyle(root);
+      var fs2 = cs2.fontSize;
+      if(fs2 && fs2.indexOf('px')!==-1){
+        var n2 = parseFloat(fs2);
+        if(isFinite(n2) && n2>0) root.dataset.origFontSize = String(n2);
+      }
+    }catch(_){}
+  }
+}
 function applyAppFontScale(save){
   var pct = Math.max(75, Math.min(140, Math.round(Number(appFontScalePercent)||100)));
   appFontScalePercent = pct;
+  var scale = pct/100;
   try{
-    document.documentElement.style.setProperty('--app-font-scale', (pct/100).toFixed(2));
-    document.body.style.zoom = (pct/100).toFixed(2);
+    document.documentElement.style.setProperty('--app-font-scale', scale.toFixed(3));
+    document.body.style.zoom = '';
+    if(!document.body.dataset.fontScaleCaptured){
+      captureOriginalFontSizes(document);
+      document.body.dataset.fontScaleCaptured = '1';
+    }
+  }catch(_){}
+  try{
+    var els = document.querySelectorAll('[data-orig-font-size]');
+    for(var i=0;i<els.length;i++){
+      var el = els[i];
+      var orig = parseFloat(el.dataset.origFontSize);
+      if(!isFinite(orig)) continue;
+      el.style.fontSize = (orig * scale).toFixed(2) + 'px';
+    }
   }catch(_){}
   var sl = document.getElementById('appFontScale');
   if(sl && Number(sl.value) !== pct) sl.value = String(pct);
@@ -5318,7 +5359,38 @@ function resetAppFontScale(){
   try{ if(typeof toast==='function') toast('Font size reset to 100%'); }catch(_){}
 }
 loadAppFontScale();
-try{ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ applyAppFontScale(false); }); else applyAppFontScale(false); }catch(_){}
+(function setupFontScale(){
+  function init(){
+    try{ captureOriginalFontSizes(document); document.body.dataset.fontScaleCaptured='1'; }catch(_){}
+    applyAppFontScale(false);
+    try{
+      var obs = new MutationObserver(function(muts){
+        for(var i=0;i<muts.length;i++){
+          var m = muts[i];
+          for(var j=0;j<m.addedNodes.length;j++){
+            var n = m.addedNodes[j];
+            if(n.nodeType!==1) continue;
+            captureOriginalFontSizes(n);
+            var scale = appFontScalePercent/100;
+            if(n.dataset.origFontSize){
+              var orig = parseFloat(n.dataset.origFontSize);
+              if(isFinite(orig)) n.style.fontSize = (orig*scale).toFixed(2)+'px';
+            }
+            var inner = n.querySelectorAll ? n.querySelectorAll('[data-orig-font-size]') : [];
+            for(var k=0;k<inner.length;k++){
+              var el2 = inner[k];
+              var o2 = parseFloat(el2.dataset.origFontSize);
+              if(isFinite(o2)) el2.style.fontSize = (o2*scale).toFixed(2)+'px';
+            }
+          }
+        }
+      });
+      obs.observe(document.documentElement, {childList:true, subtree:true});
+    }catch(_){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
 loadLsSoundSetting();
 loadLsScreensSetting();
 try{ if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncLsSoundBtn); else syncLsSoundBtn(); }catch(_){}
