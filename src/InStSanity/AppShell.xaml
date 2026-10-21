@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.61  ·  Font scaling text-only, wordmark fixed"
+                   Text="v1.62  ·  Fix loading screen freeze"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>

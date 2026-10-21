@@ -5115,8 +5115,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.61';
+const APP_VERSION='1.62';
 const VERSION_HISTORY=[
+  {version:'1.62',added:'No new features.',removed:'No new features.',fixed:'Fix font scaling that froze the loading screen — wrap only body text and skip title/head/svg so the boot animation can finish.',tone:'green'},
   {version:'1.61',added:'No new features.',removed:'No new features.',fixed:'Font scaling now leaves the In[st]Sanity wordmark everywhere untouched and scales only text (via inline text wrappers + transform) so buttons, cards and modals keep their size and proportions.',tone:'green'},
   {version:'1.60',added:'No new features.',removed:'The whole-UI zoom on font scaling.',fixed:'Font size now scales only text (per-element font-size via --app-font-scale) instead of zooming the entire layout; slider hint updated.',tone:'green'},
   {version:'1.59',added:'Font size control in UI settings with reset to default.',removed:'Best-effort by design notice.',fixed:'Loading-screen loudness now 13% by default; post carousels Select all photos and Download now share the same 35px button size.',tone:'yellow'},
@@ -5311,7 +5312,7 @@ function isAppNameNode(node){
   return false;
 }
 function wrapTextNodesForScaling(root){
-  root = root || document;
+  root = root || document.body || document;
   var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: function(node){
       try{
@@ -5319,7 +5320,8 @@ function wrapTextNodesForScaling(root){
         var parent = node.parentElement;
         if(!parent) return NodeFilter.FILTER_REJECT;
         var tag = parent.tagName;
-        if(tag==='SCRIPT' || tag==='STYLE' || tag==='NOSCRIPT' || tag==='CODE' || tag==='PRE') return NodeFilter.FILTER_REJECT;
+        if(tag==='SCRIPT' || tag==='STYLE' || tag==='NOSCRIPT' || tag==='CODE' || tag==='PRE' || tag==='TITLE' || tag==='HEAD' || tag==='HTML' || tag==='BODY') return NodeFilter.FILTER_REJECT;
+        if(parent.closest && parent.closest('head')) return NodeFilter.FILTER_REJECT;
         if(parent.closest && parent.closest('svg')) return NodeFilter.FILTER_REJECT;
         if(isAppNameNode(node) || isAppNameNode(parent)) return NodeFilter.FILTER_REJECT;
         if(parent.dataset && parent.dataset.fontScaleText === '1') return NodeFilter.FILTER_REJECT;
@@ -5361,7 +5363,7 @@ function applyAppFontScale(save){
       try{ legacy[i].style.fontSize = ''; }catch(_){}
     }
     if(!document.body.dataset.fontScaleCaptured){
-      wrapTextNodesForScaling(document);
+      wrapTextNodesForScaling(document.body);
       document.body.dataset.fontScaleCaptured = '1';
     }
   }catch(_){}
@@ -5395,7 +5397,7 @@ function resetAppFontScale(){
 loadAppFontScale();
 (function setupFontScale(){
   function init(){
-    try{ wrapTextNodesForScaling(document); document.body.dataset.fontScaleCaptured='1'; }catch(_){}
+    try{ wrapTextNodesForScaling(document.body); document.body.dataset.fontScaleCaptured='1'; }catch(_){}
     applyAppFontScale(false);
     try{
       var obs = new MutationObserver(function(muts){
@@ -5412,10 +5414,10 @@ loadAppFontScale();
           if(needsWrap) break;
         }
         if(!needsWrap) return;
-        try{ wrapTextNodesForScaling(document); }catch(_){}
+        try{ wrapTextNodesForScaling(document.body); }catch(_){}
         try{ applyAppFontScale(false); }catch(_){}
       });
-      obs.observe(document.documentElement, {childList:true, subtree:true});
+      obs.observe(document.body, {childList:true, subtree:true});
     }catch(_){}
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
