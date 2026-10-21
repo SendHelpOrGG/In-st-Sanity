@@ -5020,7 +5020,12 @@ function getThemedPeekHeadParts(){
       var fm=svg.match(/<g class="imp-horns">([\s\S]*?)<\/g>/);
       if(fm) hornsHtml = fm[1].replace(/{uid}/g, tid);
     }
-    return {head:head,hornsHtml:hornsHtml};
+    var defsHtml=null;
+    try{
+      var dm=svg.match(/<defs>([\s\S]*?)<\/defs>/);
+      if(dm) defsHtml=dm[1].replace(/{uid}/g, tid);
+    }catch(_){ defsHtml=null; }
+    return {head:head,hornsHtml:hornsHtml,defsHtml:defsHtml};
   }catch(_){return null;}
 }
 
@@ -5150,8 +5155,9 @@ function getThemedPeekHeadParts(){
     var peekParts=getThemedPeekHeadParts();
     var headCircle=peekParts&&peekParts.head? `<circle cx="${peekParts.head.cx}" cy="${peekParts.head.cy}" r="${peekParts.head.r}" fill="${peekParts.head.fill}" stroke="${peekParts.head.stroke}" stroke-width="${peekParts.head.sw}"/>` : `<circle cx="80" cy="80" r="41" fill="${mouthFill}" stroke="${c1}" stroke-width="3.0"/>`;
     var hornsContent = (peekParts && peekParts.hornsHtml) ? peekParts.hornsHtml : `<path d="M56 56 L52 72 L71 78 M104 56 L108 72 L89 78" stroke="${line}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
+    var defsPart = (peekParts && peekParts.defsHtml) ? `<defs>${peekParts.defsHtml}</defs>` : "";
     // Preserve the themed horns exactly as they are in the side-panel sticker (multi-path for v1/v10/v13 etc.)
-    return `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)}) rotate(${rotDeg.toFixed(1)}) scale(${scale.toFixed(3)}) translate(-80,-80)">${headCircle}<g transform="rotate(${hornWiggle.toFixed(2)},80,72)">${hornsContent}</g>${eyesAndMouth}</g>`;
+    return `${defsPart}<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)}) rotate(${rotDeg.toFixed(1)}) scale(${scale.toFixed(3)}) translate(-80,-80)">${headCircle}<g transform="rotate(${hornWiggle.toFixed(2)},80,72)">${hornsContent}</g>${eyesAndMouth}</g>`;
   }
 
   window.startPostModalSneakPeek=function(){
@@ -5280,8 +5286,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.81';
+const APP_VERSION='1.82';
 const VERSION_HISTORY=[
+  {version:'1.82',added:'No new features.',removed:'No removals.',fixed:'Theme 11 (Moss & Brass) peeking horns now render — peek head now includes the theme gradient defs so url(#st_v11Brass) horns no longer vanish; v1/v10/v13 also benefit from defs passthrough.',tone:'red'},
   {version:'1.81',added:'No new features.',removed:'No removals.',fixed:'Unified sticker eye-tracking — side-panel now uses the exact same instant tracking as exit prompt (svg bounding rect, no CSS transition, eyes + face + outer + halo in sync).',tone:'green'},
   {version:'1.80',added:'No new features.',removed:'No removals.',fixed:'Tightened sticker eye-tracking — side-panel eyes now snap with .03s linear (was .12s ease-out) and face updates instantly; exit-prompt sticker now moves head with eyes (face translate/rotate/scale + outer) to match side-panel.',tone:'green'},
   {version:'1.79',added:'No new features.',removed:'No removals.',fixed:'Restored sticker eye-tracking to pre-rework rev9 behaviour — sidebar eyes, face and outer frame follow cursor with proximity scaling as in 1.67; detail-window horns fix from 1.78 retained.',tone:'green'},
