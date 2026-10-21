@@ -577,7 +577,7 @@ public sealed class InstagramResolver
 
 		if (summaryOnly)
 		{
-			return post.CoverUrl.Length == 0;
+			return post.CoverUrl.Length == 0 || !string.Equals(post.SourceKind, "direct", StringComparison.Ordinal);
 		}
 
 		// Open Graph only carries the first slide, so a carousel resolved that way is
