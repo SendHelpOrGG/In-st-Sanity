@@ -5094,8 +5094,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.52';
+const APP_VERSION='1.53';
 const VERSION_HISTORY=[
+  {version:'1.53',added:'No new features.',removed:'No removals.',fixed:'Aatrox laugh extended to ~2.5s and starts ~0.38s earlier so it lands before the screen fades on all 5 variants.',tone:'green'},
   {version:'1.52',added:'No new features.',removed:'No removals.',fixed:'Loading-screen laugh swapped — Aatrox fight-me first ~2s (faded) replaces the synth demon laugh, still through the big 3.4s hall.',tone:'green'},
   {version:'1.51',added:'No new features.',removed:'No removals.',fixed:'Boot v3 Haul shoulders now ride with the sticker — tx/ty/rot/scale tracked per-frame so arms stay pinned to 34,118/126,118 through the bob + 12px drag.',tone:'green'},
   {version:'1.50',added:'No new features.',removed:'No removals.',fixed:'Trident loading screen nudge — fork/shaft moved ~6px right (CX+30.2→CX+36.2) so the prongs breathe clear of the sticker frame.',tone:'green'},
@@ -5567,19 +5568,21 @@ function playAatroxLaugh(t0){
     ensureAatrox().then(function(b){ if(b) playAatroxLaugh(t0); });
     return;
   }
-  var startOff=0.02, dur=2.05;
+  var t = t0 - 0.38; // start ~0.38s earlier so laugh lands before fade-out on all 5 screens
+  if(t < ctx.currentTime) t = ctx.currentTime + 0.02;
+  var startOff=0.02, dur=2.52; // first ~2.5s as requested
   if(aatroxBuf.duration < startOff+dur) dur=Math.max(0.4, aatroxBuf.duration-startOff);
-  var fadeDur=0.38, fadeStart=t0+dur-fadeDur;
+  var fadeDur=0.44, fadeStart=t+dur-fadeDur;
   var src=ctx.createBufferSource(); src.buffer=aatroxBuf;
   var g=ctx.createGain();
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(0.88, t0+0.03);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.88, t+0.03);
   g.gain.setValueAtTime(0.88, fadeStart);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
   src.connect(g);
   var p2=pan(g, 0);
   tapRoom(p2, 0.84, 220, 3200, room);
-  try{ src.start(t0, startOff, dur); src.stop(t0+dur+0.08); }catch(e){ try{ src.start(t0); }catch(_){} }
+  try{ src.start(t, startOff, dur); src.stop(t+dur+0.08); }catch(e){ try{ src.start(t); }catch(_){} }
 }
 
 function laughDeepLegacy(t0){
