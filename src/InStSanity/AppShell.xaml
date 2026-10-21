@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.71  ·  Video tile no longer offers a native download outside the chosen save folder"
+                   Text="v1.72  ·  Reworked Direct/API/Mixed badges — cards and tiles now agree"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>

@@ -1282,12 +1282,13 @@ function sourceKindFromUrl(u){
   const s=String(u||'');
   if(!s)return 'unknown';
   if(s===COVER_FALLBACK_DATA_URI)return 'unknown';
-  if(s.indexOf('/api/image')!==-1||s.indexOf('/api/download-photo')!==-1)return 'api';
+  // Local /api proxy anonymizes provenance — rely on pic.origin/server sourceKind instead.
+  if(s.indexOf('/api/image')!==-1||s.indexOf('/api/download-photo')!==-1)return 'unknown';
   if(s.indexOf('wsrv.nl')!==-1)return 'direct';
   if(s.indexOf('cdninstagram')!==-1||s.indexOf('fbcdn.net')!==-1)return 'direct';
   if(s.indexOf('.mp4')!==-1)return 'direct';
   if(s.startsWith('data:'))return 'direct';
-  return 'direct';
+  return 'unknown';
 }
 function estimatePictureKind(pic){
   if(!pic)return 'unknown';
@@ -1298,13 +1299,10 @@ function estimatePictureKind(pic){
   return 'direct';
 }
 function pictureSourceKind(pic){
-  // 'direct' = the media URL was read out of Instagram's own HTML/JSON,
-  // 'api'    = Instagram didn't expose it and save-free.net had to supply it.
+  // 'direct' = scontent URL from Instagram HTML/JSON, 'api' = save-free had to supply it. Provenance only.
   if(!pic)return 'unknown';
   if(pic.origin==='api')return 'api';
   if(pic.origin==='direct')return 'direct';
-  if(pic.__transportKind==='api')return 'api';
-  if(pic.isVideo&&pic.videoUrl)return 'direct';
   return 'unknown';
 }
 function computePostSourceKind(post){
@@ -1318,20 +1316,25 @@ function computePostSourceKind(post){
       else if(k==='api')hasApi=true;
     }
     const counts=getPostMediaCounts(post);
-    // photos + videos in the same post always counts as mixed
     if(counts.photoCount>0&&counts.videoCount>0)return 'mixed';
     if(hasDirect&&hasApi)return 'mixed';
     if(hasApi)return 'api';
     if(hasDirect)return 'direct';
     return 'unknown';
   }
-  if(post.sourceKind==='mixed'||post.sourceKind==='api'||post.sourceKind==='direct')return post.sourceKind;
-  try{
-    const saved=(window.__savedSourceKinds||{})[String(post.shortcode||'').toLowerCase()];
-    if(saved)return saved;
-  }catch(_){}
-  // Provisional verdict: a post holding both photos and videos is mixed by definition,
-  // and the counts are already known from the import / previous resolve.
+  let baseKind='unknown';
+  if(post.sourceKind==='mixed'||post.sourceKind==='api'||post.sourceKind==='direct') baseKind=post.sourceKind;
+  else{
+    try{
+      const saved=(window.__savedSourceKinds||{})[String(post.shortcode||'').toLowerCase()];
+      if(saved) baseKind=saved;
+    }catch(_){}
+  }
+  if(baseKind!=='unknown'){
+    const pc=getPostMediaCounts(post);
+    if(pc.photoCount>0&&pc.videoCount>0)return 'mixed';
+    return baseKind;
+  }
   const pc=getPostMediaCounts(post);
   if(pc.photoCount>0&&pc.videoCount>0)return 'mixed';
   return 'unknown';
@@ -1339,29 +1342,11 @@ function computePostSourceKind(post){
 function applySrcBadgeEl(el,kind){if(!el)return;el.dataset.kind=kind;el.textContent=srcKindLabel(kind)}
 function markCoverSource(imgEl){
   if(!imgEl)return;
-  const kind=sourceKindFromUrl(imgEl.currentSrc||imgEl.src||'');
-  imgEl.dataset.srcKind=kind;
-  const card=imgEl.closest?imgEl.closest('article.card[data-post-index]'):null;
-  if(!card)return;
-  const idx=parseInt(card.getAttribute('data-post-index'),10);
-  if(isNaN(idx)||!posts[idx])return;
-  posts[idx].__coverKind=kind;
-  updateCardSrcBadge(idx);
+  try{imgEl.dataset.srcKind=sourceKindFromUrl(imgEl.currentSrc||imgEl.src||'');}catch(_){}
 }
 function markMediaSource(el,sc,slideIdx){
   if(!el)return;
-  const kind=sourceKindFromUrl(el.currentSrc||el.src||'');
-  el.dataset.srcKind=kind;
-  if(sc){
-    const lower=String(sc).toLowerCase();
-    const idx=posts.findIndex(p=>String(p&&p.shortcode||'').toLowerCase()===lower);
-    if(idx>=0){
-      const pic=posts[idx].pictures?posts[idx].pictures[slideIdx]:null;
-      if(pic)pic.__transportKind=kind;
-      updateCardSrcBadge(idx);
-    }
-  }
-  updateTileSrcBadges();
+  try{el.dataset.srcKind=sourceKindFromUrl(el.currentSrc||el.src||'');}catch(_){}
 }
 function updateCardSrcBadge(idx){
   const card=document.querySelector(`#postGrid article.card[data-post-index="${idx}"]`);
@@ -1416,13 +1401,14 @@ function applySourceVisibility(){
   const btns=document.querySelectorAll('[data-role="source-toggle"]');
   for(const b of btns){b.innerHTML=icon;b.title=label;b.setAttribute('aria-label',label);b.setAttribute('aria-pressed',String(showSourceBadges))}
 }
-function toggleVideoVisibility(){
+function toggleSourceBadges(){
   showSourceBadges=!showSourceBadges;
   try{localStorage.setItem('stillSane.showSource',showSourceBadges?'1':'0')}catch(_){}
   applySourceVisibility();
   updateAllCardSrcBadges();
   updateSrcStatusNote();
 }
+function toggleVideoVisibility(){return toggleSourceBadges();}
 function initSourceBadges(){
   applySourceVisibility();
   updateAllCardSrcBadges();
@@ -1440,7 +1426,7 @@ function renderCardCoverMarkup(p){
     const serverProxyUrl=isLocalBackendOrigin()
       ? (fullCover&&fullCover!==rawCover?apiImgPath:'')
       : (SERVER_API_BASE&&Date.now()>serverBaseDeadUntil?SERVER_API_BASE+apiImgPath:'');
-    return `<img src="${escapeHtml(thumbSrc)}" data-fallback="${escapeHtml(serverProxyUrl)}" onload="markCoverSource(this)" onerror="handlePostImageError(this,'')" alt="${escapeHtml(p.title||'Instagram post')}" loading="lazy" fetchpriority="low" decoding="async" referrerpolicy="no-referrer">`;
+    return `<img src="${escapeHtml(thumbSrc)}" data-fallback="${escapeHtml(serverProxyUrl)}" onerror="handlePostImageError(this,'')" alt="${escapeHtml(p.title||'Instagram post')}" loading="lazy" fetchpriority="low" decoding="async" referrerpolicy="no-referrer">`;
   }
   if(typeof p.coverArtIndex==='number'&&art[p.coverArtIndex])return art[p.coverArtIndex];
   return `<img src="${COVER_FALLBACK_DATA_URI}" alt="${escapeHtml(p.title||'Instagram post')}" decoding="async">`;
@@ -1461,7 +1447,7 @@ function renderPictureMarkup(pic,post,slideIdx=0,allowVideoPlayer=false){
     const videoSrc=wrapProxiedImageUrl(pic.videoUrl,false)||pic.videoUrl;
     return `<video src="${escapeHtml(videoSrc)}" data-raw-video="${escapeHtml(pic.videoUrl)}" poster="${escapeHtml(posterSrc)}" controls controlsList="nodownload" disablePictureInPicture preload="metadata" playsinline oncontextmenu="return false;" onerror="handleVideoError(this)" onclick="event.stopPropagation()" style="width:100%;height:100%;object-fit:cover;display:block;background:#0c1011"></video>`;
   }
-  if(primarySrc)return `<img src="${escapeHtml(primarySrc)}" data-fallback="${escapeHtml(secondSrc)}" onload="markMediaSource(this,'${escapeHtml(sc)}',${slideIdx})" onerror="handlePostImageError(this,'${escapeHtml(sc)}')" alt="${escapeHtml(post?.title||'Instagram post media')}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
+  if(primarySrc)return `<img src="${escapeHtml(primarySrc)}" data-fallback="${escapeHtml(secondSrc)}" onerror="handlePostImageError(this,'${escapeHtml(sc)}')" alt="${escapeHtml(post?.title||'Instagram post media')}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
   if(typeof pic.artIndex==='number'&&art[pic.artIndex])return art[pic.artIndex];
   return art[0];
 }
@@ -5213,8 +5199,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.71';
+const APP_VERSION='1.72';
 const VERSION_HISTORY=[
+  {version:'1.72',added:'Reworked image source badges — provenance now drives the verdict.',removed:'Broken transport-sniffing that marked every proxied image as API and let card/detail disagree.',fixed:'Direct means every slide came from Instagram scontent, API means save-free had to supply it, Mixed is hybrid (direct+api in one post) or a photo+video carousel; card and detail tiles now share the same per-slide origin, video-only stays Direct, and the stray API-mislabelling/unknown fallthrough is gone.',tone:'red'},
   {version:'1.71',added:'No new features.',removed:'No removals.',fixed:'Video tile no longer shows a browser Download in its three-dot menu — stopping the stray download to the system folder and the top-right pop-up so only the chosen save folder is used.',tone:'green'},
   {version:'1.70',added:'No new features.',removed:'No removals.',fixed:'Save via URL tab no longer remembers the last post after reload — clearing its stored state on save and restore.',tone:'green'},
   {version:'1.69',added:'No new features.',removed:'No removals.',fixed:'Renamed historical versions 1.1–1.9 to 1.01–1.09 for consistent two-digit minor formatting.',tone:'green'},

@@ -24,6 +24,9 @@ public sealed class ResolvedMedia
 
 	/// <summary>Playable MP4 when the slide is a video; empty otherwise.</summary>
 	public string VideoUrl { get; init; } = string.Empty;
+
+	/// <summary>Where this slide was obtained: "direct" (scontent cdn) or "api" (save-free).</summary>
+	public string Origin { get; init; } = string.Empty;
 }
 
 /// <summary>
@@ -617,6 +620,10 @@ public sealed class InstagramResolver
 			var thumbnail = page.ThumbnailUrl.Length > 0
 				? page.ThumbnailUrl
 				: (other.ThumbnailUrl.Length > 0 ? other.ThumbnailUrl : image);
+			var origin = page.ImgUrl.Length > 0 ? page.Origin : other.Origin;
+			// if image came from direct but video from fallback, the slide used both -> keep direct origin (mixed will be at post level)
+			if (other.VideoUrl.Length > 0 && page.VideoUrl.Length == 0 && other.Origin == "api" && page.Origin == "direct" && other.IsVideo)
+				origin = other.Origin; // video supplemented
 
 			merged.Add(new ResolvedMedia
 			{
@@ -625,6 +632,7 @@ public sealed class InstagramResolver
 				RawUrl = image,
 				IsVideo = page.IsVideo || other.IsVideo,
 				VideoUrl = video,
+				Origin = origin,
 			});
 		}
 
@@ -915,6 +923,7 @@ public sealed class InstagramResolver
 				RawUrl = image,
 				IsVideo = isVideo,
 				VideoUrl = videoUrl,
+				Origin = "direct",
 			});
 		}
 
@@ -1045,6 +1054,7 @@ public sealed class InstagramResolver
 				RawUrl = cover,
 				IsVideo = isVideo,
 				VideoUrl = isVideo ? video : string.Empty,
+				Origin = "api",
 			},
 		};
 

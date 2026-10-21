@@ -265,6 +265,7 @@ public sealed class SaveFreeClient
 				RawUrl = imageUrl,
 				IsVideo = isVideo,
 				VideoUrl = isVideo ? bestUrl : string.Empty,
+				Origin = "api",
 			});
 		}
 
