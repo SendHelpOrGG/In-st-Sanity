@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.68  ·  Bundled UI fixes — 9 items"
+                   Text="v1.69  ·  Renamed 1.1–1.9 → 1.01–1.09"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>

@@ -5213,8 +5213,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.68';
+const APP_VERSION='1.69';
 const VERSION_HISTORY=[
+  {version:'1.69',added:'No new features.',removed:'No removals.',fixed:'Renamed historical versions 1.1–1.9 to 1.01–1.09 for consistent two-digit minor formatting.',tone:'green'},
   {version:'1.68',added:'No new features.',removed:'No removals.',fixed:'Bundled UI fixes: collapse window button top-right with doubled gap, open-folder after Download, version dot after version, Open in App rename + font fix, video toggle replaces source labels (hide video-only / hide videos in mixed), revert sticker horns & eye tracking to pre-rev9, Browser exit no longer hides browser, loading sticker sizing + JSON import dyi link + Doc popup.',tone:'yellow'},
   {version:'1.67',added:'No new features.',removed:'No removals.',fixed:'Sticker eyes now track cursor (rev9) — liveStickers refresh on theme change, respects sticker-anim-off.',tone:'green'},
   {version:'1.66',added:'All 16 sidepanel stickers rebuilt — rev9 identity pass with new silhouettes, props and live animations (equaliser, embers, glitch, thunder, hammer clash).',removed:'No removals.',fixed:'Implemented sticker-preview rev9 for every theme (default + v1–v15); added CSS keyframes + JS timers for thunder/clash and eye tracking.',tone:'red'},
@@ -5274,15 +5275,15 @@ const VERSION_HISTORY=[
   {version:'1.12',added:'Concept 02 exit-prompt sticker reactions.',removed:'The static exit-prompt sticker.',fixed:'Kept the villain cackle continuous and animated the sticker frame.',tone:'yellow'},
   {version:'1.11',added:'No new features.',removed:'No brand elements.',fixed:'Corrected the collapsed Windows title-bar API.',tone:'green'},
   {version:'1.10',added:'A caught-imp exit prompt and an optional top-right exit icon.',removed:'The native Windows title bar.',fixed:'Kept the wordmark descender visible and changed the desktop app icon to the sidebar logo.',tone:'red'},
-  {version:'1.9',added:'No new features.',removed:'No brand elements.',fixed:'Adjusted the sidebar wordmark size while keeping its starting point beside the logo.',tone:'green'},
-  {version:'1.8',added:'No new features.',removed:'No brand elements.',fixed:'Lengthened the sidebar wordmark while keeping its starting point beside the logo.',tone:'green'},
-  {version:'1.7',added:'No new features.',removed:'No theme-picker layout elements.',fixed:'Matched the Moss & Brass mini-icon to its dark moss surfaces and gold/green accents.',tone:'green'},
-  {version:'1.6',added:'No new features.',removed:'No interface elements.',fixed:'Removed the wordmark gap and centered the source and folder icons in their buttons.',tone:'green'},
-  {version:'1.5',added:'Moss & Brass, a botanical green and antique-gold theme.',removed:'The former Velvet Cloud/Pink & Pale Lilac-Sky theme 11.',fixed:'Kept saved v11 selections; matched its stickers, startup screen, and restart overlay to the new palette.',tone:'green'},
-  {version:'1.4',added:'Icon-only source controls and a larger app wordmark; the sidebar toggle moves to the top bar.',removed:'Text labels inside source toggle buttons.',fixed:'Centered folder/source icons, kept Minimalist Studio page numbers legible on hover, and kept primary-button icons theme-matched.',tone:'green'},
-  {version:'1.3',added:'The default-theme pagination panel gets a more compact layout and more transparent glass effect.',removed:'No additional UI elements.',fixed:'Pagination fits more comfortably in the default theme; other themes keep their existing panel appearance.',tone:'green'},
-  {version:'1.2',added:'The saved-post grid gets more room; Open folder is now an icon-only control.',removed:'The library heading and redundant footer status line.',fixed:'Saved posts start higher on screen while pagination remains visible.',tone:'yellow'},
-  {version:'1.1',added:'Startup waits for the loading screen; added the Open folder control and clickable release notes.',removed:'Visible scrollbars and redundant Save settings buttons.',fixed:'Library restoration and post loading no longer compete with the boot animation.',tone:'yellow'},
+  {version:'1.09',added:'No new features.',removed:'No brand elements.',fixed:'Adjusted the sidebar wordmark size while keeping its starting point beside the logo.',tone:'green'},
+  {version:'1.08',added:'No new features.',removed:'No brand elements.',fixed:'Lengthened the sidebar wordmark while keeping its starting point beside the logo.',tone:'green'},
+  {version:'1.07',added:'No new features.',removed:'No theme-picker layout elements.',fixed:'Matched the Moss & Brass mini-icon to its dark moss surfaces and gold/green accents.',tone:'green'},
+  {version:'1.06',added:'No new features.',removed:'No interface elements.',fixed:'Removed the wordmark gap and centered the source and folder icons in their buttons.',tone:'green'},
+  {version:'1.05',added:'Moss & Brass, a botanical green and antique-gold theme.',removed:'The former Velvet Cloud/Pink & Pale Lilac-Sky theme 11.',fixed:'Kept saved v11 selections; matched its stickers, startup screen, and restart overlay to the new palette.',tone:'green'},
+  {version:'1.04',added:'Icon-only source controls and a larger app wordmark; the sidebar toggle moves to the top bar.',removed:'Text labels inside source toggle buttons.',fixed:'Centered folder/source icons, kept Minimalist Studio page numbers legible on hover, and kept primary-button icons theme-matched.',tone:'green'},
+  {version:'1.03',added:'The default-theme pagination panel gets a more compact layout and more transparent glass effect.',removed:'No additional UI elements.',fixed:'Pagination fits more comfortably in the default theme; other themes keep their existing panel appearance.',tone:'green'},
+  {version:'1.02',added:'The saved-post grid gets more room; Open folder is now an icon-only control.',removed:'The library heading and redundant footer status line.',fixed:'Saved posts start higher on screen while pagination remains visible.',tone:'yellow'},
+  {version:'1.01',added:'Startup waits for the loading screen; added the Open folder control and clickable release notes.',removed:'Visible scrollbars and redundant Save settings buttons.',fixed:'Library restoration and post loading no longer compete with the boot animation.',tone:'yellow'},
   {version:'1.0',added:'Initial version-tracking baseline.',removed:'No recorded removals.',fixed:'No recorded fixes before release notes began.'}
 ];
 function versionToneOf(entry){const t=entry&&entry.tone;return (t==='green'||t==='yellow'||t==='red')?t:''}
