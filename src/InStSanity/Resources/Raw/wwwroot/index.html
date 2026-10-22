@@ -1044,7 +1044,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.04; open version history" title="Click to view what changed in each version">v.2.04</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.05; open version history" title="Click to view what changed in each version">v.2.05</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5358,8 +5358,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.04';
+const APP_VERSION='2.05';
 const VERSION_HISTORY=[
+  {version:'2.05',added:'No new features.',removed:'No removals.',fixed:'Fixed first-launch loading sticker placement by sizing from the measured #lsBoot viewport and rechecking/redrawing on ResizeObserver and VisualViewport changes; restart rendering and boot timing are unchanged.',tone:'yellow'},
   {version:'2.04',added:'No new features.',removed:'No removals.',fixed:'Reduced the whole Not-yet taunt (taunt plus follow-up laugh) by 30% across WebAudio and HTMLAudio paths, preserving the Settings volume slider.',tone:'green'},
   {version:'2.03',added:'No new features.',removed:'No removals.',fixed:'Not-yet taunt and follow-up laugh now use the Settings sound-volume slider in both isolated WebAudio and gesture-bound HTMLAudio fallback; changing the slider also updates an in-flight clip.',tone:'green'},
   {version:'2.02',added:'No new features.',removed:'No removals.',fixed:'Fixed app-only Not yet click ordering — the inline handler could not see the closure-local audio function and dismissed the modal first; export the handler to window, remove undefined debug calls, retry failed sample loads, and surface HTMLAudio play errors in-app.',tone:'yellow'},
@@ -6802,11 +6803,14 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
   var animsOn = true;
 
   var host = document.getElementById('lsBoot');
+  var _bootResizeObserver=null;
   var appEl = null;
   try{ appEl = document.querySelector('.app'); }catch(_){}
 
   function lsTeardown(){
     try{ if(typeof _vpResizeHandler!=='undefined' && _vpResizeHandler) window.removeEventListener('resize', _vpResizeHandler); }catch(_){}
+    try{ if(typeof _vpResizeHandler!=='undefined' && _vpResizeHandler && window.visualViewport) window.visualViewport.removeEventListener('resize',_vpResizeHandler); }catch(_){}
+    try{ if(_bootResizeObserver){_bootResizeObserver.disconnect();_bootResizeObserver=null;} }catch(_){}
     try{ if(appEl){ appEl.style.transform=''; appEl.style.willChange=''; appEl.classList.remove('ls-dragging'); } }catch(_){}
     try{ if(host && host.parentNode) host.parentNode.removeChild(host); }catch(_){}
     try{ var st=document.getElementById('lsBootStyle'); if(st && st.parentNode) st.parentNode.removeChild(st); }catch(_){}
@@ -6916,28 +6920,25 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
 
   /* ---------- viewport-sized viewBox (nothing is ever cropped) ---------- */
   function getViewportSize(){
-    var w = window.innerWidth, h = window.innerHeight;
-    if(!w || w < 10) w = document.documentElement.clientWidth || 0;
-    if(!h || h < 10) h = document.documentElement.clientHeight || 0;
-    if(!w || w < 10) try{ w = screen.width || 0; }catch(_){}
-    if(!h || h < 10) try{ h = screen.height || 0; }catch(_){}
-    // First paint in the MAUI WebView can report a transient placeholder
-    // (often 0 or a small square) before the native window is laid out to
-    // 1440×900. Clamp to the desktop minimum so the boot never picks the
-    // portrait 320×360 panel and renders as a centred square (the red-square bug).
-    if(w < 1024) w = 1440;
-    if(h < 680) h = 900;
+    // Prefer the boot host's measured CSS-pixel bounds so the sticker uses its
+    // actual rendered viewport; window/document/screen dimensions are fallbacks.
     try{
-      var hostEl = document.getElementById('lsBoot');
+      var hostEl=document.getElementById('lsBoot');
       if(hostEl){
-        var r = hostEl.getBoundingClientRect();
-        if(r.width > 100 && r.height > 100){
-          if(r.width > w) w = r.width;
-          if(r.height > h) h = r.height;
-        }
+        var r=hostEl.getBoundingClientRect();
+        if(r.width>=800&&r.height>=500) return {vw:r.width,vh:r.height};
       }
     }catch(_){}
-    return {vw: w, vh: h};
+    var w=window.innerWidth,h=window.innerHeight;
+    if(!w||w<10)w=document.documentElement.clientWidth||0;
+    if(!h||h<10)h=document.documentElement.clientHeight||0;
+    if(!w||w<10)try{w=screen.width||0}catch(_){}
+    if(!h||h<10)try{h=screen.height||0}catch(_){}
+    // Until the native window has plausible bounds, use the desktop minimum
+    // rather than letting a transient zero/square viewport pick portrait art.
+    if(w<1024)w=1440;
+    if(h<680)h=900;
+    return {vw:w,vh:h};
   }
   var _vp = getViewportSize();
   var vw = _vp.vw, vh = _vp.vh;
@@ -6950,14 +6951,13 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
   /* viewBox -> screen mapping (variant 3 needs it to grab the real app's edge) */
   var VK = Math.min(vw/W, vh/H);
   var OX = (vw - W*VK)/2, OY = (vh - H*VK)/2;
-  // If the window resizes during the boot (common on cold start when the
-  // native window grows from a placeholder to 1440×900), recompute the
-  // viewBox so the boot fills the screen instead of staying a centred square.
+  // If the viewport changes during boot, recompute the viewBox so the
+  // loading scene stays aligned with the visible area.
   var _bootStageEl = null;
   var _vpResizeHandler = null;
   function recomputeViewportForBoot(){
     var vp2 = getViewportSize();
-    if(vp2.vw === vw && vp2.vh === vh) return;
+    if(Math.abs(vp2.vw-vw)<0.5&&Math.abs(vp2.vh-vh)<0.5)return false;
     vw = vp2.vw; vh = vp2.vh;
     ar = vw / Math.max(1, vh);
     if(ar >= 1.6){ H = 200; W = Math.min(620, Math.max(300, Math.round(200*ar))); }
@@ -6976,6 +6976,7 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
         }
       }
     }catch(_){}
+    return true;
   }
 
   const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
@@ -7999,11 +8000,24 @@ function v4(sp){
   host.appendChild(stage);
   try{ _bootStageEl = stage; }catch(_){}
   try{
-    _vpResizeHandler = function(){ try{ recomputeViewportForBoot(); }catch(_){} };
-    window.addEventListener('resize', _vpResizeHandler);
-    // Re-measure once the window has had a frame to lay out (cold start)
-    setTimeout(function(){ try{ recomputeViewportForBoot(); if(typeof scene!=='undefined' && scene && scene.update) scene.update(0); }catch(_){} }, 120);
-    setTimeout(function(){ try{ recomputeViewportForBoot(); }catch(_){} }, 400);
+    _vpResizeHandler=function(){
+      try{
+        var changed=recomputeViewportForBoot();
+        if(changed&&scene&&scene.update){
+          var refreshTime=(!animsOn||reduced)?(STATIC_T[pick-1]||3.2):(t0?Math.max(0,(performance.now()-t0)/1000):0);
+          scene.update(refreshTime);
+        }
+      }catch(_){}
+    };
+    window.addEventListener('resize',_vpResizeHandler);
+    if(window.visualViewport)window.visualViewport.addEventListener('resize',_vpResizeHandler);
+    if(window.ResizeObserver){
+      _bootResizeObserver=new ResizeObserver(_vpResizeHandler);
+      _bootResizeObserver.observe(host);
+    }
+    // Keep the original cold-start checks as a fallback for older WebView runtimes.
+    setTimeout(function(){try{_vpResizeHandler();if(scene&&scene.update&&!animsOn)scene.update(STATIC_T[pick-1]||3.2)}catch(_){}},120);
+    setTimeout(function(){try{_vpResizeHandler();if(scene&&scene.update&&!animsOn)scene.update(STATIC_T[pick-1]||3.2)}catch(_){}},400);
   }catch(_){}
 
   var scene=null;
