@@ -1044,7 +1044,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.01; open version history" title="Click to view what changed in each version">v.2.01</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.02; open version history" title="Click to view what changed in each version">v.2.02</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5358,8 +5358,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.01';
+const APP_VERSION='2.02';
 const VERSION_HISTORY=[
+  {version:'2.02',added:'No new features.',removed:'No removals.',fixed:'Fixed app-only Not yet click ordering — the inline handler could not see the closure-local audio function and dismissed the modal first; export the handler to window, remove undefined debug calls, retry failed sample loads, and surface HTMLAudio play errors in-app.',tone:'yellow'},
   {version:'2.01',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet still silent in modal (8081 native worked) — stale tauntBuf from old ctx made didWebAudio=true but silent, so HTMLAudio fallback never fired; now always fire gesture-locked HTMLAudio backup (0.38 if WebAudio ok, 0.88 otherwise) + clear stale buffers on ctx recreate.',tone:'green'},
   {version:'2.00',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet silent in app (worked in 8081 clean preview) — LS teardown left Not-yet gain tied to closed AudioContext; now reset isolated gain/verb on ctx recreate and guard ctx-mismatch so taunt+0.5s laugh use fresh 0.92 gain/3.4s hall.',tone:'green'},
   {version:'1.99',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet still silent — now plays before dismiss so overlay close cannot cancel it, synchronous resume within click gesture, isolated Not-yet gain/verb (bypasses LS 13% master) and immediate HTMLAudio fallback within gesture; original LS volumes/timings untouched.',tone:'green'},
@@ -6001,6 +6002,38 @@ function syl(t,o){
 // --- AATROX SAMPLES: 2 laughs, weighted random, both through same big hall ---
 var aatroxBuf=null, aatroxReady=null;
 var aatroxBuf2=null, aatroxReady2=null;
+var notYetAudioPlayers=[];
+var lastNotYetAudioToastAt=0;
+function traceNotYetAudio(stage, detail){
+  try{
+    var record={at:new Date().toISOString(),stage:String(stage||'unknown'),detail:detail==null?'':String(detail).slice(0,240),contextState:ctx?ctx.state:'missing',sampleRate:ctx?ctx.sampleRate:null,tauntCached:!!aatroxTauntBuf};
+    var history=window.__instSanityNotYetAudioTrace;
+    if(!Array.isArray(history)) history=window.__instSanityNotYetAudioTrace=[];
+    history.push(record);
+    if(history.length>24) history.splice(0,history.length-24);
+  }catch(_){}
+  try{ if(window.console&&console.debug) console.debug('[In-st-Sanity audio]',stage,detail||''); }catch(_){}
+}
+function reportNotYetAudioFailure(stage, error, showToast){
+  var reason='unknown';
+  try{ reason=error&&(error.name||error.message)||String(error||'unknown'); }catch(_){}
+  var message='Not-yet '+String(stage||'audio')+' failed ('+String(reason).slice(0,90)+')';
+  traceNotYetAudio('error',message);
+  try{ if(window.console&&console.error) console.error('[In-st-Sanity audio]',message,error); }catch(_){}
+  if(showToast && Date.now()-lastNotYetAudioToastAt>1200){
+    lastNotYetAudioToastAt=Date.now();
+    try{ if(typeof toast==='function') toast(message); }catch(_){}
+  }
+}
+function keepNotYetAudioPlayer(player){
+  try{
+    notYetAudioPlayers.push(player);
+    while(notYetAudioPlayers.length>8) notYetAudioPlayers.shift();
+    var release=function(){ var i=notYetAudioPlayers.indexOf(player); if(i>=0) notYetAudioPlayers.splice(i,1); };
+    player.addEventListener('ended',release,{once:true});
+    player.addEventListener('error',release,{once:true});
+  }catch(_){}
+}
 function resolveAatroxUrl(name){
   try{
     var base = document.baseURI || (location && location.href) || '';
@@ -6015,7 +6048,7 @@ function ensureAatrox(){
   var url=resolveAatroxUrl('aatrox-fight-me.mp3');
   aatroxReady = fetch(url).then(function(r){ if(!r.ok) throw new Error('fetch '+r.status); return r.arrayBuffer(); })
     .then(function(ab){ return new Promise(function(res,rej){ try{ ctx.decodeAudioData(ab, function(b){ aatroxBuf=b; res(b); }, rej); }catch(e){ rej(e); } }); })
-    .catch(function(e){ console.warn('aatrox sample failed', e); return null; });
+    .catch(function(e){ aatroxReady=null; reportNotYetAudioFailure('fight-me sample load',e,false); return null; });
   return aatroxReady;
 }
 function ensureAatrox2(){
@@ -6025,7 +6058,7 @@ function ensureAatrox2(){
   var url2=resolveAatroxUrl('Aatrox_Original_Laugh_0.ogg');
   aatroxReady2 = fetch(url2).then(function(r){ if(!r.ok) throw new Error('fetch '+r.status); return r.arrayBuffer(); })
     .then(function(ab){ return new Promise(function(res,rej){ try{ ctx.decodeAudioData(ab, function(b){ aatroxBuf2=b; res(b); }, rej); }catch(e){ rej(e); } }); })
-    .catch(function(e){ console.warn('aatrox Original Laugh failed', e); return null; });
+    .catch(function(e){ aatroxReady2=null; reportNotYetAudioFailure('Original Laugh sample load',e,false); return null; });
   return aatroxReady2;
 }
 try{ if(window.AudioContext||window.webkitAudioContext) setTimeout(function(){ try{ ensureAatrox(); ensureAatrox2(); ensureAatroxTaunt(); }catch(e){} }, 420); }catch(e){}
@@ -6087,7 +6120,7 @@ function ensureAatroxTaunt(){
   var url=resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg');
   aatroxTauntReady = fetch(url).then(function(r){ if(!r.ok) throw new Error('fetch '+r.status); return r.arrayBuffer(); })
     .then(function(ab){ return new Promise(function(res,rej){ try{ ctx.decodeAudioData(ab, function(b){ aatroxTauntBuf=b; res(b); }, rej); }catch(e){ rej(e); } }); })
-    .catch(function(e){ console.warn('aatrox taunt failed', e); return null; });
+    .catch(function(e){ aatroxTauntReady=null; reportNotYetAudioFailure('Original Taunt sample load',e,false); return null; });
   return aatroxTauntReady;
 }
 // --- Not-yet isolated helpers (do not touch LS_SOUND volume/timings) ---
@@ -6152,16 +6185,22 @@ function tapRoomNotYet(node, send, hp, lp){
     last.connect(g); g.connect(verb);
   }catch(e){ try{ node.connect(ctx.destination); }catch(_){} }
 }
-function fallbackNotYetAudio(url, vol){
+function fallbackNotYetAudio(url, vol, label, showToast){
+  var a=null;
   try{
-    var a=new Audio(url);
+    a=new Audio(url);
     a.volume=Math.max(0,Math.min(1, vol==null?0.88:vol));
     a.crossOrigin='anonymous';
     a.preload='auto';
+    keepNotYetAudioPlayer(a);
+    var reported=false;
+    var fail=function(e){ if(reported)return; reported=true; reportNotYetAudioFailure(label||'HTMLAudio fallback',e,showToast!==false); };
+    try{ a.addEventListener('error',function(){ fail(a.error||'media error'); },{once:true}); }catch(_){}
     var pr=a.play();
-    if(pr && pr.catch) pr.catch(function(e){ console.warn('fallback HTMLAudio failed', url, e); });
+    if(pr&&pr.then) pr.then(function(){ traceNotYetAudio((label||'HTMLAudio')+' accepted',url); },fail);
+    else traceNotYetAudio((label||'HTMLAudio')+' play invoked',url);
     return a;
-  }catch(e){ console.warn('fallback create failed', e); return null; }
+  }catch(e){ reportNotYetAudioFailure(label||'HTMLAudio fallback',e,showToast!==false); return null; }
 }
 function ensureNotYetAudioReadySync(){
   // synchronous resume — must be called directly inside click handler (user gesture)
@@ -6182,34 +6221,42 @@ function playNotYetTauntIsolated(t0){
     if(!buf){
       var need=ensureAatroxTaunt();
       need.then(function(b){
-        if(b) playNotYetTauntIsolated((ctx&&isFinite(ctx.currentTime)? ctx.currentTime+0.06 : t0));
-        else fallbackNotYetAudio(resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg'), 0.88);
+        if(b) playNotYetTauntIsolated((ctx&&isFinite(ctx.currentTime)?ctx.currentTime+0.06:t0));
+        else fallbackNotYetAudio(resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg'),0.88,'taunt fallback',true);
       });
-      return;
+      return false;
     }
-    var t=(t0!=null? t0 : (ctx? ctx.currentTime+0.02 : 0));
-    if(ctx && t < ctx.currentTime) t = ctx.currentTime + 0.02;
+    var t=(t0!=null?t0:(ctx?ctx.currentTime+0.02:0));
+    if(ctx&&t<ctx.currentTime)t=ctx.currentTime+0.02;
     var dur=buf.duration;
-    if(!isFinite(dur) || dur<=0) dur=buf.duration||2.0;
+    if(!isFinite(dur)||dur<=0)dur=buf.duration||2.0;
     var src=ctx.createBufferSource(); src.buffer=buf;
     var g=ctx.createGain();
     var peakVol=0.88;
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(peakVol, t+0.03);
-    g.gain.setValueAtTime(peakVol, t+dur);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(peakVol,t+0.03);
+    g.gain.setValueAtTime(peakVol,t+dur);
     src.connect(g);
-    var p2=pan(g, 0);
-    tapRoomNotYet(p2, 0.88, 220, 3200);
+    var p2=pan(g,0);
+    tapRoomNotYet(p2,0.88,220,3200);
     var didDone=false;
     var onDone=function(){
-      if(didDone) return; didDone=true;
-      try{ var laughT=(ctx? ctx.currentTime+0.5 : t+dur+0.5); playNotYetLaughIsolated(laughT); }catch(e){}
+      if(didDone)return; didDone=true;
+      try{ var laughT=(ctx?ctx.currentTime+0.5:t+dur+0.5); playNotYetLaughIsolated(laughT); }catch(e){}
     };
     try{ src.onended=onDone; }catch(_){}
-    try{ src.start(t, 0, dur); src.stop(t+dur+0.08); }catch(e){ try{ src.start(t); }catch(_){} }
-    setTimeout(onDone, Math.max(0,(dur*1000+520)));
-    try{ console.log('Not-yet taunt scheduled t='+t+' dur='+dur); }catch(_){}
-  }catch(e){ console.warn('playNotYetTauntIsolated failed',e); fallbackNotYetAudio(resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg'),0.88); }
+    var started=false;
+    try{ src.start(t,0,dur); started=true; }catch(e){ try{ src.start(t); started=true; }catch(_){} }
+    if(!started){ traceNotYetAudio('WebAudio taunt source start failed'); return false; }
+    try{ src.stop(t+dur+0.08); }catch(_){}
+    setTimeout(onDone,Math.max(0,dur*1000+520));
+    traceNotYetAudio('WebAudio taunt scheduled','t='+t+' dur='+dur);
+    return true;
+  }catch(e){
+    console.warn('playNotYetTauntIsolated failed',e);
+    traceNotYetAudio('WebAudio taunt exception',e&&e.message||e);
+    return false;
+  }
 }
 function playNotYetLaughIsolated(t0){
   try{
@@ -6249,7 +6296,7 @@ function playNotYetLaughIsolated(t0){
     var p2=pan(g,0);
     tapRoomNotYet(p2, 0.88, 220, 3200);
     try{ src.start(t, startOff, dur); src.stop(t+dur+0.08); }catch(e){ try{ src.start(t); }catch(_){} }
-    try{ console.log('Not-yet laugh '+ (isFightMe?'fight-me':'Original')+' t='+t); }catch(_){}
+    traceNotYetAudio('WebAudio laugh scheduled',(isFightMe?'fight-me':'Original')+' t='+t);
   }catch(e){ console.warn('playNotYetLaughIsolated failed',e); }
 }
 function playNotYetTaunt(t0){ return playNotYetTauntIsolated(t0); }
@@ -6308,44 +6355,46 @@ function handleNotYetClick(){
       if(!ctx) try{ ensureAudio(); }catch(_){}
       // resume synchronously — required to stay in click gesture
       try{ if(ctx && ctx.state==='suspended' && ctx.resume) ctx.resume(); }catch(_){}
-      var t0sync=(ctx&&isFinite(ctx.currentTime))? ctx.currentTime+0.05 : 0;
+      var t0sync=(ctx&&isFinite(ctx.currentTime))?ctx.currentTime+0.05:0;
       var didWebAudio=false;
-      // Try isolated WebAudio first (big hall)
+      traceNotYetAudio('click','tauntCached='+Boolean(aatroxTauntBuf));
+      // Try isolated WebAudio first (big hall); its return value reflects a started source,
+      // not merely that the helper swallowed an exception.
       if(aatroxTauntBuf){
-        try{ playNotYetTauntIsolated(t0sync); didWebAudio=true; log('WebAudio taunt fired (isolated)'); }catch(e){ console.warn('sync taunt failed',e); }
-      } else {
-        log('no tauntBuf cached yet');
+        try{ didWebAudio=playNotYetTauntIsolated(t0sync)===true; }catch(e){ console.warn('sync taunt failed',e); traceNotYetAudio('WebAudio taunt exception',e&&e.message||e); }
+      }else{
+        traceNotYetAudio('taunt buffer not cached; using HTMLAudio immediately');
       }
-      // ALWAYS fire gesture-locked HTMLAudio as backup — app has stale-buf bug where WebAudio is silent but didWebAudio=true
-      // If WebAudio succeeded we lower HTMLAudio to 0.42 to avoid harsh doubling; otherwise full 0.88.
-      try{
-        var fbUrl=resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg');
-        var a0=new Audio(fbUrl); a0.volume= didWebAudio? 0.38 : 0.88; a0.preload='auto';
-        var pr0=a0.play(); if(pr0&&pr0.then) pr0.then(function(){ log('HTMLAudio taunt play ok, didWebAudio='+didWebAudio); }).catch(function(e){ log('sync HTMLAudio taunt failed',e.message||e); });
-        else log('HTMLAudio taunt play (no promise)');
+      // Always make the gesture-bound HTMLAudio attempt before dismissing the modal.
+      // Use full level unless the WebAudio context is confirmed running.
+      var webAudioRunning=Boolean(didWebAudio&&ctx&&ctx.state==='running');
+      var fallbackVolume=webAudioRunning?0.38:0.88;
+      fallbackNotYetAudio(resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg'),fallbackVolume,'taunt HTMLAudio',true);
+      // If WebAudio cannot currently run, play the fallback laugh after taunt duration + 0.5s.
+      if(!webAudioRunning){
+        var laughDelay=4700; // 4.2s taunt + 0.5s pause when its buffer is not available yet
+        if(aatroxTauntBuf&&isFinite(aatroxTauntBuf.duration))laughDelay=Math.max(400,Math.round(aatroxTauntBuf.duration*1000+500));
         setTimeout(function(){
           try{
-            var useFight = Math.random()<0.6;
+            var useFight=Math.random()<0.6;
             var fbLaugh=resolveAatroxUrl(useFight?'aatrox-fight-me.mp3':'Aatrox_Original_Laugh_0.ogg');
-            var a1=new Audio(fbLaugh); a1.volume= didWebAudio? 0.38 : 0.88; a1.preload='auto'; var pr1=a1.play(); if(pr1&&pr1.then) pr1.then(function(){ log('HTMLAudio laugh play ok'); }).catch(function(e){ log('HTMLAudio laugh fail',e); });
-          }catch(e){ log('laugh HTMLAudio create fail',e); }
-        }, 620);
-      }catch(e){ console.warn('sync HTMLAudio create failed',e); }
-      // Warm decode for next click if needed
-      try{
-        if(!aatroxTauntBuf || (aatroxTauntBuf.sampleRate && ctx.sampleRate && aatroxTauntBuf.sampleRate !== ctx.sampleRate)){
-          ensureAatroxTaunt().then(function(b){ if(b) log('taunt re-decoded for new ctx, duration '+b.duration.toFixed(2)); });
-        } else if(!aatroxTauntReady) ensureAatroxTaunt();
-      }catch(_){}
-      try{ if(!aatroxBuf || (aatroxBuf.sampleRate && ctx.sampleRate && aatroxBuf.sampleRate !== ctx.sampleRate)) ensureAatrox(); }catch(_){}
-      try{ if(!aatroxBuf2 || (aatroxBuf2.sampleRate && ctx.sampleRate && aatroxBuf2.sampleRate !== ctx.sampleRate)) ensureAatrox2(); }catch(_){}
+            fallbackNotYetAudio(fbLaugh,0.88,'laugh HTMLAudio',true);
+          }catch(e){ reportNotYetAudioFailure('laugh fallback',e,true); }
+        },laughDelay);
+      }
+      // Warm/retry decode for the next click; do not replay a duplicate taunt after this fallback.
+      try{ if(!aatroxTauntBuf||(aatroxTauntBuf.sampleRate&&ctx.sampleRate&&aatroxTauntBuf.sampleRate!==ctx.sampleRate))ensureAatroxTaunt(); }catch(_){}
+      try{ if(!aatroxBuf||(aatroxBuf.sampleRate&&ctx.sampleRate&&aatroxBuf.sampleRate!==ctx.sampleRate))ensureAatrox(); }catch(_){}
+      try{ if(!aatroxBuf2||(aatroxBuf2.sampleRate&&ctx.sampleRate&&aatroxBuf2.sampleRate!==ctx.sampleRate))ensureAatrox2(); }catch(_){}
 
     }catch(e){ console.warn('handleNotYetClick sync audio failed',e); try{ fallbackNotYetAudio(resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg'),0.88); }catch(_){} }
     // --- 2) Dismiss overlay *after* audio has been kicked ---
     setTimeout(_dismiss, 60);
     setTimeout(function(){ _notYetTauntLock=0; }, 6000);
-  }catch(e){ console.warn('handleNotYetClick failed',e); try{ _dismiss(); }catch(_){} }
+  }catch(e){ console.warn('handleNotYetClick failed',e); traceNotYetAudio('handler exception',e&&e.message||e); try{ _dismiss(); }catch(_){} }
 }
+// The inline modal onclick resolves functions on window; this helper is closure-local otherwise.
+window.handleNotYetClick=handleNotYetClick;
 try{ if(window.AudioContext||window.webkitAudioContext) setTimeout(function(){ try{ ensureAatroxTaunt(); }catch(e){} }, 800); }catch(e){}
 
 function laughDeepLegacy(t0){
