@@ -1044,7 +1044,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.00; open version history" title="Click to view what changed in each version">v.2.00</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.01; open version history" title="Click to view what changed in each version">v.2.01</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5358,8 +5358,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.00';
+const APP_VERSION='2.01';
 const VERSION_HISTORY=[
+  {version:'2.01',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet still silent in modal (8081 native worked) — stale tauntBuf from old ctx made didWebAudio=true but silent, so HTMLAudio fallback never fired; now always fire gesture-locked HTMLAudio backup (0.38 if WebAudio ok, 0.88 otherwise) + clear stale buffers on ctx recreate.',tone:'green'},
   {version:'2.00',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet silent in app (worked in 8081 clean preview) — LS teardown left Not-yet gain tied to closed AudioContext; now reset isolated gain/verb on ctx recreate and guard ctx-mismatch so taunt+0.5s laugh use fresh 0.92 gain/3.4s hall.',tone:'green'},
   {version:'1.99',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet still silent — now plays before dismiss so overlay close cannot cancel it, synchronous resume within click gesture, isolated Not-yet gain/verb (bypasses LS 13% master) and immediate HTMLAudio fallback within gesture; original LS volumes/timings untouched.',tone:'green'},
   {version:'1.98',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet taunt+laugh not playing — isolated Not-yet audio path (resume on user gesture, baseURI fetch, temporary master boost 0.88 with restore, HTMLAudio fallback) so taunt + 0.5s delayed laugh are audible without changing loading-screen volume or laugh timings.',tone:'green'},
@@ -5744,8 +5745,14 @@ function makeIR(dur, decay){
 function ensureAudio(){
   if(ctx) return ctx;
   ctx=new AC();
-  // New ctx invalidates isolated Not-yet nodes tied to old ctx — recreate on next use
+  // New ctx invalidates isolated Not-yet nodes and any buffers decoded at old sampleRate
   try{ notYetGain=null; notYetVerb=null; notYetVerbGain=null; }catch(_){}
+  try{
+    // Buffers decoded with old ctx may have mismatched sampleRate — force re-decode
+    if(aatroxTauntBuf && aatroxTauntBuf.sampleRate && ctx.sampleRate && aatroxTauntBuf.sampleRate !== ctx.sampleRate){ aatroxTauntBuf=null; aatroxTauntReady=null; }
+    if(aatroxBuf && aatroxBuf.sampleRate && ctx.sampleRate && aatroxBuf.sampleRate !== ctx.sampleRate){ aatroxBuf=null; aatroxReady=null; }
+    if(aatroxBuf2 && aatroxBuf2.sampleRate && ctx.sampleRate && aatroxBuf2.sampleRate !== ctx.sampleRate){ aatroxBuf2=null; aatroxReady2=null; }
+  }catch(_){}
   master=ctx.createGain(); master.gain.value=0.85*vol;   /* vol is the user's loudness slider (default 1 = authored level) */
   var comp=ctx.createDynamicsCompressor();
   try{ comp.threshold.value=-14; comp.knee.value=18; comp.ratio.value=6; comp.attack.value=0.004; comp.release.value=0.22; }catch(e){}
@@ -6303,35 +6310,36 @@ function handleNotYetClick(){
       try{ if(ctx && ctx.state==='suspended' && ctx.resume) ctx.resume(); }catch(_){}
       var t0sync=(ctx&&isFinite(ctx.currentTime))? ctx.currentTime+0.05 : 0;
       var didWebAudio=false;
-      // If buffer already decoded, play immediately via isolated Not-yet graph
+      // Try isolated WebAudio first (big hall)
       if(aatroxTauntBuf){
-        try{ playNotYetTauntIsolated(t0sync); didWebAudio=true; }catch(e){ console.warn('sync taunt failed',e); }
-      }
-      // Always also fire a synchronous HTMLAudio as gesture-locked fallback.
-      // If WebAudio succeeds both will be audible; we lower HTMLAudio to avoid doubling,
-      // but the key is that *something* is guaranteed to play even if fetch/decode is pending.
-      if(!didWebAudio){
-        // No buffer yet: kick fetch now, but also play HTMLAudio immediately so user hears something
-        try{
-          var fbUrl=resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg');
-          var a0=new Audio(fbUrl); a0.volume=0.88; a0.preload='auto'; var pr0=a0.play(); if(pr0&&pr0.catch) pr0.catch(function(e){ console.warn('sync HTMLAudio taunt failed',e); });
-          // schedule laugh via HTMLAudio as well (0.5s after taunt start is approximate)
-          setTimeout(function(){
-            try{
-              var useFight = Math.random()<0.6;
-              var fbLaugh=resolveAatroxUrl(useFight?'aatrox-fight-me.mp3':'Aatrox_Original_Laugh_0.ogg');
-              var a1=new Audio(fbLaugh); a1.volume=0.88; a1.preload='auto'; var pr1=a1.play(); if(pr1&&pr1.catch) pr1.catch(function(){});
-            }catch(_){}
-          }, 620);
-        }catch(e){ console.warn('sync HTMLAudio create failed',e); }
-        // kick async decode for next time, and when it arrives also play WebAudio (will be heard as second layer if HTMLAudio already played)
-        try{ ensureAatroxTaunt().then(function(b){ if(b) playNotYetTauntIsolated((ctx&&isFinite(ctx.currentTime)? ctx.currentTime+0.06 : 0)); }); }catch(_){}
-        try{ ensureAatrox(); }catch(_){}
-        try{ ensureAatrox2(); }catch(_){}
+        try{ playNotYetTauntIsolated(t0sync); didWebAudio=true; log('WebAudio taunt fired (isolated)'); }catch(e){ console.warn('sync taunt failed',e); }
       } else {
-        // buffer exists: just warm the other buffers for next click
-        try{ if(!aatroxTauntReady) ensureAatroxTaunt(); }catch(_){}
+        log('no tauntBuf cached yet');
       }
+      // ALWAYS fire gesture-locked HTMLAudio as backup — app has stale-buf bug where WebAudio is silent but didWebAudio=true
+      // If WebAudio succeeded we lower HTMLAudio to 0.42 to avoid harsh doubling; otherwise full 0.88.
+      try{
+        var fbUrl=resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg');
+        var a0=new Audio(fbUrl); a0.volume= didWebAudio? 0.38 : 0.88; a0.preload='auto';
+        var pr0=a0.play(); if(pr0&&pr0.then) pr0.then(function(){ log('HTMLAudio taunt play ok, didWebAudio='+didWebAudio); }).catch(function(e){ log('sync HTMLAudio taunt failed',e.message||e); });
+        else log('HTMLAudio taunt play (no promise)');
+        setTimeout(function(){
+          try{
+            var useFight = Math.random()<0.6;
+            var fbLaugh=resolveAatroxUrl(useFight?'aatrox-fight-me.mp3':'Aatrox_Original_Laugh_0.ogg');
+            var a1=new Audio(fbLaugh); a1.volume= didWebAudio? 0.38 : 0.88; a1.preload='auto'; var pr1=a1.play(); if(pr1&&pr1.then) pr1.then(function(){ log('HTMLAudio laugh play ok'); }).catch(function(e){ log('HTMLAudio laugh fail',e); });
+          }catch(e){ log('laugh HTMLAudio create fail',e); }
+        }, 620);
+      }catch(e){ console.warn('sync HTMLAudio create failed',e); }
+      // Warm decode for next click if needed
+      try{
+        if(!aatroxTauntBuf || (aatroxTauntBuf.sampleRate && ctx.sampleRate && aatroxTauntBuf.sampleRate !== ctx.sampleRate)){
+          ensureAatroxTaunt().then(function(b){ if(b) log('taunt re-decoded for new ctx, duration '+b.duration.toFixed(2)); });
+        } else if(!aatroxTauntReady) ensureAatroxTaunt();
+      }catch(_){}
+      try{ if(!aatroxBuf || (aatroxBuf.sampleRate && ctx.sampleRate && aatroxBuf.sampleRate !== ctx.sampleRate)) ensureAatrox(); }catch(_){}
+      try{ if(!aatroxBuf2 || (aatroxBuf2.sampleRate && ctx.sampleRate && aatroxBuf2.sampleRate !== ctx.sampleRate)) ensureAatrox2(); }catch(_){}
+
     }catch(e){ console.warn('handleNotYetClick sync audio failed',e); try{ fallbackNotYetAudio(resolveAatroxUrl('Aatrox_Original_Taunt_0.ogg'),0.88); }catch(_){} }
     // --- 2) Dismiss overlay *after* audio has been kicked ---
     setTimeout(_dismiss, 60);
