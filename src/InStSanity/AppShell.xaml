@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.92  ·  Doc button matched to X (37px, right-aligned)"
+                   Text="v1.93  ·  All buttons 37pt unified (icon 37×37)"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>
