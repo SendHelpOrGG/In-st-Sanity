@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.86  ·  Save via URL gap + icons unified, Upload JSON compact, Carnival Yes/Not-yet + runes/chevrons + devour horns themed"
+                   Text="v1.87  ·  Not yet now taunts with Aatrox then laughs"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>

@@ -1053,7 +1053,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
     <div class="leaving-sticker-slot" id="leavingStickerArt" data-concept="02" data-reaction="idle" aria-hidden="true"></div>
     <div class="leaving-actions">
       <button type="button" class="outline" id="leavingYesButton" onclick="confirmLeavingFromPrompt()">Yes</button>
-      <button type="button" class="outline" id="leavingNotYetButton" onclick="dismissLeavingPrompt()">Not yet</button>
+      <button type="button" class="outline" id="leavingNotYetButton" onclick="handleNotYetClick()">Not yet</button>
     </div>
   </section>
 </div>
@@ -5290,8 +5290,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.86';
+const APP_VERSION='1.87';
 const VERSION_HISTORY=[
+  {version:'1.87',added:'Not yet exit taunt + laugh — Aatrox Original Taunt 0 with big-room hall, then random laugh.',removed:'No removals.',fixed:'Exiting prompt Not yet now plays Aatrox Original Taunt 0 through the same 3.4s big hall (no fade), then after 0.5s a random laugh (60% fight-me / 40% Original Laugh) with hall + fade; taunt is preloaded and debounced.',tone:'green'},
   {version:'1.86',added:'No new features.',removed:'No removals.',fixed:'Bundled UI fixes: Save via URL 12px gap + top-right download icon parity + Open-in-App/Browser unified to 36px outline; Upload JSON modal \'Get your export here:\' inline link + Doc button 32px; toolbar Upload JSON compact 35px icon; Western Carnival exit Yes/Not-yet same #fef3c7 + trident background no-rotate + runes/chevrons brightened to #fde68a/#fef3c7; JSON-devour horns now themed per sticker (generic V split→themed, layered v1 handled).',tone:'yellow'},
   {version:'1.85',added:'No new features.',removed:'No removals.',fixed:'Loading screen now fills the viewport on cold start — boot viewBox is clamped to the desktop minimum (1440×900) and re-measured on resize, host is forced to 100vw/100dvh with cover, and the MAUI WebView grid is pinned to FillAndExpand so the first-launch overlay no longer renders as a centred square.',tone:'red'},
   {version:'1.84',added:'No new features.',removed:'No removals.',fixed:'Toolbar and detail video/source toggles no longer share the same icon — source toggle now shows eye / eye-off, video toggle shows cam / cam-with-slash with distinct SVG plus corrected data-role and toggle handler, ending the duplicate-icon clash.',tone:'green'},
@@ -5930,7 +5931,7 @@ function ensureAatrox2(){
     .catch(function(e){ console.warn('aatrox Original Laugh failed', e); return null; });
   return aatroxReady2;
 }
-try{ if(window.AudioContext||window.webkitAudioContext) setTimeout(function(){ try{ ensureAatrox(); ensureAatrox2(); }catch(e){} }, 420); }catch(e){}
+try{ if(window.AudioContext||window.webkitAudioContext) setTimeout(function(){ try{ ensureAatrox(); ensureAatrox2(); ensureAatroxTaunt(); }catch(e){} }, 420); }catch(e){}
 function playAatroxLaugh(t0){
   var room=laughRoom();
   if(!ctx) try{ ensureAudio(); }catch(e){}
@@ -5980,6 +5981,71 @@ function playAatroxLaugh(t0){
   tapRoom(p2, 0.84, 220, 3200, room);
   try{ src.start(t, startOff, dur); src.stop(t+dur+0.08); }catch(e){ try{ src.start(t); }catch(_){} }
 }
+
+var aatroxTauntBuf=null, aatroxTauntReady=null;
+function ensureAatroxTaunt(){
+  if(aatroxTauntBuf) return Promise.resolve(aatroxTauntBuf);
+  if(aatroxTauntReady) return aatroxTauntReady;
+  try{ ensureAudio(); }catch(e){}
+  var url='Aatrox_Original_Taunt_0.ogg';
+  aatroxTauntReady = fetch(url).then(function(r){ if(!r.ok) throw new Error('fetch '+r.status); return r.arrayBuffer(); })
+    .then(function(ab){ return new Promise(function(res,rej){ try{ ctx.decodeAudioData(ab, function(b){ aatroxTauntBuf=b; res(b); }, rej); }catch(e){ rej(e); } }); })
+    .catch(function(e){ console.warn('aatrox taunt failed', e); return null; });
+  return aatroxTauntReady;
+}
+function playAatroxTaunt(t0){
+  var room=laughRoom();
+  if(!ctx) try{ ensureAudio(); }catch(e){}
+  var buf=aatroxTauntBuf;
+  if(!buf){
+    var need=ensureAatroxTaunt();
+    need.then(function(b){ if(b) playAatroxTaunt(t0); });
+    return;
+  }
+  var t=t0;
+  if(t < ctx.currentTime) t = ctx.currentTime + 0.02;
+  try{ if(ctx.state==='suspended') ctx.resume(); }catch(e){}
+  var dur=buf.duration;
+  if(!isFinite(dur) || dur<=0) dur=buf.duration||2.0;
+  var src=ctx.createBufferSource(); src.buffer=buf;
+  var g=ctx.createGain();
+  var peakVol=0.792;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peakVol, t+0.03);
+  g.gain.setValueAtTime(peakVol, t+dur);
+  src.connect(g);
+  var p2=pan(g, 0);
+  tapRoom(p2, 0.84, 220, 3200, room);
+  var didDone=false;
+  var onDone=function(){
+    if(didDone) return; didDone=true;
+    try{
+      var laughT = ctx.currentTime + 0.5;
+      playAatroxLaugh(laughT);
+    }catch(e){ console.warn('taunt->laugh failed',e); }
+  };
+  try{ src.onended = onDone; }catch(e){}
+  try{ src.start(t, 0, dur); src.stop(t+dur+0.08); }catch(e){ try{ src.start(t); }catch(_){} }
+  setTimeout(onDone, Math.max(0,(dur*1000+520)));
+}
+var _notYetTauntLock=0;
+function handleNotYetClick(){
+  try{ dismissLeavingPrompt(); }catch(e){}
+  try{
+    var now=Date.now();
+    if(_notYetTauntLock && now - _notYetTauntLock < 3500) return;
+    _notYetTauntLock=now;
+    var t0 = (typeof ctx!=='undefined' && ctx && ctx.currentTime) ? ctx.currentTime + 0.04 : 0;
+    if(!ctx) try{ ensureAudio(); t0 = ctx.currentTime + 0.04; }catch(e){}
+    if(!aatroxTauntBuf && !aatroxTauntReady){
+      ensureAatroxTaunt().then(function(){ playAatroxTaunt(t0); });
+    } else {
+      playAatroxTaunt(t0);
+    }
+    setTimeout(function(){ _notYetTauntLock=0; }, 6000);
+  }catch(e){ console.warn('handleNotYetClick audio failed',e); }
+}
+try{ if(window.AudioContext||window.webkitAudioContext) setTimeout(function(){ try{ ensureAatroxTaunt(); }catch(e){} }, 800); }catch(e){}
 
 function laughDeepLegacy(t0){
   var room=laughRoom();
