@@ -1,4 +1,5 @@
 using System.Net;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using InStSanity.Services.Browser;
@@ -70,13 +71,47 @@ internal static class WebViewBootstrapper
 		}
 	}
 
+	static bool IsVideoDownload(CoreWebView2DownloadStartingEventArgs args)
+	{
+		try
+		{
+			var operation = args.DownloadOperation;
+			if (operation.MimeType?.StartsWith("video/", StringComparison.OrdinalIgnoreCase) == true)
+			{
+				return true;
+			}
+
+			var uri = operation.Uri;
+			if (Uri.TryCreate(uri, UriKind.Absolute, out var absoluteUri) && IsVideoExtension(Path.GetExtension(absoluteUri.AbsolutePath)))
+			{
+				return true;
+			}
+
+			return IsVideoExtension(Path.GetExtension(operation.ResultFilePath));
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
+	static bool IsVideoExtension(string? extension) => extension?.ToLowerInvariant() is ".mp4" or ".m4v" or ".mov" or ".webm" or ".avi" or ".mkv" or ".3gp" or ".mpeg" or ".mpg";
+
 	static void Configure(CoreWebView2 core, bool isInstagramBrowser)
 	{
 		core.DownloadStarting += (_, args) =>
 		{
-			// Video <video controls> native Download would otherwise save to the OS default folder
-			// and show a top-right download pop-up, bypassing the chosen save folder (Settings
-			// -> /api/download-selected). Cancel it here — the viewer is view-only.
+			if (!isInstagramBrowser && IsVideoDownload(args))
+			{
+				try { _ = core.ExecuteScriptAsync("window.showVideoDownloadNotice?.()"); } catch { }
+
+				// Keep the in-post video download running, but let the app show its themed
+				// status in the post header instead of WebView2's default download UI.
+				try { args.Handled = true; } catch { }
+				return;
+			}
+
+			// Other WebView downloads remain blocked; photos use /api/download-selected.
 			try { args.Cancel = true; } catch { }
 		};
 
