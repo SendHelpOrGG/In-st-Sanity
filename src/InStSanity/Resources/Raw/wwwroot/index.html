@@ -5286,8 +5286,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.82';
+const APP_VERSION='1.83';
 const VERSION_HISTORY=[
+  {version:'1.83',added:'No new features.',removed:'No removals.',fixed:'Singularity (JSON devour) horns now match the themed sticker — JSON-throw imp preserves the full multi-path horns for v10 (6-antenna Nordic), v11 (branching Moss & Brass) and v13 (twin fills) instead of splitting the single-path old V, eliminating the bugged thin-wire horns.',tone:'red'},
   {version:'1.82',added:'No new features.',removed:'No removals.',fixed:'Theme 11 (Moss & Brass) peeking horns now render — peek head now includes the theme gradient defs so url(#st_v11Brass) horns no longer vanish; v1/v10/v13 also benefit from defs passthrough.',tone:'red'},
   {version:'1.81',added:'No new features.',removed:'No removals.',fixed:'Unified sticker eye-tracking — side-panel now uses the exact same instant tracking as exit prompt (svg bounding rect, no CSS transition, eyes + face + outer + halo in sync).',tone:'green'},
   {version:'1.80',added:'No new features.',removed:'No removals.',fixed:'Tightened sticker eye-tracking — side-panel eyes now snap with .03s linear (was .12s ease-out) and face updates instantly; exit-prompt sticker now moves head with eyes (face translate/rotate/scale + outer) to match side-panel.',tone:'green'},
@@ -7982,7 +7983,8 @@ function buildImp(root){
   var hornPaths = horns.querySelectorAll('path');
   var browL = hornPaths[0] || null, browR = hornPaths[1] || null;
   var browClone = null, hornD = browL ? browL.getAttribute('d') : null;
-  if(browL && !browR){
+  var DEFAULT_HORNS_D = 'M56 56 L52 72 L71 78 M104 56 L108 72 L89 78';
+  if(browL && !browR && hornD === DEFAULT_HORNS_D){
     var d = hornD || '', cut = (function(){ var idx=[]; for(var i=0;i<d.length;i++) if(d[i]==='M') idx.push(i); if(idx.length<=1) return -1; var mid=Math.floor(idx.length/2); return idx[mid]; })();
     if(cut > 0){
       browClone = browL.cloneNode(false);
