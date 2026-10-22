@@ -105,16 +105,15 @@ internal static class WebViewBootstrapper
 		{
 			// Hide WebView2's default dialog while we read the app's selected folder.
 			try { args.Handled = true; } catch { }
-			string? requestedFolder = null;
 			try
 			{
-				var result = await core.ExecuteScriptAsync("(()=>{try{window.showVideoDownloadNotice?.();return String(window.getConfiguredDownloadFolder?.()||'~/Pictures/Instagram')}catch(e){return '~/Pictures/Instagram'}})()");
-				requestedFolder = JsonSerializer.Deserialize<string>(result);
-			}
-			catch { }
+				var result = await core.ExecuteScriptAsync("(()=>{try{return String(window.getConfiguredDownloadFolder?.()||'')}catch(e){return ''}})()");
+				var requestedFolder = JsonSerializer.Deserialize<string>(result);
+				if (string.IsNullOrWhiteSpace(requestedFolder))
+				{
+					throw new InvalidOperationException("The Settings download folder is unavailable.");
+				}
 
-			try
-			{
 				var folder = DownloadSelectedEndpoint.ResolveFolder(requestedFolder);
 				Directory.CreateDirectory(folder);
 				var fileName = Path.GetFileName(args.ResultFilePath);
@@ -123,8 +122,13 @@ internal static class WebViewBootstrapper
 			}
 			catch
 			{
-				// Keep WebView2's original path if the configured destination is unavailable.
+				// Never let WebView2 silently fall back to its own Downloads folder.
+				try { args.Cancel = true; } catch { }
+				try { await core.ExecuteScriptAsync("window.toast?.('Video download canceled: could not use the folder selected in Settings')"); } catch { }
+				return;
 			}
+
+			try { await core.ExecuteScriptAsync("window.showVideoDownloadNotice?.()"); } catch { }
 		}
 		finally
 		{

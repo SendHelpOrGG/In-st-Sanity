@@ -998,8 +998,8 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
           <div class="background-actions">
           <button type="button" class="outline ui-toggle-btn active" id="lsSoundBtn" aria-pressed="true" onclick="toggleLoadingScreenSound()">Loading screen sound: On</button>
           </div>
-          <label class="field-label opacity-label" for="lsSoundVolume">Sound loudness <strong id="lsSoundVolumeValue">13%</strong></label>
-          <input class="opacity-slider" id="lsSoundVolume" type="range" min="0" max="100" value="13" oninput="setLoadingScreenSoundVolume(this.value)">
+          <label class="field-label opacity-label" for="lsSoundVolume">Sound loudness <strong id="lsSoundVolumeValue">10%</strong></label>
+          <input class="opacity-slider" id="lsSoundVolume" type="range" min="0" max="100" value="10" oninput="setLoadingScreenSoundVolume(this.value)">
           <p class="hint">100% is the level the soundtracks were mixed at. Drop it if the loading screen is too loud, or to 0% to mute it while leaving the sound switched on.</p>
           </div>
           </div>
@@ -1044,7 +1044,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.09; open version history" title="Click to view what changed in each version">v.2.09</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.10; open version history" title="Click to view what changed in each version">v.2.10</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5359,8 +5359,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.09';
+const APP_VERSION='2.10';
 const VERSION_HISTORY=[
+  {version:'2.10',added:'No new features.',removed:'No removals.',fixed:'Loading-screen sound loudness now defaults to 10%, the Not-yet taunt uses 30% less big-room reverb, and video downloads cancel instead of falling back when the Settings folder is unavailable; saved sound preferences remain unchanged.',tone:'yellow'},
   {version:'2.09',added:'No new features.',removed:'No removals.',fixed:'Video-player downloads now use the folder selected in Settings, creating it when needed and choosing a non-conflicting filename instead of defaulting to WebView2’s Downloads folder.',tone:'green'},
   {version:'2.08',added:'No new features.',removed:'No removals.',fixed:'The “Downloading...” video notice now matches the 37px height of the post-header action buttons on desktop and mobile.',tone:'green'},
   {version:'2.07',added:'No new features.',removed:'No removals.',fixed:'Fixed the Windows build error in the video-download handler: the `_` event parameter shadowed C#’s discard assignment for ExecuteScriptAsync.',tone:'green'},
@@ -5539,7 +5540,7 @@ function toggleLoadingScreens(){
 }
 
 var lsSoundEnabled = true;
-var lsSoundVolumePercent = 13;         // 100 = the authored master level (0.85)
+var lsSoundVolumePercent = 10;         // 100 = the authored master level (0.85)
 function loadLsSoundSetting(){
   try{
     var v = localStorage.getItem('stillSane.lsSound');
@@ -6135,6 +6136,7 @@ function ensureAatroxTaunt(){
 // Keep the Not-yet graph independent of the loading score, but use its Settings slider level.
 var notYetGain=null, notYetVerb=null, notYetVerbGain=null;
 var NOT_YET_VOLUME_FACTOR=0.70; // 30% quieter across WebAudio and HTMLAudio paths
+var NOT_YET_TAUNT_ROOM_FACTOR=0.70; // 30% less big-room reverb send for the taunt only
 function notYetVolumeScale(){
   return Math.max(0,Math.min(1,(typeof vol==='number'&&isFinite(vol))?vol:1));
 }
@@ -6252,7 +6254,7 @@ function playNotYetTauntIsolated(t0){
     g.gain.setValueAtTime(peakVol,t+dur);
     src.connect(g);
     var p2=pan(g,0);
-    tapRoomNotYet(p2,0.88,220,3200);
+    tapRoomNotYet(p2,0.88*NOT_YET_TAUNT_ROOM_FACTOR,220,3200);
     var didDone=false;
     var onDone=function(){
       if(didDone)return; didDone=true;
