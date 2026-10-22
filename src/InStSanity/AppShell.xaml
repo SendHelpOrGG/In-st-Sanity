@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.97  ·  Broken horns fixed — black-hole horns preserve themed shape"
+                   Text="v1.98  ·  Not yet sounds fixed — taunt+laugh now audible with big hall"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>
