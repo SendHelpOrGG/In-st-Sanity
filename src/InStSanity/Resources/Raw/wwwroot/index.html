@@ -1044,7 +1044,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.96; open version history" title="Click to view what changed in each version">v.1.96</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.97; open version history" title="Click to view what changed in each version">v.1.97</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5358,8 +5358,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.96';
+const APP_VERSION='1.97';
 const VERSION_HISTORY=[
+  {version:'1.97',added:'No new features.',removed:'No removals.',fixed:'Fixed broken horns on black-hole JSON animation — runD (variant 5) preserved themed long horns (v10/v11/v13) by checking isDefaultHorns; default short-V horns still animate, themed horns now stay long and solid instead of snapping to short stubby V.',tone:'green'},
   {version:'1.96',added:'No new features.',removed:'No removals.',fixed:'Detail and Save-via-URL folder button icon unified — replaced the upload/share arrow with the same folder icon as the library footer (M3 6.5 folder), 16×16, so all Open download folder buttons match.',tone:'green'},
   {version:'1.95',added:'No new features.',removed:'No removals.',fixed:'Doc button in Upload JSON modal moved to the right side — flex wrap removed, margin-left:auto forces right alignment, explicit 37×37 size to match the close (X) button.',tone:'green'},
   {version:'1.94',added:'No new features.',removed:'No removals.',fixed:'Filter row height equalized — All posts / Upload JSON no longer taller: forced 37px equal height for all filters (filter + primary + download-toolbar) with line-height 1 and border-box.',tone:'green'},
@@ -8235,12 +8236,15 @@ function buildImp(root){
     mouth.appendChild(laughMouth);
   }
 
+  var isDefaultHorns = false;
+  try{ var _hd = hornD || ''; if(_hd.indexOf('M56 56')>=0 && _hd.indexOf('M104 56')>=0) isDefaultHorns = true; else if(browL && (browL.getAttribute('d')||'').indexOf('M56 56')>=0) isDefaultHorns = true; }catch(_){}
   return {
     svg: root, head: head, horns: horns, eyes: eyes, mouth: mouth,
     mouthPath: mouthPath, haloL: haloL, haloR: haloR,
     browL: browL, browR: browR,
     browLD: browL ? browL.getAttribute('d') : null,
     browRD: browR ? browR.getAttribute('d') : null,
+    isDefaultHorns: isDefaultHorns,
     eyesBlink: eyesBlink, defaultEyes: defaultEyes, exprEyes: exprEyes,
     defaultMouth: defaultMouth, exprMouth: exprMouth, laughMouth: laughMouth,
     defs: defs, browClone: browClone, hornD: hornD,
@@ -9120,6 +9124,7 @@ function play(variant, fileName, totalCount){
   }
   function putBrow(path, points) {
     if(!path || path._isLayered) return;
+    try{ if(IMP && !IMP.isDefaultHorns) return; }catch(_){}
     path.setAttribute('d', `M ${points[0].toFixed(1)} ${points[1].toFixed(1)} L ${points[2].toFixed(1)} ${points[3].toFixed(1)} L ${points[4].toFixed(1)} ${points[5].toFixed(1)}`);
   }
   function putBrows(left, right) {
