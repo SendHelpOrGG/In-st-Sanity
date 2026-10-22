@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.98  ·  Not yet sounds fixed — taunt+laugh now audible with big hall"
+                   Text="v1.99  ·  Not yet now plays before dismiss — isolated gain/verb, LS untouched"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>
