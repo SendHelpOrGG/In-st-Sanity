@@ -586,9 +586,9 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 
 </style>
 <style id="lsBootStyle">
-#lsBoot{position:fixed;inset:0;z-index:400;overflow:hidden;background:#0a0f18}
-#lsBoot .ls-stage{position:absolute;inset:0}
-#lsBoot svg{display:block;width:100%;height:100%;object-fit:contain}
+#lsBoot{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;min-width:100vw;min-height:100vh;min-height:100dvh;z-index:400;overflow:hidden;background:#0a0f18;contain:layout size;transform:none;will-change:auto}
+#lsBoot .ls-stage{position:absolute;inset:0;width:100%;height:100%}
+#lsBoot svg{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 #lsBoot .cap{position:absolute;left:22px;bottom:20px;font:600 11px/1.3 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:2.2px;text-transform:uppercase;color:var(--ls-cap,rgba(148,163,184,.92));-webkit-user-select:none;user-select:none;pointer-events:none}
 #lsBoot .pips{display:inline-flex;gap:5px;margin-left:9px;vertical-align:middle}
 #lsBoot .pip{width:5px;height:5px;border-radius:50%;background:var(--ls-dim,rgba(255,255,255,.22));transition:background .18s ease,box-shadow .18s ease}
@@ -5289,8 +5289,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.84';
+const APP_VERSION='1.85';
 const VERSION_HISTORY=[
+  {version:'1.85',added:'No new features.',removed:'No removals.',fixed:'Loading screen now fills the viewport on cold start — boot viewBox is clamped to the desktop minimum (1440×900) and re-measured on resize, host is forced to 100vw/100dvh with cover, and the MAUI WebView grid is pinned to FillAndExpand so the first-launch overlay no longer renders as a centred square.',tone:'red'},
   {version:'1.84',added:'No new features.',removed:'No removals.',fixed:'Toolbar and detail video/source toggles no longer share the same icon — source toggle now shows eye / eye-off, video toggle shows cam / cam-with-slash with distinct SVG plus corrected data-role and toggle handler, ending the duplicate-icon clash.',tone:'green'},
   {version:'1.83',added:'No new features.',removed:'No removals.',fixed:'Singularity (JSON devour) horns now match the themed sticker — JSON-throw imp preserves the full multi-path horns for v10 (6-antenna Nordic), v11 (branching Moss & Brass) and v13 (twin fills) instead of splitting the single-path old V, eliminating the bugged thin-wire horns.',tone:'red'},
   {version:'1.82',added:'No new features.',removed:'No removals.',fixed:'Theme 11 (Moss & Brass) peeking horns now render — peek head now includes the theme gradient defs so url(#st_v11Brass) horns no longer vanish; v1/v10/v13 also benefit from defs passthrough.',tone:'red'},
@@ -6362,6 +6363,7 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
   try{ appEl = document.querySelector('.app'); }catch(_){}
 
   function lsTeardown(){
+    try{ if(typeof _vpResizeHandler!=='undefined' && _vpResizeHandler) window.removeEventListener('resize', _vpResizeHandler); }catch(_){}
     try{ if(appEl){ appEl.style.transform=''; appEl.style.willChange=''; appEl.classList.remove('ls-dragging'); } }catch(_){}
     try{ if(host && host.parentNode) host.parentNode.removeChild(host); }catch(_){}
     try{ var st=document.getElementById('lsBootStyle'); if(st && st.parentNode) st.parentNode.removeChild(st); }catch(_){}
@@ -6470,7 +6472,32 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
   TH.face  = TH.parts.face;
 
   /* ---------- viewport-sized viewBox (nothing is ever cropped) ---------- */
-  var vw = window.innerWidth || 1280, vh = window.innerHeight || 800;
+  function getViewportSize(){
+    var w = window.innerWidth, h = window.innerHeight;
+    if(!w || w < 10) w = document.documentElement.clientWidth || 0;
+    if(!h || h < 10) h = document.documentElement.clientHeight || 0;
+    if(!w || w < 10) try{ w = screen.width || 0; }catch(_){}
+    if(!h || h < 10) try{ h = screen.height || 0; }catch(_){}
+    // First paint in the MAUI WebView can report a transient placeholder
+    // (often 0 or a small square) before the native window is laid out to
+    // 1440×900. Clamp to the desktop minimum so the boot never picks the
+    // portrait 320×360 panel and renders as a centred square (the red-square bug).
+    if(w < 1024) w = 1440;
+    if(h < 680) h = 900;
+    try{
+      var hostEl = document.getElementById('lsBoot');
+      if(hostEl){
+        var r = hostEl.getBoundingClientRect();
+        if(r.width > 100 && r.height > 100){
+          if(r.width > w) w = r.width;
+          if(r.height > h) h = r.height;
+        }
+      }
+    }catch(_){}
+    return {vw: w, vh: h};
+  }
+  var _vp = getViewportSize();
+  var vw = _vp.vw, vh = _vp.vh;
   var ar = vw / Math.max(1, vh);
   var W, H;
   if(ar >= 1.6){ H = 200; W = Math.min(620, Math.max(300, Math.round(200*ar))); }
@@ -6480,6 +6507,33 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
   /* viewBox -> screen mapping (variant 3 needs it to grab the real app's edge) */
   var VK = Math.min(vw/W, vh/H);
   var OX = (vw - W*VK)/2, OY = (vh - H*VK)/2;
+  // If the window resizes during the boot (common on cold start when the
+  // native window grows from a placeholder to 1440×900), recompute the
+  // viewBox so the boot fills the screen instead of staying a centred square.
+  var _bootStageEl = null;
+  var _vpResizeHandler = null;
+  function recomputeViewportForBoot(){
+    var vp2 = getViewportSize();
+    if(vp2.vw === vw && vp2.vh === vh) return;
+    vw = vp2.vw; vh = vp2.vh;
+    ar = vw / Math.max(1, vh);
+    if(ar >= 1.6){ H = 200; W = Math.min(620, Math.max(300, Math.round(200*ar))); }
+    else if(ar >= 0.95){ W = 320; H = Math.min(340, Math.max(200, Math.round(320/ar))); }
+    else { W = 320; H = 360; }
+    CX = W/2; CY = H/2;
+    VK = Math.min(vw/W, vh/H);
+    OX = (vw - W*VK)/2; OY = (vh - H*VK)/2;
+    try{
+      if(_bootStageEl){
+        var svgEl = _bootStageEl.querySelector('svg');
+        if(svgEl){
+          svgEl.setAttribute('viewBox','0 0 '+W+' '+H);
+          svgEl.setAttribute('width','100%');
+          svgEl.setAttribute('height','100%');
+        }
+      }
+    }catch(_){}
+  }
 
   const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
   const win=(t,a,b)=>clamp((t-a)/(b-a),0,1);
@@ -7500,6 +7554,14 @@ function v4(sp){
   var stage=document.createElement('div');
   stage.className='ls-stage';
   host.appendChild(stage);
+  try{ _bootStageEl = stage; }catch(_){}
+  try{
+    _vpResizeHandler = function(){ try{ recomputeViewportForBoot(); }catch(_){} };
+    window.addEventListener('resize', _vpResizeHandler);
+    // Re-measure once the window has had a frame to lay out (cold start)
+    setTimeout(function(){ try{ recomputeViewportForBoot(); if(typeof scene!=='undefined' && scene && scene.update) scene.update(0); }catch(_){} }, 120);
+    setTimeout(function(){ try{ recomputeViewportForBoot(); }catch(_){} }, 400);
+  }catch(_){}
 
   var scene=null;
   var stopBrandGlitch=null;
@@ -7515,6 +7577,7 @@ function v4(sp){
   function finish(){
     if(done) return; done=true;
     try{ if(raf) cancelAnimationFrame(raf); }catch(_){}
+    try{ if(_vpResizeHandler) window.removeEventListener('resize', _vpResizeHandler); }catch(_){}
     /* let the score ring out past the fade instead of chopping its tail off */
     try{ if(window.LS_SOUND) window.LS_SOUND.release(SCORE_END[pick-1], SCORE_TAIL[pick-1]); }catch(_){}
 
