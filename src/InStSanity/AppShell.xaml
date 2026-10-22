@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.87  ·  Not yet now taunts with Aatrox then laughs"
+                   Text="v1.88  ·  Full-size photo wheel zoom + drag"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>
