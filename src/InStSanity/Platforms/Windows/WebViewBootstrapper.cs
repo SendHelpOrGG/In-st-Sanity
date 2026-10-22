@@ -99,7 +99,7 @@ internal static class WebViewBootstrapper
 
 	static void Configure(CoreWebView2 core, bool isInstagramBrowser)
 	{
-		core.DownloadStarting += (_, args) =>
+		core.DownloadStarting += (_sender, args) =>
 		{
 			if (!isInstagramBrowser && IsVideoDownload(args))
 			{

@@ -1044,7 +1044,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.06; open version history" title="Click to view what changed in each version">v.2.06</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.07; open version history" title="Click to view what changed in each version">v.2.07</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5359,8 +5359,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.06';
+const APP_VERSION='2.07';
 const VERSION_HISTORY=[
+  {version:'2.07',added:'No new features.',removed:'No removals.',fixed:'Fixed the Windows build error in the video-download handler: the `_` event parameter shadowed C#’s discard assignment for ExecuteScriptAsync.',tone:'green'},
   {version:'2.06',added:'A brief “Downloading...” notice in the post header when an in-post video download starts from the video player menu.',removed:'The native cancellation of in-post video downloads.',fixed:'Video downloads continue to WebView2’s default location while its default dialog is replaced by the themed status; selected-photo downloads are unchanged.',tone:'red'},
   {version:'2.05',added:'No new features.',removed:'No removals.',fixed:'Fixed first-launch loading sticker placement by sizing from the measured #lsBoot viewport and rechecking/redrawing on ResizeObserver and VisualViewport changes; restart rendering and boot timing are unchanged.',tone:'yellow'},
   {version:'2.04',added:'No new features.',removed:'No removals.',fixed:'Reduced the whole Not-yet taunt (taunt plus follow-up laugh) by 30% across WebAudio and HTMLAudio paths, preserving the Settings volume slider.',tone:'green'},
