@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v2.03  ·  Not-yet audio follows Settings sound slider"
+                   Text="v2.04  ·  Not-yet taunt volume reduced 30%"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>

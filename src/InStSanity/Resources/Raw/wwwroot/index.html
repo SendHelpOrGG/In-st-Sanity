@@ -1044,7 +1044,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.03; open version history" title="Click to view what changed in each version">v.2.03</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.04; open version history" title="Click to view what changed in each version">v.2.04</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5358,8 +5358,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.03';
+const APP_VERSION='2.04';
 const VERSION_HISTORY=[
+  {version:'2.04',added:'No new features.',removed:'No removals.',fixed:'Reduced the whole Not-yet taunt (taunt plus follow-up laugh) by 30% across WebAudio and HTMLAudio paths, preserving the Settings volume slider.',tone:'green'},
   {version:'2.03',added:'No new features.',removed:'No removals.',fixed:'Not-yet taunt and follow-up laugh now use the Settings sound-volume slider in both isolated WebAudio and gesture-bound HTMLAudio fallback; changing the slider also updates an in-flight clip.',tone:'green'},
   {version:'2.02',added:'No new features.',removed:'No removals.',fixed:'Fixed app-only Not yet click ordering — the inline handler could not see the closure-local audio function and dismissed the modal first; export the handler to window, remove undefined debug calls, retry failed sample loads, and surface HTMLAudio play errors in-app.',tone:'yellow'},
   {version:'2.01',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet still silent in modal (8081 native worked) — stale tauntBuf from old ctx made didWebAudio=true but silent, so HTMLAudio fallback never fired; now always fire gesture-locked HTMLAudio backup (0.38 if WebAudio ok, 0.88 otherwise) + clear stale buffers on ctx recreate.',tone:'green'},
@@ -6127,6 +6128,7 @@ function ensureAatroxTaunt(){
 // --- Not-yet isolated helpers (separate graph, shared Settings volume) ---
 // Keep the Not-yet graph independent of the loading score, but use its Settings slider level.
 var notYetGain=null, notYetVerb=null, notYetVerbGain=null;
+var NOT_YET_VOLUME_FACTOR=0.70; // 30% quieter across WebAudio and HTMLAudio paths
 function notYetVolumeScale(){
   return Math.max(0,Math.min(1,(typeof vol==='number'&&isFinite(vol))?vol:1));
 }
@@ -6146,7 +6148,7 @@ function getNotYetGain(){
     }
     if(!ctx) return null;
     notYetGain = ctx.createGain();
-    notYetGain.gain.value = 0.92*notYetVolumeScale(); // authored level scaled by Settings volume
+    notYetGain.gain.value = 0.92*notYetVolumeScale()*NOT_YET_VOLUME_FACTOR; // Settings level, 30% quieter
     notYetGain.connect(ctx.destination);
     return notYetGain;
   }catch(e){ return null; }
@@ -6195,7 +6197,7 @@ function fallbackNotYetAudio(url, baseVolume, label, showToast){
     a=new Audio(url);
     var baseLevel=Math.max(0,Math.min(1,baseVolume==null?0.88:baseVolume));
     a.__instSanityNotYetBaseVolume=baseLevel;
-    a.volume=baseLevel*notYetVolumeScale();
+    a.volume=baseLevel*notYetVolumeScale()*NOT_YET_VOLUME_FACTOR;
     a.crossOrigin='anonymous';
     a.preload='auto';
     keepNotYetAudioPlayer(a);
@@ -6746,7 +6748,7 @@ var SCHED={1:schedule1,2:schedule2,3:schedule3,4:schedule4,5:schedule5};
             if(notYetGain&&notYetGain.context===ctx&&ctx.state!=='closed'){
               notYetGain.gain.cancelScheduledValues(t);
               notYetGain.gain.setValueAtTime(notYetGain.gain.value,t);
-              notYetGain.gain.linearRampToValueAtTime(0.92*sliderVolume,t+0.06);
+              notYetGain.gain.linearRampToValueAtTime(0.92*sliderVolume*NOT_YET_VOLUME_FACTOR,t+0.06);
             }
           }catch(_){}
         }
@@ -6754,7 +6756,7 @@ var SCHED={1:schedule1,2:schedule2,3:schedule3,4:schedule4,5:schedule5};
         try{
           for(var i=0;i<notYetAudioPlayers.length;i++){
             var player=notYetAudioPlayers[i];
-            if(player) player.volume=(typeof player.__instSanityNotYetBaseVolume==='number'?player.__instSanityNotYetBaseVolume:0.88)*sliderVolume;
+            if(player) player.volume=(typeof player.__instSanityNotYetBaseVolume==='number'?player.__instSanityNotYetBaseVolume:0.88)*sliderVolume*NOT_YET_VOLUME_FACTOR;
           }
         }catch(_){}
       }catch(_){}
