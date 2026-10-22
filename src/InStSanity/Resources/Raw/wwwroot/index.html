@@ -1044,7 +1044,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.99; open version history" title="Click to view what changed in each version">v.1.99</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.00; open version history" title="Click to view what changed in each version">v.2.00</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5358,8 +5358,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.99';
+const APP_VERSION='2.00';
 const VERSION_HISTORY=[
+  {version:'2.00',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet silent in app (worked in 8081 clean preview) — LS teardown left Not-yet gain tied to closed AudioContext; now reset isolated gain/verb on ctx recreate and guard ctx-mismatch so taunt+0.5s laugh use fresh 0.92 gain/3.4s hall.',tone:'green'},
   {version:'1.99',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet still silent — now plays before dismiss so overlay close cannot cancel it, synchronous resume within click gesture, isolated Not-yet gain/verb (bypasses LS 13% master) and immediate HTMLAudio fallback within gesture; original LS volumes/timings untouched.',tone:'green'},
   {version:'1.98',added:'No new features.',removed:'No removals.',fixed:'Fixed Not yet taunt+laugh not playing — isolated Not-yet audio path (resume on user gesture, baseURI fetch, temporary master boost 0.88 with restore, HTMLAudio fallback) so taunt + 0.5s delayed laugh are audible without changing loading-screen volume or laugh timings.',tone:'green'},
   {version:'1.97',added:'No new features.',removed:'No removals.',fixed:'Fixed broken horns on black-hole JSON animation — runD (variant 5) preserved themed long horns (v10/v11/v13) by checking isDefaultHorns; default short-V horns still animate, themed horns now stay long and solid instead of snapping to short stubby V.',tone:'green'},
@@ -5743,6 +5744,8 @@ function makeIR(dur, decay){
 function ensureAudio(){
   if(ctx) return ctx;
   ctx=new AC();
+  // New ctx invalidates isolated Not-yet nodes tied to old ctx — recreate on next use
+  try{ notYetGain=null; notYetVerb=null; notYetVerbGain=null; }catch(_){}
   master=ctx.createGain(); master.gain.value=0.85*vol;   /* vol is the user's loudness slider (default 1 = authored level) */
   var comp=ctx.createDynamicsCompressor();
   try{ comp.threshold.value=-14; comp.knee.value=18; comp.ratio.value=6; comp.attack.value=0.004; comp.release.value=0.22; }catch(e){}
@@ -6085,7 +6088,18 @@ function ensureAatroxTaunt(){
 var notYetGain=null, notYetVerb=null, notYetVerbGain=null;
 function getNotYetGain(){
   try{
-    if(notYetGain && ctx) return notYetGain;
+    // Recreate if ctx changed/closed (LS teardown sets ctx=null then new ctx)
+    if(notYetGain && ctx){
+      try{
+        // gain's context should match current ctx; if closed or different, discard
+        if(notYetGain.context && notYetGain.context !== ctx) throw new Error('ctx mismatch');
+        if(ctx.state === 'closed') throw new Error('ctx closed');
+        return notYetGain;
+      }catch(_){
+        try{ notYetGain.disconnect(); }catch(_){}
+        notYetGain=null; notYetVerb=null; notYetVerbGain=null;
+      }
+    }
     if(!ctx) return null;
     notYetGain = ctx.createGain();
     notYetGain.gain.value = 0.92; // authored loud for Not-yet, independent of LS slider
@@ -6095,7 +6109,17 @@ function getNotYetGain(){
 }
 function getNotYetVerb(){
   try{
-    if(notYetVerb && ctx) return notYetVerb;
+    if(notYetVerb && ctx){
+      try{
+        if(notYetVerb.context && notYetVerb.context !== ctx) throw 1;
+        if(ctx.state === 'closed') throw 1;
+        return notYetVerb;
+      }catch(_){
+        try{ notYetVerb.disconnect(); }catch(_){}
+        try{ if(notYetVerbGain) notYetVerbGain.disconnect(); }catch(_){}
+        notYetVerb=null; notYetVerbGain=null;
+      }
+    }
     if(!ctx) return null;
     notYetVerb = ctx.createConvolver();
     try{ notYetVerb.buffer = makeIR(3.4, 2.0); }catch(_){}

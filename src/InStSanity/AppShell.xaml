@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.99  ·  Not yet now plays before dismiss — isolated gain/verb, LS untouched"
+                   Text="v2.00  ·  Not yet isolated ctx fix — fresh gain/verb after LS close"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>
