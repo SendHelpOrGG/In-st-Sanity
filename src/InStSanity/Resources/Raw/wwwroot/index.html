@@ -242,10 +242,6 @@ body:not([data-theme]) .sidebar,body:not([data-theme]) .post-modal,body:not([dat
 .version-tag.tone-green{background:color-mix(in srgb,#6ee7b7 26%,transparent);border-color:color-mix(in srgb,#6ee7b7 55%,transparent);color:color-mix(in srgb,var(--t-ink) 82%,#6ee7b7)}
 .version-tag.tone-yellow{background:color-mix(in srgb,#fcd34d 26%,transparent);border-color:color-mix(in srgb,#fcd34d 55%,transparent);color:color-mix(in srgb,var(--t-ink) 82%,#fcd34d)}
 .version-tag.tone-red{background:color-mix(in srgb,#f87171 26%,transparent);border-color:color-mix(in srgb,#f87171 55%,transparent);color:color-mix(in srgb,var(--t-ink) 82%,#f87171)}
-.version-tone-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:6px;vertical-align:0;background:var(--t-muted)}
-.version-tone-dot.tone-green{background:#6ee7b7}
-.version-tone-dot.tone-yellow{background:#fcd34d}
-.version-tone-dot.tone-red{background:#f87171}
 .version-tone-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--t-muted);margin:0 0 14px}
 .version-tone-legend span{display:inline-flex;align-items:center}
 .version-tone-swatch{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
@@ -636,7 +632,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   .brand { grid-template-columns:40px minmax(0,1fr); column-gap:8px; height:44px; padding:0 8px; margin-bottom:34px; }
   .brand .logo { width:40px; height:40px; }
   .brand-name { font-size:24.5px; line-height:1.2; text-align:left; justify-self:start; align-self:center; }
-  .app-version-button { position:fixed; right:14px; bottom:8px; z-index:85; border:0; background:transparent; color:var(--t-muted,#94a3b8); font:inherit; font-size:10px; letter-spacing:.5px; text-align:right; cursor:pointer; padding:3px 12px 8px; opacity:.8; }
+  .app-version-button { position:fixed; right:14px; bottom:8px; transform:translateX(10pt); z-index:85; border:0; background:transparent; color:var(--t-muted,#94a3b8); font:inherit; font-size:10px; letter-spacing:.5px; text-align:right; cursor:pointer; padding:3px 12px 8px; opacity:.8; }
   .app-version-button:hover, .app-version-button:focus-visible { color:var(--t-accent,#38bdf8); opacity:1; outline:none; }
   .version-history-overlay { display:none; position:fixed; inset:0; z-index:100020; align-items:center; justify-content:center; padding:20px; background:rgba(3,7,12,.72); backdrop-filter:blur(9px); }
   .version-history-overlay.show { display:flex; }
@@ -1044,7 +1040,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.113; open version history" title="Click to view what changed in each version">v.1.113</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.114; open version history" title="Click to view what changed in each version">v.1.114</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5374,8 +5370,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.113';
+const APP_VERSION='1.114';
 const VERSION_HISTORY=[
+  {version:'1.114',added:'No new features.',removed:'No removals.',fixed:'Removed the tone dot beside the on-screen version label and shifted the label 10pt to the right; change-size markers remain in version history.',tone:'green'},
   {version:'1.113',added:'No new features.',removed:'No removals.',fixed:'Fixed the first-load loading scene when the MAUI WebView viewport changes by rebuilding each variant at the newly measured dimensions, rather than only changing the SVG viewBox. Loading screens now default to Off for new installs; saved On/Off preferences remain in effect.',tone:'green'},
   {version:'1.112',added:'No new features.',removed:'No removals.',fixed:'The photo full-size button now uses active-theme colors, and the Browser tab’s exit prompt hides the native WebView; choosing “Not yet” restores it.',tone:'green'},
   {version:'1.111',added:'No new features.',removed:'No removals.',fixed:'Loading-screen loudness now defaults to 10%, the Not-yet taunt’s big-hall reverb send is 30% lower, and video downloads cancel rather than fall back if the Settings folder is unavailable; saved slider preferences remain unchanged.',tone:'yellow'},
@@ -5495,8 +5492,7 @@ function versionToneOf(entry){const t=entry&&entry.tone;return (t==='green'||t==
 function renderVersionHistory(){
   const label=document.getElementById('appVersionButton');
   const list=document.getElementById('versionHistoryList');
-  const currentTone=versionToneOf(VERSION_HISTORY[0]);
-  if(label){label.innerHTML=`v.${APP_VERSION}`+(currentTone?` <span class="version-tone-dot tone-${currentTone}"></span>`:'');label.setAttribute('aria-label',`Version ${APP_VERSION}; open version history`)}
+  if(label){label.textContent='v.'+APP_VERSION;label.setAttribute('aria-label',`Version ${APP_VERSION}; open version history`)}
   if(list){
     const legend='<div class="version-tone-legend"><span><i class="version-tone-swatch tone-green"></i>small changes &middot; UI adjustments</span><span><i class="version-tone-swatch tone-yellow"></i>lots of small changes</span><span><i class="version-tone-swatch tone-red"></i>new features &middot; reworks</span></div>';
     list.innerHTML=legend+VERSION_HISTORY.map((entry,index)=>{
