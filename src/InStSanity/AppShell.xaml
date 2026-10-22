@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.85  ·  Fixed blank preview — app now starts and Browser save works"
+                   Text="v1.86  ·  Save via URL gap + icons unified, Upload JSON compact, Carnival Yes/Not-yet + runes/chevrons + devour horns themed"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>
