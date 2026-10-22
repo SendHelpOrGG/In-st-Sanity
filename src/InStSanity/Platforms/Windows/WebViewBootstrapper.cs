@@ -2,6 +2,7 @@ using System.Net;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using InStSanity.Services.Api;
 using InStSanity.Services.Browser;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Web.WebView2.Core;
@@ -97,17 +98,62 @@ internal static class WebViewBootstrapper
 
 	static bool IsVideoExtension(string? extension) => extension?.ToLowerInvariant() is ".mp4" or ".m4v" or ".mov" or ".webm" or ".avi" or ".mkv" or ".3gp" or ".mpeg" or ".mpg";
 
+	static async Task ConfigureVideoDownloadAsync(CoreWebView2 core, CoreWebView2DownloadStartingEventArgs args)
+	{
+		var deferral = args.GetDeferral();
+		try
+		{
+			// Hide WebView2's default dialog while we read the app's selected folder.
+			try { args.Handled = true; } catch { }
+			string? requestedFolder = null;
+			try
+			{
+				var result = await core.ExecuteScriptAsync("(()=>{try{window.showVideoDownloadNotice?.();return String(window.getConfiguredDownloadFolder?.()||'~/Pictures/Instagram')}catch(e){return '~/Pictures/Instagram'}})()");
+				requestedFolder = JsonSerializer.Deserialize<string>(result);
+			}
+			catch { }
+
+			try
+			{
+				var folder = DownloadSelectedEndpoint.ResolveFolder(requestedFolder);
+				Directory.CreateDirectory(folder);
+				var fileName = Path.GetFileName(args.ResultFilePath);
+				if (string.IsNullOrWhiteSpace(fileName)) fileName = "video.mp4";
+				args.ResultFilePath = GetUniqueDownloadPath(folder, fileName);
+			}
+			catch
+			{
+				// Keep WebView2's original path if the configured destination is unavailable.
+			}
+		}
+		finally
+		{
+			deferral.Complete();
+		}
+	}
+
+	static string GetUniqueDownloadPath(string folder, string requestedName)
+	{
+		var fileName = Path.GetFileName(requestedName);
+		if (string.IsNullOrWhiteSpace(fileName)) fileName = "video.mp4";
+		var extension = Path.GetExtension(fileName);
+		var stem = Path.GetFileNameWithoutExtension(fileName);
+		if (string.IsNullOrWhiteSpace(stem)) stem = "video";
+		var candidate = Path.Combine(folder, fileName);
+		for (var suffix = 2; File.Exists(candidate); suffix++)
+		{
+			candidate = Path.Combine(folder, $"{stem} ({suffix}){extension}");
+		}
+		return candidate;
+	}
+
 	static void Configure(CoreWebView2 core, bool isInstagramBrowser)
 	{
 		core.DownloadStarting += (_sender, args) =>
 		{
 			if (!isInstagramBrowser && IsVideoDownload(args))
 			{
-				try { _ = core.ExecuteScriptAsync("window.showVideoDownloadNotice?.()"); } catch { }
-
-				// Keep the in-post video download running, but let the app show its themed
-				// status in the post header instead of WebView2's default download UI.
-				try { args.Handled = true; } catch { }
+				_ = ConfigureVideoDownloadAsync(core, args);
 				return;
 			}
 
