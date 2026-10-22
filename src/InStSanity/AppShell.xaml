@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.93  ·  All buttons 37pt unified (icon 37×37)"
+                   Text="v1.94  ·  Filter row equalized 37px (All posts / Upload JSON)"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>
