@@ -185,13 +185,21 @@ internal static class WebViewBootstrapper
 		};
 
 #if DEBUG
-		// Keep DevTools available to the debugger, but never expose WebView2's browser menu.
+		// Keep DevTools available to the debugger; the page menu is filtered below.
 		core.Settings.AreDevToolsEnabled = true;
 #else
 		core.Settings.AreDevToolsEnabled = false;
 #endif
-		// Applies to both embedded WebViews and every build configuration.
-		core.Settings.AreDefaultContextMenusEnabled = false;
+		// Preserve the intentional native HTML-video menu, but suppress all other
+		// browser menus such as Back, Refresh, Save as, Print, and Inspect.
+		core.Settings.AreDefaultContextMenusEnabled = true;
+		core.ContextMenuRequested += (_, args) =>
+		{
+			if (args.ContextMenuTarget.Kind != CoreWebView2ContextMenuTargetKind.Video)
+			{
+				args.Handled = true;
+			}
+		};
 	}
 
 	/// <summary>
