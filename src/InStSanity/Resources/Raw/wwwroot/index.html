@@ -703,10 +703,10 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </style>
 <style id="theme-aware-ui-fixes">
 /* Keep the translucent treatment theme-aware without fading the panel contents. */
-body .sidebar { isolation:isolate; background:transparent; }
+body .sidebar { isolation:isolate; background:transparent; backdrop-filter:blur(16px); }
 .sidebar::before {
   content:""; position:absolute; inset:0; z-index:-1;
-  background:var(--t-sidebar-bg); opacity:.82; backdrop-filter:blur(18px);
+  background:var(--t-sidebar-bg); opacity:.82;
   pointer-events:none;
 }
 #libraryPage .library-footer { isolation:isolate; background:transparent; }
@@ -1069,7 +1069,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.120; open version history" title="Click to view what changed in each version">v.1.120</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.121; open version history" title="Click to view what changed in each version">v.1.121</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5399,8 +5399,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.120';
+const APP_VERSION='1.121';
 const VERSION_HISTORY=[
+  {version:'1.121',added:'No new features.',removed:'No removals.',fixed:'Moved the backdrop blur onto the sidebar surface, matching the page bar’s 16px glass blur for themed palettes while retaining the default theme’s 20px blur. Text and controls stay sharp.',tone:'green'},
   {version:'1.120',added:'No new features.',removed:'The 60% sidebar surface treatment.',fixed:'Raised the blurred sidebar surface opacity to 82% across all themes, reducing background-image bleed-through without fading sidebar labels or controls.',tone:'green'},
   {version:'1.119',added:'No new features.',removed:'The opaque sidebar surface and off-theme blank media tiles.',fixed:'Sidebar and library surfaces now use theme-aware glass across all themes, including default, without fading sidebar contents. Blank/loading carousel media and export-link accents follow the active palette.',tone:'green'},
   {version:'1.118',added:'No new features.',removed:'The generic WebView2 right-click menu outside video.',fixed:'Preserved the native video menu (Download, playback speed, Picture in picture) while suppressing default menus on other right-click targets.',tone:'green'},
