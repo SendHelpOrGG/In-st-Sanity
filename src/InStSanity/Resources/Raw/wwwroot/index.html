@@ -1070,7 +1070,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.118; open version history" title="Click to view what changed in each version">v.1.118</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.119; open version history" title="Click to view what changed in each version">v.1.119</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5400,8 +5400,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.118';
+const APP_VERSION='1.119';
 const VERSION_HISTORY=[
+  {version:'1.119',added:'No new features.',removed:'The opaque sidebar surface and off-theme blank media tiles.',fixed:'Sidebar and library surfaces now use theme-aware glass across all themes, including default, without fading sidebar contents. Blank/loading carousel media and export-link accents follow the active palette.',tone:'green'},
   {version:'1.118',added:'No new features.',removed:'The generic WebView2 right-click menu outside video.',fixed:'Preserved the native video menu (Download, playback speed, Picture in picture) while suppressing default menus on other right-click targets.',tone:'green'},
   {version:'1.117',added:'No new features.',removed:'Non-English satellite resource folders from the published output.',fixed:'Self-contained Windows publish keeps English resources only (en, en-GB, en-US) and removes non-English Windows App SDK MUI folders.',tone:'green'},
   {version:'1.116',added:'No new features.',removed:'No removals.',fixed:'Fixed Windows publish failing with NETSDK1152: the generated MauiIcon supplies appicon.ico in publish while the source copy remains available in normal build output.',tone:'green'},
