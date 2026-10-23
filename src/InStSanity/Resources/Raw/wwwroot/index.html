@@ -703,13 +703,13 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </style>
 <style id="theme-aware-ui-fixes">
 /* Keep the translucent treatment theme-aware without fading the panel contents. */
-.sidebar { isolation:isolate; background:transparent; }
+body .sidebar { isolation:isolate; background:transparent; }
 .sidebar::before {
   content:""; position:absolute; inset:0; z-index:-1;
   background:var(--t-sidebar-bg); opacity:.60; backdrop-filter:blur(18px);
   pointer-events:none;
 }
-body:not([data-theme]) .sidebar::before { opacity:1; backdrop-filter:none; }
+body:not([data-theme]) .sidebar::before { opacity:.60; backdrop-filter:blur(18px); }
 #libraryPage .library-footer { isolation:isolate; background:transparent; }
 #libraryPage .library-footer::after {
   content:""; position:absolute; inset:0; z-index:-1;
