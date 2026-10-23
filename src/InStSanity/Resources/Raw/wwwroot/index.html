@@ -701,6 +701,36 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   @media(max-width:480px) { .leaving-dialog { padding:22px 18px 18px; } }
   @media(prefers-reduced-motion:reduce) { .leaving-overlay,.leaving-dialog { transition:none; } #leavingStickerArt svg,#leavingStickerArt svg * { animation:none!important; } #leavingStickerArt .leaving-sad-expression { transition:none; } }
 </style>
+<style id="theme-aware-ui-fixes">
+/* Keep the translucent treatment theme-aware without fading the panel contents. */
+.sidebar { isolation:isolate; background:transparent; }
+.sidebar::before {
+  content:""; position:absolute; inset:0; z-index:-1;
+  background:var(--t-sidebar-bg); opacity:.82; backdrop-filter:blur(18px);
+  pointer-events:none;
+}
+body:not([data-theme]) .sidebar::before { opacity:1; backdrop-filter:none; }
+#libraryPage .library-footer { isolation:isolate; background:transparent; }
+#libraryPage .library-footer::after {
+  content:""; position:absolute; inset:0; z-index:-1;
+  background:var(--t-modal-bg,linear-gradient(135deg,rgba(10,15,24,.48),rgba(19,26,33,.42)));
+  opacity:.82; pointer-events:none;
+}
+body:not([data-theme]) #libraryPage .library-footer::after { opacity:1; }
+
+/* The export link follows the active palette; theme 15 needs its brighter secondary accent. */
+#dyiLinkWrap > span { color:var(--t-muted,#94a3b8)!important; }
+#dyiLinkWrap a { color:var(--t-accent,#38bdf8)!important; }
+body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important; }
+
+/* The version label is nudged left by two CSS points. */
+.app-version-button { transform:translateX(8pt); }
+
+/* Blank and loading photo/video slides use the current card surface and theme border. */
+.picture-tile { background:var(--t-card-bg,#141b22); border-color:var(--t-card-border,#3d5060); }
+.picture-art { background:var(--t-card-bg,#141b22); }
+.picture-tile:hover,.picture-tile.is-video:hover { border-color:var(--t-accent,#648296); }
+</style>
 </head>
 <body class="app-startup-blocked">
 <div id="lsBoot" aria-hidden="true"></div><script>(function(){try{var S={default:'#0a0f18',v1:'#130f1c',v2:'#161f26',v3:'#090a0c',v4:'#0e090b',v5:'#150e27',v6:'#141909',v7:'#1b120b',v8:'#0b152c',v9:'#121722',v10:'#181c2b',v11:'#11170f',v12:'#0f0f0f',v13:'#0f0f1a',v14:'#0a0f1e',v15:'#0a0f14'};var id=localStorage.getItem('stillSane.uiThemeV2')||'default';if(!Object.prototype.hasOwnProperty.call(S,id))id='default';var el=document.getElementById('lsBoot');if(el)el.style.background=S[id];if(document.body&&id!=='default')document.body.setAttribute('data-theme',id);}catch(e){}})();</script>
