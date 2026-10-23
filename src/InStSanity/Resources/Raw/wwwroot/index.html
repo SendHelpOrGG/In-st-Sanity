@@ -1040,7 +1040,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.116; open version history" title="Click to view what changed in each version">v.1.116</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.117; open version history" title="Click to view what changed in each version">v.1.117</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5370,8 +5370,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.116';
+const APP_VERSION='1.117';
 const VERSION_HISTORY=[
+  {version:'1.117',added:'No new features.',removed:'Non-English satellite resource folders from the published output.',fixed:'Self-contained Windows publish keeps English resources only (en, en-GB, en-US) and removes non-English Windows App SDK MUI folders.',tone:'green'},
   {version:'1.116',added:'No new features.',removed:'No removals.',fixed:'Fixed Windows publish failing with NETSDK1152: the generated MauiIcon supplies appicon.ico in publish while the source copy remains available in normal build output.',tone:'green'},
   {version:'1.115',added:'No new features.',removed:'The native WebView2 right-click context menu in both app surfaces.',fixed:'Right-clicking no longer opens Back, Refresh, Save as, Print, or Inspect.',tone:'green'},
   {version:'1.114',added:'No new features.',removed:'No removals.',fixed:'Removed the tone dot beside the on-screen version label and shifted the label 10pt to the right; change-size markers remain in version history.',tone:'green'},

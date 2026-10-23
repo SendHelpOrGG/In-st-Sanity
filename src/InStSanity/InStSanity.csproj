@@ -17,11 +17,13 @@
 		<ApplicationTitle>In-st-Sanity</ApplicationTitle>
 		<ApplicationId>com.instsanity.app</ApplicationId>
 		<ApplicationIcon>Resources\AppIcon\appicon.ico</ApplicationIcon>
-		<ApplicationDisplayVersion>1.116</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>1.117</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<!-- Unpackaged desktop app: run it straight from the build output (F5 / dotnet run), no MSIX required. -->
 		<WindowsPackageType>None</WindowsPackageType>
+		<!-- Keep managed satellite resources in English only. -->
+		<SatelliteResourceLanguages>en;en-GB;en-US</SatelliteResourceLanguages>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -45,5 +47,18 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 	</ItemGroup>
+
+	<!-- WindowsAppSDKSelfContained copies .mui folders from its framework package and does not honor SatelliteResourceLanguages. Keep English variants in publish; remove only non-English folders that contain MUI resources. -->
+	<Target Name="RemoveNonEnglishWindowsAppSdkLanguageFolders"
+			AfterTargets="Publish"
+			Condition="'$(PublishDir)' != ''">
+		<ItemGroup>
+			<_EnglishMuiPattern Include="$(PublishDir)en\*.mui" />
+			<_EnglishMuiPattern Include="$(PublishDir)en-*\*.mui" />
+			<_NonEnglishMuiFile Include="$(PublishDir)*\*.mui" Exclude="@(_EnglishMuiPattern)" />
+			<_NonEnglishMuiDirectory Include="@(_NonEnglishMuiFile-&gt;'%(RootDir)%(Directory)')" />
+		</ItemGroup>
+		<RemoveDir Directories="@(_NonEnglishMuiDirectory)" />
+	</Target>
 
 </Project>
