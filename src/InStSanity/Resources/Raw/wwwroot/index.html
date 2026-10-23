@@ -706,7 +706,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .sidebar { isolation:isolate; background:transparent; }
 .sidebar::before {
   content:""; position:absolute; inset:0; z-index:-1;
-  background:var(--t-sidebar-bg); opacity:.82; backdrop-filter:blur(18px);
+  background:var(--t-sidebar-bg); opacity:.60; backdrop-filter:blur(18px);
   pointer-events:none;
 }
 body:not([data-theme]) .sidebar::before { opacity:1; backdrop-filter:none; }
