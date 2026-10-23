@@ -185,13 +185,13 @@ internal static class WebViewBootstrapper
 		};
 
 #if DEBUG
-		// Right-click → Inspect is useful while developing the port.
+		// Keep DevTools available to the debugger, but never expose WebView2's browser menu.
 		core.Settings.AreDevToolsEnabled = true;
-		core.Settings.AreDefaultContextMenusEnabled = true;
 #else
 		core.Settings.AreDevToolsEnabled = false;
-		core.Settings.AreDefaultContextMenusEnabled = isInstagramBrowser;
 #endif
+		// Applies to both embedded WebViews and every build configuration.
+		core.Settings.AreDefaultContextMenusEnabled = false;
 	}
 
 	/// <summary>
