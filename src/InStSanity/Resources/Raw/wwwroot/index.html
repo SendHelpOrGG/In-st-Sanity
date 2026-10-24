@@ -626,7 +626,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   .source-toggle-button svg { width:18px; height:18px; display:block; position:static!important; inset:auto!important; margin:0!important; pointer-events:none; justify-self:center; align-self:center; }
   .icon-filter-btn { display:grid!important; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr); place-items:center!important; justify-content:center!important; align-content:center!important; width:37px; min-width:37px; height:37px; flex:0 0 37px; padding:0!important; gap:0!important; line-height:0!important; }
   .icon-filter-btn svg { width:17px; height:17px; display:block; position:static!important; inset:auto!important; margin:0!important; pointer-events:none; justify-self:center; align-self:center; }
-  .icon-filter-btn.scope-selection-btn svg { width:16.15px; height:16.15px; }
+  .icon-filter-btn.scope-selection-btn svg { width:13.73px; height:13.73px; }
   body[data-theme="v3"] .page-btn.active:hover:not(:disabled), body[data-theme="v3"] .page-btn.active:focus-visible:not(:disabled) { color:var(--t-nav-act-ink,#090a0c); }
   body .download-toolbar.primary { color:var(--t-btn-ink); }
   body .download-toolbar.primary svg { color:inherit; stroke:currentColor; }
@@ -776,8 +776,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         </div>
         <div class="filters toolbar-row toolbar-row-selection" role="group" aria-label="Post selection actions">
           <button class="filter" id="selectedFilter" onclick="setFilter(this,'selected')">Selected (<span id="selectedPostCount">0</span>)</button>
-          <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectAllCollectionBtn" title="Select every photo across all pages in the collection" aria-label="Select every photo across all pages in the collection" onclick="selectAllCollectionPhotos()" disabled><svg viewBox="0 0 24 24" width="16.15" height="16.15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 16a4.5 4.5 0 1 1 0-8c4.5 0 7.5 8 11 8a4.5 4.5 0 1 0 0-8c-4.5 0-7.5 8-11 8"/></svg></button>
-          <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectCurrentPageBtn" title="Select all photos on this page; click again to deselect when all are selected" aria-label="Toggle selection of all photos on the current page" onclick="selectCurrentPagePhotos()" disabled><svg viewBox="0 0 24 24" width="16.15" height="16.15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.1" fill="currentColor" fill-opacity=".08"/><text x="12" y="17" text-anchor="middle" font-family="system-ui,Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="currentColor" stroke="none">1</text></svg></button>
+          <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectAllCollectionBtn" title="Select every photo across all pages in the collection" aria-label="Select every photo across all pages in the collection" onclick="selectAllCollectionPhotos()" disabled><svg viewBox="0 0 24 24" width="13.73" height="13.73" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 16a4.5 4.5 0 1 1 0-8c4.5 0 7.5 8 11 8a4.5 4.5 0 1 0 0-8c-4.5 0-7.5 8-11 8"/></svg></button>
+          <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectCurrentPageBtn" title="Select all photos on this page; click again to deselect when all are selected" aria-label="Toggle selection of all photos on the current page" onclick="selectCurrentPagePhotos()" disabled><svg viewBox="0 0 24 24" width="13.73" height="13.73" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.1" fill="currentColor" fill-opacity=".08"/><text x="12" y="17" text-anchor="middle" font-family="system-ui,Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="currentColor" stroke="none">1</text></svg></button>
           <button type="button" class="filter icon-filter-btn" id="deselectAllBtn" title="Deselect all posts" aria-label="Deselect all posts" onclick="clearAllSelections()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><line x1="8" y1="16" x2="16" y2="8"/></svg></button>
           <span id="srcStatusNote" class="src-status-note" title="Source labels are resolved as posts are viewed"></span>
           <button id="uploadJsonToolbarBtn" class="primary download-toolbar" onclick="openUploadJsonModal()"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Upload JSON</button>
@@ -1103,7 +1103,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.129; open version history" title="Click to view what changed in each version">v.1.129</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.130; open version history" title="Click to view what changed in each version">v.1.130</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5450,8 +5450,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.129';
+const APP_VERSION='1.130';
 const VERSION_HISTORY=[
+  {version:'1.130',added:'No new features.',removed:'The still oversized infinity and circled 1 selection icons.',fixed:'Reduced the collection and current-page selector icons by another 15%, without changing button sizes or layout.',tone:'green'},
   {version:'1.129',added:'No new features.',removed:'The oversized infinity and circled 1 collection/page selection icons.',fixed:'Reduced both selector icons by 15% while leaving button sizes and toolbar layout unchanged.',tone:'green'},
   {version:'1.128',added:'No new features.',removed:'Cropped Open Graph preview URLs being kept as full-size media, and API-only posts marked Mixed.',fixed:'Logged-out posts prefer Save-Free slides or Instagram media-info over OG previews; source badges reflect resolved slide origins, and cropped OG covers stay card-only if originals are unavailable. The authenticated verdict remains unchanged.',tone:'green'},
   {version:'1.127',added:'No new features.',removed:'Source labels appearing only after opening a post while logged out.',fixed:'Visible-page source labels now resolve for anonymous posts too, using the media-info fallback when public page parsing cannot determine provenance.',tone:'green'},
