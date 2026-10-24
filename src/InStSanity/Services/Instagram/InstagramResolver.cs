@@ -290,6 +290,7 @@ public sealed class InstagramResolver
 		}
 		catch (Exception ex)
 		{
+			reason = $"exception:{ex.GetType().Name}";
 			_logger.LogWarning(ex, "Resolve failed for {Shortcode}", shortcode);
 		}
 
@@ -1039,6 +1040,9 @@ public sealed class InstagramResolver
 	static bool HasMediaPayloadFields(JsonObject obj) =>
 		HasCarouselPayloadFields(obj) || HasSingleMediaPayloadFields(obj);
 
+	static JsonNode? FirstArrayItem(JsonNode? node) =>
+		node is JsonArray array && array.Count > 0 ? array[0] : null;
+
 	static ResolvedPost? BuildFromMedia(JsonNode media, string shortcode, JsonNode? identityAnchor = null)
 	{
 		var ownerNode = media["owner"] ?? media["user"] ?? identityAnchor?["owner"] ?? identityAnchor?["user"];
@@ -1053,8 +1057,8 @@ public sealed class InstagramResolver
 
 		if (string.IsNullOrEmpty(caption))
 		{
-			caption = Text(media["edge_media_to_caption"]?["edges"]?[0]?["node"]?["text"])
-				?? Text(identityAnchor?["edge_media_to_caption"]?["edges"]?[0]?["node"]?["text"]);
+			caption = Text(FirstArrayItem(media["edge_media_to_caption"]?["edges"])?["node"]?["text"])
+				?? Text(FirstArrayItem(identityAnchor?["edge_media_to_caption"]?["edges"])?["node"]?["text"]);
 		}
 
 		caption ??= string.Empty;

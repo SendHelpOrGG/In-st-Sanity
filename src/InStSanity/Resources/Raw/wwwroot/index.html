@@ -1103,7 +1103,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.136; open version history" title="Click to view what changed in each version">v.1.136</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.137; open version history" title="Click to view what changed in each version">v.1.137</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5461,8 +5461,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.136';
+const APP_VERSION='1.137';
 const VERSION_HISTORY=[
+  {version:'1.137',added:'No new features.',removed:'Empty Instagram caption-edge arrays aborting the resolver and exception details being hidden from the Debug output.',fixed:'Caption-edge access now checks for an item before indexing. Debug builds route ILogger output to Visual Studio, and resolver failures include the exception type.',tone:'green'},
   {version:'1.136',added:'No new features.',removed:'The blanket rejection of Instagram size-preview URLs and Open Graph-only media when opening a post.',fixed:'Temporarily restored display_url-first selection and allowed preview URLs through card, detail, full-size, and download paths. Target-post identity scoping remains unchanged for this rollback test.',tone:'yellow'},
   {version:'1.135',added:'No new features.',removed:'No diagnostic clue when size-limited previews were filtered and no full-size media reached the detail view.',fixed:'The empty detail state now distinguishes preview-only responses from resolver failures and displays the failure reason. Cropped preview URLs remain excluded from the viewer and downloads.',tone:'green'},
   {version:'1.134',added:'No new features.',removed:'Target media being discarded when display_url pointed to an Instagram size-preview URL despite full-size candidates being present.',fixed:'The resolver now skips /media/?size= preview URLs when choosing slide images and continues through the target post’s image_versions2/display_resources candidates. Preview-only URLs remain blocked from the viewer and downloads.',tone:'green'},

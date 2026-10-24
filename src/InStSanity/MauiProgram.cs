@@ -28,6 +28,10 @@ public static class MauiProgram
 
 		builder.UseMauiApp<App>();
 
+#if DEBUG
+		builder.Logging.AddDebug();
+#endif
+
 #if WINDOWS
 		// The desktop UX owns its own close affordances (the caught-imp prompt by default,
 		// or an optional in-app exit icon). Collapse the WinUI title bar so Windows does
