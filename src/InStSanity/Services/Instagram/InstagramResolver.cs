@@ -141,22 +141,6 @@ public sealed class InstagramResolver
 		"\"taken_at(?:_timestamp)?\"\\s*:\\s*(?<ts>\\d{9,12})",
 		RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
-	static readonly Regex ScontentUrlRegex = new(
-		@"https://scontent[^\s""'\\<>)]+",
-		RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-	static readonly Regex ScontentFilenameRegex = new(
-		@"/(?<filename>\d+_\d+_\d+_n\.[A-Za-z0-9]+)",
-		RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-	static readonly Regex VideoEfgRegex = new(
-		@"[?&]efg=([^&""'\s]+)",
-		RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-	static readonly string[] VideoEfgMarkers =
-	{
-		"dmlkZW8", "LnZpZGVv", "X3ZpZGVv", "Q0xJUFM", "IkNMSVBT",
-	};
 
 	readonly InstagramHttp _http;
 	readonly SaveFreeClient? _saveFree;
@@ -540,27 +524,6 @@ public sealed class InstagramResolver
 			direct = WithShortcodeTimestamp(direct, shortcode);
 		}
 
-		// Instagram sometimes omits the carousel JSON from its logged-out page while
-		// still embedding every original photo URL in the HTML. Recover that set before
-		// trying a third party or treating an OG cover as the whole post.
-		var html = string.Concat(embed.Html ?? string.Empty, "\n", page.Html ?? string.Empty);
-		var scontentPhotos = authed ? Array.Empty<ResolvedMedia>() : ExtractScontentPhotosFromHtml(html);
-		var hasCarouselMarkup = ContainsCarouselMarkup(html);
-		var directCarouselIsIncomplete =
-			direct is not null &&
-			string.Equals(direct.SourceKind, "direct", StringComparison.Ordinal) &&
-			direct.Pictures.Count < scontentPhotos.Count &&
-			hasCarouselMarkup;
-		if (scontentPhotos.Count > 1 &&
-			(direct is null ||
-			 !string.Equals(direct.SourceKind, "direct", StringComparison.Ordinal) ||
-			 directCarouselIsIncomplete))
-		{
-			direct = WithShortcodeTimestamp(
-				WithPictures(direct, shortcode, scontentPhotos, "direct"),
-				shortcode);
-		}
-
 		// 4. save-free.net, for what Instagram will not serve logged out. Asked only when
 		//    the direct result cannot stand on its own — see NeedsSaveFree — because it is
 		//    a third party and the grid resolves twelve posts per request.
@@ -758,124 +721,6 @@ public sealed class InstagramResolver
 		};
 	}
 
-	static IReadOnlyList<ResolvedMedia> ExtractScontentPhotosFromHtml(string html)
-	{
-		if (string.IsNullOrWhiteSpace(html))
-		{
-			return Array.Empty<ResolvedMedia>();
-		}
-
-		var unescaped = html
-			.Replace("\\/", "/", StringComparison.Ordinal)
-			.Replace("\\u0026", "&", StringComparison.OrdinalIgnoreCase)
-			.Replace("&amp;", "&", StringComparison.OrdinalIgnoreCase);
-		var byFilename = new Dictionary<string, string>(StringComparer.Ordinal);
-		var orderedKeys = new List<string>();
-
-		foreach (Match match in ScontentUrlRegex.Matches(unescaped))
-		{
-			var url = match.Value;
-			if (url.Contains("t51.2885-19", StringComparison.OrdinalIgnoreCase) ||
-				url.Contains("/s150x150/", StringComparison.OrdinalIgnoreCase) ||
-				url.Contains("/p150x150/", StringComparison.OrdinalIgnoreCase) ||
-				url.Contains("profile_pic", StringComparison.OrdinalIgnoreCase) ||
-				IsVideoScontentUrl(url))
-			{
-				continue;
-			}
-
-			if (!url.Contains(".jpg", StringComparison.OrdinalIgnoreCase) &&
-				!url.Contains(".webp", StringComparison.OrdinalIgnoreCase) &&
-				!url.Contains(".png", StringComparison.OrdinalIgnoreCase) &&
-				!url.Contains("dst-jpg", StringComparison.OrdinalIgnoreCase))
-			{
-				continue;
-			}
-
-			var filename = ScontentFilenameRegex.Match(url);
-			var queryIndex = url.IndexOf('?');
-			var key = filename.Success
-				? filename.Groups["filename"].Value
-				: queryIndex >= 0 ? url[..queryIndex] : url;
-			if (!byFilename.TryGetValue(key, out var previous))
-			{
-				orderedKeys.Add(key);
-				byFilename[key] = url;
-				continue;
-			}
-
-			var currentLooksLarge =
-				url.Contains("1080", StringComparison.OrdinalIgnoreCase) ||
-				url.Contains("1440", StringComparison.OrdinalIgnoreCase) ||
-				url.Contains("e35", StringComparison.OrdinalIgnoreCase);
-			var previousLooksLarge =
-				previous.Contains("1080", StringComparison.OrdinalIgnoreCase) ||
-				previous.Contains("1440", StringComparison.OrdinalIgnoreCase);
-			if (currentLooksLarge && !previousLooksLarge)
-			{
-				byFilename[key] = url;
-			}
-		}
-
-		return orderedKeys
-			.Select(key => byFilename[key])
-			.Select(url => new ResolvedMedia
-			{
-				ImgUrl = url,
-				ThumbnailUrl = url,
-				RawUrl = url,
-				Origin = "direct",
-			})
-			.ToArray();
-	}
-
-	static bool ContainsCarouselMarkup(string html) =>
-		html.Contains("carousel_media", StringComparison.OrdinalIgnoreCase) ||
-		html.Contains("edge_sidecar_to_children", StringComparison.OrdinalIgnoreCase);
-
-	static bool IsVideoScontentUrl(string url)
-	{
-		if (url.Contains(".mp4", StringComparison.OrdinalIgnoreCase) ||
-			url.Contains("/o1/v/t", StringComparison.OrdinalIgnoreCase))
-		{
-			return true;
-		}
-
-		var match = VideoEfgRegex.Match(url);
-		if (!match.Success)
-		{
-			return false;
-		}
-
-		string encoded;
-		try
-		{
-			encoded = Uri.UnescapeDataString(match.Groups[1].Value);
-		}
-		catch (UriFormatException)
-		{
-			encoded = match.Groups[1].Value;
-		}
-
-		if (VideoEfgMarkers.Any(marker => encoded.Contains(marker, StringComparison.Ordinal)))
-		{
-			return true;
-		}
-
-		try
-		{
-			var base64 = encoded.Replace('-', '+').Replace('_', '/');
-			base64 = base64.PadRight(base64.Length + ((4 - base64.Length % 4) % 4), '=');
-			var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64));
-			return decoded.Contains("video", StringComparison.OrdinalIgnoreCase) ||
-				decoded.Contains("clips.", StringComparison.OrdinalIgnoreCase);
-		}
-		catch (FormatException)
-		{
-			return false;
-		}
-	}
-
 	async Task<(string? Html, string Reason)> FetchHtmlAsync(
 		string url,
 		string? userAgent,
@@ -937,16 +782,15 @@ public sealed class InstagramResolver
 	}
 
 	/// <summary>
-	/// Walks the JSON blobs Instagram embeds in the page (the captioned embed's
-	/// <c>contextJSON</c>, the <c>xdt_shortcode_media</c> blob, the older Polaris
-	/// <c>image_versions2</c> payload) and builds a post out of the first media object.
+	/// Walks the JSON blobs Instagram embeds in the page and returns only the media
+	/// object whose shortcode (or numeric media id) matches the requested post. Pages
+	/// can contain unrelated recommendations and account imagery; those are not slides.
 	/// </summary>
 	static ResolvedPost? ParseFromPageJson(string html, string shortcode)
 	{
 		var candidates = new List<string>();
 
-		var contextMatch = ContextJsonRegex.Match(html);
-		if (contextMatch.Success)
+		foreach (Match contextMatch in ContextJsonRegex.Matches(html))
 		{
 			var unescaped = UnescapeJsonString(contextMatch.Groups[1].Value);
 			if (!string.IsNullOrEmpty(unescaped))
@@ -959,12 +803,17 @@ public sealed class InstagramResolver
 		{
 			var body = script.Groups[1].Value;
 			if (body.Contains("shortcode_media", StringComparison.Ordinal) ||
-				body.Contains("image_versions2", StringComparison.Ordinal))
+				body.Contains("image_versions2", StringComparison.Ordinal) ||
+				body.Contains("carousel_media", StringComparison.Ordinal) ||
+				body.Contains("edge_sidecar_to_children", StringComparison.Ordinal) ||
+				body.Contains("display_resources", StringComparison.Ordinal) ||
+				body.Contains("display_url", StringComparison.Ordinal))
 			{
 				candidates.Add(body);
 			}
 		}
 
+		var expectedMediaId = ShortcodeToMediaId(shortcode);
 		foreach (var candidate in candidates)
 		{
 			JsonNode? root;
@@ -977,7 +826,7 @@ public sealed class InstagramResolver
 				continue;
 			}
 
-			var media = FindMediaNode(root, 0);
+			var media = FindMediaNode(root, 0, shortcode, expectedMediaId);
 			if (media is null)
 			{
 				continue;
@@ -993,8 +842,8 @@ public sealed class InstagramResolver
 		return null;
 	}
 
-	/// <summary>Depth-first search for the object that actually describes a post.</summary>
-	static JsonNode? FindMediaNode(JsonNode? node, int depth)
+	/// <summary>Depth-first search for a media object explicitly identified as this post.</summary>
+	static JsonNode? FindMediaNode(JsonNode? node, int depth, string shortcode, string? expectedMediaId)
 	{
 		if (node is null || depth > 14)
 		{
@@ -1003,10 +852,17 @@ public sealed class InstagramResolver
 
 		if (node is JsonObject obj)
 		{
-			var hasIdentity =
-				obj.ContainsKey("code") ||
-				obj.ContainsKey("shortcode") ||
-				obj.ContainsKey("pk");
+			var code = Text(obj["code"]);
+			var embeddedShortcode = Text(obj["shortcode"]);
+			var hasShortcode = !string.IsNullOrWhiteSpace(code) || !string.IsNullOrWhiteSpace(embeddedShortcode);
+			var matchesShortcode =
+				string.Equals(code, shortcode, StringComparison.Ordinal) ||
+				string.Equals(embeddedShortcode, shortcode, StringComparison.Ordinal);
+			var embeddedMediaId = ScalarText(obj["pk"]) ?? ScalarText(obj["id"]);
+			var matchesMediaId = !hasShortcode &&
+				!string.IsNullOrEmpty(expectedMediaId) &&
+				(string.Equals(embeddedMediaId, expectedMediaId, StringComparison.Ordinal) ||
+				 embeddedMediaId?.StartsWith(expectedMediaId + "_", StringComparison.Ordinal) == true);
 
 			// A carousel's parent object often carries no display_url of its own — the
 			// slides live under edge_sidecar_to_children / carousel_media — so those
@@ -1018,16 +874,18 @@ public sealed class InstagramResolver
 				obj.ContainsKey("display_resources") ||
 				obj.ContainsKey("edge_sidecar_to_children") ||
 				obj.ContainsKey("carousel_media") ||
-				obj.ContainsKey("video_url");
+				obj.ContainsKey("video_url") ||
+				obj.ContainsKey("video_versions") ||
+				obj.ContainsKey("thumbnail_src");
 
-			if (hasIdentity && hasMedia)
+			if ((matchesShortcode || matchesMediaId) && hasMedia)
 			{
 				return obj;
 			}
 
 			foreach (var pair in obj)
 			{
-				var found = FindMediaNode(pair.Value, depth + 1);
+				var found = FindMediaNode(pair.Value, depth + 1, shortcode, expectedMediaId);
 				if (found is not null)
 				{
 					return found;
@@ -1041,7 +899,7 @@ public sealed class InstagramResolver
 		{
 			foreach (var item in array)
 			{
-				var found = FindMediaNode(item, depth + 1);
+				var found = FindMediaNode(item, depth + 1, shortcode, expectedMediaId);
 				if (found is not null)
 				{
 					return found;
@@ -1419,6 +1277,22 @@ public sealed class InstagramResolver
 		}
 
 		return slide["video_versions"] is JsonArray versions && versions.Count > 0;
+	}
+
+	static string? ScalarText(JsonNode? node)
+	{
+		var text = Text(node);
+		if (text is not null)
+		{
+			return text;
+		}
+
+		if (node is JsonValue value && value.TryGetValue<long>(out var number))
+		{
+			return number.ToString(CultureInfo.InvariantCulture);
+		}
+
+		return null;
 	}
 
 	static string? Text(JsonNode? node)
