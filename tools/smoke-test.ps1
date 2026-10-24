@@ -202,6 +202,9 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
+    if (-not $projectSource.Contains('<ApplicationVersion>2</ApplicationVersion>')) {
+        throw 'The integer application version code must be bumped for this release.'
+    }
     if ($projectSource -notmatch '<Content Include="Resources\\AppIcon\\appicon\.ico"[^>]*CopyToPublishDirectory="Never"') {
         throw 'The source app icon must not be published twice; MauiIcon supplies the publish appicon.ico.'
     }
