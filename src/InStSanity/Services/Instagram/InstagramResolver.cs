@@ -555,8 +555,8 @@ public sealed class InstagramResolver
 			}
 		}
 
-		// If the only page result is an Open Graph/API preview, prefer the media-info
-		// endpoint's original media when available. Keep OG as the last fallback only.
+		// If the page only supplied a preview, prefer media-info when available; if that
+		// also fails, let the preview through as a temporary last-resort media result.
 		if (direct is not null && !string.Equals(direct.SourceKind, "direct", StringComparison.Ordinal))
 		{
 			if (mediaInfoPost is null && !authed)
@@ -569,14 +569,6 @@ public sealed class InstagramResolver
 			if (mediaInfoPost is not null)
 			{
 				return (WithShortcodeTimestamp(mediaInfoPost, shortcode), string.Empty);
-			}
-
-			// An OG image is useful as a card cover, but it is not the post's original.
-			// Never expose it as an opened/downloadable slide when full media could not
-			// be resolved.
-			if (!summaryOnly && !authed)
-			{
-				return (null, mediaInfoFailureReason.Length > 0 ? mediaInfoFailureReason : "full_media_unavailable");
 			}
 		}
 
@@ -1347,19 +1339,14 @@ public sealed class InstagramResolver
 		return bestUrl.Length > 0 ? bestUrl : smallestUrl;
 	}
 
-	static bool IsCroppedPreviewUrl(string? url) =>
-		!string.IsNullOrEmpty(url) && url.Contains("/media/?size=", StringComparison.OrdinalIgnoreCase);
-
 	static string PickImage(JsonNode slide)
 	{
 		var direct = Text(slide["display_url"]);
-		if (!IsCroppedPreviewUrl(direct) && !string.IsNullOrEmpty(direct))
+		if (!string.IsNullOrEmpty(direct))
 		{
 			return direct;
 		}
 
-		// A display_url can be only an Instagram size-preview URL. Prefer the
-		// target post's original image candidates before giving up on that slide.
 		var best = BestCandidate(slide["image_versions2"]?["candidates"]);
 		if (best.Length > 0)
 		{
@@ -1373,13 +1360,12 @@ public sealed class InstagramResolver
 		}
 
 		direct = Text(slide["display_uri"]);
-		if (!IsCroppedPreviewUrl(direct) && !string.IsNullOrEmpty(direct))
+		if (!string.IsNullOrEmpty(direct))
 		{
 			return direct;
 		}
 
-		var thumbnail = Text(slide["thumbnail_src"]);
-		return IsCroppedPreviewUrl(thumbnail) ? string.Empty : thumbnail ?? string.Empty;
+		return Text(slide["thumbnail_src"]) ?? string.Empty;
 	}
 
 	/// <summary>Picks the widest candidate — Instagram ships several sizes per slide.</summary>
@@ -1396,7 +1382,7 @@ public sealed class InstagramResolver
 		foreach (var candidate in array)
 		{
 			var url = Text(candidate?["url"]) ?? Text(candidate?["src"]);
-			if (string.IsNullOrEmpty(url) || IsCroppedPreviewUrl(url))
+			if (string.IsNullOrEmpty(url))
 			{
 				continue;
 			}
