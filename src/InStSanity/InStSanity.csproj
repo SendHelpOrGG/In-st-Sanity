@@ -46,6 +46,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
 
 	<!-- WindowsAppSDKSelfContained copies .mui folders from its framework package and does not honor SatelliteResourceLanguages. Keep English variants in publish; remove only non-English folders that contain MUI resources. -->

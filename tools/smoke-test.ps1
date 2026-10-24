@@ -205,6 +205,9 @@ try {
     if (-not $projectSource.Contains('<ApplicationVersion>6</ApplicationVersion>')) {
         throw 'The integer application version code must be bumped for this release.'
     }
+    if (-not $projectSource.Contains('<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />')) {
+        throw 'Debug logging must include its Microsoft.Extensions.Logging.Debug package.'
+    }
     if ($projectSource -notmatch '<Content Include="Resources\\AppIcon\\appicon\.ico"[^>]*CopyToPublishDirectory="Never"') {
         throw 'The source app icon must not be published twice; MauiIcon supplies the publish appicon.ico.'
     }
