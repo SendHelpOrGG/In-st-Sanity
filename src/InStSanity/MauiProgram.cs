@@ -43,6 +43,10 @@ public static class MauiProgram
 				var id = Win32Interop.GetWindowIdFromWindow(handle);
 				var appWindow = AppWindow.GetFromWindowId(id);
 
+				// The web UI already carries the app branding, so avoid repeating the name
+				// in the native caption while keeping the window icon and caption controls.
+				appWindow.Title = string.Empty;
+
 				// The taskbar and caption must show the imp app icon. ApplicationIcon
 				// covers the exe; this pins the window itself to the same .ico.
 				try
