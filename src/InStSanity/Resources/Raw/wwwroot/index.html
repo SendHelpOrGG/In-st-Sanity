@@ -1103,7 +1103,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.125; open version history" title="Click to view what changed in each version">v.1.125</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.126; open version history" title="Click to view what changed in each version">v.1.126</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5436,8 +5436,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.125';
+const APP_VERSION='1.126';
 const VERSION_HISTORY=[
+  {version:'1.126',added:'No new features.',removed:'The unpredictable startup window position.',fixed:'The app window now opens centered on the primary display’s usable area.',tone:'green'},
   {version:'1.125',added:'No new features.',removed:'The duplicate app name in the native Windows title bar.',fixed:'Cleared the native caption text while preserving the window icon and caption controls.',tone:'green'},
   {version:'1.124',added:'A toggle for current-page photo selection.',removed:'No removals.',fixed:'Clicking the current-page selector again deselects that page when all its photos are already selected, without affecting other pages.',tone:'green'},
   {version:'1.123',added:'A detail-header status for photo and video downloads.',removed:'Text on the Deselect all posts icon button, generic selection glyphs, and the sidebar resize handle.',fixed:'Removed persisted sidebar resizing; the sidebar stays at its fixed 244px width. Collapse window now uses two monochrome diagonal arrows with larger inward-facing tips. The collection-wide selector uses an infinity icon and the current-page selector a circled 1. Selection buttons now play one click sound. Back and Forward use matching curved history arrows in monochrome; Reload is a compact 17px circular arrow. All Posts and Selected (N) share a width. Detail downloads show “Downloading N photos” or “Downloading video” at the Select all photos button’s height.',tone:'yellow'},

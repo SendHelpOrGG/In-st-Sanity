@@ -63,6 +63,17 @@ public static class MauiProgram
 				var titleBar = appWindow.TitleBar;
 				titleBar.ExtendsContentIntoTitleBar = true;
 				titleBar.PreferredHeightOption = TitleBarHeightOption.Collapsed;
+
+				// Always place a new app window in the center of the primary display's
+				// usable area, rather than relying on Windows' remembered placement.
+				var primaryDisplay = DisplayArea.GetFromPoint(
+					new Windows.Graphics.PointInt32(0, 0),
+					DisplayAreaFallback.Primary);
+				var workArea = primaryDisplay.WorkArea;
+				var windowSize = appWindow.Size;
+				var x = workArea.X + (workArea.Width - windowSize.Width) / 2;
+				var y = workArea.Y + (workArea.Height - windowSize.Height) / 2;
+				appWindow.Move(new Windows.Graphics.PointInt32(x, y));
 			}));
 		});
 #endif
