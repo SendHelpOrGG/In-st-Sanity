@@ -141,6 +141,23 @@ public sealed class InstagramResolver
 		"\"taken_at(?:_timestamp)?\"\\s*:\\s*(?<ts>\\d{9,12})",
 		RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
+	static readonly Regex ScontentUrlRegex = new(
+		@"https://scontent[^\s""'\\<>)]+",
+		RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+	static readonly Regex ScontentFilenameRegex = new(
+		@"/(?<filename>\d+_\d+_\d+_n\.[A-Za-z0-9]+)",
+		RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+	static readonly Regex VideoEfgRegex = new(
+		@"[?&]efg=([^&""'\s]+)",
+		RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+	static readonly string[] VideoEfgMarkers =
+	{
+		"dmlkZW8", "LnZpZGVv", "X3ZpZGVv", "Q0xJUFM", "IkNMSVBT",
+	};
+
 	readonly InstagramHttp _http;
 	readonly SaveFreeClient? _saveFree;
 	readonly ILogger<InstagramResolver> _logger;
@@ -523,6 +540,27 @@ public sealed class InstagramResolver
 			direct = WithShortcodeTimestamp(direct, shortcode);
 		}
 
+		// Instagram sometimes omits the carousel JSON from its logged-out page while
+		// still embedding every original photo URL in the HTML. Recover that set before
+		// trying a third party or treating an OG cover as the whole post.
+		var html = string.Concat(embed.Html ?? string.Empty, "\n", page.Html ?? string.Empty);
+		var scontentPhotos = authed ? Array.Empty<ResolvedMedia>() : ExtractScontentPhotosFromHtml(html);
+		var hasCarouselMarkup = ContainsCarouselMarkup(html);
+		var directCarouselIsIncomplete =
+			direct is not null &&
+			string.Equals(direct.SourceKind, "direct", StringComparison.Ordinal) &&
+			direct.Pictures.Count < scontentPhotos.Count &&
+			hasCarouselMarkup;
+		if (scontentPhotos.Count > 1 &&
+			(direct is null ||
+			 !string.Equals(direct.SourceKind, "direct", StringComparison.Ordinal) ||
+			 directCarouselIsIncomplete))
+		{
+			direct = WithShortcodeTimestamp(
+				WithPictures(direct, shortcode, scontentPhotos, "direct"),
+				shortcode);
+		}
+
 		// 4. save-free.net, for what Instagram will not serve logged out. Asked only when
 		//    the direct result cannot stand on its own — see NeedsSaveFree — because it is
 		//    a third party and the grid resolves twelve posts per request.
@@ -718,6 +756,124 @@ public sealed class InstagramResolver
 			SourceKind = sourceKind,
 			Pictures = pictures,
 		};
+	}
+
+	static IReadOnlyList<ResolvedMedia> ExtractScontentPhotosFromHtml(string html)
+	{
+		if (string.IsNullOrWhiteSpace(html))
+		{
+			return Array.Empty<ResolvedMedia>();
+		}
+
+		var unescaped = html
+			.Replace("\\/", "/", StringComparison.Ordinal)
+			.Replace("\\u0026", "&", StringComparison.OrdinalIgnoreCase)
+			.Replace("&amp;", "&", StringComparison.OrdinalIgnoreCase);
+		var byFilename = new Dictionary<string, string>(StringComparer.Ordinal);
+		var orderedKeys = new List<string>();
+
+		foreach (Match match in ScontentUrlRegex.Matches(unescaped))
+		{
+			var url = match.Value;
+			if (url.Contains("t51.2885-19", StringComparison.OrdinalIgnoreCase) ||
+				url.Contains("/s150x150/", StringComparison.OrdinalIgnoreCase) ||
+				url.Contains("/p150x150/", StringComparison.OrdinalIgnoreCase) ||
+				url.Contains("profile_pic", StringComparison.OrdinalIgnoreCase) ||
+				IsVideoScontentUrl(url))
+			{
+				continue;
+			}
+
+			if (!url.Contains(".jpg", StringComparison.OrdinalIgnoreCase) &&
+				!url.Contains(".webp", StringComparison.OrdinalIgnoreCase) &&
+				!url.Contains(".png", StringComparison.OrdinalIgnoreCase) &&
+				!url.Contains("dst-jpg", StringComparison.OrdinalIgnoreCase))
+			{
+				continue;
+			}
+
+			var filename = ScontentFilenameRegex.Match(url);
+			var queryIndex = url.IndexOf('?');
+			var key = filename.Success
+				? filename.Groups["filename"].Value
+				: queryIndex >= 0 ? url[..queryIndex] : url;
+			if (!byFilename.TryGetValue(key, out var previous))
+			{
+				orderedKeys.Add(key);
+				byFilename[key] = url;
+				continue;
+			}
+
+			var currentLooksLarge =
+				url.Contains("1080", StringComparison.OrdinalIgnoreCase) ||
+				url.Contains("1440", StringComparison.OrdinalIgnoreCase) ||
+				url.Contains("e35", StringComparison.OrdinalIgnoreCase);
+			var previousLooksLarge =
+				previous.Contains("1080", StringComparison.OrdinalIgnoreCase) ||
+				previous.Contains("1440", StringComparison.OrdinalIgnoreCase);
+			if (currentLooksLarge && !previousLooksLarge)
+			{
+				byFilename[key] = url;
+			}
+		}
+
+		return orderedKeys
+			.Select(key => byFilename[key])
+			.Select(url => new ResolvedMedia
+			{
+				ImgUrl = url,
+				ThumbnailUrl = url,
+				RawUrl = url,
+				Origin = "direct",
+			})
+			.ToArray();
+	}
+
+	static bool ContainsCarouselMarkup(string html) =>
+		html.Contains("carousel_media", StringComparison.OrdinalIgnoreCase) ||
+		html.Contains("edge_sidecar_to_children", StringComparison.OrdinalIgnoreCase);
+
+	static bool IsVideoScontentUrl(string url)
+	{
+		if (url.Contains(".mp4", StringComparison.OrdinalIgnoreCase) ||
+			url.Contains("/o1/v/t", StringComparison.OrdinalIgnoreCase))
+		{
+			return true;
+		}
+
+		var match = VideoEfgRegex.Match(url);
+		if (!match.Success)
+		{
+			return false;
+		}
+
+		string encoded;
+		try
+		{
+			encoded = Uri.UnescapeDataString(match.Groups[1].Value);
+		}
+		catch (UriFormatException)
+		{
+			encoded = match.Groups[1].Value;
+		}
+
+		if (VideoEfgMarkers.Any(marker => encoded.Contains(marker, StringComparison.Ordinal)))
+		{
+			return true;
+		}
+
+		try
+		{
+			var base64 = encoded.Replace('-', '+').Replace('_', '/');
+			base64 = base64.PadRight(base64.Length + ((4 - base64.Length % 4) % 4), '=');
+			var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64));
+			return decoded.Contains("video", StringComparison.OrdinalIgnoreCase) ||
+				decoded.Contains("clips.", StringComparison.OrdinalIgnoreCase);
+		}
+		catch (FormatException)
+		{
+			return false;
+		}
 	}
 
 	async Task<(string? Html, string Reason)> FetchHtmlAsync(

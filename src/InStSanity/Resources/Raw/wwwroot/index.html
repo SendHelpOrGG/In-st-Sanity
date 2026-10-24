@@ -1103,7 +1103,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.130; open version history" title="Click to view what changed in each version">v.1.130</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.131; open version history" title="Click to view what changed in each version">v.1.131</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1611,8 +1611,8 @@ function isVideoHtml(html){if(!html)return false;return /PlayButtonSprite|WatchO
 function hasOnlyUnresolvedMediaUrl(post){if(!post)return true;if(typeof post.coverArtIndex==='number'&&!post.coverUrl)return false;const u=String(post.coverUrl||post.pictures?.[0]?.rawUrl||post.pictures?.[0]?.imgUrl||'');return !u||u.includes('/media/?size=')}
 function needsSummaryResolution(post){if(!post)return false;if(String(post.shortcode||'').toLowerCase()==='dewe8ltizn2')return false;if(typeof post.coverArtIndex==='number'&&!post.shortcode)return false;if(!post.summaryResolved)return true;const u=String(post.coverUrl||'');if(!u||u.includes('/media/?size='))return true;if(!post.fullResolved&&!post.serverResolved){const scKind=String(post.sourceKind||'');if(scKind==='api'){const pc=typeof post.photoCount==='number'?post.photoCount:1;const vc=typeof post.videoCount==='number'?post.videoCount:0;if(pc===1&&vc===0)return true}}return false}
 function needsSourceKindResolution(post){if(!post||!post.shortcode||String(post.shortcode).startsWith('Post #')||String(post.shortcode).toLowerCase()==='dewe8ltizn2')return false;return computePostSourceKind(post)==='unknown'}
-const SUMMARY_RETRY_COOLDOWN_MS=6*60*60*1000;const SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE=5*60*1000;
-function summaryResolutionCoolingDown(post){const attemptedAt=Number(post?.summaryAttemptedAt)||0;if(!attemptedAt)return false;const isApiSingle=!post.fullResolved&&String(post.sourceKind||'')==='api'&&Number(post.photoCount)===1&&Number(post.videoCount)===0;const cd=isApiSingle?SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE:SUMMARY_RETRY_COOLDOWN_MS;return Date.now()<attemptedAt+cd}
+const SUMMARY_RETRY_COOLDOWN_MS=6*60*60*1000;const SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE=5*60*1000;const SUMMARY_RETRY_COOLDOWN_MS_SOURCE_KIND=2*60*1000;
+function summaryResolutionCoolingDown(post){const attemptedAt=Number(post?.summaryAttemptedAt)||0;if(!attemptedAt)return false;if(needsSourceKindResolution(post))return Date.now()<attemptedAt+SUMMARY_RETRY_COOLDOWN_MS_SOURCE_KIND;const isApiSingle=!post.fullResolved&&String(post.sourceKind||'')==='api'&&Number(post.photoCount)===1&&Number(post.videoCount)===0;const cd=isApiSingle?SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE:SUMMARY_RETRY_COOLDOWN_MS;return Date.now()<attemptedAt+cd}
 function needsFullCarouselResolution(post){if(!post)return false;if(!post.mediaLoaded||!Array.isArray(post.pictures)||!post.pictures.length)return true;if(String(post.shortcode||'').toLowerCase()==='dewe8ltizn2')return post.pictures.length<9;const pics=post.pictures;if(pics.some(pic=>(pic?.isVideo||isVideoCdnUrl(pic?.rawUrl||pic?.imgUrl))&&!pic?.videoUrl))return true;const {photoCount,videoCount}=getPostMediaCounts(post);if(pics.length<(photoCount+videoCount))return true;if(pics.length>1)return false;if(post.confirmedSingleMedia&&post.fullResolved&&post.serverResolved)return false;return true}
 function openPost(i){if(currentPost>=0&&currentPost!==i){const prev=posts[currentPost];if(prev){if(prev.mediaLoaded)syncPostSelectedIndicesFromPictures(prev);prev.pictures=[];prev.mediaLoaded=false}}currentPost=i;const post=posts[i];if(!post)return;const scLower=String(post.shortcode||'').toLowerCase();if(scLower==='dewe8ltizn2'&&!post.mediaLoaded){post.pictures=Array.from({length:9},(_,j)=>({artIndex:6+j,selected:false,isVideo:false}));applySelectedIndicesToPictures(post);post.mediaLoaded=true;post.fullResolved=true}else if(Array.isArray(post.seedSpec)&&!post.mediaLoaded){post.pictures=post.seedSpec.map(s=>({artIndex:s.artIndex,selected:false,isVideo:Boolean(s.isVideo)}));applySelectedIndicesToPictures(post);post.mediaLoaded=true;post.fullResolved=true}cancelImpButtonClickFx();resetStickerTransforms();renderDetail();document.getElementById('postDetail').classList.add('show');document.body.classList.add('post-detail-open');if(typeof window.startPostModalSneakPeek==='function')window.startPostModalSneakPeek();if(!post.mediaLoaded||needsFullCarouselResolution(post)){resolveSinglePostVisual(post,true).then(()=>{scheduleSaveImportedPostsState();updateCardInDom(i);if(currentPost===i)renderDetail()})}}
 async function copyPostUrlInput(inputEl){if(!inputEl)return;const url=String(inputEl.value||'').trim();if(!url)return;playUiClick();try{inputEl.focus();inputEl.select();inputEl.setSelectionRange(0,url.length)}catch(_){}let copied=false;if(navigator.clipboard&&navigator.clipboard.writeText){try{await navigator.clipboard.writeText(url);copied=true}catch(_){}}if(!copied){try{const ta=document.createElement('textarea');ta.value=url;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();copied=document.execCommand('copy');document.body.removeChild(ta)}catch(_){}}const lbl=inputEl.parentElement?.querySelector('span');if(lbl){lbl.textContent='POST URL · COPIED TO CLIPBOARD ✓';clearTimeout(lbl._copyTimer);lbl._copyTimer=setTimeout(()=>{lbl.textContent='POST URL'},1800)}toast('Post URL copied to clipboard')}
@@ -2003,10 +2003,11 @@ async function resolvePostsBatchChunk(chunk,token,signal=null,isWarm=false){
       if(Array.isArray(data.posts))data.posts.forEach(r=>{if(r&&r.shortcode)bySc[String(r.shortcode).toLowerCase()]=r});
       let changed=false;
       chunk.forEach(post=>{
-        if(!post||currentPost===post._idx)return;
+        if(!post)return;
         const k=String(post.shortcode||'').toLowerCase();
         const res=bySc[k];
         if(res&&res.ok===false){
+          if(currentPost===post._idx)return;
           post.summaryAttemptedAt=Date.now();
           post.resolveFailedReason=String(res.reason||res.error||'no_media');
           if(typeof post._idx==='number')updateCardInDom(post._idx);
@@ -2014,6 +2015,17 @@ async function resolvePostsBatchChunk(chunk,token,signal=null,isWarm=false){
         }
         if(res&&res.ok){
           const previousSourceKind=String(post.sourceKind||'');
+          if(currentPost===post._idx){
+            const resolvedKind=String(res.sourceKind||'');
+            if(['direct','api','mixed'].includes(resolvedKind))post.sourceKind=resolvedKind;
+            if(String(post.sourceKind||'')!==previousSourceKind){
+              post.summaryAttemptedAt=Date.now();
+              post.resolveFailedReason='';
+              changed=true;
+              if(typeof post._idx==='number'){updateCardInDom(post._idx);updateCardSrcBadge(post._idx)}
+            }
+            return;
+          }
           const summaryApplied=applyPostSummaryData(post,res);
           const sourceKindChanged=String(post.sourceKind||'')!==previousSourceKind;
           if(summaryApplied||sourceKindChanged){
@@ -5450,8 +5462,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.130';
+const APP_VERSION='1.131';
 const VERSION_HISTORY=[
+  {version:'1.131',added:'No new features.',removed:'Logged-out carousel posts showing only a cropped preview, and visible-page source labels disappearing when a post was opened during resolution.',fixed:'Recover full carousels from Instagram scontent URLs embedded in public page HTML. Visible-page summary results now still update source labels when a post is opened, with unresolved labels retried sooner.',tone:'green'},
   {version:'1.130',added:'No new features.',removed:'The still oversized infinity and circled 1 selection icons.',fixed:'Reduced the collection and current-page selector icons by another 15%, without changing button sizes or layout.',tone:'green'},
   {version:'1.129',added:'No new features.',removed:'The oversized infinity and circled 1 collection/page selection icons.',fixed:'Reduced both selector icons by 15% while leaving button sizes and toolbar layout unchanged.',tone:'green'},
   {version:'1.128',added:'No new features.',removed:'Cropped Open Graph preview URLs being kept as full-size media, and API-only posts marked Mixed.',fixed:'Logged-out posts prefer Save-Free slides or Instagram media-info over OG previews; source badges reflect resolved slide origins, and cropped OG covers stay card-only if originals are unavailable. The authenticated verdict remains unchanged.',tone:'green'},
