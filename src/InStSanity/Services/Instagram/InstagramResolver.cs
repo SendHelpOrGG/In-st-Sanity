@@ -782,9 +782,10 @@ public sealed class InstagramResolver
 	}
 
 	/// <summary>
-	/// Walks the JSON blobs Instagram embeds in the page and returns only the media
-	/// object whose shortcode (or numeric media id) matches the requested post. Pages
-	/// can contain unrelated recommendations and account imagery; those are not slides.
+	/// Finds the requested post's identity anchor, then inspects only known media-holder
+	/// fields below that anchor. Instagram can put the shortcode on a wrapper and the
+	/// preview/carousel payload in a nested object; unrelated page JSON is never a source
+	/// of slides.
 	/// </summary>
 	static ResolvedPost? ParseFromPageJson(string html, string shortcode)
 	{
@@ -807,32 +808,60 @@ public sealed class InstagramResolver
 				body.Contains("carousel_media", StringComparison.Ordinal) ||
 				body.Contains("edge_sidecar_to_children", StringComparison.Ordinal) ||
 				body.Contains("display_resources", StringComparison.Ordinal) ||
-				body.Contains("display_url", StringComparison.Ordinal))
+				body.Contains("display_url", StringComparison.Ordinal) ||
+				body.Contains("display_uri", StringComparison.Ordinal) ||
+				body.Contains("video_versions", StringComparison.Ordinal) ||
+				body.Contains("thumbnail_src", StringComparison.Ordinal) ||
+				body.Contains("__isXIGPolarisMedia", StringComparison.Ordinal))
 			{
 				candidates.Add(body);
 			}
 		}
 
-		var expectedMediaId = ShortcodeToMediaId(shortcode);
+		var roots = new List<JsonNode>();
 		foreach (var candidate in candidates)
 		{
-			JsonNode? root;
 			try
 			{
-				root = JsonNode.Parse(candidate);
+				var root = JsonNode.Parse(candidate);
+				if (root is not null)
+				{
+					roots.Add(root);
+				}
 			}
 			catch (JsonException)
 			{
 				continue;
 			}
+		}
 
-			var media = FindMediaNode(root, 0, shortcode, expectedMediaId);
+		var expectedMediaId = ShortcodeToMediaId(shortcode);
+		// Search every JSON block for a target carousel before accepting any single
+		// preview image; the first block may be only a lightweight preview.
+		foreach (var root in roots)
+		{
+			var media = FindPostMediaNode(root, 0, shortcode, expectedMediaId, true, out var identityAnchor);
 			if (media is null)
 			{
 				continue;
 			}
 
-			var built = BuildFromMedia(media, shortcode);
+			var built = BuildFromMedia(media, shortcode, identityAnchor);
+			if (built is not null)
+			{
+				return built;
+			}
+		}
+
+		foreach (var root in roots)
+		{
+			var media = FindPostMediaNode(root, 0, shortcode, expectedMediaId, false, out var identityAnchor);
+			if (media is null)
+			{
+				continue;
+			}
+
+			var built = BuildFromMedia(media, shortcode, identityAnchor);
 			if (built is not null)
 			{
 				return built;
@@ -842,52 +871,41 @@ public sealed class InstagramResolver
 		return null;
 	}
 
-	/// <summary>Depth-first search for a media object explicitly identified as this post.</summary>
-	static JsonNode? FindMediaNode(JsonNode? node, int depth, string shortcode, string? expectedMediaId)
+	/// <summary>Searches page JSON for the post identity before considering any image fields.</summary>
+	static JsonNode? FindPostMediaNode(
+		JsonNode? node,
+		int depth,
+		string shortcode,
+		string? expectedMediaId,
+		bool preferCarousel,
+		out JsonObject? identityAnchor)
 	{
-		if (node is null || depth > 14)
+		identityAnchor = null;
+		if (node is null || depth > 18)
 		{
 			return null;
 		}
 
 		if (node is JsonObject obj)
 		{
-			var code = Text(obj["code"]);
-			var embeddedShortcode = Text(obj["shortcode"]);
-			var hasShortcode = !string.IsNullOrWhiteSpace(code) || !string.IsNullOrWhiteSpace(embeddedShortcode);
-			var matchesShortcode =
-				string.Equals(code, shortcode, StringComparison.Ordinal) ||
-				string.Equals(embeddedShortcode, shortcode, StringComparison.Ordinal);
-			var embeddedMediaId = ScalarText(obj["pk"]) ?? ScalarText(obj["id"]);
-			var matchesMediaId = !hasShortcode &&
-				!string.IsNullOrEmpty(expectedMediaId) &&
-				(string.Equals(embeddedMediaId, expectedMediaId, StringComparison.Ordinal) ||
-				 embeddedMediaId?.StartsWith(expectedMediaId + "_", StringComparison.Ordinal) == true);
-
-			// A carousel's parent object often carries no display_url of its own — the
-			// slides live under edge_sidecar_to_children / carousel_media — so those
-			// keys have to count as media too, or the parent is skipped and the walk
-			// ends up returning one slide as if it were the whole post.
-			var hasMedia =
-				obj.ContainsKey("image_versions2") ||
-				obj.ContainsKey("display_url") ||
-				obj.ContainsKey("display_resources") ||
-				obj.ContainsKey("edge_sidecar_to_children") ||
-				obj.ContainsKey("carousel_media") ||
-				obj.ContainsKey("video_url") ||
-				obj.ContainsKey("video_versions") ||
-				obj.ContainsKey("thumbnail_src");
-
-			if ((matchesShortcode || matchesMediaId) && hasMedia)
+			if (MatchesPostIdentity(obj, shortcode, expectedMediaId))
 			{
-				return obj;
+				var scopedMedia = FindMediaPayloadWithinPost(obj, 0, preferCarousel, shortcode);
+				if (scopedMedia is not null)
+				{
+					identityAnchor = obj;
+					return scopedMedia;
+				}
 			}
 
+			// This outer walk locates identity anchors only. Media extraction happens
+			// separately and is restricted to recognized post/media-holder keys.
 			foreach (var pair in obj)
 			{
-				var found = FindMediaNode(pair.Value, depth + 1, shortcode, expectedMediaId);
+				var found = FindPostMediaNode(pair.Value, depth + 1, shortcode, expectedMediaId, preferCarousel, out var nestedIdentity);
 				if (found is not null)
 				{
+					identityAnchor = nestedIdentity;
 					return found;
 				}
 			}
@@ -899,7 +917,98 @@ public sealed class InstagramResolver
 		{
 			foreach (var item in array)
 			{
-				var found = FindMediaNode(item, depth + 1, shortcode, expectedMediaId);
+				var found = FindPostMediaNode(item, depth + 1, shortcode, expectedMediaId, preferCarousel, out var nestedIdentity);
+				if (found is not null)
+				{
+					identityAnchor = nestedIdentity;
+					return found;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	static bool MatchesPostIdentity(JsonObject obj, string shortcode, string? expectedMediaId)
+	{
+		var code = Text(obj["code"]);
+		var embeddedShortcode = Text(obj["shortcode"]);
+		var hasCode = !string.IsNullOrWhiteSpace(code);
+		var hasEmbeddedShortcode = !string.IsNullOrWhiteSpace(embeddedShortcode);
+		if (hasCode || hasEmbeddedShortcode)
+		{
+			// When both identity fields are present, both must agree. A conflicting
+			// shortcode must not be rescued by another matching field or numeric id.
+			return (!hasCode || string.Equals(code, shortcode, StringComparison.Ordinal)) &&
+				(!hasEmbeddedShortcode || string.Equals(embeddedShortcode, shortcode, StringComparison.Ordinal));
+		}
+
+		if (string.IsNullOrEmpty(expectedMediaId))
+		{
+			return false;
+		}
+
+		var embeddedMediaId = ScalarText(obj["pk"]) ?? ScalarText(obj["id"]);
+		return string.Equals(embeddedMediaId, expectedMediaId, StringComparison.Ordinal) ||
+			embeddedMediaId?.StartsWith(expectedMediaId + "_", StringComparison.Ordinal) == true;
+	}
+
+	static bool HasConflictingShortcode(JsonObject obj, string shortcode)
+	{
+		var code = Text(obj["code"]);
+		var embeddedShortcode = Text(obj["shortcode"]);
+		return (!string.IsNullOrWhiteSpace(code) && !string.Equals(code, shortcode, StringComparison.Ordinal)) ||
+			(!string.IsNullOrWhiteSpace(embeddedShortcode) && !string.Equals(embeddedShortcode, shortcode, StringComparison.Ordinal));
+	}
+
+	/// <summary>
+	/// Chooses the media holder only within a post whose identity has already matched.
+	/// It does not descend through owner, comment, or recommendation branches.
+	/// </summary>
+	static JsonNode? FindMediaPayloadWithinPost(JsonNode? node, int depth, bool preferCarousel, string shortcode)
+	{
+		if (node is null || depth > 12)
+		{
+			return null;
+		}
+
+		if (node is JsonObject obj)
+		{
+			if (depth > 0 && HasConflictingShortcode(obj, shortcode))
+			{
+				return null;
+			}
+
+			if (HasCarouselPayloadFields(obj))
+			{
+				return obj;
+			}
+
+			// Traverse only recognized post/media-holder keys; never follow owner,
+			// comment, recommendation, or arbitrary page branches. Prefer a nested
+			// holder over a wrapper's lone preview URL.
+			foreach (var pair in obj)
+			{
+				if (!IsPostMediaContainerKey(pair.Key))
+				{
+					continue;
+				}
+
+				var found = FindMediaPayloadWithinPost(pair.Value, depth + 1, preferCarousel, shortcode);
+				if (found is not null)
+				{
+					return found;
+				}
+			}
+
+			return !preferCarousel && HasMediaPayloadFields(obj) ? obj : null;
+		}
+
+		if (node is JsonArray array)
+		{
+			foreach (var item in array)
+			{
+				var found = FindMediaPayloadWithinPost(item, depth + 1, preferCarousel, shortcode);
 				if (found is not null)
 				{
 					return found;
@@ -910,25 +1019,63 @@ public sealed class InstagramResolver
 		return null;
 	}
 
-	static ResolvedPost? BuildFromMedia(JsonNode media, string shortcode)
+	static bool IsPostMediaContainerKey(string key) => key is
+		"shortcode_media" or
+		"xdt_shortcode_media" or
+		"media" or
+		"preview" or
+		"preview_media" or
+		"xdt_api__v1__media__shortcode__web_info" or
+		"graphql" or
+		"gql_data" or
+		"data" or
+		"node";
+
+	static bool HasCarouselPayloadFields(JsonObject obj) =>
+		obj["carousel_media"] is JsonArray carousel && carousel.Count > 0 ||
+		obj["edge_sidecar_to_children"]?["edges"] is JsonArray edges && edges.Count > 0;
+
+	static bool HasSingleMediaPayloadFields(JsonObject obj) =>
+		obj.ContainsKey("image_versions2") ||
+		obj.ContainsKey("display_url") ||
+		obj.ContainsKey("display_uri") ||
+		obj.ContainsKey("display_resources") ||
+		obj.ContainsKey("video_url") ||
+		obj.ContainsKey("video_versions") ||
+		obj.ContainsKey("thumbnail_src");
+
+	static bool HasMediaPayloadFields(JsonObject obj) =>
+		HasCarouselPayloadFields(obj) || HasSingleMediaPayloadFields(obj);
+
+	static ResolvedPost? BuildFromMedia(JsonNode media, string shortcode, JsonNode? identityAnchor = null)
 	{
-		var ownerNode = media["owner"] ?? media["user"];
+		var ownerNode = media["owner"] ?? media["user"] ?? identityAnchor?["owner"] ?? identityAnchor?["user"];
 		var owner = Text(ownerNode?["username"]) ?? string.Empty;
 		var ownerFull = Text(ownerNode?["full_name"]) ?? string.Empty;
 
 		var caption = Text(media["caption"]?["text"]);
 		if (string.IsNullOrEmpty(caption))
 		{
-			caption = Text(media["edge_media_to_caption"]?["edges"]?[0]?["node"]?["text"]);
+			caption = Text(identityAnchor?["caption"]?["text"]);
+		}
+
+		if (string.IsNullOrEmpty(caption))
+		{
+			caption = Text(media["edge_media_to_caption"]?["edges"]?[0]?["node"]?["text"])
+				?? Text(identityAnchor?["edge_media_to_caption"]?["edges"]?[0]?["node"]?["text"]);
 		}
 
 		caption ??= string.Empty;
 
 		var likes = Integer(media["like_count"])
 			?? Integer(media["edge_liked_by"]?["count"])
-			?? Integer(media["edge_media_preview_like"]?["count"]);
+			?? Integer(media["edge_media_preview_like"]?["count"])
+			?? Integer(identityAnchor?["like_count"])
+			?? Integer(identityAnchor?["edge_liked_by"]?["count"])
+			?? Integer(identityAnchor?["edge_media_preview_like"]?["count"]);
 
-		var timestamp = Number(media["taken_at"]) ?? Number(media["taken_at_timestamp"]);
+		var timestamp = Number(media["taken_at"]) ?? Number(media["taken_at_timestamp"])
+			?? Number(identityAnchor?["taken_at"]) ?? Number(identityAnchor?["taken_at_timestamp"]);
 
 		var slides = new List<JsonNode>();
 		if (media["carousel_media"] is JsonArray carousel)
@@ -995,7 +1142,8 @@ public sealed class InstagramResolver
 		{
 			Ok = true,
 			Shortcode = shortcode,
-			ParentCode = Text(media["code"]) ?? Text(media["shortcode"]) ?? shortcode,
+			ParentCode = Text(media["code"]) ?? Text(media["shortcode"]) ??
+				Text(identityAnchor?["code"]) ?? Text(identityAnchor?["shortcode"]) ?? shortcode,
 			Title = FirstLine(caption),
 			Caption = caption,
 			Owner = owner,
@@ -1150,6 +1298,11 @@ public sealed class InstagramResolver
 		}
 
 		var fallbackThumbnail = Text(slide["thumbnail_src"]);
+		if (string.IsNullOrWhiteSpace(fallbackThumbnail))
+		{
+			fallbackThumbnail = Text(slide["display_uri"]);
+		}
+
 		return string.IsNullOrWhiteSpace(fallbackThumbnail) ? fullImage : fallbackThumbnail;
 	}
 
@@ -1214,6 +1367,12 @@ public sealed class InstagramResolver
 			return best;
 		}
 
+		direct = Text(slide["display_uri"]);
+		if (!string.IsNullOrEmpty(direct))
+		{
+			return direct;
+		}
+
 		return Text(slide["thumbnail_src"]) ?? string.Empty;
 	}
 
@@ -1230,13 +1389,13 @@ public sealed class InstagramResolver
 
 		foreach (var candidate in array)
 		{
-			var url = Text(candidate?["url"]);
+			var url = Text(candidate?["url"]) ?? Text(candidate?["src"]);
 			if (string.IsNullOrEmpty(url))
 			{
 				continue;
 			}
 
-			var width = Number(candidate?["width"]) ?? 0;
+			var width = Number(candidate?["width"]) ?? Number(candidate?["config_width"]) ?? 0;
 			if (width > bestWidth)
 			{
 				bestWidth = width;

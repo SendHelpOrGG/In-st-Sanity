@@ -1103,7 +1103,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.132; open version history" title="Click to view what changed in each version">v.1.132</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.133; open version history" title="Click to view what changed in each version">v.1.133</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5462,8 +5462,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.132';
+const APP_VERSION='1.133';
 const VERSION_HISTORY=[
+  {version:'1.133',added:'No new features.',removed:'Valid post media nested below a matched preview/identity wrapper being skipped.',fixed:'The resolver anchors to the requested shortcode or media ID, then searches only recognized media-holder fields inside that post subtree. Carousel payloads take priority over a single preview image, display_uri is supported, and unrelated page images remain excluded.',tone:'green'},
   {version:'1.132',added:'No new features.',removed:'Unverified page-wide scontent URLs being presented as carousel photos.',fixed:'Embedded Instagram media is accepted only from JSON matching the requested shortcode or its exact numeric media ID; arbitrary page-wide scontent URLs can no longer become post slides. Unrelated recommendations and account images are ignored. Save-Free/media-info fallbacks, logged-in behavior, and visible-card source-label updates remain intact.',tone:'green'},
   {version:'1.131',added:'No new features.',removed:'Logged-out carousel posts showing only a cropped preview, and visible-page source labels disappearing when a post was opened during resolution.',fixed:'Recover full carousels from Instagram scontent URLs embedded in public page HTML. Visible-page summary results now still update source labels when a post is opened, with unresolved labels retried sooner.',tone:'green'},
   {version:'1.130',added:'No new features.',removed:'The still oversized infinity and circled 1 selection icons.',fixed:'Reduced the collection and current-page selector icons by another 15%, without changing button sizes or layout.',tone:'green'},
