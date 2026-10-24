@@ -1103,7 +1103,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.126; open version history" title="Click to view what changed in each version">v.1.126</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.127; open version history" title="Click to view what changed in each version">v.1.127</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1449,7 +1449,7 @@ function updateSrcStatusNote(){
   el.textContent=known===total?`source ${known}/${total}`:'';
   el.title=known===total
     ? `All ${total} posts have a Direct / API / Mixed verdict.`
-    : `${known} of ${total} posts have a Direct / API / Mixed verdict. Remaining labels are resolved as posts are viewed; the app does not fetch the whole library in the background.`;
+    : `${known} of ${total} posts have a Direct / API / Mixed verdict. Missing labels are resolved for posts on the visible page or when opened; the app does not fetch the whole library in the background.`;
 }
 function updateTileSrcBadges(){
   const apply=(sel,post)=>{
@@ -1610,6 +1610,7 @@ function isVideoCdnUrl(url){if(!url)return false;const u=String(url);if(u.includ
 function isVideoHtml(html){if(!html)return false;return /PlayButtonSprite|WatchOnInstagram|EmbeddedMediaVideo|property=["']og:video|content=["']video|Instagram\s+reel|instagram\.com\/(?:[^/"'?#]+\/)?(?:reel|reels|tv)\//i.test(String(html))}
 function hasOnlyUnresolvedMediaUrl(post){if(!post)return true;if(typeof post.coverArtIndex==='number'&&!post.coverUrl)return false;const u=String(post.coverUrl||post.pictures?.[0]?.rawUrl||post.pictures?.[0]?.imgUrl||'');return !u||u.includes('/media/?size=')}
 function needsSummaryResolution(post){if(!post)return false;if(String(post.shortcode||'').toLowerCase()==='dewe8ltizn2')return false;if(typeof post.coverArtIndex==='number'&&!post.shortcode)return false;if(!post.summaryResolved)return true;const u=String(post.coverUrl||'');if(!u||u.includes('/media/?size='))return true;if(!post.fullResolved&&!post.serverResolved){const scKind=String(post.sourceKind||'');if(scKind==='api'){const pc=typeof post.photoCount==='number'?post.photoCount:1;const vc=typeof post.videoCount==='number'?post.videoCount:0;if(pc===1&&vc===0)return true}}return false}
+function needsSourceKindResolution(post){if(!post||!post.shortcode||String(post.shortcode).startsWith('Post #')||String(post.shortcode).toLowerCase()==='dewe8ltizn2')return false;return computePostSourceKind(post)==='unknown'}
 const SUMMARY_RETRY_COOLDOWN_MS=6*60*60*1000;const SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE=5*60*1000;
 function summaryResolutionCoolingDown(post){const attemptedAt=Number(post?.summaryAttemptedAt)||0;if(!attemptedAt)return false;const isApiSingle=!post.fullResolved&&String(post.sourceKind||'')==='api'&&Number(post.photoCount)===1&&Number(post.videoCount)===0;const cd=isApiSingle?SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE:SUMMARY_RETRY_COOLDOWN_MS;return Date.now()<attemptedAt+cd}
 function needsFullCarouselResolution(post){if(!post)return false;if(!post.mediaLoaded||!Array.isArray(post.pictures)||!post.pictures.length)return true;if(String(post.shortcode||'').toLowerCase()==='dewe8ltizn2')return post.pictures.length<9;const pics=post.pictures;if(pics.some(pic=>(pic?.isVideo||isVideoCdnUrl(pic?.rawUrl||pic?.imgUrl))&&!pic?.videoUrl))return true;const {photoCount,videoCount}=getPostMediaCounts(post);if(pics.length<(photoCount+videoCount))return true;if(pics.length>1)return false;if(post.confirmedSingleMedia&&post.fullResolved&&post.serverResolved)return false;return true}
@@ -1879,7 +1880,7 @@ function applyPostSummaryData(post,data){
   if(!isCurrentlyOpen){post.pictures=[];post.mediaLoaded=false}
   post.loading=false;
   post.summaryResolved=Boolean(data.summaryResolved||data.fullResolved||validCover);
-  const summaryObj={ok:true,summaryOnly:true,summaryResolved:post.summaryResolved,shortcode:post.shortcode||data.shortcode||'',parentCode:data.parentCode||post.shortcode||'',title:post.title,caption:post.fullCaption||data.caption||post.title||'',owner:post.owner||data.owner||'',ownerFull:post.ownerFull||data.ownerFull||'',location:post.location,likes:post.likes,date:post.date,hasExplicitDate:Boolean(data.hasExplicitDate),photoCount,videoCount,coverUrl:post.coverUrl||'',coverThumbnailUrl:post.coverThumbnailUrl||'',coverIsVideo};
+  const summaryObj={ok:true,summaryOnly:true,summaryResolved:post.summaryResolved,shortcode:post.shortcode||data.shortcode||'',parentCode:data.parentCode||post.shortcode||'',title:post.title,caption:post.fullCaption||data.caption||post.title||'',owner:post.owner||data.owner||'',ownerFull:post.ownerFull||data.ownerFull||'',location:post.location,likes:post.likes,date:post.date,hasExplicitDate:Boolean(data.hasExplicitDate),photoCount,videoCount,coverUrl:post.coverUrl||'',coverThumbnailUrl:post.coverThumbnailUrl||'',coverIsVideo,sourceKind:post.sourceKind||''};
   if(post.shortcode&&post.summaryResolved)clientSummaryCache[String(post.shortcode).toLowerCase()]=summaryObj;
   if(data.parentCode&&post.summaryResolved)clientSummaryCache[String(data.parentCode).toLowerCase()]=summaryObj;
   return Boolean(validCover||post.summaryResolved);
@@ -2003,11 +2004,16 @@ async function resolvePostsBatchChunk(chunk,token,signal=null,isWarm=false){
           if(typeof post._idx==='number')updateCardInDom(post._idx);
           return;
         }
-        if(res&&res.ok&&applyPostSummaryData(post,res)){
-          post.summaryAttemptedAt=Date.now();
-          post.resolveFailedReason='';
-          changed=true;
-          if(typeof post._idx==='number'){updateCardInDom(post._idx);updateCardSrcBadge(post._idx)}
+        if(res&&res.ok){
+          const previousSourceKind=String(post.sourceKind||'');
+          const summaryApplied=applyPostSummaryData(post,res);
+          const sourceKindChanged=String(post.sourceKind||'')!==previousSourceKind;
+          if(summaryApplied||sourceKindChanged){
+            post.summaryAttemptedAt=Date.now();
+            post.resolveFailedReason='';
+            changed=true;
+            if(typeof post._idx==='number'){updateCardInDom(post._idx);updateCardSrcBadge(post._idx)}
+          }
         }
       });
       if(changed){
@@ -2111,7 +2117,7 @@ function loadCurrentPagePosts(){
     if(!p||currentPost===idx)return;
     p._idx=idx;
     const scLower=String(p.shortcode||'').toLowerCase();
-    if(scLower&&clientSummaryCache[scLower]&&needsSummaryResolution(p)){
+    if(scLower&&clientSummaryCache[scLower]&&(needsSummaryResolution(p)||needsSourceKindResolution(p))){
       applyPostSummaryData(p,clientSummaryCache[scLower]);
       updateCardInDom(idx);
     }
@@ -2119,14 +2125,14 @@ function loadCurrentPagePosts(){
   const list=getFilteredSortedPosts();
   const startIdx=(currentPage-1)*PAGE_SIZE;
   const pagePosts=list.slice(startIdx,startIdx+PAGE_SIZE);
-  const unresolvedPosts=pagePosts.filter(p=>p&&currentPost!==p._idx&&p.url&&p.shortcode&&!String(p.shortcode).startsWith('Post #')&&needsSummaryResolution(p)&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
+  const unresolvedPosts=pagePosts.filter(p=>p&&currentPost!==p._idx&&p.url&&p.shortcode&&!String(p.shortcode).startsWith('Post #')&&(needsSummaryResolution(p)||needsSourceKindResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
   (async()=>{
     try{
       if(unresolvedPosts.length){
         const chunkSize=10;
         for(let c=0;c<unresolvedPosts.length;c+=chunkSize){
           if(token!==currentPageLoadToken)return;
-          const chunk=unresolvedPosts.slice(c,c+chunkSize).filter(p=>p&&currentPost!==p._idx&&needsSummaryResolution(p)&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
+          const chunk=unresolvedPosts.slice(c,c+chunkSize).filter(p=>p&&currentPost!==p._idx&&(needsSummaryResolution(p)||needsSourceKindResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
           if(!chunk.length)continue;
           chunk.forEach(p=>{p._summaryResolveToken=token});
           let batchOk=false;
@@ -2138,7 +2144,7 @@ function loadCurrentPagePosts(){
               const attemptedAt=Date.now();
               chunk.forEach(post=>{
                 if(!post)return;
-                post.summaryAttemptedAt=needsSummaryResolution(post)?attemptedAt:0;
+                post.summaryAttemptedAt=(needsSummaryResolution(post)||needsSourceKindResolution(post))?attemptedAt:0;
                 if(post.summaryAttemptedAt)needsPersist=true;
               });
             }
@@ -2149,7 +2155,7 @@ function loadCurrentPagePosts(){
           if(!batchOk){
             for(const post of chunk){
               if(token!==currentPageLoadToken)return;
-              if(!post||currentPost===post._idx||!needsSummaryResolution(post))continue;
+              if(!post||currentPost===post._idx||(!needsSummaryResolution(post)&&!needsSourceKindResolution(post)))continue;
               const ok=false;/* porting: third-party scraper fallback removed */
               if(ok){
                 scheduleSaveImportedPostsState();
@@ -5436,8 +5442,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.126';
+const APP_VERSION='1.127';
 const VERSION_HISTORY=[
+  {version:'1.127',added:'No new features.',removed:'Source labels appearing only after opening a post while logged out.',fixed:'Visible-page source labels now resolve for anonymous posts too, using the media-info fallback when public page parsing cannot determine provenance.',tone:'green'},
   {version:'1.126',added:'No new features.',removed:'The unpredictable startup window position.',fixed:'The app window now opens centered on the primary display’s usable area.',tone:'green'},
   {version:'1.125',added:'No new features.',removed:'The duplicate app name in the native Windows title bar.',fixed:'Cleared the native caption text while preserving the window icon and caption controls.',tone:'green'},
   {version:'1.124',added:'A toggle for current-page photo selection.',removed:'No removals.',fixed:'Clicking the current-page selector again deselects that page when all its photos are already selected, without affecting other pages.',tone:'green'},

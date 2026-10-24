@@ -459,7 +459,8 @@ public sealed class InstagramResolver
 	}
 
 	/// <summary>
-	/// One resolve: fetch, parse, fall back. Summary mode stops at the page HTML.
+	/// One resolve: fetch, parse, fall back. Summary mode avoids returning the carousel,
+	/// but still uses the media-info endpoint when anonymous page parsing cannot identify the post.
 	/// </summary>
 	async Task<(ResolvedPost? Post, string Reason)> ResolveCoreAsync(
 		string shortcode,
@@ -544,13 +545,9 @@ public sealed class InstagramResolver
 			return (direct, string.Empty);
 		}
 
-		if (summaryOnly)
-		{
-			return (null, reason.Length > 0 ? reason : "no_media");
-		}
-
 		// 5. Last resort: the JSON media endpoint, which sometimes answers when both HTML
-		//    paths were refused (already fetched above when signed in).
+		//    paths were refused. Summary mode uses this too, so anonymous cards can receive
+		//    a source verdict without requiring the user to open each post first.
 		var (infoPost, infoReason) = authedPartial is not null
 			? (authedPartial, string.Empty)
 			: await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
