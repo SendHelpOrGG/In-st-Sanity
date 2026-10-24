@@ -1347,14 +1347,19 @@ public sealed class InstagramResolver
 		return bestUrl.Length > 0 ? bestUrl : smallestUrl;
 	}
 
+	static bool IsCroppedPreviewUrl(string? url) =>
+		!string.IsNullOrEmpty(url) && url.Contains("/media/?size=", StringComparison.OrdinalIgnoreCase);
+
 	static string PickImage(JsonNode slide)
 	{
 		var direct = Text(slide["display_url"]);
-		if (!string.IsNullOrEmpty(direct))
+		if (!IsCroppedPreviewUrl(direct) && !string.IsNullOrEmpty(direct))
 		{
 			return direct;
 		}
 
+		// A display_url can be only an Instagram size-preview URL. Prefer the
+		// target post's original image candidates before giving up on that slide.
 		var best = BestCandidate(slide["image_versions2"]?["candidates"]);
 		if (best.Length > 0)
 		{
@@ -1368,12 +1373,13 @@ public sealed class InstagramResolver
 		}
 
 		direct = Text(slide["display_uri"]);
-		if (!string.IsNullOrEmpty(direct))
+		if (!IsCroppedPreviewUrl(direct) && !string.IsNullOrEmpty(direct))
 		{
 			return direct;
 		}
 
-		return Text(slide["thumbnail_src"]) ?? string.Empty;
+		var thumbnail = Text(slide["thumbnail_src"]);
+		return IsCroppedPreviewUrl(thumbnail) ? string.Empty : thumbnail ?? string.Empty;
 	}
 
 	/// <summary>Picks the widest candidate — Instagram ships several sizes per slide.</summary>
@@ -1390,7 +1396,7 @@ public sealed class InstagramResolver
 		foreach (var candidate in array)
 		{
 			var url = Text(candidate?["url"]) ?? Text(candidate?["src"]);
-			if (string.IsNullOrEmpty(url))
+			if (string.IsNullOrEmpty(url) || IsCroppedPreviewUrl(url))
 			{
 				continue;
 			}
