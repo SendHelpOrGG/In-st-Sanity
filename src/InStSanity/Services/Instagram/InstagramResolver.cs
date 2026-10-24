@@ -470,12 +470,14 @@ public sealed class InstagramResolver
 		// Signed in (the Browser tab's session is synced into InstagramHttp): ask
 		// Instagram's own media-info JSON first — with a session it is the only layer that
 		// sees follower-only and age-restricted posts, and it is the lightest request here.
-		ResolvedPost? authedPartial = null;
+		ResolvedPost? mediaInfoPost = null;
+		var mediaInfoFailureReason = string.Empty;
 		var authed = _http.HasInstagramSession;
 		if (authed)
 		{
-			var (info, _) = await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
-			authedPartial = info;
+			var (info, infoReason) = await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
+			mediaInfoPost = info;
+			mediaInfoFailureReason = infoReason;
 			if (info is not null && !NeedsSaveFree(info, summaryOnly))
 			{
 				return (WithShortcodeTimestamp(info, shortcode), string.Empty);
@@ -532,11 +534,48 @@ public sealed class InstagramResolver
 
 			if (fallback.Count > 0)
 			{
-				var pictures = MergeSlides(direct?.Pictures, fallback);
+				// Open Graph supplies only a preview image, not a trustworthy full-size
+				// slide. Merge Save-Free with Instagram media only when the latter is real
+				// Direct media; otherwise its cropped API preview would win the merge.
+				var directPictures = direct is not null &&
+					string.Equals(direct.SourceKind, "direct", StringComparison.Ordinal)
+					? direct.Pictures
+					: null;
+				var pictures = MergeSlides(directPictures, fallback);
+				var hasDirect = pictures.Any(picture => string.Equals(picture.Origin, "direct", StringComparison.Ordinal));
+				var hasApi = pictures.Any(picture => string.Equals(picture.Origin, "api", StringComparison.Ordinal));
+				// Keep the established authenticated verdict; anonymous posts use the
+				// provenance of the slides actually returned, not the discarded OG preview.
+				var sourceKind = authed
+					? (direct is null ? "api" : "mixed")
+					: (hasDirect && hasApi ? "mixed" : hasDirect ? "direct" : "api");
 
-				return (
-					WithPictures(direct, shortcode, pictures, direct is null ? "api" : "mixed"),
-					string.Empty);
+				return (WithPictures(direct, shortcode, pictures, sourceKind), string.Empty);
+			}
+		}
+
+		// If the only page result is an Open Graph/API preview, prefer the media-info
+		// endpoint's original media when available. Keep OG as the last fallback only.
+		if (direct is not null && !string.Equals(direct.SourceKind, "direct", StringComparison.Ordinal))
+		{
+			if (mediaInfoPost is null && !authed)
+			{
+				var (info, infoReason) = await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
+				mediaInfoPost = info;
+				mediaInfoFailureReason = infoReason;
+			}
+
+			if (mediaInfoPost is not null)
+			{
+				return (WithShortcodeTimestamp(mediaInfoPost, shortcode), string.Empty);
+			}
+
+			// An OG image is useful as a card cover, but it is not the post's original.
+			// Never expose it as an opened/downloadable slide when full media could not
+			// be resolved.
+			if (!summaryOnly && !authed)
+			{
+				return (null, mediaInfoFailureReason.Length > 0 ? mediaInfoFailureReason : "full_media_unavailable");
 			}
 		}
 
@@ -548,15 +587,19 @@ public sealed class InstagramResolver
 		// 5. Last resort: the JSON media endpoint, which sometimes answers when both HTML
 		//    paths were refused. Summary mode uses this too, so anonymous cards can receive
 		//    a source verdict without requiring the user to open each post first.
-		var (infoPost, infoReason) = authedPartial is not null
-			? (authedPartial, string.Empty)
-			: await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
-		if (infoPost is not null)
+		if (mediaInfoPost is null && !authed)
 		{
-			return (WithShortcodeTimestamp(infoPost, shortcode), string.Empty);
+			var (info, infoReason) = await FetchMediaInfoAsync(shortcode, cancellationToken).ConfigureAwait(false);
+			mediaInfoPost = info;
+			mediaInfoFailureReason = infoReason;
 		}
 
-		return (null, reason.Length > 0 ? reason : infoReason.Length > 0 ? infoReason : "no_media");
+		if (mediaInfoPost is not null)
+		{
+			return (WithShortcodeTimestamp(mediaInfoPost, shortcode), string.Empty);
+		}
+
+		return (null, reason.Length > 0 ? reason : mediaInfoFailureReason.Length > 0 ? mediaInfoFailureReason : "no_media");
 	}
 
 	/// <summary>
@@ -1072,7 +1115,7 @@ public sealed class InstagramResolver
 			CoverThumbnailUrl = cover,
 			CoverIsVideo = isVideo,
 			SummaryResolved = true,
-			FullResolved = !isVideo || video.Length > 0,
+			FullResolved = false,
 			SourceKind = "api",
 			Pictures = pictures,
 		};
