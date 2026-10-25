@@ -107,6 +107,10 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		}
 
 		var files = new DownloadFileResult[batch.Items.Count];
+		var writeTurns = batch.Items
+			.Select(_ => new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously))
+			.ToArray();
+		writeTurns[0].TrySetResult(true);
 		await Parallel.ForEachAsync(
 			Enumerable.Range(0, batch.Items.Count),
 			new ParallelOptions
@@ -116,8 +120,19 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 			},
 			async (index, token) =>
 			{
-				files[index] = await DownloadOneAsync(batch.Items[index], folder, index, token)
-					.ConfigureAwait(false);
+				files[index] = await DownloadOneAsync(
+					batch.Items[index],
+					folder,
+					index,
+					writeTurns[index].Task,
+					() =>
+					{
+						if (index + 1 < writeTurns.Length)
+						{
+							writeTurns[index + 1].TrySetResult(true);
+						}
+					},
+					token).ConfigureAwait(false);
 			}).ConfigureAwait(false);
 
 		var savedCount = files.Count(file => file.Ok);
@@ -138,14 +153,21 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		DownloadItem item,
 		string folder,
 		int index,
+		Task writeTurn,
+		Action advanceWriteTurn,
 		CancellationToken cancellationToken)
 	{
 		var fallbackName = FallbackFileName(item, index);
 		var initialName = SafeFileName(item.Filename, fallbackName, ".jpg", index);
+		var writeTurnAcquired = false;
 
 		try
 		{
+			// Fetch concurrently, but serialize disk writes in request order so media
+			// from each post gets consecutive creation/modification timestamps.
 			var payload = await LoadPayloadAsync(item, cancellationToken).ConfigureAwait(false);
+			await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
+			writeTurnAcquired = true;
 			var extension = ExtensionFor(payload, initialName);
 			var filename = SafeFileName(item.Filename, fallbackName, extension, index);
 			var savedName = await WriteUniqueFileAsync(folder, filename, payload.Bytes, cancellationToken)
@@ -159,6 +181,12 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		}
 		catch (DownloadFailureException exception)
 		{
+			if (!writeTurnAcquired)
+			{
+				await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
+				writeTurnAcquired = true;
+			}
+
 			_logger.LogInformation(
 				"Selected photo {Index} was not saved ({Reason})",
 				index + 1,
@@ -167,8 +195,21 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		}
 		catch (Exception exception)
 		{
+			if (!writeTurnAcquired)
+			{
+				await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
+				writeTurnAcquired = true;
+			}
+
 			_logger.LogWarning(exception, "Selected photo {Index} could not be saved", index + 1);
 			return new DownloadFileResult(initialName, Ok: false, Error: "download_failed");
+		}
+		finally
+		{
+			if (writeTurnAcquired)
+			{
+				advanceWriteTurn();
+			}
 		}
 	}
 
