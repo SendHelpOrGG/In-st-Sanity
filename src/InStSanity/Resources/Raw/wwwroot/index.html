@@ -627,6 +627,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   .icon-filter-btn { display:grid!important; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr); place-items:center!important; justify-content:center!important; align-content:center!important; width:37px; min-width:37px; height:37px; flex:0 0 37px; padding:0!important; gap:0!important; line-height:0!important; }
   .icon-filter-btn svg { width:17px; height:17px; display:block; position:static!important; inset:auto!important; margin:0!important; pointer-events:none; justify-self:center; align-self:center; }
   .icon-filter-btn.scope-selection-btn svg { width:13.73px; height:13.73px; }
+  #selectAllCollectionBtn.scope-selection-btn svg { width:15px; height:15px; }
   body[data-theme="v3"] .page-btn.active:hover:not(:disabled), body[data-theme="v3"] .page-btn.active:focus-visible:not(:disabled) { color:var(--t-nav-act-ink,#090a0c); }
   body .download-toolbar.primary { color:var(--t-btn-ink); }
   body .download-toolbar.primary svg { color:inherit; stroke:currentColor; }
@@ -776,7 +777,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         </div>
         <div class="filters toolbar-row toolbar-row-selection" role="group" aria-label="Post selection actions">
           <button class="filter" id="selectedFilter" onclick="setFilter(this,'selected')">Selected (<span id="selectedPostCount">0</span>)</button>
-          <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectAllCollectionBtn" title="Select every photo across all pages in the collection" aria-label="Select every photo across all pages in the collection" onclick="selectAllCollectionPhotos()" disabled><svg viewBox="0 0 24 24" width="13.73" height="13.73" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 16a4.5 4.5 0 1 1 0-8c4.5 0 7.5 8 11 8a4.5 4.5 0 1 0 0-8c-4.5 0-7.5 8-11 8"/></svg></button>
+          <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectAllCollectionBtn" title="Select every photo across all pages in the collection" aria-label="Select every photo across all pages in the collection" onclick="selectAllCollectionPhotos()" disabled><svg viewBox="-1 0 26 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 16a4.5 4.5 0 1 1 0-8c4.5 0 7.5 8 11 8a4.5 4.5 0 1 0 0-8c-4.5 0-7.5 8-11 8"/></svg></button>
           <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectCurrentPageBtn" title="Select all photos on this page; click again to deselect when all are selected" aria-label="Toggle selection of all photos on the current page" onclick="selectCurrentPagePhotos()" disabled><svg viewBox="0 0 24 24" width="13.73" height="13.73" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.1" fill="currentColor" fill-opacity=".08"/><text x="12" y="17" text-anchor="middle" font-family="system-ui,Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="currentColor" stroke="none">1</text></svg></button>
           <button type="button" class="filter icon-filter-btn" id="deselectAllBtn" title="Deselect all posts" aria-label="Deselect all posts" onclick="clearAllSelections()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><line x1="8" y1="16" x2="16" y2="8"/></svg></button>
           <span id="srcStatusNote" class="src-status-note" title="Source labels are resolved as posts are viewed"></span>
@@ -1103,7 +1104,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.137; open version history" title="Click to view what changed in each version">v.1.137</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.138; open version history" title="Click to view what changed in each version">v.1.138</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5461,8 +5462,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.137';
+const APP_VERSION='1.138';
 const VERSION_HISTORY=[
+  {version:'1.138',added:'No new features.',removed:'The infinity collection-selector glyph touching the SVG horizontal edges.',fixed:'Expanded the SVG viewBox and reserved horizontal breathing room so both sides of the infinity icon render fully without changing collection-selection behavior or button size.',tone:'green'},
   {version:'1.137',added:'No new features.',removed:'Empty Instagram caption-edge arrays aborting the resolver and exception details being hidden from the Debug output.',fixed:'Caption-edge access now checks for an item before indexing. Debug builds route ILogger output to Visual Studio, and resolver failures include the exception type.',tone:'green'},
   {version:'1.136',added:'No new features.',removed:'The blanket rejection of Instagram size-preview URLs and Open Graph-only media when opening a post.',fixed:'Temporarily restored display_url-first selection and allowed preview URLs through card, detail, full-size, and download paths. Target-post identity scoping remains unchanged for this rollback test.',tone:'yellow'},
   {version:'1.135',added:'No new features.',removed:'No diagnostic clue when size-limited previews were filtered and no full-size media reached the detail view.',fixed:'The empty detail state now distinguishes preview-only responses from resolver failures and displays the failure reason. Cropped preview URLs remain excluded from the viewer and downloads.',tone:'green'},
