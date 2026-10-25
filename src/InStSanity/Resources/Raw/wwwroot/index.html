@@ -1104,7 +1104,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.147; open version history" title="Click to view what changed in each version">v.1.147</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.148; open version history" title="Click to view what changed in each version">v.1.148</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5921,8 +5921,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.147';
+const APP_VERSION='1.148';
 const VERSION_HISTORY=[
+  {version:'1.148',added:'No new features.',removed:'Rate-limit warnings without the upstream retry-delay value.',fixed:'The throttled Instagram 429 warning now includes the raw Retry-After response header, or says it was not provided, so rate-limit cooldowns can be observed without restoring per-request log spam.',tone:'green'},
   {version:'1.147',added:'No new features.',removed:'Repeated per-post upstream status messages while collection photo totals resolve.',fixed:'Collection summaries now run in smaller, slower background batches after visible cards finish. A 429 triggers exponential backoff up to five minutes, and rate-limited posts retry after the resolver cache expires, expected 404s are silent and other per-post status details are Debug-only, with a single throttled 429 warning. Carousel media stays lazy-loaded.',tone:'green'},
   {version:'1.146',added:'No new features.',removed:'No removals.',fixed:'HTML responses from Instagram and Save-Free are detected before JSON parsing, so login/challenge pages use the existing fallback path instead of raising JsonReaderException.',tone:'green'},
   {version:'1.145',added:'Collection post/photo totals on All Posts.',removed:'The need to manually visit collection pages for photo totals.',fixed:'All Posts shows posts/photos, marks unresolved photo totals with a plus while lightweight summary-only background batches finish, and never preloads carousel media. All Posts and Selected keep matching widths.',tone:'green'},

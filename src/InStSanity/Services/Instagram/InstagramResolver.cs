@@ -425,7 +425,7 @@ public sealed class InstagramResolver
 		return post;
 	}
 
-	void LogRateLimitOnce()
+	void LogRateLimitOnce(HttpResponseMessage response, string source)
 	{
 		var nowTicks = DateTime.UtcNow.Ticks;
 		var nextAllowedTicks = Interlocked.Read(ref _nextRateLimitLogUtcTicks);
@@ -435,10 +435,27 @@ public sealed class InstagramResolver
 		}
 
 		var nextTicks = nowTicks + TimeSpan.FromMinutes(1).Ticks;
-		if (Interlocked.CompareExchange(ref _nextRateLimitLogUtcTicks, nextTicks, nextAllowedTicks) == nextAllowedTicks)
+		if (Interlocked.CompareExchange(ref _nextRateLimitLogUtcTicks, nextTicks, nextAllowedTicks) != nextAllowedTicks)
 		{
-			_logger.LogWarning("Instagram rate-limited post summary requests (HTTP 429); repeat notices are suppressed for 1 minute.");
+			return;
 		}
+
+		var retryAfter = response.Headers.TryGetValues("Retry-After", out var values)
+			? string.Join(", ", values).Trim()
+			: "not provided";
+		if (retryAfter.Length == 0)
+		{
+			retryAfter = "not provided";
+		}
+		else if (retryAfter.Length > 160)
+		{
+			retryAfter = retryAfter[..160];
+		}
+
+		_logger.LogWarning(
+			"Instagram rate-limited post summary request at {Source} (HTTP 429); Retry-After: {RetryAfter}; repeat notices are suppressed for 1 minute.",
+			source,
+			retryAfter);
 	}
 
 	/// <summary>
@@ -479,7 +496,7 @@ public sealed class InstagramResolver
 			{
 				if (response.StatusCode == HttpStatusCode.TooManyRequests)
 				{
-					LogRateLimitOnce();
+					LogRateLimitOnce(response, "media-info");
 				}
 				else if (response.StatusCode != HttpStatusCode.NotFound)
 				{
@@ -829,7 +846,7 @@ public sealed class InstagramResolver
 			{
 				if (response.StatusCode == HttpStatusCode.TooManyRequests)
 				{
-					LogRateLimitOnce();
+					LogRateLimitOnce(response, "page-fetch");
 				}
 				else if (response.StatusCode != HttpStatusCode.NotFound)
 				{
