@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="InStSanity.MainPage"
              Shell.NavBarIsVisible="False"
-             Title="In[st]Sanity">
+             Title="">
 
     <!-- Root grid so the startup overlay and the native Instagram browser can stack above
          the WebView that hosts the ported web app. -->

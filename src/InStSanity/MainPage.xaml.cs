@@ -12,6 +12,7 @@ public partial class MainPage : ContentPage
 
 	readonly InstagramBrowserWindowService _browserWindow;
 	readonly InstagramHttp _instagramHttp;
+	readonly InstagramResolver _instagramResolver;
 	WebView? _instagramBrowserView;
 	string? _currentInstagramUrl;
 
@@ -24,18 +25,21 @@ public partial class MainPage : ContentPage
 	string _knownAccountFullName = string.Empty;
 	string _knownAccountPic = string.Empty;
 
-	public MainPage(MainPageViewModel viewModel, InstagramBrowserWindowService browserWindow, InstagramHttp instagramHttp)
+	public MainPage(MainPageViewModel viewModel, InstagramBrowserWindowService browserWindow, InstagramHttp instagramHttp, InstagramResolver instagramResolver)
 	{
 		InitializeComponent();
 
 		BindingContext = viewModel;
 		_browserWindow = browserWindow;
 		_instagramHttp = instagramHttp;
+		_instagramResolver = instagramResolver;
 		browserWindow.OpenRequested += OnInstagramBrowserOpenRequested;
 		browserWindow.NavigateRequested += OnInstagramBrowserNavigateRequested;
 		browserWindow.CommandRequested += OnInstagramBrowserCommandRequested;
 		browserWindow.RegionRequested += OnInstagramBrowserRegionRequested;
 		browserWindow.CookieSyncHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(SyncInstagramCookiesAsync);
+		browserWindow.SessionRefreshHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(RefreshInstagramAccountAsync);
+		browserWindow.LogoutHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(LogoutInstagramAsync);
 
 		// Links opened by the app UI belong in the system browser (Windows only; the
 		// guard keeps the platform-specific intent explicit).
@@ -340,28 +344,45 @@ public partial class MainPage : ContentPage
 			_instagramBrowserView?.CanGoForward == true);
 	}
 
-	async Task RefreshInstagramAccountAsync()
+	async Task<bool> RefreshInstagramAccountAsync()
 	{
 #if WINDOWS
 		if (_instagramBrowserView is null)
 		{
-			return;
+			EnsureInstagramBrowserView();
+			if (_currentInstagramUrl is null)
+			{
+				NavigateInstagramBrowser(new Uri(InstagramHomeUrl));
+			}
+		}
+
+		if (_instagramBrowserView is null)
+		{
+			return false;
 		}
 
 		var snapshot = await WebViewBootstrapper.ProbeAccountAsync(_instagramBrowserView);
 		if (snapshot is null)
 		{
-			return;
+			return false;
 		}
 
 		var loggedIn = snapshot.LoggedIn;
 		var username = snapshot.Username;
 		var fullName = snapshot.FullName;
 		var profilePicUrl = snapshot.ProfilePicUrl;
+		var cookiesSynced = true;
 		if (loggedIn)
 		{
-			await SyncInstagramCookiesAsync();
-			if (username.Length == 0 || profilePicUrl.Length == 0)
+			cookiesSynced = await SyncInstagramCookiesAsync();
+			if (!cookiesSynced)
+			{
+				// Never let the resolver keep using a previous account's cookies after a
+				// transition if the current WebView profile could not be copied.
+				_instagramHttp.ClearInstagramCookies();
+			}
+
+			if (cookiesSynced && (username.Length == 0 || profilePicUrl.Length == 0))
 			{
 				// The page probe can miss the identity as Instagram's markup and its
 				// script guards move; the account API over the synced session is reliable.
@@ -418,7 +439,19 @@ public partial class MainPage : ContentPage
 			ClearKnownAccount();
 		}
 
+		var previousAccount = _browserWindow.GetState();
+		var identityChanged = previousAccount.LoggedIn != loggedIn ||
+			(loggedIn && !string.Equals(previousAccount.Username, username, StringComparison.OrdinalIgnoreCase));
+		if (identityChanged)
+		{
+			_instagramResolver.ClearCache();
+		}
+
 		_browserWindow.SetAccount(loggedIn, username, fullName, profilePicUrl);
+		return !loggedIn || cookiesSynced;
+#else
+		await Task.CompletedTask;
+		return false;
 #endif
 	}
 
@@ -475,16 +508,16 @@ public partial class MainPage : ContentPage
 		}
 	}
 
-	async Task LogoutInstagramAsync()
+	async Task<bool> LogoutInstagramAsync()
 	{
 #if WINDOWS
 		// The WebView2 profile persists across runs, so an old Instagram session may exist
 		// before any browser page was opened in this one. Create the view if needed, then
-		// clear the cookies.
+		// clear the cookies before acknowledging logout to the web layer.
 		EnsureInstagramBrowserView();
 		if (_instagramBrowserView is null)
 		{
-			return;
+			return false;
 		}
 
 		await WebViewBootstrapper.ClearInstagramSessionAsync(_instagramBrowserView);
@@ -493,8 +526,13 @@ public partial class MainPage : ContentPage
 		_knownAccountPic = string.Empty;
 		ClearKnownAccount();
 		_instagramHttp.ClearInstagramCookies();
+		_instagramResolver.ClearCache();
 		_browserWindow.SetAccount(false, string.Empty, string.Empty, string.Empty);
 		UpdateBrowserState();
+		return true;
+#else
+		await Task.CompletedTask;
+		return false;
 #endif
 	}
 

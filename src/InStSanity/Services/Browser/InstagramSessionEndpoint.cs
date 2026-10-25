@@ -1,26 +1,41 @@
+using InStSanity.Services.Instagram;
 using InStSanity.Services.WebHost;
 
 namespace InStSanity.Services.Browser;
 
 /// <summary>
-/// <c>GET /api/instagram-session</c> — the signed-in account and the navigation state of
-/// the native Instagram browser. The web layer polls this to draw the account-aware
-/// top-bar button, the My Account settings card, and the Browser page address bar.
+/// <c>GET /api/instagram-session</c> — returns the signed-in account and the navigation
+/// state of the native Instagram browser. The web layer polls this to draw the
+/// account-aware controls. Add <c>?refresh=1</c> to force a fresh browser probe and cookie
+/// synchronization before returning the snapshot.
 /// </summary>
-public sealed class InstagramSessionEndpoint(InstagramBrowserWindowService browserWindow) : IApiEndpoint
+public sealed class InstagramSessionEndpoint(
+	InstagramBrowserWindowService browserWindow,
+	InstagramResolver resolver) : IApiEndpoint
 {
 	public string Route => "/api/instagram-session";
 
-	public Task<HttpResponseInfo> HandleAsync(HttpRequestInfo request, CancellationToken cancellationToken)
+	public async Task<HttpResponseInfo> HandleAsync(HttpRequestInfo request, CancellationToken cancellationToken)
 	{
 		if (request.Method != "GET" && request.Method != "HEAD")
 		{
-			return Task.FromResult(HttpResponseInfo.Error("method_not_allowed", 405));
+			return HttpResponseInfo.Error("method_not_allowed", 405);
 		}
 
 		cancellationToken.ThrowIfCancellationRequested();
+		if (string.Equals(request.QueryValue("refresh"), "1", StringComparison.Ordinal))
+		{
+			if (!await browserWindow.RefreshSessionAsync().ConfigureAwait(false))
+			{
+				return HttpResponseInfo.Error("The Instagram session could not be refreshed.", 503);
+			}
+
+			// A forced refresh is also the explicit freshness boundary used by Settings.
+			resolver.ClearCache();
+		}
+
 		var state = browserWindow.GetState();
-		return Task.FromResult(HttpResponseInfo.Json(new
+		return HttpResponseInfo.Json(new
 		{
 			loggedIn = state.LoggedIn,
 			username = state.Username,
@@ -30,6 +45,6 @@ public sealed class InstagramSessionEndpoint(InstagramBrowserWindowService brows
 			canGoBack = state.CanGoBack,
 			canGoForward = state.CanGoForward,
 			browserOpen = state.Open,
-		}));
+		});
 	}
 }

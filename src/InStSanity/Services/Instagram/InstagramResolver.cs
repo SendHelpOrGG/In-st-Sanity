@@ -146,6 +146,8 @@ public sealed class InstagramResolver
 	readonly SaveFreeClient? _saveFree;
 	readonly ILogger<InstagramResolver> _logger;
 	readonly ConcurrentDictionary<string, CacheEntry> _cache = new(StringComparer.OrdinalIgnoreCase);
+	readonly object _cacheLock = new();
+	int _cacheGeneration;
 
 	int _attempts;
 	int _resolved;
@@ -214,6 +216,22 @@ public sealed class InstagramResolver
 		return result;
 	}
 
+	/// <summary>
+	/// Discards all session-dependent resolutions so the next request uses the current
+	/// Instagram cookies. The generation also prevents a request started with old
+	/// cookies from repopulating the cache after a sign-in transition.
+	/// </summary>
+	public void ClearCache()
+	{
+		lock (_cacheLock)
+		{
+			_cacheGeneration++;
+			_cache.Clear();
+			_failureReasons.Clear();
+			Volatile.Write(ref _lastFailure, string.Empty);
+		}
+	}
+
 	/// <summary>Fetch attempts since launch, including cache hits.</summary>
 	public int Attempts => Volatile.Read(ref _attempts);
 
@@ -270,10 +288,14 @@ public sealed class InstagramResolver
 		}
 
 		var cacheKey = summaryOnly ? "sum:" + shortcode : shortcode;
-
-		if (_cache.TryGetValue(cacheKey, out var cached) && cached.Expires > DateTimeOffset.UtcNow)
+		int cacheGeneration;
+		lock (_cacheLock)
 		{
-			return cached.Post;
+			cacheGeneration = _cacheGeneration;
+			if (_cache.TryGetValue(cacheKey, out var cached) && cached.Expires > DateTimeOffset.UtcNow)
+			{
+				return cached.Post;
+			}
 		}
 
 		Interlocked.Increment(ref _attempts);
@@ -301,15 +323,25 @@ public sealed class InstagramResolver
 		else
 		{
 			Interlocked.Increment(ref _failed);
-			Volatile.Write(ref _lastFailure, reason);
-			_failureReasons[shortcode] = reason;
 			_logger.LogInformation("Resolve failed for {Shortcode}: {Reason}", shortcode, reason);
 		}
 
 		var written = DateTimeOffset.UtcNow;
-		_cache[cacheKey] = new CacheEntry(
-			post,
-			written + (post is { Ok: true } ? CacheLifetime : FailureLifetime));
+		lock (_cacheLock)
+		{
+			if (_cacheGeneration == cacheGeneration)
+			{
+				if (post is not { Ok: true })
+				{
+					Volatile.Write(ref _lastFailure, reason);
+					_failureReasons[shortcode] = reason;
+				}
+
+				_cache[cacheKey] = new CacheEntry(
+					post,
+					written + (post is { Ok: true } ? CacheLifetime : FailureLifetime));
+			}
+		}
 
 		return post;
 	}

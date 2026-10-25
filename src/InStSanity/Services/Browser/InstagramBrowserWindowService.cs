@@ -72,6 +72,48 @@ public sealed class InstagramBrowserWindowService
 	/// <summary>Set by MainPage: copies the WebView2 profile's Instagram cookies into InstagramHttp. False when no browser page is attached.</summary>
 	public Func<Task<bool>>? CookieSyncHandler { get; set; }
 
+	/// <summary>Set by MainPage: re-probes the native browser and synchronizes its current session.</summary>
+	public Func<Task<bool>>? SessionRefreshHandler { get; set; }
+
+	/// <summary>Set by MainPage: clears the native browser and shared HTTP session before returning.</summary>
+	public Func<Task<bool>>? LogoutHandler { get; set; }
+
+	public async Task<bool> RefreshSessionAsync()
+	{
+		var handler = SessionRefreshHandler;
+		if (handler is null)
+		{
+			return false;
+		}
+
+		try
+		{
+			return await handler().ConfigureAwait(false);
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
+	public async Task<bool> LogoutAsync()
+	{
+		var handler = LogoutHandler;
+		if (handler is null)
+		{
+			return false;
+		}
+
+		try
+		{
+			return await handler().ConfigureAwait(false);
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
 	readonly object _syncLock = new();
 	DateTimeOffset _lastCookieSync = DateTimeOffset.MinValue;
 

@@ -74,7 +74,7 @@ public partial class App : Application
 
 		return new Window(root)
 		{
-			Title = headless ? "In-st-Sanity (headless)" : "In-st-Sanity",
+			Title = headless ? "In-st-Sanity (headless)" : string.Empty,
 			Width = 1440,
 			Height = 900,
 			MinimumWidth = 1024,
