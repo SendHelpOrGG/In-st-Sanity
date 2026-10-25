@@ -1,6 +1,7 @@
 using InStSanity.Platforms.Windows;
 using InStSanity.Services.Api;
 using InStSanity.Services.Browser;
+using InStSanity.Services.Images;
 using InStSanity.Services.Instagram;
 using InStSanity.Services.WebHost;
 using InStSanity.ViewModels;
@@ -93,6 +94,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<InstagramBrowserWindowService>();
 		builder.Services.AddSingleton<IFolderPickerService, WindowsFolderPickerService>();
 		builder.Services.AddSingleton<IDownloadFolderOpener, WindowsDownloadFolderOpener>();
+		builder.Services.AddSingleton<PhotoResizeService>();
 
 		// /api/image and /api/download-photo share one implementation, differing only in
 		// how the payload is presented.
@@ -110,6 +112,8 @@ public static class MauiProgram
 			asAttachment: true));
 
 		builder.Services.AddSingleton<IApiEndpoint, DownloadSelectedEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, ResizeUploadEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, ResizeConvertEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenDownloadFolderEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ExitAppEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, CollapseWindowEndpoint>();
