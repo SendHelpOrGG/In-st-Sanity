@@ -101,6 +101,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 				error = "folder_unavailable",
 				folder = batch.Folder,
 				savedCount = 0,
+				skippedCount = 0,
 				failedCount = batch.Items.Count,
 				files = failedFiles,
 			});
@@ -132,17 +133,20 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 							writeTurns[index + 1].TrySetResult(true);
 						}
 					},
+					batch.NoDuplicates,
 					token).ConfigureAwait(false);
 			}).ConfigureAwait(false);
 
 		var savedCount = files.Count(file => file.Ok);
-		var failedCount = files.Length - savedCount;
+		var skippedCount = files.Count(file => file.Skipped);
+		var failedCount = files.Count(file => !file.Ok && !file.Skipped);
 
 		return HttpResponseInfo.Json(new
 		{
-			ok = savedCount == files.Length,
+			ok = failedCount == 0,
 			requestedCount = files.Length,
 			savedCount,
+			skippedCount,
 			failedCount,
 			folder,
 			files,
@@ -155,6 +159,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		int index,
 		Task writeTurn,
 		Action advanceWriteTurn,
+		bool noDuplicates,
 		CancellationToken cancellationToken)
 	{
 		var fallbackName = FallbackFileName(item, index);
@@ -163,17 +168,31 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 
 		try
 		{
+			if (noDuplicates && ExistingPhotoExists(folder, item, initialName, index))
+			{
+				await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
+				writeTurnAcquired = true;
+				return DuplicateSkipped(initialName);
+			}
+
 			// Fetch concurrently, but serialize disk writes in request order so media
 			// from each post gets consecutive creation/modification timestamps.
 			var payload = await LoadPayloadAsync(item, cancellationToken).ConfigureAwait(false);
 			await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
 			writeTurnAcquired = true;
+			if (noDuplicates && ExistingPhotoExists(folder, item, initialName, index))
+			{
+				return DuplicateSkipped(initialName);
+			}
+
 			var extension = ExtensionFor(payload, initialName);
 			var filename = SafeFileName(item.Filename, fallbackName, extension, index);
-			var savedName = await WriteUniqueFileAsync(folder, filename, payload.Bytes, cancellationToken)
+			var writeResult = await WriteUniqueFileAsync(folder, filename, payload.Bytes, noDuplicates, cancellationToken)
 				.ConfigureAwait(false);
 
-			return new DownloadFileResult(savedName, Ok: true, Error: null);
+			return writeResult.Skipped
+				? DuplicateSkipped(writeResult.Filename)
+				: new DownloadFileResult(writeResult.Filename, Ok: true, Error: null);
 		}
 		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 		{
@@ -519,18 +538,52 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 
 	static string FallbackFileName(DownloadItem item, int index)
 	{
-		var shortcode = string.IsNullOrWhiteSpace(item.Shortcode) ? "instagram" : item.Shortcode.Trim();
-		var safeShortcode = new string(shortcode
-			.Select(character => char.IsLetterOrDigit(character) || character is '_' or '-' or '.' ? character : '_')
-			.ToArray());
 		var photoNumber = Math.Max(0, item.PhotoIndex ?? index) + 1;
-		return $"{safeShortcode}_photo_{photoNumber}.jpg";
+		return $"{SafeShortcode(item.Shortcode)}_{photoNumber}.jpg";
 	}
 
-	static async Task<string> WriteUniqueFileAsync(
+	static string SafeShortcode(string? shortcode)
+	{
+		var source = string.IsNullOrWhiteSpace(shortcode) ? "instagram" : shortcode.Trim();
+		var safe = new string(source
+			.Select(character => char.IsLetterOrDigit(character) || character is '_' or '-' or '.' ? character : '_')
+			.ToArray());
+		return safe.Length == 0 ? "instagram" : safe;
+	}
+
+	static bool ExistingPhotoExists(string folder, DownloadItem item, string initialName, int index)
+	{
+		var stems = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+		{
+			Path.GetFileNameWithoutExtension(initialName),
+		};
+
+		var photoNumber = Math.Max(0, item.PhotoIndex ?? index) + 1;
+		var shortcode = SafeShortcode(item.Shortcode);
+		var currentName = SafeFileName(
+			$"{shortcode}_{photoNumber}.jpg",
+			$"{shortcode}_{photoNumber}.jpg",
+			".jpg",
+			index);
+		var legacyName = SafeFileName(
+			$"{shortcode}_photo_{photoNumber}.jpg",
+			$"{shortcode}_photo_{photoNumber}.jpg",
+			".jpg",
+			index);
+		stems.Add(Path.GetFileNameWithoutExtension(currentName));
+		stems.Add(Path.GetFileNameWithoutExtension(legacyName));
+
+		return stems.Any(stem => SafeExtensions.Any(extension => File.Exists(Path.Combine(folder, stem + extension))));
+	}
+
+	static DownloadFileResult DuplicateSkipped(string filename) =>
+		new(filename, Ok: false, Error: null, Skipped: true);
+
+	static async Task<(string Filename, bool Skipped)> WriteUniqueFileAsync(
 		string folder,
 		string filename,
 		byte[] payload,
+		bool noDuplicates,
 		CancellationToken cancellationToken)
 	{
 		var extension = Path.GetExtension(filename);
@@ -553,6 +606,11 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 			}
 			catch (IOException) when (File.Exists(path))
 			{
+				if (noDuplicates)
+				{
+					return (candidate, true);
+				}
+
 				continue;
 			}
 
@@ -564,7 +622,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 					await output.FlushAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				return candidate;
+				return (candidate, false);
 			}
 			catch
 			{
@@ -646,6 +704,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 			error,
 			savedCount = 0,
 			failedCount,
+			skippedCount = 0,
 			files = Array.Empty<DownloadFileResult>(),
 		});
 
@@ -660,6 +719,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		}
 
 		var folder = ReadString(root, "folder");
+		var noDuplicates = ReadBoolean(root, "noDuplicates");
 		var items = new List<DownloadItem>();
 		foreach (var itemElement in itemsElement.EnumerateArray())
 		{
@@ -678,7 +738,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 				ReadString(itemElement, "svgMarkup")));
 		}
 
-		return new BatchRequest(folder, items);
+		return new BatchRequest(folder, items, noDuplicates);
 	}
 
 	static string? ReadString(JsonElement element, string name) =>
@@ -690,6 +750,9 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		TryGetProperty(element, name, out var value) && value.TryGetInt32(out var number)
 			? number
 			: null;
+
+	static bool ReadBoolean(JsonElement element, string name) =>
+		TryGetProperty(element, name, out var value) && value.ValueKind == JsonValueKind.True;
 
 	static bool TryGetProperty(JsonElement element, string name, out JsonElement value)
 	{
@@ -709,7 +772,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		return false;
 	}
 
-	readonly record struct BatchRequest(string? Folder, List<DownloadItem> Items);
+	readonly record struct BatchRequest(string? Folder, List<DownloadItem> Items, bool NoDuplicates);
 	readonly record struct DownloadItem(
 		string? Filename,
 		string? Shortcode,
@@ -717,7 +780,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		string? RawUrl,
 		string? DataUri,
 		string? SvgMarkup);
-	sealed record DownloadFileResult(string Filename, bool Ok, string? Error);
+	sealed record DownloadFileResult(string Filename, bool Ok, string? Error, bool Skipped = false);
 	sealed record MediaPayload(byte[] Bytes, string ContentType);
 
 	sealed class DownloadFailureException(string code) : Exception(code)

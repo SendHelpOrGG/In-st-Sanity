@@ -1096,7 +1096,16 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             </div>
             <span class="settings-card-chevron" aria-hidden="true">▾</span>
           </div></div>
-          <div class="setting-body"><label class="field-label" for="saveFolder">Download location</label><div class="folder-row"><input class="text-input" id="saveFolder" value="~/Pictures/Instagram" readonly><button class="outline" onclick="chooseFolder()">Browse…</button></div></div>
+          <div class="setting-body">
+            <label class="field-label" for="saveFolder">Download location</label>
+            <div class="folder-row"><input class="text-input" id="saveFolder" value="~/Pictures/Instagram" readonly><button class="outline" onclick="chooseFolder()">Browse…</button></div>
+            <div class="anim-group" style="margin-top:18px">
+              <div class="background-actions" style="margin-bottom:6px">
+                <button type="button" class="outline ui-toggle-btn active" id="noDuplicatesBtn" aria-pressed="true" onclick="toggleNoDuplicates()">No duplicates: On</button>
+              </div>
+              <p class="hint">Skip a photo if its <code>shortcode_N</code> file is already in the download folder.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1104,7 +1113,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.148; open version history" title="Click to view what changed in each version">v.1.148</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.149; open version history" title="Click to view what changed in each version">v.1.149</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1257,6 +1266,9 @@ let uiPrefs={};
 function loadUiPrefs(){try{const raw=localStorage.getItem(UI_PREFS_KEY);uiPrefs=raw?(JSON.parse(raw)||{}):{}}catch(_){uiPrefs={}}if(!uiPrefs||typeof uiPrefs!=='object')uiPrefs={}}
 function setUiPref(key,val){try{uiPrefs[key]=val;localStorage.setItem(UI_PREFS_KEY,JSON.stringify(uiPrefs))}catch(_){}}
 function getUiPref(key,fallback){return Object.prototype.hasOwnProperty.call(uiPrefs,key)?uiPrefs[key]:fallback}
+function isNoDuplicatesEnabled(){return Boolean(getUiPref('noDuplicates',true))}
+function syncNoDuplicatesButton(){const button=document.getElementById('noDuplicatesBtn');if(!button)return;const enabled=isNoDuplicatesEnabled();button.textContent=`No duplicates: ${enabled?'On':'Off'}`;button.classList.toggle('active',enabled);button.setAttribute('aria-pressed',String(enabled))}
+function toggleNoDuplicates(){setUiPref('noDuplicates',!isNoDuplicatesEnabled());syncNoDuplicatesButton()}
 loadUiPrefs();
 const SIDEBAR_COLLAPSE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 9l-3 3 3 3"/></svg>';
 const SIDEBAR_EXPAND_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M12 9l3 3-3 3"/></svg>';
@@ -1953,7 +1965,7 @@ function buildDownloadItemsForPost(post,postIdx=0,selectedIndicesOverride=null){
         const svgMarkup=artData.svgMarkup||'';
         const rawUrl=pic.rawUrl||pic.imgUrl||'';
         const ext=svgMarkup?'.svg':'.jpg';
-        items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,filename:`${sc}_photo_${photoOrd+1}${ext}`,rawUrl,dataUri,svgMarkup});
+        items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,filename:`${sc}_${photoOrd+1}${ext}`,rawUrl,dataUri,svgMarkup});
       }
       photoOrd++;
     }
@@ -1966,34 +1978,36 @@ function buildDownloadItemsForPost(post,postIdx=0,selectedIndicesOverride=null){
     if(typeof photoOrd!=='number'||photoOrd<0)continue;
     if(scLower==='dewe8ltizn2'){
       const artData=extractArtPayload(6+photoOrd);
-      items.push({shortcode:'DeWe8lTiZN2',postUrl:post.url||'',photoIndex:photoOrd,filename:`DeWe8lTiZN2_photo_${photoOrd+1}.jpg`,rawUrl:'',dataUri:artData.dataUri,svgMarkup:''});
+      items.push({shortcode:'DeWe8lTiZN2',postUrl:post.url||'',photoIndex:photoOrd,filename:`DeWe8lTiZN2_${photoOrd+1}.jpg`,rawUrl:'',dataUri:artData.dataUri,svgMarkup:''});
     }else if(Array.isArray(post.seedSpec)&&post.seedSpec.length){
       const nonVideoSpecs=post.seedSpec.filter(s=>s&&!s.isVideo);
       const spec=nonVideoSpecs[photoOrd];
       const artData=extractArtPayload(spec?.artIndex);
       const ext=artData.svgMarkup?'.svg':'.jpg';
-      items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,filename:`${sc}_photo_${photoOrd+1}${ext}`,rawUrl:'',dataUri:artData.dataUri,svgMarkup:artData.svgMarkup});
+      items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,filename:`${sc}_${photoOrd+1}${ext}`,rawUrl:'',dataUri:artData.dataUri,svgMarkup:artData.svgMarkup});
     }else{
       const coverRaw=post.coverUrl||'';
       const fallbackRaw=Boolean(post.fullResolved||post.serverResolved)&&!post.coverIsVideo&&(photoOrd===0||post.photoCount===1)?coverRaw:'';
-      items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,filename:`${sc}_photo_${photoOrd+1}.jpg`,rawUrl:fallbackRaw,dataUri:'',svgMarkup:''});
+      items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,filename:`${sc}_${photoOrd+1}.jpg`,rawUrl:fallbackRaw,dataUri:'',svgMarkup:''});
     }
   }
   return items;
 }
 async function performPhotoDownload(items){
-  if(!Array.isArray(items)||!items.length)return{savedCount:0,failedCount:0,backendUnavailable:false,unconfirmedCount:0,failureReason:'no_items',targetFolder:''};
+  if(!Array.isArray(items)||!items.length)return{savedCount:0,failedCount:0,duplicateSkippedCount:0,backendUnavailable:false,unconfirmedCount:0,failureReason:'no_items',targetFolder:''};
   const folder=document.getElementById('saveFolder')?.value||'~/Pictures/Instagram';
+  const noDuplicates=isNoDuplicatesEnabled();
   const batchSize=4;
-  let savedCount=0,failedCount=0,backendUnavailable=false,unconfirmedCount=0,failureReason='',targetFolder=folder;
+  let savedCount=0,failedCount=0,duplicateSkippedCount=0,backendUnavailable=false,unconfirmedCount=0,failureReason='',targetFolder=folder;
   for(let offset=0;offset<items.length;offset+=batchSize){
     const batch=items.slice(offset,offset+batchSize);
     const end=Math.min(items.length,offset+batch.length);
     const batchLabel=batch.length===1?`photo ${offset+1} of ${items.length}`:`photos ${offset+1}-${end} of ${items.length}`;
-    setDownloadProgressMessage(`Downloading and saving ${batchLabel} · ${savedCount} saved`,`${savedCount}/${items.length} photos saved`);
+    const priorDuplicateStatus=duplicateSkippedCount?` · ${duplicateSkippedCount} existing photo${duplicateSkippedCount===1?'':'s'} skipped`:'';
+    setDownloadProgressMessage(`Downloading and saving ${batchLabel} · ${savedCount} saved${priorDuplicateStatus}`,`${savedCount} saved${priorDuplicateStatus}`);
     let result=null;
     for(const endpoint of getApiUrls('/api/download-selected')){
-      result=await fetchEndpointJson(endpoint,300000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder,items:batch})});
+      result=await fetchEndpointJson(endpoint,300000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder,items:batch,noDuplicates})});
       if(result)break;
     }
     if(!result){backendUnavailable=true;unconfirmedCount=items.length-offset;break}
@@ -2001,19 +2015,34 @@ async function performPhotoDownload(items){
     const files=Array.isArray(result.files)?result.files:[];
     const reportedSaved=Number(result.savedCount);
     const batchSaved=Number.isFinite(reportedSaved)?reportedSaved:files.filter(file=>file?.ok).length;
+    const reportedDuplicatesSkipped=Number(result.skippedCount);
+    const batchDuplicatesSkipped=Number.isFinite(reportedDuplicatesSkipped)?reportedDuplicatesSkipped:files.filter(file=>file?.skipped).length;
     const reportedFailed=Number(result.failedCount);
-    const batchFailed=Number.isFinite(reportedFailed)?reportedFailed:Math.max(0,batch.length-batchSaved);
+    const batchFailed=Number.isFinite(reportedFailed)?reportedFailed:Math.max(0,batch.length-batchSaved-batchDuplicatesSkipped);
     savedCount+=Math.max(0,Math.min(batch.length,batchSaved));
+    duplicateSkippedCount+=Math.max(0,Math.min(batch.length,batchDuplicatesSkipped));
     failedCount+=Math.max(0,Math.min(batch.length,batchFailed));
     if(result.error)failureReason=String(result.error);else if(batchSaved===0&&files.find(file=>file?.error)?.error)failureReason=String(files.find(file=>file?.error)?.error);
-    setDownloadProgressMessage(`${savedCount+failedCount}/${items.length} photos processed · ${savedCount} saved`,`${savedCount}/${items.length} photos saved`);
+    const processedCount=savedCount+failedCount+duplicateSkippedCount;
+    const duplicateStatus=duplicateSkippedCount?` · ${duplicateSkippedCount} existing photo${duplicateSkippedCount===1?'':'s'} skipped`:'';
+    setDownloadProgressMessage(`${processedCount}/${items.length} photos processed · ${savedCount} saved${duplicateStatus}`,`${processedCount}/${items.length} processed · ${savedCount} saved${duplicateStatus}`);
   }
-  return{savedCount,failedCount,backendUnavailable,unconfirmedCount,failureReason,targetFolder};
+  return{savedCount,failedCount,duplicateSkippedCount,backendUnavailable,unconfirmedCount,failureReason,targetFolder};
 }
-function formatPhotoDownloadSummary(result,totalCount,skippedCount=0){
+function formatPhotoDownloadSummary(result,totalCount,unresolvedSkippedCount=0){
   let message='';
+  const duplicateSkippedCount=Math.max(0,Math.floor(Number(result.duplicateSkippedCount)||0));
+  const allPhotosAlreadyExist=totalCount>0&&duplicateSkippedCount===totalCount&&result.failedCount===0;
   if(result.savedCount===0){
-    message=result.backendUnavailable?`Download service unavailable — 0 of ${totalCount} photos confirmed saved`:`No photos were saved (0 of ${totalCount})${result.failureReason?`: ${result.failureReason.replaceAll('_',' ')}`:''}`;
+    if(result.backendUnavailable){
+      message=`Download service unavailable — 0 of ${totalCount} photos confirmed saved`;
+    }else if(allPhotosAlreadyExist){
+      message=duplicateSkippedCount===1
+        ?'The photo was already in the folder (duplicate skipped); no new file was saved'
+        :`All ${duplicateSkippedCount} photos were already in the folder (duplicates skipped); no new files were saved`;
+    }else{
+      message=`No photos were saved (0 of ${totalCount})${result.failureReason?`: ${result.failureReason.replaceAll('_',' ')}`:''}`;
+    }
   }else if(result.backendUnavailable){
     message=`Downloaded and saved ${result.savedCount} of ${totalCount} photos; ${result.unconfirmedCount} remaining not confirmed${result.failedCount?`, ${result.failedCount} failed`:''}`;
   }else if(result.failedCount>0){
@@ -2021,7 +2050,8 @@ function formatPhotoDownloadSummary(result,totalCount,skippedCount=0){
   }else{
     message=`Downloaded and saved ${result.savedCount} photo${result.savedCount===1?'':'s'}`;
   }
-  if(skippedCount>0)message+=`; ${skippedCount} unresolved photo${skippedCount===1?'':'s'} skipped`;
+  if(duplicateSkippedCount>0&&!allPhotosAlreadyExist)message+=`; ${duplicateSkippedCount} duplicate${duplicateSkippedCount===1?'':'s'} already in the folder skipped`;
+  if(unresolvedSkippedCount>0)message+=`; ${unresolvedSkippedCount} unresolved photo${unresolvedSkippedCount===1?'':'s'} skipped`;
   return message;
 }
 function snapshotSelectedPhotoIndices(post){
@@ -3857,6 +3887,7 @@ function toggleUiSettingsPanel(card){
 function applySavedUiPrefs(){
   loadUiPrefs();
   syncTopExitButtonMode(Boolean(getUiPref('topExitButtonMode',false)));
+  syncNoDuplicatesButton();
   try{
     const hidden=getUiPref('sidebarHidden',false);
     const app=document.querySelector('.app');
@@ -5921,8 +5952,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.148';
+const APP_VERSION='1.149';
 const VERSION_HISTORY=[
+  {version:'1.149',added:'A default-on No duplicates setting in Settings > Saving.',removed:'The shortcode_photo_N filename pattern for downloads.',fixed:'Downloads now use shortcode_N filenames. When No duplicates is on, an already-saved matching photo is skipped (including the previous filename pattern), the queue continues, and skips are reported in progress and the completion summary.',tone:'green'},
   {version:'1.148',added:'No new features.',removed:'Rate-limit warnings without the upstream retry-delay value.',fixed:'The throttled Instagram 429 warning now includes the raw Retry-After response header, or says it was not provided, so rate-limit cooldowns can be observed without restoring per-request log spam.',tone:'green'},
   {version:'1.147',added:'No new features.',removed:'Repeated per-post upstream status messages while collection photo totals resolve.',fixed:'Collection summaries now run in smaller, slower background batches after visible cards finish. A 429 triggers exponential backoff up to five minutes, and rate-limited posts retry after the resolver cache expires, expected 404s are silent and other per-post status details are Debug-only, with a single throttled 429 warning. Carousel media stays lazy-loaded.',tone:'green'},
   {version:'1.146',added:'No new features.',removed:'No removals.',fixed:'HTML responses from Instagram and Save-Free are detected before JSON parsing, so login/challenge pages use the existing fallback path instead of raising JsonReaderException.',tone:'green'},
