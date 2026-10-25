@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using InStSanity.Services.Api;
 using InStSanity.Services.Browser;
+using InStSanity.Services.Instagram;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Web.WebView2.Core;
 
@@ -270,7 +271,7 @@ internal static class WebViewBootstrapper
 					inner = TryUnwrapScriptJson(await ExecOnUiAsync(core, "window.__igAccountProbeResult||''"));
 				}
 
-				if (!string.IsNullOrEmpty(inner))
+				if (InstagramHttp.HasJsonValuePrefix(inner))
 				{
 					using var payload = JsonDocument.Parse(inner);
 					if (payload.RootElement.TryGetProperty("u", out var u)) username = u.GetString() ?? string.Empty;
@@ -430,7 +431,7 @@ internal static class WebViewBootstrapper
 	/// <summary>Unwraps the JSON string ExecuteScriptAsync returns for script results that are strings.</summary>
 	internal static string? TryUnwrapScriptJson(string? result)
 	{
-		if (string.IsNullOrEmpty(result) || result == "null")
+		if (string.IsNullOrEmpty(result) || result == "null" || !InstagramHttp.HasJsonValuePrefix(result))
 		{
 			return null;
 		}

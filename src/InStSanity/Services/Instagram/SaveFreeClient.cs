@@ -179,6 +179,11 @@ public sealed class SaveFreeClient
 
 	IReadOnlyList<ResolvedMedia> Parse(string body)
 	{
+		if (!InstagramHttp.HasJsonValuePrefix(body))
+		{
+			return Array.Empty<ResolvedMedia>();
+		}
+
 		JsonNode? root;
 		try
 		{
@@ -385,7 +390,7 @@ public sealed class SaveFreeClient
 		try
 		{
 			var decoded = Base64UrlDecode(match.Groups[2].Value);
-			if (decoded.Length == 0)
+			if (!InstagramHttp.HasJsonValuePrefix(decoded))
 			{
 				return token;
 			}

@@ -68,6 +68,34 @@ public sealed class InstagramHttp
 	public CookieContainer Cookies { get; }
 
 	/// <summary>
+	/// Avoids feeding obvious HTML error/login pages to System.Text.Json. Instagram
+	/// endpoints occasionally return a successful HTTP status with a redirected HTML page.
+	/// </summary>
+	internal static bool HasJsonValuePrefix(string? text)
+	{
+		if (string.IsNullOrEmpty(text))
+		{
+			return false;
+		}
+
+		var span = text.AsSpan();
+		var index = 0;
+		while (index < span.Length && (char.IsWhiteSpace(span[index]) || span[index] == '\uFEFF'))
+		{
+			index++;
+		}
+
+		if (index >= span.Length)
+		{
+			return false;
+		}
+
+		var first = span[index];
+		return (first is '{' or '[' or '"' or 't' or 'f' or 'n' or '-') ||
+			(first >= '0' && first <= '9');
+	}
+
+	/// <summary>
 	/// Builds a GET request carrying the headers Instagram's CDN expects for media.
 	/// </summary>
 	/// <param name="uri">Absolute media or page URL.</param>
@@ -227,8 +255,14 @@ public sealed class InstagramHttp
 				}
 
 				var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+				if (!HasJsonValuePrefix(body))
+				{
+					continue;
+				}
+
 				using var document = JsonDocument.Parse(body);
-				if (!document.RootElement.TryGetProperty("user", out var user) ||
+				if (document.RootElement.ValueKind != JsonValueKind.Object ||
+					!document.RootElement.TryGetProperty("user", out var user) ||
 					user.ValueKind != JsonValueKind.Object)
 				{
 					continue;

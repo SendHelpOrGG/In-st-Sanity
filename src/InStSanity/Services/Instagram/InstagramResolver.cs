@@ -465,8 +465,19 @@ public sealed class InstagramResolver
 			}
 
 			var body = await response.Content.ReadAsStringAsync(timeout.Token).ConfigureAwait(false);
+			if (!InstagramHttp.HasJsonValuePrefix(body))
+			{
+				var contentType = response.Content.Headers.ContentType?.MediaType ?? "unknown";
+				_logger.LogDebug(
+					"Media info returned non-JSON content ({ContentType}) for {Shortcode}",
+					contentType,
+					shortcode);
+				return (null, "no_media");
+			}
+
 			var root = JsonNode.Parse(body);
-			if (root?["items"] is JsonArray items && items.Count > 0 && items[0] is JsonNode item)
+			if (root is JsonObject payload &&
+				payload["items"] is JsonArray items && items.Count > 0 && items[0] is JsonNode item)
 			{
 				var built = BuildFromMedia(item, shortcode);
 				if (built is not null)
@@ -846,6 +857,11 @@ public sealed class InstagramResolver
 		var roots = new List<JsonNode>();
 		foreach (var candidate in candidates)
 		{
+			if (!InstagramHttp.HasJsonValuePrefix(candidate))
+			{
+				continue;
+			}
+
 			try
 			{
 				var root = JsonNode.Parse(candidate);
