@@ -1104,7 +1104,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.143; open version history" title="Click to view what changed in each version">v.1.143</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.144; open version history" title="Click to view what changed in each version">v.1.144</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1960,11 +1960,11 @@ function formatPhotoDownloadSummary(result,totalCount,skippedCount=0){
   if(result.savedCount===0){
     message=result.backendUnavailable?`Download service unavailable — 0 of ${totalCount} photos confirmed saved`:`No photos were saved (0 of ${totalCount})${result.failureReason?`: ${result.failureReason.replaceAll('_',' ')}`:''}`;
   }else if(result.backendUnavailable){
-    message=`Downloaded and saved ${result.savedCount} of ${totalCount} photos to ${result.targetFolder}; ${result.unconfirmedCount} remaining not confirmed${result.failedCount?`, ${result.failedCount} failed`:''}`;
+    message=`Downloaded and saved ${result.savedCount} of ${totalCount} photos; ${result.unconfirmedCount} remaining not confirmed${result.failedCount?`, ${result.failedCount} failed`:''}`;
   }else if(result.failedCount>0){
-    message=`Downloaded and saved ${result.savedCount} of ${totalCount} photos to ${result.targetFolder} (${result.failedCount} failed)`;
+    message=`Downloaded and saved ${result.savedCount} of ${totalCount} photos (${result.failedCount} failed)`;
   }else{
-    message=`Downloaded and saved ${result.savedCount} photo${result.savedCount===1?'':'s'} to ${result.targetFolder}`;
+    message=`Downloaded and saved ${result.savedCount} photo${result.savedCount===1?'':'s'}`;
   }
   if(skippedCount>0)message+=`; ${skippedCount} unresolved photo${skippedCount===1?'':'s'} skipped`;
   return message;
@@ -5858,8 +5858,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.143';
+const APP_VERSION='1.144';
 const VERSION_HISTORY=[
+  {version:'1.144',added:'No new features.',removed:'The saved folder path in download completion pop-ups.',fixed:'Completion notices keep saved, failed, and unconfirmed photo counts without showing the folder path.',tone:'green'},
   {version:'1.143',added:'No new features.',removed:'Collection photo totals waiting for manual page-by-page visits.',fixed:'Selecting the whole collection now resolves lightweight card summaries in background batches, so selected-photo counts refresh across every page without loading carousel media.',tone:'green'},
   {version:'1.142',added:'No new features.',removed:'Download progress pop-ups appearing over the pagination controls.',fixed:'Persistent download progress and photo counts stay inside the pages bar, between the page controls and Download actions.',tone:'green'},
   {version:'1.141',added:'Collection-wide selection now includes every photo in posts whose media is still lazy-loaded.',removed:'Select all stopping at each post’s first known photo when full carousel counts arrived later.',fixed:'Collection and page selections retain an all-photos intent without preloading media. As each post’s counts resolve, selection and download plans expand to its full carousel.',tone:'green'},
