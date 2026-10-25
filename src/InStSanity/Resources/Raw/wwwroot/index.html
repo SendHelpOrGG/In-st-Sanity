@@ -739,7 +739,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 #libraryPage .toolbar-row > .filter,
 #libraryPage .toolbar-row > .primary { flex-shrink:0; }
 #libraryPage #allPostsFilter,
-#libraryPage #selectedFilter { width:120px; min-width:120px; justify-content:center; padding:0 8px; }
+#libraryPage #selectedFilter { width:180px; min-width:180px; justify-content:center; padding:0 8px; }
 #libraryPage .toolbar-row .filter:disabled { opacity:.45; cursor:not-allowed; }
 #libraryPage #srcStatusNote { margin-left:auto; }
 #libraryPage #srcStatusNote:empty { display:none; }
@@ -1104,7 +1104,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.144; open version history" title="Click to view what changed in each version">v.1.144</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.145; open version history" title="Click to view what changed in each version">v.1.145</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1414,27 +1414,29 @@ function warmNextPage(){
   unresolved.forEach(p=>{p._summaryResolveToken=token});
   (async()=>{try{await resolvePostsBatchChunk(unresolved,token,null,true)}finally{unresolved.forEach(p=>{if(p._summaryResolveToken===token)p._summaryResolveToken=0})}})();
 }
-let selectedCollectionSummaryResolutionRunning=false;
+let collectionSummaryResolutionRunning=false;
+let collectionSummaryResolutionList=null;
 // Refresh card-sized counts in batches only; this never loads carousel photos.
-function resolveSelectedCollectionSummariesInBackground(){
-  if(selectedCollectionSummaryResolutionRunning||!activeImportFileName||!posts.length)return null;
-  selectedCollectionSummaryResolutionRunning=true;
+function resolveCollectionSummariesInBackground(){
+  if(collectionSummaryResolutionRunning||!activeImportFileName||!posts.length)return null;
+  const collection=posts;
+  collectionSummaryResolutionRunning=true;
   return (async()=>{
     try{
       let cachedChanged=false;
-      posts.forEach((post,index)=>{
-        if(!post||!post.allPhotosSelected)return;
+      collection.forEach((post,index)=>{
+        if(!post)return;
         post._idx=index;
         const shortcode=String(post.shortcode||'').toLowerCase();
         const cachedSummary=shortcode?clientSummaryCache[shortcode]:null;
         if(cachedSummary&&needsSummaryResolution(post)&&applyPostSummaryData(post,cachedSummary))cachedChanged=true;
       });
       if(cachedChanged){scheduleSaveImportedPostsState();render()}
-      while(activeImportFileName&&posts.some(post=>post&&post.allPhotosSelected)){
+      while(activeImportFileName&&posts===collection&&collection.length){
         const pendingPosts=[];
         let waitingForInFlight=false;
-        posts.forEach((post,index)=>{
-          if(!post||!post.allPhotosSelected||currentPost===index||!post.url||!post.shortcode||String(post.shortcode).startsWith('Post #'))return;
+        collection.forEach((post,index)=>{
+          if(!post||currentPost===index||!post.url||!post.shortcode||String(post.shortcode).startsWith('Post #'))return;
           post._idx=index;
           if(!needsSummaryResolution(post)||summaryResolutionCoolingDown(post))return;
           if(post._summaryResolveToken){waitingForInFlight=true;return}
@@ -1459,10 +1461,10 @@ function resolveSelectedCollectionSummariesInBackground(){
             if(!post)return;
             if(post._summaryResolveToken===token)post._summaryResolveToken=0;
             if(sessionGeneration!==instagramSessionGeneration||!Number.isInteger(post._idx)||posts[post._idx]!==post)return;
-            if(post.allPhotosSelected&&needsSummaryResolution(post)){
+            if(needsSummaryResolution(post)){
               post.summaryAttemptedAt=attemptedAt;
               needsPersist=true;
-            }else if(!needsSummaryResolution(post)){
+            }else{
               post.summaryAttemptedAt=0;
             }
           });
@@ -1472,7 +1474,11 @@ function resolveSelectedCollectionSummariesInBackground(){
         await new Promise(resolve=>setTimeout(resolve,120));
       }
     }finally{
-      selectedCollectionSummaryResolutionRunning=false;
+      collectionSummaryResolutionRunning=false;
+      if(activeImportFileName&&posts.length&&posts!==collection){
+        collectionSummaryResolutionList=posts;
+        resolveCollectionSummariesInBackground();
+      }
     }
   })();
 }
@@ -1724,9 +1730,34 @@ function buildCardHtml(p,idx){const chosen=getPostSelectedCount(p);const badgeTe
 function clearAllSelections(){const had=posts.some(p=>getPostSelectedCount(p)>0);posts.forEach(post=>{if(!post)return;if(Array.isArray(post.pictures)&&post.pictures.length)post.pictures.forEach(pic=>{if(pic&&!pic.isVideo)pic.selected=false});post.selectedIndices=[];post.allPhotosSelected=false});scheduleSaveImportedPostsState();render();loadCurrentPagePosts();updateToolbarCounts();if(currentPost>=0)renderDetail();if(had)toast('Selection cleared')}
 function setPostPhotosSelected(post,selected){if(!post)return 0;const photoCount=getPostSelectablePhotoCount(post);if(photoCount<=0){if(!selected){post.allPhotosSelected=false;post.selectedIndices=[]}return 0}post.allPhotosSelected=Boolean(selected);if(post.mediaLoaded&&Array.isArray(post.pictures)&&post.pictures.length){post.pictures.forEach(pic=>{if(pic&&!pic.isVideo)pic.selected=selected});syncPostSelectedIndicesFromPictures(post)}else{post.selectedIndices=selected?Array.from({length:photoCount},(_,index)=>index):[]}return photoCount}
 function setPhotosSelectedForPosts(indices,message,selected=true){const seen=new Set();let photosSelected=0;for(const rawIndex of indices){const index=Number(rawIndex);if(!Number.isInteger(index)||seen.has(index)||index<0||index>=posts.length)continue;seen.add(index);photosSelected+=setPostPhotosSelected(posts[index],selected)}if(!photosSelected)return 0;scheduleSaveImportedPostsState();render();if(currentPost>=0)renderDetail();if(message)toast(message);return photosSelected}
-function selectAllCollectionPhotos(){if(!posts.length)return;const selectedCount=setPhotosSelectedForPosts(posts.map((_,index)=>index),'Selected all photos in the collection');if(selectedCount>0)resolveSelectedCollectionSummariesInBackground()}
+function selectAllCollectionPhotos(){if(!posts.length)return;const selectedCount=setPhotosSelectedForPosts(posts.map((_,index)=>index),'Selected all photos in the collection');if(selectedCount>0)resolveCollectionSummariesInBackground()}
 function selectCurrentPagePhotos(){const list=getFilteredSortedPosts();const start=(currentPage-1)*PAGE_SIZE;const indices=list.slice(start,start+PAGE_SIZE).map(post=>post?._idx).filter(index=>Number.isInteger(index));if(!indices.length)return;const photoPosts=indices.map(index=>posts[index]).filter(post=>post&&getPostSelectablePhotoCount(post)>0);if(!photoPosts.length)return;const allPhotosSelected=photoPosts.every(post=>getPostSelectedCount(post)>=getPostSelectablePhotoCount(post));const select=!allPhotosSelected;setPhotosSelectedForPosts(indices,select?'Selected all photos on this page':'Deselected all photos on this page',select)}
-function updateToolbarCounts(){const selPosts=countSelectedPosts();const selTotal=countSelected();const spc=document.getElementById('selectedPostCount');if(spc)spc.textContent=`${selPosts}/${selTotal}`;const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const upBtn=document.getElementById('uploadJsonToolbarBtn');if(upBtn)upBtn.style.display=hasJsonLoaded?'none':'inline-flex';const b=document.getElementById('downloadBtn');if(b){b.style.display=hasJsonLoaded?'inline-flex':'none';const canDownload=hasJsonLoaded&&selTotal>0&&!downloadRunActive;b.disabled=!canDownload;b.style.opacity=canDownload?'1':'.45';b.style.cursor=canDownload?'pointer':'not-allowed';b.style.pointerEvents=canDownload?'auto':'none';b.setAttribute('aria-disabled',canDownload?'false':'true')}const openFolderBtn=document.getElementById('openDownloadFolderBtn');if(openFolderBtn)openFolderBtn.style.display=hasJsonLoaded?'grid':'none';const collectionBtn=document.getElementById('selectAllCollectionBtn');if(collectionBtn){const canSelectCollection=hasJsonLoaded&&posts.some(post=>getPostSelectablePhotoCount(post)>0);collectionBtn.disabled=!canSelectCollection;collectionBtn.setAttribute('aria-disabled',String(!canSelectCollection))}const pageBtn=document.getElementById('selectCurrentPageBtn');if(pageBtn){const pageHasPhotos=Array.from(document.querySelectorAll('#postGrid article.card[data-post-index]')).some(card=>{const index=Number(card.dataset.postIndex);return Number.isInteger(index)&&Boolean(posts[index])&&getPostSelectablePhotoCount(posts[index])>0});const canSelectPage=hasJsonLoaded&&pageHasPhotos;pageBtn.disabled=!canSelectPage;pageBtn.setAttribute('aria-disabled',String(!canSelectPage))}const deselectBtn=document.getElementById('deselectAllBtn');if(deselectBtn){deselectBtn.disabled=selTotal<=0;deselectBtn.setAttribute('aria-disabled',String(selTotal<=0))}}
+function updateAllPostsCollectionTotal(){
+  const button=document.getElementById('allPostsFilter');
+  if(!button)return;
+  if(!activeImportFileName||!posts.length){
+    button.textContent='All Posts';
+    button.removeAttribute('title');
+    button.setAttribute('aria-label','Show all posts');
+    return;
+  }
+  let confirmedPhotoCount=0;
+  let unresolvedCount=0;
+  posts.forEach(post=>{
+    if(!post)return;
+    if(needsSummaryResolution(post)){unresolvedCount++;return}
+    const photoCount=Number(getPostMediaCounts(post).photoCount);
+    if(Number.isFinite(photoCount))confirmedPhotoCount+=Math.max(0,Math.floor(photoCount));
+  });
+  const photoCountLabel=`${confirmedPhotoCount}${unresolvedCount?'+':''}`;
+  button.textContent=`All Posts (${posts.length}/${photoCountLabel})`;
+  const totalStatus=unresolvedCount
+    ?`${confirmedPhotoCount} confirmed photos; ${unresolvedCount} post${unresolvedCount===1?'':'s'} without a confirmed photo count`
+    :`${confirmedPhotoCount} photos`;
+  button.title=`${posts.length} posts · ${totalStatus}`;
+  button.setAttribute('aria-label',`All Posts: ${posts.length} posts, ${totalStatus}`);
+}
+function updateToolbarCounts(){updateAllPostsCollectionTotal();const selPosts=countSelectedPosts();const selTotal=countSelected();const spc=document.getElementById('selectedPostCount');if(spc)spc.textContent=`${selPosts}/${selTotal}`;const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const upBtn=document.getElementById('uploadJsonToolbarBtn');if(upBtn)upBtn.style.display=hasJsonLoaded?'none':'inline-flex';const b=document.getElementById('downloadBtn');if(b){b.style.display=hasJsonLoaded?'inline-flex':'none';const canDownload=hasJsonLoaded&&selTotal>0&&!downloadRunActive;b.disabled=!canDownload;b.style.opacity=canDownload?'1':'.45';b.style.cursor=canDownload?'pointer':'not-allowed';b.style.pointerEvents=canDownload?'auto':'none';b.setAttribute('aria-disabled',canDownload?'false':'true')}const openFolderBtn=document.getElementById('openDownloadFolderBtn');if(openFolderBtn)openFolderBtn.style.display=hasJsonLoaded?'grid':'none';const collectionBtn=document.getElementById('selectAllCollectionBtn');if(collectionBtn){const canSelectCollection=hasJsonLoaded&&posts.some(post=>getPostSelectablePhotoCount(post)>0);collectionBtn.disabled=!canSelectCollection;collectionBtn.setAttribute('aria-disabled',String(!canSelectCollection))}const pageBtn=document.getElementById('selectCurrentPageBtn');if(pageBtn){const pageHasPhotos=Array.from(document.querySelectorAll('#postGrid article.card[data-post-index]')).some(card=>{const index=Number(card.dataset.postIndex);return Number.isInteger(index)&&Boolean(posts[index])&&getPostSelectablePhotoCount(posts[index])>0});const canSelectPage=hasJsonLoaded&&pageHasPhotos;pageBtn.disabled=!canSelectPage;pageBtn.setAttribute('aria-disabled',String(!canSelectPage))}const deselectBtn=document.getElementById('deselectAllBtn');if(deselectBtn){deselectBtn.disabled=selTotal<=0;deselectBtn.setAttribute('aria-disabled',String(selTotal<=0))}}
 function updateCardInDom(idx){const p=posts[idx];if(!p)return;p._idx=idx;updateToolbarCounts();if(filter==='selected'){render();return}const card=document.querySelector(`#postGrid article.card[data-post-index="${idx}"]`);if(!card)return;const chosen=getPostSelectedCount(p);card.classList.toggle('selected',chosen>0);const coverKey=getCardCoverKey(p);if(card.dataset.coverKey!==coverKey){card.dataset.coverKey=coverKey;const mediaEl=card.querySelector('.photo-media');if(mediaEl)mediaEl.innerHTML=renderCardCoverMarkup(p)}const selMark=card.querySelector('.selected-mark');if(selMark){selMark.style.display=chosen?'inline-flex':'none';if(chosen)selMark.innerHTML=`${MINI_CHECKMARK_SVG}<span>${chosen} picked</span>`}const countEl=card.querySelector('.post-count');if(countEl)countEl.textContent=formatMediaBadge(p);const cardAcct=card.querySelector('.card-account');if(cardAcct){const at=buildPostAccountText(p);cardAcct.textContent=at;cardAcct.title=at}const cardPosted=card.querySelector('.card-posted');if(cardPosted){const pt=buildPostMetaText(p,'','');cardPosted.innerHTML=buildCardPostedHtml(p);cardPosted.title=pt}updateCardSrcBadge(idx)}
 function buildLibraryEmptyState(hasJsonLoaded){
   if(!hasJsonLoaded)return '<div class="empty">No saved posts loaded yet. Click <b>Upload JSON</b> above to import your Instagram posts.</div>';
@@ -2462,6 +2493,7 @@ function invalidateSavedPostResolutionData(){
   instagramSessionGeneration++;
   bgIndexToken++;
   bgIndexRunning=false;
+  collectionSummaryResolutionList=null;
   currentPageLoadToken++;
   if(currentPageSummaryController){currentPageSummaryController.abort();currentPageSummaryController=null}
   coverResolveQueue.length=0;
@@ -2566,6 +2598,10 @@ function loadCurrentPagePosts(){
   })();
   const hint=document.getElementById('jsonImportHint');
   if(hint)hint.textContent=`Page ${currentPage} ready (${pagePosts.length} post${pagePosts.length===1?'':'s'} on this page · ${posts.length} total in ${activeImportFileName}). Click any post to load its photos and videos.`;
+  if(posts.length&&collectionSummaryResolutionList!==posts){
+    collectionSummaryResolutionList=posts;
+    resolveCollectionSummariesInBackground();
+  }
 }
 function openUploadJsonModal(){const modal=document.getElementById('uploadJsonModal');const linkWrap=document.getElementById('dyiLinkWrap');if(linkWrap)linkWrap.style.display=(activeImportFileName&&posts.length>0)?'none':'flex';refreshLastJsonUi();if(modal)modal.classList.add('show')}
 function openDyiDocPopup(){document.getElementById('dyiDocPopup')?.classList.add('show')}function closeDyiDocPopup(){document.getElementById('dyiDocPopup')?.classList.remove('show')}
@@ -5858,8 +5894,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.144';
+const APP_VERSION='1.145';
 const VERSION_HISTORY=[
+  {version:'1.145',added:'Collection post/photo totals on All Posts.',removed:'The need to manually visit collection pages for photo totals.',fixed:'All Posts shows posts/photos, marks unresolved photo totals with a plus while lightweight summary-only background batches finish, and never preloads carousel media. All Posts and Selected keep matching widths.',tone:'green'},
   {version:'1.144',added:'No new features.',removed:'The saved folder path in download completion pop-ups.',fixed:'Completion notices keep saved, failed, and unconfirmed photo counts without showing the folder path.',tone:'green'},
   {version:'1.143',added:'No new features.',removed:'Collection photo totals waiting for manual page-by-page visits.',fixed:'Selecting the whole collection now resolves lightweight card summaries in background batches, so selected-photo counts refresh across every page without loading carousel media.',tone:'green'},
   {version:'1.142',added:'No new features.',removed:'Download progress pop-ups appearing over the pagination controls.',fixed:'Persistent download progress and photo counts stay inside the pages bar, between the page controls and Download actions.',tone:'green'},
