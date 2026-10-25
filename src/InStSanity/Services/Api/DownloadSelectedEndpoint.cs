@@ -168,11 +168,12 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 
 		try
 		{
-			if (noDuplicates && ExistingPhotoExists(folder, item, initialName, index))
+			var existingPath = noDuplicates ? FindExistingPhotoPath(folder, item, initialName, index) : null;
+			if (existingPath is not null)
 			{
 				await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
 				writeTurnAcquired = true;
-				return DuplicateSkipped(initialName);
+				return DuplicateSkipped(existingPath);
 			}
 
 			// Fetch concurrently, but serialize disk writes in request order so media
@@ -180,9 +181,10 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 			var payload = await LoadPayloadAsync(item, cancellationToken).ConfigureAwait(false);
 			await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
 			writeTurnAcquired = true;
-			if (noDuplicates && ExistingPhotoExists(folder, item, initialName, index))
+			existingPath = noDuplicates ? FindExistingPhotoPath(folder, item, initialName, index) : null;
+			if (existingPath is not null)
 			{
-				return DuplicateSkipped(initialName);
+				return DuplicateSkipped(existingPath);
 			}
 
 			var extension = ExtensionFor(payload, initialName);
@@ -191,8 +193,12 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 				.ConfigureAwait(false);
 
 			return writeResult.Skipped
-				? DuplicateSkipped(writeResult.Filename)
-				: new DownloadFileResult(writeResult.Filename, Ok: true, Error: null);
+				? DuplicateSkipped(Path.Combine(folder, writeResult.Filename))
+				: new DownloadFileResult(
+					writeResult.Filename,
+					Ok: true,
+					Error: null,
+					DownloadedAtUtc: writeResult.DownloadedAtUtc);
 		}
 		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 		{
@@ -551,7 +557,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		return safe.Length == 0 ? "instagram" : safe;
 	}
 
-	static bool ExistingPhotoExists(string folder, DownloadItem item, string initialName, int index)
+	static string? FindExistingPhotoPath(string folder, DownloadItem item, string initialName, int index)
 	{
 		var stems = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
@@ -573,13 +579,51 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		stems.Add(Path.GetFileNameWithoutExtension(currentName));
 		stems.Add(Path.GetFileNameWithoutExtension(legacyName));
 
-		return stems.Any(stem => SafeExtensions.Any(extension => File.Exists(Path.Combine(folder, stem + extension))));
+		string? latestPath = null;
+		var latestTimestamp = DateTimeOffset.MinValue;
+		foreach (var stem in stems)
+		{
+			foreach (var extension in SafeExtensions)
+			{
+				var path = Path.Combine(folder, stem + extension);
+				if (!File.Exists(path))
+				{
+					continue;
+				}
+
+				var timestamp = TryGetDownloadedAtUtc(path) ?? DateTimeOffset.MinValue;
+				if (latestPath is null || timestamp >= latestTimestamp)
+				{
+					latestPath = path;
+					latestTimestamp = timestamp;
+				}
+			}
+		}
+
+		return latestPath;
 	}
 
-	static DownloadFileResult DuplicateSkipped(string filename) =>
-		new(filename, Ok: false, Error: null, Skipped: true);
+	static DownloadFileResult DuplicateSkipped(string existingPath) =>
+		new(
+			Path.GetFileName(existingPath),
+			Ok: false,
+			Error: null,
+			Skipped: true,
+			DownloadedAtUtc: TryGetDownloadedAtUtc(existingPath));
 
-	static async Task<(string Filename, bool Skipped)> WriteUniqueFileAsync(
+	static DateTimeOffset? TryGetDownloadedAtUtc(string path)
+	{
+		try
+		{
+			return new DateTimeOffset(File.GetLastWriteTimeUtc(path), TimeSpan.Zero);
+		}
+		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+		{
+			return null;
+		}
+	}
+
+	static async Task<(string Filename, bool Skipped, DateTimeOffset? DownloadedAtUtc)> WriteUniqueFileAsync(
 		string folder,
 		string filename,
 		byte[] payload,
@@ -608,7 +652,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 			{
 				if (noDuplicates)
 				{
-					return (candidate, true);
+					return (candidate, true, TryGetDownloadedAtUtc(path));
 				}
 
 				continue;
@@ -622,7 +666,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 					await output.FlushAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				return (candidate, false);
+				return (candidate, false, TryGetDownloadedAtUtc(path));
 			}
 			catch
 			{
@@ -780,7 +824,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		string? RawUrl,
 		string? DataUri,
 		string? SvgMarkup);
-	sealed record DownloadFileResult(string Filename, bool Ok, string? Error, bool Skipped = false);
+	sealed record DownloadFileResult(string Filename, bool Ok, string? Error, bool Skipped = false, DateTimeOffset? DownloadedAtUtc = null);
 	sealed record MediaPayload(byte[] Bytes, string ContentType);
 
 	sealed class DownloadFailureException(string code) : Exception(code)

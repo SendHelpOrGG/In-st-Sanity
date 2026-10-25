@@ -14,6 +14,7 @@ namespace InStSanity.Platforms.Windows;
 internal static class WebViewBootstrapper
 {
 	static readonly ConditionalWeakTable<object, object> Hooked = new();
+	sealed record VideoDownloadHistoryContext(string Shortcode, int ContentIndex, int? ContentCount);
 
 	// Same-origin call Instagram's own web app makes; the x-ig-app-id header is the
 	// public one every browser session uses. Page scripts cannot see HttpOnly cookies,
@@ -104,11 +105,15 @@ internal static class WebViewBootstrapper
 		var deferral = args.GetDeferral();
 		try
 		{
+			// The native HTML-video menu remains in place. Capture which carousel tile
+			// started the download so its completion date can be attached to that tile.
+			var historyContext = await TryGetVideoDownloadHistoryContextAsync(core, args.DownloadOperation.Uri).ConfigureAwait(false);
+
 			// Hide WebView2's default dialog while we read the app's selected folder.
 			try { args.Handled = true; } catch { }
 			try
 			{
-				var result = await core.ExecuteScriptAsync("(()=>{try{return String(window.getConfiguredDownloadFolder?.()||'')}catch(e){return ''}})()");
+				var result = await core.ExecuteScriptAsync("(()=>{try{return String(window.getConfiguredDownloadFolder?.()||'')}catch(e){return ''}})()").ConfigureAwait(false);
 				var requestedFolder = JsonSerializer.Deserialize<string>(result);
 				if (string.IsNullOrWhiteSpace(requestedFolder))
 				{
@@ -125,15 +130,85 @@ internal static class WebViewBootstrapper
 			{
 				// Never let WebView2 silently fall back to its own Downloads folder.
 				try { args.Cancel = true; } catch { }
-				try { await core.ExecuteScriptAsync("window.toast?.('Video download canceled: could not use the folder selected in Settings')"); } catch { }
+				try { await core.ExecuteScriptAsync("window.toast?.('Video download canceled: could not use the folder selected in Settings')").ConfigureAwait(false); } catch { }
 				return;
 			}
 
-			try { await core.ExecuteScriptAsync("window.showVideoDownloadNotice?.()"); } catch { }
+			if (historyContext is not null)
+			{
+				var operation = args.DownloadOperation;
+				operation.StateChanged += (_, _) =>
+				{
+					if (operation.State != CoreWebView2DownloadState.Completed)
+					{
+						return;
+					}
+
+					try
+					{
+						var resultPath = operation.ResultFilePath;
+						var downloadedAtUtc = DateTimeOffset.UtcNow;
+						try
+						{
+							if (File.Exists(resultPath))
+							{
+								downloadedAtUtc = new DateTimeOffset(File.GetLastWriteTimeUtc(resultPath), TimeSpan.Zero);
+							}
+						}
+						catch
+						{
+							// Keep the completion time if the filesystem timestamp is unavailable.
+						}
+						var historyRecord = new
+						{
+							shortcode = historyContext.Shortcode,
+							contentIndex = historyContext.ContentIndex,
+							contentCount = historyContext.ContentCount,
+							downloadedAtUtc,
+							filename = Path.GetFileName(resultPath),
+						};
+						var recordJson = JsonSerializer.Serialize(historyRecord);
+						_ = core.ExecuteScriptAsync($"window.__recordVideoDownloadHistory?.({recordJson})");
+					}
+					catch
+					{
+						// History is best effort and must not interfere with the native download.
+					}
+				};
+			}
+
+			try { await core.ExecuteScriptAsync("window.showVideoDownloadNotice?.()").ConfigureAwait(false); } catch { }
 		}
 		finally
 		{
 			deferral.Complete();
+		}
+	}
+
+	static async Task<VideoDownloadHistoryContext?> TryGetVideoDownloadHistoryContextAsync(CoreWebView2 core, string sourceUrl)
+	{
+		try
+		{
+			var sourceJson = JsonSerializer.Serialize(sourceUrl);
+			var result = await core.ExecuteScriptAsync($"window.__getVideoDownloadHistoryContext?.({sourceJson})||null").ConfigureAwait(false);
+			using var document = JsonDocument.Parse(result);
+			var root = document.RootElement;
+			if (root.ValueKind != JsonValueKind.Object ||
+				!root.TryGetProperty("shortcode", out var shortcodeValue) || shortcodeValue.ValueKind != JsonValueKind.String ||
+				!root.TryGetProperty("contentIndex", out var contentIndexValue) || !contentIndexValue.TryGetInt32(out var contentIndex) || contentIndex < 0)
+			{
+				return null;
+			}
+
+			int? contentCount = root.TryGetProperty("contentCount", out var countValue) &&
+				countValue.ValueKind == JsonValueKind.Number && countValue.TryGetInt32(out var parsedCount) && parsedCount > 0
+				? parsedCount
+				: null;
+			return new VideoDownloadHistoryContext(shortcodeValue.GetString()!, contentIndex, contentCount);
+		}
+		catch
+		{
+			return null;
 		}
 	}
 

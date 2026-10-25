@@ -112,6 +112,7 @@ public static class MauiProgram
 			asAttachment: true));
 
 		builder.Services.AddSingleton<IApiEndpoint, DownloadSelectedEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, DownloadHistoryEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ResizeUploadEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ResizeConvertEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenDownloadFolderEndpoint>();

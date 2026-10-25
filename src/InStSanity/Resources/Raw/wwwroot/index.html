@@ -205,6 +205,14 @@ body .card.selected,body .picture-tile.chosen{border-color:var(--t-accent);box-s
 body .selected-mark,body .chosen .picture-tick{background:var(--t-btn-bg);color:var(--t-btn-ink)}
 body .chosen .picture-tick{border:2px solid #ffffff;box-shadow:0 0 0 2px rgba(0,0,0,.34),0 4px 14px rgba(0,0,0,.38)}
 body .post-count{background:var(--t-count-bg);border:1px solid var(--t-count-border);color:var(--t-count-ink);font-weight:600}
+.download-history-mark{position:absolute;top:10px;right:10px;z-index:5;display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:27px;padding:4px 8px;border:1px solid var(--t-count-border,rgba(255,255,255,.35));border-radius:8px;background:var(--t-count-bg,rgba(11,15,20,.88));color:var(--t-count-ink,#fff);font-size:10px;font-weight:700;line-height:1;white-space:nowrap;backdrop-filter:blur(10px);box-shadow:0 3px 12px rgba(0,0,0,.28);pointer-events:none}
+.download-history-mark svg{display:block;width:14px;height:14px;flex:0 0 14px;color:var(--t-accent,#5eead4)}
+.download-history-item-mark{top:48px;right:10px;min-height:25px;padding:4px 7px;font-size:9px;z-index:4}
+.download-history-mark .download-history-date{font-weight:600;color:var(--t-ink,#fff);opacity:.92}
+.download-history-mark .download-history-count{font-variant-numeric:tabular-nums}
+.download-status-hidden .download-history-mark{display:none!important}
+#downloadHistoryToggleBtn.active{color:var(--t-accent,#5eead4);border-color:var(--t-accent,#5eead4)}
+
 body .status{background:var(--t-card-bg);border-color:var(--t-accent);color:var(--t-ink)}
 body .opacity-slider{accent-color:var(--t-accent)}
 body main,body .detail-grid{scrollbar-color:var(--t-accent) #11151a}
@@ -774,11 +782,12 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <div class="filters toolbar-row toolbar-row-top" role="group" aria-label="Post filters and visibility">
           <button class="filter active" id="allPostsFilter" onclick="setFilter(this,'all')">All Posts</button>
           <button type="button" class="filter icon-filter-btn source-toggle-button" id="librarySourceToggleBtn" data-role="source-toggle" onclick="toggleSourceBadges()" title="Hide source labels" aria-label="Hide source labels" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          <button type="button" class="filter icon-filter-btn source-toggle-button" id="downloadHistoryToggleBtn" data-role="download-history-toggle" onclick="toggleDownloadHistoryVisibility()" title="Hide download history marks" aria-label="Hide download history marks" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2.5 12.5 3.3 3.3L12.5 8"/><path d="m9.5 12.5 3.3 3.3L21 7.5"/></svg></button>
           <button type="button" class="filter icon-filter-btn source-toggle-button" id="libraryVideoToggleBtn" data-role="video-toggle" onclick="toggleVideoVisibility()" title="Hide videos" aria-label="Hide videos" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="M15 10l5-3v10l-5-3z"/></svg></button>
         </div>
         <div class="filters toolbar-row toolbar-row-selection" role="group" aria-label="Post selection actions">
           <button class="filter" id="selectedFilter" onclick="setFilter(this,'selected')">Selected (<span id="selectedPostCount">0/0</span>)</button>
-          <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectAllCollectionBtn" title="Select every photo across all pages in the collection" aria-label="Select every photo across all pages in the collection" onclick="selectAllCollectionPhotos()" disabled><svg viewBox="-1 0 26 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 16a4.5 4.5 0 1 1 0-8c4.5 0 7.5 8 11 8a4.5 4.5 0 1 0 0-8c-4.5 0-7.5 8-11 8"/></svg></button>
+          <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectAllCollectionBtn" title="Temporarily disabled to avoid collection-wide image-count lookups" aria-label="Select every photo across all pages in the collection (temporarily unavailable)" onclick="selectAllCollectionPhotos()" aria-disabled="true" disabled><svg viewBox="-1 0 26 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 16a4.5 4.5 0 1 1 0-8c4.5 0 7.5 8 11 8a4.5 4.5 0 1 0 0-8c-4.5 0-7.5 8-11 8"/></svg></button>
           <button type="button" class="filter icon-filter-btn scope-selection-btn" id="selectCurrentPageBtn" title="Select all photos on this page; click again to deselect when all are selected" aria-label="Toggle selection of all photos on the current page" onclick="selectCurrentPagePhotos()" disabled><svg viewBox="0 0 24 24" width="13.73" height="13.73" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.1" fill="currentColor" fill-opacity=".08"/><text x="12" y="17" text-anchor="middle" font-family="system-ui,Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="currentColor" stroke="none">1</text></svg></button>
           <button type="button" class="filter icon-filter-btn" id="deselectAllBtn" title="Deselect all posts" aria-label="Deselect all posts" onclick="clearAllSelections()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><line x1="8" y1="16" x2="16" y2="8"/></svg></button>
           <span id="srcStatusNote" class="src-status-note" title="Source labels are resolved as posts are viewed"></span>
@@ -1150,7 +1159,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.150; open version history" title="Click to view what changed in each version">v.1.150</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.151; open version history" title="Click to view what changed in each version">v.1.151</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1307,6 +1316,39 @@ function isNoDuplicatesEnabled(){return Boolean(getUiPref('noDuplicates',true))}
 function syncNoDuplicatesButton(){const button=document.getElementById('noDuplicatesBtn');if(!button)return;const enabled=isNoDuplicatesEnabled();button.textContent=`No duplicates: ${enabled?'On':'Off'}`;button.classList.toggle('active',enabled);button.setAttribute('aria-pressed',String(enabled))}
 function toggleNoDuplicates(){setUiPref('noDuplicates',!isNoDuplicatesEnabled());syncNoDuplicatesButton()}
 loadUiPrefs();
+const DOWNLOAD_HISTORY_KEY='stillSane.downloadHistoryV1';
+const DOWNLOAD_HISTORY_CHECKS_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2.5 12.5 3.3 3.3L12.5 8"/><path d="m9.5 12.5 3.3 3.3L21 7.5"/></svg>';
+function loadDownloadHistory(){try{const parsed=JSON.parse(localStorage.getItem(DOWNLOAD_HISTORY_KEY)||'{}');if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))return Object.create(null);const clean=Object.create(null);for(const [key,value] of Object.entries(parsed)){if(!key||!value||typeof value!=='object')continue;const normalizedKey=String(key).toLowerCase();const entry={shortcode:String(value.shortcode||key),contentCount:Number(value.contentCount)||0,photos:Object.create(null),videos:Object.create(null)};for(const [index,item] of Object.entries(value.photos||{})){if(!/^\d+$/.test(index)||!item||typeof item!=='object')continue;entry.photos[index]={downloadedAtUtc:String(item.downloadedAtUtc||''),filename:String(item.filename||'')}}for(const [index,item] of Object.entries(value.videos||{})){if(!/^\d+$/.test(index)||!item||typeof item!=='object')continue;entry.videos[index]={downloadedAtUtc:String(item.downloadedAtUtc||''),filename:String(item.filename||'')}}clean[normalizedKey]=entry}return clean}catch(_){return Object.create(null)}}
+let downloadHistory=loadDownloadHistory();
+let showDownloadHistory=Boolean(getUiPref('showDownloadHistory',true));
+let downloadHistorySyncTimer=0;
+let downloadHistorySyncPromise=null;
+let downloadHistorySyncPending=false;
+let downloadHistoryForcePending=false;
+let downloadHistoryLastSyncKey='';
+function saveDownloadHistory(){try{localStorage.setItem(DOWNLOAD_HISTORY_KEY,JSON.stringify(downloadHistory))}catch(_){}}
+function getDownloadHistoryEntry(shortcode,create=false){const key=String(shortcode||'').trim().toLowerCase();if(!key)return null;let entry=downloadHistory[key];if(!entry&&create){entry={shortcode:String(shortcode),contentCount:0,photos:Object.create(null),videos:Object.create(null)};downloadHistory[key]=entry}if(entry){if(!entry.photos||typeof entry.photos!=='object')entry.photos=Object.create(null);if(!entry.videos||typeof entry.videos!=='object')entry.videos=Object.create(null)}return entry||null}
+function getPostContentCountForHistory(post){if(!post)return null;const entry=getDownloadHistoryEntry(post.shortcode,false);const storedCount=Math.floor(Number(entry?.contentCount)||0);if(storedCount>0)return storedCount;const known=Boolean(post.summaryResolved||post.fullResolved||post.serverResolved||post.confirmedSingleMedia||Array.isArray(post.seedSpec)||(post.mediaLoaded&&Array.isArray(post.pictures)&&post.pictures.length>0&&!needsFullCarouselResolution(post)));if(!known)return null;const counts=getPostMediaCounts(post);const total=Math.floor(Number(counts.photoCount)||0)+Math.floor(Number(counts.videoCount)||0);return total>0?total:null}
+function getDownloadHistoryLastRecord(entry){if(!entry)return null;let latest=null;for(const item of [...Object.values(entry.photos||{}),...Object.values(entry.videos||{})]){const value=String(item?.downloadedAtUtc||'');const time=Date.parse(value);if(Number.isFinite(time)&&(!latest||time>latest.time))latest={time,value,filename:String(item?.filename||'')}}return latest}
+function formatDownloadHistoryDate(value){const date=new Date(value);if(!Number.isFinite(date.getTime()))return'';try{return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric'}).format(date)}catch(_){return date.toLocaleDateString('en-US',{month:'short',day:'numeric'})}}
+function renderPostDownloadHistoryMark(post){const entry=getDownloadHistoryEntry(post?.shortcode,false);if(!entry)return'';const photoCount=Object.keys(entry.photos||{}).length;const videoCount=Object.keys(entry.videos||{}).length;const downloadedCount=photoCount+videoCount;if(!downloadedCount)return'';const latest=getDownloadHistoryLastRecord(entry);const date=latest?formatDownloadHistoryDate(latest.value):'';const total=getPostContentCountForHistory(post);const countText=`${downloadedCount}/${total||'?'}`;const description=`${downloadedCount} of ${total||'an unknown number of'} media items downloaded${date?` · Latest ${date}`:''}`;return`<span class="download-history-mark" title="${escapeHtml(description)}"><span class="download-history-count">${countText}</span>${DOWNLOAD_HISTORY_CHECKS_SVG}${date?`<span class="download-history-date">${escapeHtml(date)}</span>`:''}</span>`}
+function getPostPhotoOrdinal(post,contentIndex){if(!post||!Array.isArray(post.pictures)||!Number.isInteger(contentIndex)||contentIndex<0)return contentIndex;let ordinal=0;for(let index=0;index<contentIndex&&index<post.pictures.length;index++){if(post.pictures[index]&&!post.pictures[index].isVideo)ordinal++}return ordinal}
+function renderMediaDownloadHistoryMark(post,pic,contentIndex){const entry=getDownloadHistoryEntry(post?.shortcode,false);if(!entry||!pic)return'';const item=pic.isVideo?entry.videos?.[String(contentIndex)]:entry.photos?.[String(getPostPhotoOrdinal(post,contentIndex))];if(!item)return'';const date=formatDownloadHistoryDate(item.downloadedAtUtc);if(!date)return'';const kind=pic.isVideo?'video':'photo';const title=`${kind==='video'?'Video':'Photo'} last downloaded ${date}`;return`<span class="download-history-mark download-history-item-mark" title="${escapeHtml(title)}">${DOWNLOAD_HISTORY_CHECKS_SVG}<span class="download-history-date">${escapeHtml(date)}</span></span>`}
+function recordPhotoDownloadHistory(item,file){if(!item||!file||(!file.ok&&!file.skipped))return false;const shortcode=String(item.shortcode||'').trim();const photoIndex=Number(item.photoIndex);if(!shortcode||!Number.isInteger(photoIndex)||photoIndex<0)return false;const downloadedAtUtc=String(file.downloadedAtUtc||file.lastWriteTimeUtc||(file.ok?new Date().toISOString():''));if(!downloadedAtUtc||!Number.isFinite(Date.parse(downloadedAtUtc)))return false;const entry=getDownloadHistoryEntry(shortcode,true);const key=String(photoIndex);const current=entry.photos[key];if(!current||Date.parse(downloadedAtUtc)>=Date.parse(current.downloadedAtUtc||'')||!Number.isFinite(Date.parse(current.downloadedAtUtc||'')))entry.photos[key]={downloadedAtUtc,filename:String(file.filename||item.filename||'')};const contentCount=Math.floor(Number(item.contentCount)||0);if(contentCount>0)entry.contentCount=contentCount;return true}
+function recordVideoDownloadHistory(data){if(!data||typeof data!=='object')return false;const shortcode=String(data.shortcode||'').trim();const contentIndex=Number(data.contentIndex);const downloadedAtUtc=String(data.downloadedAtUtc||'');if(!shortcode||!Number.isInteger(contentIndex)||contentIndex<0||!Number.isFinite(Date.parse(downloadedAtUtc)))return false;const entry=getDownloadHistoryEntry(shortcode,true);const key=String(contentIndex);const current=entry.videos[key];const currentTime=Date.parse(current?.downloadedAtUtc||'');if(!current||!Number.isFinite(currentTime)||Date.parse(downloadedAtUtc)>=currentTime)entry.videos[key]={downloadedAtUtc,filename:String(data.filename||'')};const contentCount=Math.floor(Number(data.contentCount)||0);if(contentCount>0)entry.contentCount=contentCount;saveDownloadHistory();refreshDownloadHistoryUi([shortcode]);return true}
+function mergeDownloadHistorySnapshot(snapshot){const source=snapshot?.history;if(!source||typeof source!=='object')return false;let changed=false;for(const [rawShortcode,value] of Object.entries(source)){const shortcode=String(value?.shortcode||rawShortcode);const entry=getDownloadHistoryEntry(shortcode,true);for(const [name,target] of [['photos',entry.photos],['videos',entry.videos]]){const records=Array.isArray(value?.[name])?value[name]:[];for(const record of records){const index=Number(name==='photos'?record?.photoIndex:record?.contentIndex);const downloadedAtUtc=String(record?.downloadedAtUtc||'');if(!Number.isInteger(index)||index<0||!Number.isFinite(Date.parse(downloadedAtUtc)))continue;const key=String(index);const current=target[key];const currentTime=Date.parse(current?.downloadedAtUtc||'');if(!current||!Number.isFinite(currentTime)||Date.parse(downloadedAtUtc)>=currentTime){target[key]={downloadedAtUtc,filename:String(record?.filename||'')};changed=true}}}const contentCount=Math.floor(Number(value?.contentCount)||0);if(contentCount>0&&contentCount!==Number(entry.contentCount)){entry.contentCount=contentCount;changed=true}}return changed}
+function getDownloadHistorySyncKey(folder){const postKey=`${activeImportFileName||''}|${lastImportedJsonHash||''}|${posts.length}|${String(urlTabPost?.shortcode||'').toLowerCase()}`;return`${folder}|${postKey}`}
+function scheduleDownloadHistorySync(force=false){if(!showDownloadHistory||(!posts.length&&!urlTabPost))return;if(downloadHistorySyncTimer)clearTimeout(downloadHistorySyncTimer);downloadHistorySyncTimer=setTimeout(()=>{downloadHistorySyncTimer=0;syncDownloadHistoryFromFolder(force)},250)}
+async function syncDownloadHistoryFromFolder(force=false){if(downloadHistorySyncPromise){downloadHistorySyncPending=true;if(force)downloadHistoryForcePending=true;return}if(!showDownloadHistory||(!posts.length&&!urlTabPost))return;const folder=String(getConfiguredDownloadFolder()||'~/Pictures/Instagram');const syncKey=getDownloadHistorySyncKey(folder);if(!force&&syncKey===downloadHistoryLastSyncKey)return;const shortcodes=[...new Set([...posts.map(post=>String(post?.shortcode||'').trim()),String(urlTabPost?.shortcode||'').trim()].filter(Boolean))];if(!shortcodes.length)return;downloadHistoryLastSyncKey=syncKey;downloadHistorySyncPromise=(async()=>{let result=null;for(const endpoint of getApiUrls('/api/download-history')){result=await fetchEndpointJson(endpoint,30000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder,shortcodes})});if(result)break}if(!result?.ok){if(downloadHistoryLastSyncKey===syncKey)downloadHistoryLastSyncKey='';return}if(mergeDownloadHistorySnapshot(result)){saveDownloadHistory();refreshDownloadHistoryUi(shortcodes)}})();try{await downloadHistorySyncPromise}catch(_){if(downloadHistoryLastSyncKey===syncKey)downloadHistoryLastSyncKey=''}finally{downloadHistorySyncPromise=null;const shouldSyncAgain=downloadHistorySyncPending||downloadHistoryForcePending;const forceAgain=downloadHistoryForcePending;downloadHistorySyncPending=false;downloadHistoryForcePending=false;if(shouldSyncAgain)scheduleDownloadHistorySync(forceAgain)}}
+function refreshDownloadHistoryUi(shortcodes){const wanted=new Set((Array.isArray(shortcodes)?shortcodes:[shortcodes]).map(value=>String(value||'').toLowerCase()).filter(Boolean));if(!wanted.size)return;const affected=[];posts.forEach((post,index)=>{if(wanted.has(String(post?.shortcode||'').toLowerCase()))affected.push(index)});if(affected.length){if(filter==='selected')render();else affected.forEach(index=>updateCardInDom(index))}if(currentPost>=0&&wanted.has(String(posts[currentPost]?.shortcode||'').toLowerCase()))renderDetail();if(urlTabPost&&wanted.has(String(urlTabPost.shortcode||'').toLowerCase()))renderSaveUrlTab()}
+function syncDownloadHistoryVisibility(){document.body.classList.toggle('download-status-hidden',!showDownloadHistory);document.querySelectorAll('[data-role="download-history-toggle"]').forEach(button=>{const label=showDownloadHistory?'Hide download history marks':'Show download history marks';button.classList.toggle('active',showDownloadHistory);button.title=label;button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(showDownloadHistory))})}
+function toggleDownloadHistoryVisibility(){showDownloadHistory=!showDownloadHistory;setUiPref('showDownloadHistory',showDownloadHistory);syncDownloadHistoryVisibility();if(showDownloadHistory)scheduleDownloadHistorySync(true)}
+window.__recordVideoDownloadHistory=recordVideoDownloadHistory;
+function getVideoDownloadContextForElement(video){const tile=video?.closest?.('.picture-tile');if(!tile)return null;const contentIndex=Number(tile.dataset.slide);if(!Number.isInteger(contentIndex)||contentIndex<0)return null;const post=tile.closest('#saveUrlGrid')?urlTabPost:(currentPost>=0?posts[currentPost]:null);if(!post?.shortcode)return null;const sourceUrls=[video.currentSrc,video.src,video.dataset.rawVideo,...Array.from(video.querySelectorAll('source')).map(source=>source.src)].filter(Boolean);return{shortcode:String(post.shortcode),contentIndex,contentCount:getPostContentCountForHistory(post),sourceUrls}}
+let lastVideoDownloadHistoryContext=null;
+function getVideoDownloadHistoryContext(sourceUrl){const wanted=String(sourceUrl||'');const normalize=value=>{try{return new URL(String(value||''),location.href).href}catch(_){return String(value||'')}};const target=normalize(wanted);const videos=Array.from(document.querySelectorAll('#detailGrid video,#saveUrlGrid video'));const match=videos.find(video=>[video.currentSrc,video.src,video.dataset.rawVideo,...Array.from(video.querySelectorAll('source')).map(source=>source.src)].some(value=>value&&normalize(value)===target));const found=match?getVideoDownloadContextForElement(match):null;if(found){lastVideoDownloadHistoryContext=found;return found}return lastVideoDownloadHistoryContext?.sourceUrls?.some(value=>normalize(value)===target)?lastVideoDownloadHistoryContext:null}
+window.__getVideoDownloadHistoryContext=getVideoDownloadHistoryContext;
+document.addEventListener('contextmenu',event=>{const video=event.target?.closest?.('video');if(video){const context=getVideoDownloadContextForElement(video);if(context)lastVideoDownloadHistoryContext=context}},true);
 const SIDEBAR_COLLAPSE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 9l-3 3 3 3"/></svg>';
 const SIDEBAR_EXPAND_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M12 9l3 3-3 3"/></svg>';
 function syncSidebarToggle(hidden){const button=document.getElementById('railToggle');if(!button)return;const label=hidden?'Show sidebar':'Hide sidebar';button.innerHTML=hidden?SIDEBAR_EXPAND_ICON:SIDEBAR_COLLAPSE_ICON;button.title=label;button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(hidden))}
@@ -1351,6 +1393,8 @@ function escapeHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'
 function wrapProxiedImageUrl(rawUrl,isThumb=false){if(!rawUrl)return '';if(rawUrl.startsWith('data:'))return rawUrl;if(rawUrl.startsWith('https://wsrv.nl/')){const m=rawUrl.match(/[?&]url=([^&]+)/);rawUrl=m?decodeURIComponent(m[1]):rawUrl}return `/api/image?url=${encodeURIComponent(rawUrl)}${isThumb?'&w=480':''}`}
 const coverErrorInFlight=new Set();const coverErrorAttempted=new Set();const coverResolveQueue=[];let activeCoverResolves=0;const MAX_CONCURRENT_COVER_RESOLVES=2;
 function pumpCoverResolveQueue(){
+  // Keep the single-post cover-error fallback: it repairs only the failed visible cover,
+  // not a page or collection count pass. Full media resolution still requires opening the post.
   while(activeCoverResolves<MAX_CONCURRENT_COVER_RESOLVES&&coverResolveQueue.length>0){
     const lower=coverResolveQueue.shift();
     const sessionGeneration=instagramSessionGeneration;
@@ -1439,7 +1483,6 @@ function handleVideoError(el){
   const post=currentPost>=0?posts[currentPost]:null;if(!post)return;
   (async()=>{await resolveSinglePostVisual(post,true);renderDetail()})();
 }
-let pageWarmToken=0;
 function scheduleNextPageWarm(){
   const run=()=>{try{warmNextPage()}catch(_){}};
   if(typeof window.requestIdleCallback==='function')window.requestIdleCallback(run,{timeout:2500});
@@ -1457,103 +1500,6 @@ function warmNextPage(){
       try{fetch(wrapProxiedImageUrl(raw,true),{cache:'force-cache'}).catch(()=>{})}catch(_){}
     }
   });
-  const unresolved=nxt.filter(p=>p&&p.url&&p.shortcode&&!String(p.shortcode).startsWith('Post #')&&needsSummaryResolution(p)&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken&&!clientSummaryCache[String(p.shortcode||'').toLowerCase()]);
-  if(!unresolved.length)return;
-  const token=++pageWarmToken;
-  unresolved.forEach(p=>{p._summaryResolveToken=token});
-  (async()=>{try{await resolvePostsBatchChunk(unresolved,token,null,true)}finally{unresolved.forEach(p=>{if(p._summaryResolveToken===token)p._summaryResolveToken=0})}})();
-}
-let collectionSummaryResolutionRunning=false;
-let collectionSummaryResolutionList=null;
-let collectionSummaryRetryTimer=0;
-let collectionSummaryRetryList=null;
-let collectionSummaryRateLimitPauseMs=30000;
-const COLLECTION_SUMMARY_RATE_LIMIT_RETRY_MS=10*60*1000;
-const COLLECTION_SUMMARY_RATE_LIMIT_PAUSE_INITIAL_MS=30000;
-const COLLECTION_SUMMARY_RATE_LIMIT_PAUSE_MAX_MS=5*60*1000;
-// Refresh card-sized counts in batches only; this never loads carousel photos.
-function resolveCollectionSummariesInBackground(){
-  if(collectionSummaryResolutionRunning||!activeImportFileName||!posts.length)return null;
-  const collection=posts;
-  collectionSummaryResolutionRunning=true;
-  return (async()=>{
-    try{
-      let cachedChanged=false;
-      collection.forEach((post,index)=>{
-        if(!post)return;
-        post._idx=index;
-        const shortcode=String(post.shortcode||'').toLowerCase();
-        const cachedSummary=shortcode?clientSummaryCache[shortcode]:null;
-        if(cachedSummary&&needsSummaryResolution(post)&&applyPostSummaryData(post,cachedSummary))cachedChanged=true;
-      });
-      if(cachedChanged){scheduleSaveImportedPostsState();render()}
-      while(activeImportFileName&&posts===collection&&collection.length){
-        if(currentPageSummaryController){await new Promise(resolve=>setTimeout(resolve,250));continue}
-        const pendingPosts=[];
-        let waitingForInFlight=false;
-        collection.forEach((post,index)=>{
-          if(!post||currentPost===index||!post.url||!post.shortcode||String(post.shortcode).startsWith('Post #'))return;
-          post._idx=index;
-          if(!needsSummaryResolution(post)||summaryResolutionCoolingDown(post))return;
-          if(post._summaryResolveToken){waitingForInFlight=true;return}
-          pendingPosts.push(post);
-        });
-        if(!pendingPosts.length){
-          if(waitingForInFlight){await new Promise(resolve=>setTimeout(resolve,120));continue}
-          break;
-        }
-        const chunk=pendingPosts.slice(0,2);
-        const token={};
-        chunk.forEach(post=>post._summaryResolveToken=token);
-        const sessionGeneration=instagramSessionGeneration;
-        let batchResolved=false;
-        try{
-          batchResolved=await resolvePostsBatchChunk(chunk,token,null,true,true);
-        }catch(_){}
-        finally{
-          let needsPersist=false;
-          const attemptedAt=Date.now();
-          chunk.forEach(post=>{
-            if(!post)return;
-            if(post._summaryResolveToken===token)post._summaryResolveToken=0;
-            if(sessionGeneration!==instagramSessionGeneration||!Number.isInteger(post._idx)||posts[post._idx]!==post)return;
-            if(needsSummaryResolution(post)){
-              post.summaryAttemptedAt=attemptedAt;
-              needsPersist=true;
-            }else{
-              post.summaryAttemptedAt=0;
-            }
-          });
-          if(needsPersist)scheduleSaveImportedPostsState();
-        }
-        const batchRateLimited=chunk.some(post=>String(post?.resolveFailedReason||'')==='http_429');
-        const rateLimitPauseMs=batchRateLimited?collectionSummaryRateLimitPauseMs:0;
-        collectionSummaryRateLimitPauseMs=batchRateLimited?Math.min(collectionSummaryRateLimitPauseMs*2,COLLECTION_SUMMARY_RATE_LIMIT_PAUSE_MAX_MS):COLLECTION_SUMMARY_RATE_LIMIT_PAUSE_INITIAL_MS;
-        if(!batchResolved&&sessionGeneration===instagramSessionGeneration)break;
-        const pauseUntil=Date.now()+(batchRateLimited?rateLimitPauseMs:800);
-        while(activeImportFileName&&posts===collection&&Date.now()<pauseUntil){
-          await new Promise(resolve=>setTimeout(resolve,Math.min(1000,pauseUntil-Date.now())));
-        }
-      }
-    }finally{
-      collectionSummaryResolutionRunning=false;
-      if(collectionSummaryRetryTimer&&collectionSummaryRetryList!==posts){clearTimeout(collectionSummaryRetryTimer);collectionSummaryRetryTimer=0;collectionSummaryRetryList=null}
-      if(activeImportFileName&&posts.length&&posts!==collection){
-        collectionSummaryResolutionList=posts;
-        resolveCollectionSummariesInBackground();
-      }else if(activeImportFileName&&posts===collection&&collection.some(post=>post&&needsSummaryResolution(post)&&String(post.resolveFailedReason||'')==='http_429')&&!collectionSummaryRetryTimer){
-        collectionSummaryRetryList=collection;
-        collectionSummaryRetryTimer=setTimeout(()=>{
-          collectionSummaryRetryTimer=0;
-          collectionSummaryRetryList=null;
-          if(!activeImportFileName||posts!==collection)return;
-          collection.forEach(post=>{if(post&&needsSummaryResolution(post)&&String(post.resolveFailedReason||'')==='http_429'){post.summaryAttemptedAt=0;post.resolveFailedReason=''}});
-          scheduleSaveImportedPostsState();
-          resolveCollectionSummariesInBackground();
-        },COLLECTION_SUMMARY_RATE_LIMIT_RETRY_MS);
-      }
-    }
-  })();
 }
 function handlePostImageError(imgEl,sc){if(!imgEl)return;const fb=imgEl.dataset.fallback||'';const mfb=imgEl.dataset.mediaFallback||'';if(fb&&imgEl.src!==fb&&!imgEl.dataset.triedFallback){imgEl.dataset.triedFallback='1';imgEl.src=fb;return}if(mfb&&imgEl.src!==mfb&&!imgEl.dataset.triedMediaFallback){imgEl.dataset.triedMediaFallback='1';imgEl.src=mfb;return}if(imgEl.src!==COVER_FALLBACK_DATA_URI)imgEl.src=COVER_FALLBACK_DATA_URI;if(sc)triggerCoverErrorResolution(sc)}
 function getCardCoverKey(p){if(!p)return 'none';const cover=String(p.coverThumbnailUrl||p.coverUrl||'');const fail=p.resolveFailedReason?`|fail:${p.resolveFailedReason}`:'';if(typeof p.coverArtIndex==='number'&&!cover)return `art:${p.coverArtIndex}${fail}`;if(cover)return `url:${cover}|full:${p.coverUrl||''}${fail}`;return `fallback${fail}`}
@@ -1717,6 +1663,7 @@ function toggleVideoVisibility(){
 }
 function initSourceBadges(){
   applySourceVisibility();
+  syncDownloadHistoryVisibility();
   try{document.body.classList.toggle('videos-hidden',hideVideos)}catch(_){}
   updateAllCardSrcBadges();
   updateTileSrcBadges();
@@ -1799,11 +1746,11 @@ function buildPostMetaHtml(post,badgeSummary,suffix){
 }
 function formatMediaBadge(p){const {photoCount,videoCount}=getPostMediaCounts(p);const parts=[];if(photoCount>0)parts.push(`▧ ${photoCount} photo${photoCount===1?'':'s'}`);if(videoCount>0)parts.push(`▶ ${videoCount} video${videoCount===1?'':'s'}`);return parts.length?parts.join(' · '):'▧ 1 photo'}
 const MINI_CHECKMARK_SVG='<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:12px!important;height:12px!important;display:block;flex-shrink:0"><path d="M4.6 12.4c-.5-.5-.5-1.3 0-1.8.5-.5 1.4-.5 1.9 0l3.2 2.9c3.1-3.4 6.4-6.3 9.8-8.6.5-.3 1.1.2.8.8-2.6 3.9-5.8 7.8-9.7 11.7-.6.6-1.5.6-2.1 0L4.6 12.4z"/></svg>';
-function buildCardHtml(p,idx){const chosen=getPostSelectedCount(p);const badgeText=formatMediaBadge(p);const coverKey=getCardCoverKey(p);return `<article class="card ${chosen?'selected':''} ${throwLandedPostIndices.has(String(idx))?'card-throw-landed':''}" data-post-index="${idx}" data-cover-key="${escapeHtml(coverKey)}" onclick="openPost(${idx})" oncontextmenu="event.preventDefault();selectAllPostPhotos(${idx})"><div class="photo"><div class="photo-media" style="width:100%;height:100%">${renderCardCoverMarkup(p)}</div><span class="selected-mark" style="display:${chosen?'inline-flex':'none'}">${MINI_CHECKMARK_SVG}<span>${chosen} picked</span></span><span class="post-count">${badgeText}</span><span class="src-badge card-src-badge" data-role="src-badge" data-kind="unknown" title="Where the media came from: Direct = read from Instagram's own HTML, API = save-free.net had to supply it, Mixed = both (or photos + videos)">—</span></div><div class="card-info"><div class="card-meta-row"><span class="detail-meta-label card-meta-label">Account</span><span class="detail-meta-value card-meta-value card-account" title="${escapeHtml(buildPostAccountText(p))}">${escapeHtml(buildPostAccountText(p))}</span></div><div class="card-meta-row"><span class="detail-meta-label card-meta-label">Posted</span><span class="detail-meta-value card-meta-value card-posted" title="${escapeHtml(buildPostMetaText(p,'',''))}">${buildCardPostedHtml(p)}</span></div></div></article>`}
+function buildCardHtml(p,idx){const chosen=getPostSelectedCount(p);const badgeText=formatMediaBadge(p);const coverKey=getCardCoverKey(p);return `<article class="card ${chosen?'selected':''} ${throwLandedPostIndices.has(String(idx))?'card-throw-landed':''}" data-post-index="${idx}" data-cover-key="${escapeHtml(coverKey)}" onclick="openPost(${idx})" oncontextmenu="event.preventDefault();selectAllPostPhotos(${idx})"><div class="photo"><div class="photo-media" style="width:100%;height:100%">${renderCardCoverMarkup(p)}</div>${renderPostDownloadHistoryMark(p)}<span class="selected-mark" style="display:${chosen?'inline-flex':'none'}">${MINI_CHECKMARK_SVG}<span>${chosen} picked</span></span><span class="post-count">${badgeText}</span><span class="src-badge card-src-badge" data-role="src-badge" data-kind="unknown" title="Where the media came from: Direct = read from Instagram's own HTML, API = save-free.net had to supply it, Mixed = both (or photos + videos)">—</span></div><div class="card-info"><div class="card-meta-row"><span class="detail-meta-label card-meta-label">Account</span><span class="detail-meta-value card-meta-value card-account" title="${escapeHtml(buildPostAccountText(p))}">${escapeHtml(buildPostAccountText(p))}</span></div><div class="card-meta-row"><span class="detail-meta-label card-meta-label">Posted</span><span class="detail-meta-value card-meta-value card-posted" title="${escapeHtml(buildPostMetaText(p,'',''))}">${buildCardPostedHtml(p)}</span></div></div></article>`}
 function clearAllSelections(){const had=posts.some(p=>getPostSelectedCount(p)>0);posts.forEach(post=>{if(!post)return;if(Array.isArray(post.pictures)&&post.pictures.length)post.pictures.forEach(pic=>{if(pic&&!pic.isVideo)pic.selected=false});post.selectedIndices=[];post.allPhotosSelected=false});scheduleSaveImportedPostsState();render();loadCurrentPagePosts();updateToolbarCounts();if(currentPost>=0)renderDetail();if(had)toast('Selection cleared')}
 function setPostPhotosSelected(post,selected){if(!post)return 0;const photoCount=getPostSelectablePhotoCount(post);if(photoCount<=0){if(!selected){post.allPhotosSelected=false;post.selectedIndices=[]}return 0}post.allPhotosSelected=Boolean(selected);if(post.mediaLoaded&&Array.isArray(post.pictures)&&post.pictures.length){post.pictures.forEach(pic=>{if(pic&&!pic.isVideo)pic.selected=selected});syncPostSelectedIndicesFromPictures(post)}else{post.selectedIndices=selected?Array.from({length:photoCount},(_,index)=>index):[]}return photoCount}
 function setPhotosSelectedForPosts(indices,message,selected=true){const seen=new Set();let photosSelected=0;for(const rawIndex of indices){const index=Number(rawIndex);if(!Number.isInteger(index)||seen.has(index)||index<0||index>=posts.length)continue;seen.add(index);photosSelected+=setPostPhotosSelected(posts[index],selected)}if(!photosSelected)return 0;scheduleSaveImportedPostsState();render();if(currentPost>=0)renderDetail();if(message)toast(message);return photosSelected}
-function selectAllCollectionPhotos(){if(!posts.length)return;const selectedCount=setPhotosSelectedForPosts(posts.map((_,index)=>index),'Selected all photos in the collection');if(selectedCount>0)resolveCollectionSummariesInBackground()}
+function selectAllCollectionPhotos(){return}
 function selectCurrentPagePhotos(){const list=getFilteredSortedPosts();const start=(currentPage-1)*PAGE_SIZE;const indices=list.slice(start,start+PAGE_SIZE).map(post=>post?._idx).filter(index=>Number.isInteger(index));if(!indices.length)return;const photoPosts=indices.map(index=>posts[index]).filter(post=>post&&getPostSelectablePhotoCount(post)>0);if(!photoPosts.length)return;const allPhotosSelected=photoPosts.every(post=>getPostSelectedCount(post)>=getPostSelectablePhotoCount(post));const select=!allPhotosSelected;setPhotosSelectedForPosts(indices,select?'Selected all photos on this page':'Deselected all photos on this page',select)}
 function updateAllPostsCollectionTotal(){
   const button=document.getElementById('allPostsFilter');
@@ -1814,24 +1761,12 @@ function updateAllPostsCollectionTotal(){
     button.setAttribute('aria-label','Show all posts');
     return;
   }
-  let confirmedPhotoCount=0;
-  let unresolvedCount=0;
-  posts.forEach(post=>{
-    if(!post)return;
-    if(needsSummaryResolution(post)){unresolvedCount++;return}
-    const photoCount=Number(getPostMediaCounts(post).photoCount);
-    if(Number.isFinite(photoCount))confirmedPhotoCount+=Math.max(0,Math.floor(photoCount));
-  });
-  const photoCountLabel=`${confirmedPhotoCount}${unresolvedCount?'+':''}`;
-  button.textContent=`All Posts (${posts.length}/${photoCountLabel})`;
-  const totalStatus=unresolvedCount
-    ?`${confirmedPhotoCount} confirmed photos; ${unresolvedCount} post${unresolvedCount===1?'':'s'} without a confirmed photo count`
-    :`${confirmedPhotoCount} photos`;
-  button.title=`${posts.length} posts · ${totalStatus}`;
-  button.setAttribute('aria-label',`All Posts: ${posts.length} posts, ${totalStatus}`);
+  button.textContent=`All Posts (${posts.length})`;
+  button.title=`${posts.length} posts`;
+  button.setAttribute('aria-label',`All Posts: ${posts.length} posts`);
 }
-function updateToolbarCounts(){updateAllPostsCollectionTotal();const selPosts=countSelectedPosts();const selTotal=countSelected();const spc=document.getElementById('selectedPostCount');if(spc)spc.textContent=`${selPosts}/${selTotal}`;const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const upBtn=document.getElementById('uploadJsonToolbarBtn');if(upBtn)upBtn.style.display=hasJsonLoaded?'none':'inline-flex';const b=document.getElementById('downloadBtn');if(b){b.style.display=hasJsonLoaded?'inline-flex':'none';const canDownload=hasJsonLoaded&&selTotal>0&&!downloadRunActive;b.disabled=!canDownload;b.style.opacity=canDownload?'1':'.45';b.style.cursor=canDownload?'pointer':'not-allowed';b.style.pointerEvents=canDownload?'auto':'none';b.setAttribute('aria-disabled',canDownload?'false':'true')}const openFolderBtn=document.getElementById('openDownloadFolderBtn');if(openFolderBtn)openFolderBtn.style.display=hasJsonLoaded?'grid':'none';const collectionBtn=document.getElementById('selectAllCollectionBtn');if(collectionBtn){const canSelectCollection=hasJsonLoaded&&posts.some(post=>getPostSelectablePhotoCount(post)>0);collectionBtn.disabled=!canSelectCollection;collectionBtn.setAttribute('aria-disabled',String(!canSelectCollection))}const pageBtn=document.getElementById('selectCurrentPageBtn');if(pageBtn){const pageHasPhotos=Array.from(document.querySelectorAll('#postGrid article.card[data-post-index]')).some(card=>{const index=Number(card.dataset.postIndex);return Number.isInteger(index)&&Boolean(posts[index])&&getPostSelectablePhotoCount(posts[index])>0});const canSelectPage=hasJsonLoaded&&pageHasPhotos;pageBtn.disabled=!canSelectPage;pageBtn.setAttribute('aria-disabled',String(!canSelectPage))}const deselectBtn=document.getElementById('deselectAllBtn');if(deselectBtn){deselectBtn.disabled=selTotal<=0;deselectBtn.setAttribute('aria-disabled',String(selTotal<=0))}}
-function updateCardInDom(idx){const p=posts[idx];if(!p)return;p._idx=idx;updateToolbarCounts();if(filter==='selected'){render();return}const card=document.querySelector(`#postGrid article.card[data-post-index="${idx}"]`);if(!card)return;const chosen=getPostSelectedCount(p);card.classList.toggle('selected',chosen>0);const coverKey=getCardCoverKey(p);if(card.dataset.coverKey!==coverKey){card.dataset.coverKey=coverKey;const mediaEl=card.querySelector('.photo-media');if(mediaEl)mediaEl.innerHTML=renderCardCoverMarkup(p)}const selMark=card.querySelector('.selected-mark');if(selMark){selMark.style.display=chosen?'inline-flex':'none';if(chosen)selMark.innerHTML=`${MINI_CHECKMARK_SVG}<span>${chosen} picked</span>`}const countEl=card.querySelector('.post-count');if(countEl)countEl.textContent=formatMediaBadge(p);const cardAcct=card.querySelector('.card-account');if(cardAcct){const at=buildPostAccountText(p);cardAcct.textContent=at;cardAcct.title=at}const cardPosted=card.querySelector('.card-posted');if(cardPosted){const pt=buildPostMetaText(p,'','');cardPosted.innerHTML=buildCardPostedHtml(p);cardPosted.title=pt}updateCardSrcBadge(idx)}
+function updateToolbarCounts(){updateAllPostsCollectionTotal();const selPosts=countSelectedPosts();const selTotal=countSelected();const spc=document.getElementById('selectedPostCount');if(spc)spc.textContent=`${selPosts}/${selTotal}`;const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const upBtn=document.getElementById('uploadJsonToolbarBtn');if(upBtn)upBtn.style.display=hasJsonLoaded?'none':'inline-flex';const b=document.getElementById('downloadBtn');if(b){b.style.display=hasJsonLoaded?'inline-flex':'none';const canDownload=hasJsonLoaded&&selTotal>0&&!downloadRunActive;b.disabled=!canDownload;b.style.opacity=canDownload?'1':'.45';b.style.cursor=canDownload?'pointer':'not-allowed';b.style.pointerEvents=canDownload?'auto':'none';b.setAttribute('aria-disabled',canDownload?'false':'true')}const openFolderBtn=document.getElementById('openDownloadFolderBtn');if(openFolderBtn)openFolderBtn.style.display=hasJsonLoaded?'grid':'none';const collectionBtn=document.getElementById('selectAllCollectionBtn');if(collectionBtn){collectionBtn.disabled=true;collectionBtn.setAttribute('aria-disabled','true')}const pageBtn=document.getElementById('selectCurrentPageBtn');if(pageBtn){const pageHasPhotos=Array.from(document.querySelectorAll('#postGrid article.card[data-post-index]')).some(card=>{const index=Number(card.dataset.postIndex);return Number.isInteger(index)&&Boolean(posts[index])&&getPostSelectablePhotoCount(posts[index])>0});const canSelectPage=hasJsonLoaded&&pageHasPhotos;pageBtn.disabled=!canSelectPage;pageBtn.setAttribute('aria-disabled',String(!canSelectPage))}const deselectBtn=document.getElementById('deselectAllBtn');if(deselectBtn){deselectBtn.disabled=selTotal<=0;deselectBtn.setAttribute('aria-disabled',String(selTotal<=0))}}
+function updateCardInDom(idx){const p=posts[idx];if(!p)return;p._idx=idx;updateToolbarCounts();if(filter==='selected'){render();return}const card=document.querySelector(`#postGrid article.card[data-post-index="${idx}"]`);if(!card)return;const chosen=getPostSelectedCount(p);card.classList.toggle('selected',chosen>0);const coverKey=getCardCoverKey(p);if(card.dataset.coverKey!==coverKey){card.dataset.coverKey=coverKey;const mediaEl=card.querySelector('.photo-media');if(mediaEl)mediaEl.innerHTML=renderCardCoverMarkup(p)}const photoEl=card.querySelector('.photo');if(photoEl){photoEl.querySelector('.download-history-mark:not(.download-history-item-mark)')?.remove();const historyMark=renderPostDownloadHistoryMark(p);if(historyMark)photoEl.insertAdjacentHTML('beforeend',historyMark)}const selMark=card.querySelector('.selected-mark');if(selMark){selMark.style.display=chosen?'inline-flex':'none';if(chosen)selMark.innerHTML=`${MINI_CHECKMARK_SVG}<span>${chosen} picked</span>`}const countEl=card.querySelector('.post-count');if(countEl)countEl.textContent=formatMediaBadge(p);const cardAcct=card.querySelector('.card-account');if(cardAcct){const at=buildPostAccountText(p);cardAcct.textContent=at;cardAcct.title=at}const cardPosted=card.querySelector('.card-posted');if(cardPosted){const pt=buildPostMetaText(p,'','');cardPosted.innerHTML=buildCardPostedHtml(p);cardPosted.title=pt}updateCardSrcBadge(idx)}
 function buildLibraryEmptyState(hasJsonLoaded){
   if(!hasJsonLoaded)return '<div class="empty">No saved posts loaded yet. Click <b>Upload JSON</b> above to import your Instagram posts.</div>';
   if(bgIndexRunning)return `<div class="empty">Searching across all ${posts.length} posts… Indexing account names (${posts.filter(p=>p&&(p.ownerResolved||p._bgOwnerAttempted)).length}/${posts.length}).</div>`;
@@ -1840,7 +1775,7 @@ function buildLibraryEmptyState(hasJsonLoaded){
   if(query&&posts.some(post=>needsOwnerResolution(post)))return '<div class="empty">No matching posts yet. Account names are not fetched at startup. <button class="outline" style="margin-top:12px" onclick="startBackgroundAllPostsIndexing()">Search account names across all posts</button></div>';
   return '<div class="empty">No posts found across your list. Try a different search.</div>';
 }
-function render(){const list=getFilteredSortedPosts();const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const footerBar=document.getElementById('libraryFooter');if(footerBar)footerBar.style.display=hasJsonLoaded?'flex':'none';const totalFiltered=list.length;const totalPages=Math.max(1,Math.ceil(totalFiltered/PAGE_SIZE));if(currentPage>totalPages)currentPage=totalPages;if(currentPage<1)currentPage=1;const startIdx=(currentPage-1)*PAGE_SIZE;const pageItems=list.slice(startIdx,startIdx+PAGE_SIZE);document.getElementById('postGrid').innerHTML=pageItems.length?pageItems.map(p=>buildCardHtml(p,p._idx)).join(''):buildLibraryEmptyState(hasJsonLoaded);if(typeof updateAllCardSrcBadges==='function')updateAllCardSrcBadges();if(typeof updateSrcStatusNote==='function')updateSrcStatusNote();const pag=document.getElementById('paginationBar');if(pag)pag.innerHTML=hasJsonLoaded?buildPaginationHtml(totalFiltered,totalPages,startIdx):'';updateToolbarCounts();updateAllCardSrcBadges()}
+function render(){const list=getFilteredSortedPosts();const hasJsonLoaded=Boolean(activeImportFileName&&posts.length>0);const footerBar=document.getElementById('libraryFooter');if(footerBar)footerBar.style.display=hasJsonLoaded?'flex':'none';const totalFiltered=list.length;const totalPages=Math.max(1,Math.ceil(totalFiltered/PAGE_SIZE));if(currentPage>totalPages)currentPage=totalPages;if(currentPage<1)currentPage=1;const startIdx=(currentPage-1)*PAGE_SIZE;const pageItems=list.slice(startIdx,startIdx+PAGE_SIZE);document.getElementById('postGrid').innerHTML=pageItems.length?pageItems.map(p=>buildCardHtml(p,p._idx)).join(''):buildLibraryEmptyState(hasJsonLoaded);if(typeof updateAllCardSrcBadges==='function')updateAllCardSrcBadges();if(typeof updateSrcStatusNote==='function')updateSrcStatusNote();const pag=document.getElementById('paginationBar');if(pag)pag.innerHTML=hasJsonLoaded?buildPaginationHtml(totalFiltered,totalPages,startIdx):'';updateToolbarCounts();updateAllCardSrcBadges();if(showDownloadHistory)scheduleDownloadHistorySync()}
 function isVideoCdnUrl(url){if(!url)return false;const u=String(url);if(u.includes('.mp4')||u.includes('/o1/v/t'))return true;const m=u.match(/[?&]efg=([^&"'\s]+)/);if(m){try{const raw=decodeURIComponent(m[1]);if(/dmlkZW8|LnZpZGVv|X3ZpZGVv|Q0xJUFM|IkNMSVBT/.test(raw))return true;const b64=raw.replace(/-/g,'+').replace(/_/g,'/');const dec=atob(b64+'='.repeat((4-b64.length%4)%4)).toLowerCase();if(dec.includes('video')||dec.includes('clips.'))return true}catch(_){}}return false}
 function isVideoHtml(html){if(!html)return false;return /PlayButtonSprite|WatchOnInstagram|EmbeddedMediaVideo|property=["']og:video|content=["']video|Instagram\s+reel|instagram\.com\/(?:[^/"'?#]+\/)?(?:reel|reels|tv)\//i.test(String(html))}
 function hasOnlyUnresolvedMediaUrl(post){if(!post)return true;if(typeof post.coverArtIndex==='number'&&!post.coverUrl)return false;const u=String(post.coverUrl||post.pictures?.[0]?.rawUrl||post.pictures?.[0]?.imgUrl||'');return !u}
@@ -1916,7 +1851,7 @@ function openPhotoFullSize(event,slideIdx,isUrlTab=false){if(event)event.stopPro
 function closePhotoFullSize(){const modal=document.getElementById('photoFullSizeModal');const mediaEl=document.getElementById('photoFullSizeMedia');try{ resetPhotoZoom(); }catch(_){} if(mediaEl){mediaEl.querySelectorAll('img').forEach(im=>{try{im.src=''}catch(_){}});mediaEl.innerHTML=''; mediaEl.classList.remove('zoomed');}if(modal)modal.classList.remove('show')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(document.getElementById('photoFullSizeModal')?.classList.contains('show')){e.stopPropagation();closePhotoFullSize()}else if(document.getElementById('uploadJsonModal')?.classList.contains('show')){e.stopPropagation();closeUploadJsonModal()}else if(document.getElementById('jsonNoticeModal')?.classList.contains('show')){e.stopPropagation();closeJsonNoticeModal()}else if(document.getElementById('logoutConfirmModal')?.classList.contains('show')){e.stopPropagation();dismissLogoutConfirm()}}});
 const CHECKMARK_SVG='<svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="position:static!important;inset:auto!important;width:21px!important;height:21px!important;margin:auto!important;display:block!important;pointer-events:none"><path d="M4.6 12.4c-.5-.5-.5-1.3 0-1.8.5-.5 1.4-.5 1.9 0l3.2 2.9c3.1-3.4 6.4-6.3 9.8-8.6.5-.3 1.1.2.8.8-2.6 3.9-5.8 7.8-9.7 11.7-.6.6-1.5.6-2.1 0L4.6 12.4z"/></svg>';
-function renderDetail(){if(currentPost<0)return;let _postRaw=posts[currentPost]; if(hideVideos && _postRaw){ const _hasVideo=_postRaw.pictures?.some(p=>p.isVideo); const _hasImage=_postRaw.pictures?.some(p=>!p.isVideo); if(_hasVideo && !_hasImage){document.getElementById('detailGrid').innerHTML='<div class="empty" style="grid-column:1/-1;padding:42px 20px">Video content hidden — toggle the video button to show</div>';return;} } const post=posts[currentPost];if(!post)return;document.getElementById('detailTitle').textContent=post.title;const badgeSummary=formatMediaBadge(post);const isLoadingMedia=Boolean(!post.mediaLoaded||(post.loading&&needsFullCarouselResolution(post)));const loadingSuffix=isLoadingMedia?' · Loading all photos & videos…':'';const titleEl=document.getElementById('detailTitle');const fullCapText=String(post.fullCaption||post.title||'');titleEl.textContent=fullCapText||'Post title';titleEl.title=fullCapText;const acctText=buildPostAccountText(post);const acctEl=document.getElementById('detailAccount');acctEl.textContent=acctText;acctEl.title=acctText;const metaText=buildPostMetaText(post,badgeSummary,loadingSuffix);const metaEl=document.getElementById('detailMeta');metaEl.innerHTML=buildPostMetaHtml(post,badgeSummary,loadingSuffix);metaEl.title=metaText;const selected=getPostSelectedCount(post);document.getElementById('detailUrl').value=post.url;document.getElementById('detailSelected').textContent=selected;try{const dl=document.getElementById('detailDownloadBtn'); if(dl){ dl.style.display = selected>0 ? 'inline-flex' : 'none'; dl.innerHTML = '<svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download'; dl.disabled = !(selected>0)||downloadRunActive; dl.style.opacity = selected>0&&!downloadRunActive ? '1' : '.55'; }}catch(_){}const {photoCount:selectableCount,videoCount:totalVideos}=getPostMediaCounts(post);const totalExpected=Math.max(1,selectableCount+totalVideos);document.getElementById('selectAllButton').textContent=selectableCount>0&&selected===selectableCount?'Clear selection':'Select all photos';if(!post.mediaLoaded||!Array.isArray(post.pictures)||!post.pictures.length){const detailGrid=document.getElementById('detailGrid');if(post.resolveFailedReason&&!post.loading){const failureReason=String(post.resolveFailedReason||'');const failureText='The resolver returned no target-matched media (reason: '+escapeHtml(failureReason)+').';detailGrid.innerHTML=`<div class="empty" style="grid-column:1/-1;padding:42px 20px"><b>Full-size media unavailable.</b><br>${failureText} Open the post in Instagram to view the original.<div style="margin-top:12px"><button type="button" class="outline" onclick="event.stopPropagation();openInstagramBrowser(posts[${currentPost}].url)">Open in Instagram browser</button></div></div>`}else{detailGrid.innerHTML=`<div class="empty" style="grid-column:1/-1;padding:42px 20px">Loading ${escapeHtml(badgeSummary)} for this post…</div>`}return}const zoomBtnSvg='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:static!important;inset:auto!important;width:21px!important;height:21px!important;margin:auto!important;display:block!important;pointer-events:none"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';document.getElementById('detailGrid').innerHTML=(hideVideos?post.pictures.filter(p=>!p.isVideo):post.pictures).map((pic,j)=>`<article class="picture-tile ${pic.selected?'chosen':''} ${pic.isVideo?'is-video':''}" data-slide="${j}" onclick="togglePicture(${j})"><div class="picture-art">${renderPictureMarkup(pic,post,j,true)}<span class="picture-num">${pic.isVideo?`▶ Video ${j+1} of ${Math.max(post.pictures.length,totalExpected)}`:`Photo ${j+1} of ${Math.max(post.pictures.length,totalExpected)}`}</span>${pic.isVideo&&!pic.videoUrl?'<span class="video-stamp">▶ &nbsp; VIDEO CLIP</span>':''}<span class="picture-tick">${pic.selected?CHECKMARK_SVG:''}</span><span class="src-badge tile-src-badge" data-role="src-badge" data-kind="unknown" title="Where this file came from: Direct = read from Instagram's own HTML, API = save-free.net had to supply it">—</span>${!pic.isVideo?`<button type="button" class="picture-zoom-btn" title="Open photo in full size" aria-label="Open photo in full size" onclick="openPhotoFullSize(event,${j},false)">${zoomBtnSvg}</button>`:''}</div></article>`).join('');updateTileSrcBadges()}
+function renderDetail(){if(currentPost<0)return;let _postRaw=posts[currentPost]; if(hideVideos && _postRaw){ const _hasVideo=_postRaw.pictures?.some(p=>p.isVideo); const _hasImage=_postRaw.pictures?.some(p=>!p.isVideo); if(_hasVideo && !_hasImage){document.getElementById('detailGrid').innerHTML='<div class="empty" style="grid-column:1/-1;padding:42px 20px">Video content hidden — toggle the video button to show</div>';return;} } const post=posts[currentPost];if(!post)return;document.getElementById('detailTitle').textContent=post.title;const badgeSummary=formatMediaBadge(post);const isLoadingMedia=Boolean(!post.mediaLoaded||(post.loading&&needsFullCarouselResolution(post)));const loadingSuffix=isLoadingMedia?' · Loading all photos & videos…':'';const titleEl=document.getElementById('detailTitle');const fullCapText=String(post.fullCaption||post.title||'');titleEl.textContent=fullCapText||'Post title';titleEl.title=fullCapText;const acctText=buildPostAccountText(post);const acctEl=document.getElementById('detailAccount');acctEl.textContent=acctText;acctEl.title=acctText;const metaText=buildPostMetaText(post,badgeSummary,loadingSuffix);const metaEl=document.getElementById('detailMeta');metaEl.innerHTML=buildPostMetaHtml(post,badgeSummary,loadingSuffix);metaEl.title=metaText;const selected=getPostSelectedCount(post);document.getElementById('detailUrl').value=post.url;document.getElementById('detailSelected').textContent=selected;try{const dl=document.getElementById('detailDownloadBtn'); if(dl){ dl.style.display = selected>0 ? 'inline-flex' : 'none'; dl.innerHTML = '<svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download'; dl.disabled = !(selected>0)||downloadRunActive; dl.style.opacity = selected>0&&!downloadRunActive ? '1' : '.55'; }}catch(_){}const {photoCount:selectableCount,videoCount:totalVideos}=getPostMediaCounts(post);const totalExpected=Math.max(1,selectableCount+totalVideos);document.getElementById('selectAllButton').textContent=selectableCount>0&&selected===selectableCount?'Clear selection':'Select all photos';if(!post.mediaLoaded||!Array.isArray(post.pictures)||!post.pictures.length){const detailGrid=document.getElementById('detailGrid');if(post.resolveFailedReason&&!post.loading){const failureReason=String(post.resolveFailedReason||'');const failureText='The resolver returned no target-matched media (reason: '+escapeHtml(failureReason)+').';detailGrid.innerHTML=`<div class="empty" style="grid-column:1/-1;padding:42px 20px"><b>Full-size media unavailable.</b><br>${failureText} Open the post in Instagram to view the original.<div style="margin-top:12px"><button type="button" class="outline" onclick="event.stopPropagation();openInstagramBrowser(posts[${currentPost}].url)">Open in Instagram browser</button></div></div>`}else{detailGrid.innerHTML=`<div class="empty" style="grid-column:1/-1;padding:42px 20px">Loading ${escapeHtml(badgeSummary)} for this post…</div>`}return}const zoomBtnSvg='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:static!important;inset:auto!important;width:21px!important;height:21px!important;margin:auto!important;display:block!important;pointer-events:none"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';document.getElementById('detailGrid').innerHTML=getVisiblePostMediaEntries(post).map(({pic,contentIndex})=>`<article class="picture-tile ${pic.selected?'chosen':''} ${pic.isVideo?'is-video':''}" data-slide="${contentIndex}" onclick="togglePicture(${contentIndex})"><div class="picture-art">${renderPictureMarkup(pic,post,contentIndex,true)}<span class="picture-num">${pic.isVideo?`▶ Video ${contentIndex+1} of ${Math.max(post.pictures.length,totalExpected)}`:`Photo ${contentIndex+1} of ${Math.max(post.pictures.length,totalExpected)}`}</span>${pic.isVideo&&!pic.videoUrl?'<span class="video-stamp">▶ &nbsp; VIDEO CLIP</span>':''}<span class="picture-tick">${pic.selected?CHECKMARK_SVG:''}</span>${renderMediaDownloadHistoryMark(post,pic,contentIndex)}<span class="src-badge tile-src-badge" data-role="src-badge" data-kind="unknown" title="Where this file came from: Direct = read from Instagram's own HTML, API = save-free.net had to supply it">—</span>${!pic.isVideo?`<button type="button" class="picture-zoom-btn" title="Open photo in full size" aria-label="Open photo in full size" onclick="openPhotoFullSize(event,${contentIndex},false)">${zoomBtnSvg}</button>`:''}</div></article>`).join('');updateTileSrcBadges()}
 function openCurrentPost(){if(currentPost<0)return;window.open(posts[currentPost].url,'_blank','noopener,noreferrer')}function togglePicture(j){
   const post=posts[currentPost];
   const pic=post?.pictures?.[j];
@@ -1981,7 +1916,8 @@ function closePost(){closePhotoFullSize();const closedIdx=currentPost;const post
 function showSettingsTab(name,button){setUiPref('settingsTab',name);document.querySelector('main')?.scrollTo({top:0,behavior:'smooth'});document.querySelectorAll('.settings-tab').forEach(tab=>{const active=tab===button;tab.setAttribute('aria-selected',String(active));tab.setAttribute('class','settings-tab'+(active?' active':''))});document.querySelectorAll('.settings-tab-panel').forEach(panel=>panel.classList.toggle('active',panel.id==='settings-'+name))}function setFilter(el,f){filter=f;currentPage=1;document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));el.classList.add('active');render();loadCurrentPagePosts()}function filterSearch(){currentPage=1;render();loadCurrentPagePosts()}function showPage(p){let mode=p==='save-url'?'save-url':p==='settings'?'settings':p==='browser'?'browser':p==='resizer'?'resizer':'library';if(mode==='settings'&&document.getElementById('settingsPage').style.display==='block')mode='library';document.getElementById('libraryPage').style.display=mode==='library'?'block':'none';const saveUrlEl=document.getElementById('saveUrlPage');if(saveUrlEl)saveUrlEl.style.display=mode==='save-url'?'block':'none';document.getElementById('settingsPage').style.display=mode==='settings'?'block':'none';document.getElementById('browserPage').style.display=mode==='browser'?'block':'none';const resizerEl=document.getElementById('resizerPage');if(resizerEl)resizerEl.style.display=mode==='resizer'?'block':'none';document.getElementById('libraryNav').classList.toggle('active',mode==='library');document.getElementById('saveUrlNav')?.classList.toggle('active',mode==='save-url');document.getElementById('settingsNav')?.classList.toggle('active',mode==='settings');document.getElementById('browserNav')?.classList.toggle('active',mode==='browser');document.getElementById('resizerNav')?.classList.toggle('active',mode==='resizer');document.getElementById('crumbText').textContent=mode==='settings'?'Settings':mode==='save-url'?'Save via URL':mode==='browser'?'Browser':mode==='resizer'?'Photo Resizer':'Saved Posts JSON';document.getElementById('crumbSub').textContent=mode==='settings'?'/ Preferences':mode==='save-url'?'/ Fetch a post by link':mode==='browser'?'/ Instagram':mode==='resizer'?'/ Resize images from a folder':'/ Your Instagram posts';if(mode==='browser'){startBrowserRegionWatch();startBrowserStateWatch();loadBrowserState()}else{stopBrowserRegionWatch();stopBrowserStateWatch();sendBrowserView({action:'hide'})}if(mode==='settings'||mode==='browser')loadInstagramSession();document.querySelector('main').scrollTo({top:0,behavior:'smooth'})}let urlTabPost=null;
 function saveUrlTabState(){try{localStorage.removeItem('stillSane.urlTabPostV3');localStorage.removeItem('stillSane.urlTabPostV2');localStorage.removeItem('stillSane.urlTabPostV1')}catch(_){}}
 function restoreUrlTabState(){try{localStorage.removeItem('stillSane.urlTabPostV3');localStorage.removeItem('stillSane.urlTabPostV2');localStorage.removeItem('stillSane.urlTabPostV1')}catch(_){}}
-function renderSaveUrlTab(){const grid=document.getElementById('saveUrlGrid');if(!grid)return;if(!urlTabPost){grid.innerHTML='';return}const post=urlTabPost;const badgeSummary=formatMediaBadge(post);const loadingSuffix=post.loading&&needsFullCarouselResolution(post)?' · Loading all photos & videos…':'';const accountText=buildPostAccountText(post);const metaText=buildPostMetaText(post,badgeSummary,loadingSuffix);const metaHtml=buildPostMetaHtml(post,badgeSummary,loadingSuffix);const selected=post.pictures.filter(x=>x.selected).length;const selectableCount=post.pictures.filter(x=>!x.isVideo).length;const selectBtnLabel=selectableCount>0&&selected===selectableCount?'Clear selection':'Select all photos';const zoomBtnSvg='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:static!important;inset:auto!important;width:21px!important;height:21px!important;margin:auto!important;display:block!important;pointer-events:none"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';const tilesHtml=(hideVideos?post.pictures.filter(p=>!p.isVideo):post.pictures).map((pic,j)=>`<article class="picture-tile ${pic.selected?'chosen':''} ${pic.isVideo?'is-video':''}" data-slide="${j}" onclick="toggleUrlTabPicture(${j})"><div class="picture-art">${renderPictureMarkup(pic,post,j,true)}<span class="picture-num">${pic.isVideo?`▶ Video ${j+1} of ${post.pictures.length}`:`Photo ${j+1} of ${post.pictures.length}`}</span>${pic.isVideo&&!pic.videoUrl?'<span class="video-stamp">▶ &nbsp; VIDEO CLIP</span>':''}<span class="picture-tick">${pic.selected?CHECKMARK_SVG:''}</span><span class="src-badge tile-src-badge" data-role="src-badge" data-kind="unknown" title="Where this file came from: Direct = read from Instagram's own HTML, API = save-free.net had to supply it">—</span>${!pic.isVideo?`<button type="button" class="picture-zoom-btn" title="Open photo in full size" aria-label="Open photo in full size" onclick="openPhotoFullSize(event,${j},true)">${zoomBtnSvg}</button>`:''}</div></article>`).join('');grid.innerHTML=`<section class="post-modal save-url-post-modal"><header class="detail-head"><div class="detail-heading"><div class="eyebrow">Instagram post</div><span class="detail-meta-label">Caption</span><h2>${escapeHtml(post.fullCaption||post.title)}</h2><div class="detail-meta-list"><div class="detail-meta-row"><span class="detail-meta-label">Account</span><span class="detail-meta-value">${escapeHtml(accountText)}</span></div><div class="detail-meta-row"><span class="detail-meta-label">Posted</span><span class="detail-meta-value">${metaHtml}</span></div></div></div><div class="detail-actions"><button type="button" class="outline source-toggle-button" data-role="video-toggle" onclick="toggleVideoVisibility()" title="Toggle video visibility" aria-label="Toggle video visibility" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="M15 10l5-3v10l-5-3z"/></svg></button><button class="primary detail-select-all" onclick="toggleUrlTabSelectAll()">${selectBtnLabel}</button><button class="primary download-toolbar" onclick="downloadUrlTabSelected()" style="opacity:${selected&&!downloadRunActive?1:.55}" ${selected&&!downloadRunActive?'':'disabled'}><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download${selected?` (${selected})`:''}</button><button type="button" class="icon-btn" title="Open download folder" aria-label="Open download folder" onclick="openDownloadFolder()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button></div></header><div class="post-url-bar"><div class="post-url-input" onclick="copyPostUrlInput(this.querySelector('input'))" title="Click to copy post URL"><span>POST URL</span><input value="${escapeHtml(post.url)}" readonly aria-label="Instagram post URL" title="Click to copy post URL" onclick="event.stopPropagation();copyPostUrlInput(this)"></div><button class="outline open-browser" onclick="if(urlTabPost)openInstagramBrowser(urlTabPost.url)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>Open in App</button><button class="outline open-browser" onclick="if(urlTabPost)window.open(urlTabPost.url,'_blank','noopener,noreferrer')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open in Browser</button></div><div class="detail-grid" style="max-height:none;overflow:visible">${tilesHtml}</div></section>`;applySourceVisibility();updateTileSrcBadges()}
+function getVisiblePostMediaEntries(post){return(post?.pictures||[]).map((pic,contentIndex)=>({pic,contentIndex})).filter(entry=>!hideVideos||!entry.pic?.isVideo)}
+function renderSaveUrlTab(){const grid=document.getElementById('saveUrlGrid');if(!grid)return;if(!urlTabPost){grid.innerHTML='';return}const post=urlTabPost;const badgeSummary=formatMediaBadge(post);const loadingSuffix=post.loading&&needsFullCarouselResolution(post)?' · Loading all photos & videos…':'';const accountText=buildPostAccountText(post);const metaText=buildPostMetaText(post,badgeSummary,loadingSuffix);const metaHtml=buildPostMetaHtml(post,badgeSummary,loadingSuffix);const selected=post.pictures.filter(x=>x.selected).length;const selectableCount=post.pictures.filter(x=>!x.isVideo).length;const selectBtnLabel=selectableCount>0&&selected===selectableCount?'Clear selection':'Select all photos';const zoomBtnSvg='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:static!important;inset:auto!important;width:21px!important;height:21px!important;margin:auto!important;display:block!important;pointer-events:none"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';const tilesHtml=getVisiblePostMediaEntries(post).map(({pic,contentIndex})=>`<article class="picture-tile ${pic.selected?'chosen':''} ${pic.isVideo?'is-video':''}" data-slide="${contentIndex}" onclick="toggleUrlTabPicture(${contentIndex})"><div class="picture-art">${renderPictureMarkup(pic,post,contentIndex,true)}<span class="picture-num">${pic.isVideo?`▶ Video ${contentIndex+1} of ${post.pictures.length}`:`Photo ${contentIndex+1} of ${post.pictures.length}`}</span>${pic.isVideo&&!pic.videoUrl?'<span class="video-stamp">▶ &nbsp; VIDEO CLIP</span>':''}<span class="picture-tick">${pic.selected?CHECKMARK_SVG:''}</span>${renderMediaDownloadHistoryMark(post,pic,contentIndex)}<span class="src-badge tile-src-badge" data-role="src-badge" data-kind="unknown" title="Where this file came from: Direct = read from Instagram's own HTML, API = save-free.net had to supply it">—</span>${!pic.isVideo?`<button type="button" class="picture-zoom-btn" title="Open photo in full size" aria-label="Open photo in full size" onclick="openPhotoFullSize(event,${contentIndex},true)">${zoomBtnSvg}</button>`:''}</div></article>`).join('');grid.innerHTML=`<section class="post-modal save-url-post-modal"><header class="detail-head"><div class="detail-heading"><div class="eyebrow">Instagram post</div><span class="detail-meta-label">Caption</span><h2>${escapeHtml(post.fullCaption||post.title)}</h2><div class="detail-meta-list"><div class="detail-meta-row"><span class="detail-meta-label">Account</span><span class="detail-meta-value">${escapeHtml(accountText)}</span></div><div class="detail-meta-row"><span class="detail-meta-label">Posted</span><span class="detail-meta-value">${metaHtml}</span></div></div></div><div class="detail-actions"><button type="button" class="outline source-toggle-button" data-role="video-toggle" onclick="toggleVideoVisibility()" title="Toggle video visibility" aria-label="Toggle video visibility" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="M15 10l5-3v10l-5-3z"/></svg></button><button class="primary detail-select-all" onclick="toggleUrlTabSelectAll()">${selectBtnLabel}</button><button class="primary download-toolbar" onclick="downloadUrlTabSelected()" style="opacity:${selected&&!downloadRunActive?1:.55}" ${selected&&!downloadRunActive?'':'disabled'}><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download${selected?` (${selected})`:''}</button><button type="button" class="icon-btn" title="Open download folder" aria-label="Open download folder" onclick="openDownloadFolder()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button></div></header><div class="post-url-bar"><div class="post-url-input" onclick="copyPostUrlInput(this.querySelector('input'))" title="Click to copy post URL"><span>POST URL</span><input value="${escapeHtml(post.url)}" readonly aria-label="Instagram post URL" title="Click to copy post URL" onclick="event.stopPropagation();copyPostUrlInput(this)"></div><button class="outline open-browser" onclick="if(urlTabPost)openInstagramBrowser(urlTabPost.url)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>Open in App</button><button class="outline open-browser" onclick="if(urlTabPost)window.open(urlTabPost.url,'_blank','noopener,noreferrer')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open in Browser</button></div><div class="detail-grid" style="max-height:none;overflow:visible">${tilesHtml}</div></section>`;applySourceVisibility();updateTileSrcBadges()}
 let videoDownloadNoticeTimer=0;function showPostDownloadNotice(message,persistent=false,hideAfterMs=2200){const overlay=document.getElementById('postDetail');const notice=document.getElementById('videoDownloadNotice');if(!overlay||!overlay.classList.contains('show')||!notice)return;clearTimeout(videoDownloadNoticeTimer);videoDownloadNoticeTimer=0;notice.textContent=message;notice.classList.add('show');if(!persistent)videoDownloadNoticeTimer=setTimeout(()=>{notice.classList.remove('show');videoDownloadNoticeTimer=0},hideAfterMs)}function showPhotoDownloadNotice(photoCount,persistent=false){const count=Math.max(0,Math.floor(Number(photoCount)||0));if(!count)return;showPostDownloadNotice(`Downloading ${count} photo${count===1?'':'s'}`,persistent)}function showVideoDownloadNotice(){if(!document.querySelector('#detailGrid video'))return;showPostDownloadNotice('Downloading video')}window.showVideoDownloadNotice=showVideoDownloadNotice;window.showPhotoDownloadNotice=showPhotoDownloadNotice;
 function toggleUrlTabPicture(j){if(!urlTabPost)return;const pic=urlTabPost.pictures[j];if(!pic)return;if(pic.isVideo){if(!pic.videoUrl)toast("This carousel item is a video, not a photo, so it cannot be selected for photo download.");return}pic.selected=!pic.selected;saveUrlTabState();renderSaveUrlTab()}
 function toggleUrlTabSelectAll(){if(!urlTabPost)return;const pics=urlTabPost.pictures.filter(p=>!p.isVideo);const select=pics.some(p=>!p.selected);pics.forEach(p=>p.selected=select);saveUrlTabState();renderSaveUrlTab()}
@@ -1991,6 +1927,7 @@ function buildDownloadItemsForPost(post,postIdx=0,selectedIndicesOverride=null){
   const selectedIndices=Array.isArray(selectedIndicesOverride)?new Set(selectedIndicesOverride):post.allPhotosSelected?new Set(Array.from({length:getPostSelectablePhotoCount(post)},(_,index)=>index)):null;
   const scRaw=post.shortcode||(post.url?(post.url.match(/\/(?:p|reel|reels|tv)\/([^/?#]+)/i)||[])[1]:'')||`post_${postIdx+1}`;
   const sc=String(scRaw).replace(/[^A-Za-z0-9._-]+/g,'_');
+  const contentCount=getPostContentCountForHistory(post);
   const items=[];
   if(post.mediaLoaded&&Array.isArray(post.pictures)&&post.pictures.length){
     let photoOrd=0;
@@ -2002,7 +1939,7 @@ function buildDownloadItemsForPost(post,postIdx=0,selectedIndicesOverride=null){
         const svgMarkup=artData.svgMarkup||'';
         const rawUrl=pic.rawUrl||pic.imgUrl||'';
         const ext=svgMarkup?'.svg':'.jpg';
-        items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,filename:`${sc}_${photoOrd+1}${ext}`,rawUrl,dataUri,svgMarkup});
+        items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,contentCount,filename:`${sc}_${photoOrd+1}${ext}`,rawUrl,dataUri,svgMarkup});
       }
       photoOrd++;
     }
@@ -2015,17 +1952,17 @@ function buildDownloadItemsForPost(post,postIdx=0,selectedIndicesOverride=null){
     if(typeof photoOrd!=='number'||photoOrd<0)continue;
     if(scLower==='dewe8ltizn2'){
       const artData=extractArtPayload(6+photoOrd);
-      items.push({shortcode:'DeWe8lTiZN2',postUrl:post.url||'',photoIndex:photoOrd,filename:`DeWe8lTiZN2_${photoOrd+1}.jpg`,rawUrl:'',dataUri:artData.dataUri,svgMarkup:''});
+      items.push({shortcode:'DeWe8lTiZN2',postUrl:post.url||'',photoIndex:photoOrd,contentCount,filename:`DeWe8lTiZN2_${photoOrd+1}.jpg`,rawUrl:'',dataUri:artData.dataUri,svgMarkup:''});
     }else if(Array.isArray(post.seedSpec)&&post.seedSpec.length){
       const nonVideoSpecs=post.seedSpec.filter(s=>s&&!s.isVideo);
       const spec=nonVideoSpecs[photoOrd];
       const artData=extractArtPayload(spec?.artIndex);
       const ext=artData.svgMarkup?'.svg':'.jpg';
-      items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,filename:`${sc}_${photoOrd+1}${ext}`,rawUrl:'',dataUri:artData.dataUri,svgMarkup:artData.svgMarkup});
+      items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,contentCount,filename:`${sc}_${photoOrd+1}${ext}`,rawUrl:'',dataUri:artData.dataUri,svgMarkup:artData.svgMarkup});
     }else{
       const coverRaw=post.coverUrl||'';
       const fallbackRaw=Boolean(post.fullResolved||post.serverResolved)&&!post.coverIsVideo&&(photoOrd===0||post.photoCount===1)?coverRaw:'';
-      items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,filename:`${sc}_${photoOrd+1}.jpg`,rawUrl:fallbackRaw,dataUri:'',svgMarkup:''});
+      items.push({shortcode:sc,postUrl:post.url||'',photoIndex:photoOrd,contentCount,filename:`${sc}_${photoOrd+1}.jpg`,rawUrl:fallbackRaw,dataUri:'',svgMarkup:''});
     }
   }
   return items;
@@ -2050,6 +1987,9 @@ async function performPhotoDownload(items){
     if(!result){backendUnavailable=true;unconfirmedCount=items.length-offset;break}
     if(typeof result.folder==='string'&&result.folder)targetFolder=result.folder;
     const files=Array.isArray(result.files)?result.files:[];
+    let historyChanged=false;
+    files.forEach((file,index)=>{if(index<batch.length&&recordPhotoDownloadHistory(batch[index],file))historyChanged=true});
+    if(historyChanged){saveDownloadHistory();refreshDownloadHistoryUi(batch.map(item=>item.shortcode))}
     const reportedSaved=Number(result.savedCount);
     const batchSaved=Number.isFinite(reportedSaved)?reportedSaved:files.filter(file=>file?.ok).length;
     const reportedDuplicatesSkipped=Number(result.skippedCount);
@@ -2123,7 +2063,7 @@ async function downloadUrlTabSelected(){
   }catch(_){finalMessage='Photo download stopped before completion'}
   finally{finishDownloadRun(finalMessage)}
 }
-let saveUrlAutoTimer=null;function onDirectPostUrlInput(){if(saveUrlAutoTimer)clearTimeout(saveUrlAutoTimer);const v=String((document.getElementById('directPostUrlInput')||{}).value||'').trim();if(!v)return;saveUrlAutoTimer=setTimeout(function(){savePostViaUrl(true)},600)}async function savePostViaUrl(auto){const input=document.getElementById('directPostUrlInput');const rawUrl=String(input?.value||'').trim();if(!/instagram\.com\/(?:share\/)?(?:[^/?#]+\/)?(?:p|reel|reels|tv)\/[^/?#]+/i.test(rawUrl)){if(!auto)toast('Please enter a valid Instagram post or reel URL');return}if(urlTabPost&&urlTabPost.url===rawUrl&&!urlTabPost.resolving&&(urlTabPost.loading||urlTabPost.resolved||urlTabPost.serverResolved)){return}urlTabPost=buildPostFromEntry({url:rawUrl,timestamp:Math.floor(Date.now()/1000)},0,true);renderSaveUrlTab();await resolveSinglePostVisual(urlTabPost,true);saveUrlTabState();renderSaveUrlTab()}function displayToastMessage(msg,hideAfterMs=2600,forceBody=false,downloadProgress=false){const t=document.getElementById('toast');if(!t)return;if(toastHideTimer){clearTimeout(toastHideTimer);toastHideTimer=0}t.textContent=msg;if(forceBody){if(t.parentNode!==document.body)document.body.appendChild(t)}else{const foot=document.getElementById('libraryFooter');const slot=document.getElementById('toastSlot');const inBar=Boolean(slot&&foot&&foot.getBoundingClientRect().height>0);if(inBar&&t.parentNode!==slot)slot.appendChild(t);else if(!inBar&&t.parentNode!==document.body)document.body.appendChild(t)}t.classList.toggle('download-progress',downloadProgress);t.classList.add('show');if(hideAfterMs>0)toastHideTimer=setTimeout(()=>{t.classList.remove('show');toastHideTimer=0},hideAfterMs)}function toast(msg){if(downloadProgressActive)return;displayToastMessage(msg)}function refreshDownloadControlStates(){updateToolbarCounts();if(currentPost>=0)renderDetail();if(document.getElementById('saveUrlPage')?.style.display==='block'&&urlTabPost)renderSaveUrlTab()}function setDownloadProgressMessage(message,detailMessage=''){downloadProgressActive=true;displayToastMessage(message,0,false,true);showPostDownloadNotice(detailMessage||message,true)}function beginDownloadRun(message,detailMessage=''){if(downloadRunActive)return false;downloadRunActive=true;downloadProgressActive=true;refreshDownloadControlStates();setDownloadProgressMessage(message,detailMessage);return true}function finishDownloadRun(message){downloadRunActive=false;downloadProgressActive=false;refreshDownloadControlStates();displayToastMessage(message,6500,false,true);showPostDownloadNotice(message,false,6500)}async function downloadSelected(){
+let saveUrlAutoTimer=null;function onDirectPostUrlInput(){if(saveUrlAutoTimer)clearTimeout(saveUrlAutoTimer);const v=String((document.getElementById('directPostUrlInput')||{}).value||'').trim();if(!v)return;saveUrlAutoTimer=setTimeout(function(){savePostViaUrl(true)},600)}async function savePostViaUrl(auto){const input=document.getElementById('directPostUrlInput');const rawUrl=String(input?.value||'').trim();if(!/instagram\.com\/(?:share\/)?(?:[^/?#]+\/)?(?:p|reel|reels|tv)\/[^/?#]+/i.test(rawUrl)){if(!auto)toast('Please enter a valid Instagram post or reel URL');return}if(urlTabPost&&urlTabPost.url===rawUrl&&!urlTabPost.resolving&&(urlTabPost.loading||urlTabPost.resolved||urlTabPost.serverResolved)){return}urlTabPost=buildPostFromEntry({url:rawUrl,timestamp:Math.floor(Date.now()/1000)},0,true);renderSaveUrlTab();scheduleDownloadHistorySync(true);await resolveSinglePostVisual(urlTabPost,true);saveUrlTabState();renderSaveUrlTab()}function displayToastMessage(msg,hideAfterMs=2600,forceBody=false,downloadProgress=false){const t=document.getElementById('toast');if(!t)return;if(toastHideTimer){clearTimeout(toastHideTimer);toastHideTimer=0}t.textContent=msg;if(forceBody){if(t.parentNode!==document.body)document.body.appendChild(t)}else{const foot=document.getElementById('libraryFooter');const slot=document.getElementById('toastSlot');const inBar=Boolean(slot&&foot&&foot.getBoundingClientRect().height>0);if(inBar&&t.parentNode!==slot)slot.appendChild(t);else if(!inBar&&t.parentNode!==document.body)document.body.appendChild(t)}t.classList.toggle('download-progress',downloadProgress);t.classList.add('show');if(hideAfterMs>0)toastHideTimer=setTimeout(()=>{t.classList.remove('show');toastHideTimer=0},hideAfterMs)}function toast(msg){if(downloadProgressActive)return;displayToastMessage(msg)}function refreshDownloadControlStates(){updateToolbarCounts();if(currentPost>=0)renderDetail();if(document.getElementById('saveUrlPage')?.style.display==='block'&&urlTabPost)renderSaveUrlTab()}function setDownloadProgressMessage(message,detailMessage=''){downloadProgressActive=true;displayToastMessage(message,0,false,true);showPostDownloadNotice(detailMessage||message,true)}function beginDownloadRun(message,detailMessage=''){if(downloadRunActive)return false;downloadRunActive=true;downloadProgressActive=true;refreshDownloadControlStates();setDownloadProgressMessage(message,detailMessage);return true}function finishDownloadRun(message){downloadRunActive=false;downloadProgressActive=false;refreshDownloadControlStates();displayToastMessage(message,6500,false,true);showPostDownloadNotice(message,false,6500)}async function downloadSelected(){
   if(downloadRunActive)return;
   if(!activeImportFileName||!posts.length||countSelected()<=0)return;
   const selectedPosts=posts.map((post,index)=>({post,index})).filter(entry=>getPostSelectedCount(entry.post)>0);
@@ -2415,64 +2355,6 @@ function saveImportedPostsState(){
 }
 function scheduleSaveImportedPostsState(){if(!activeImportFileName)return;if(saveStateTimer)clearTimeout(saveStateTimer);saveStateTimer=setTimeout(()=>saveImportedPostsState(),450)}
 async function restoreImportedPostsState(){const restoreGeneration=instagramSessionGeneration;let restored=false;try{try{const kindsRaw=localStorage.getItem('stillSane.sourceKindsV1');if(kindsRaw){window.__savedSourceKinds=JSON.parse(kindsRaw)||{}}}catch(_){}['V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12'].forEach(v=>localStorage.removeItem('stillSane.importedPosts'+v));const raw=localStorage.getItem('stillSane.importedPostsV13');if(raw){const saved=JSON.parse(raw);if(saved&&Array.isArray(saved.posts)&&saved.posts.length){activeImportFileName=saved.fileName||'imported.json';lastImportedJsonHash=String(saved.sourceHash||'');lastImportedJsonSavedAt=Number(saved.importedAt)||0;posts=saved.posts.map((p,idx)=>{const scLower=String(p.shortcode||'').toLowerCase();if(scLower==='dewe8ltizn2'){return{title:seeds[0][0],fullCaption:seeds[0][0],owner:'s0meii0',ownerFull:'소히 ソヒ',rawJsonText:p.rawJsonText||'',location:seeds[0][1],date:seeds[0][2],likes:seeds[0][3],url:p.url||seeds[0][4],shortcode:'DeWe8lTiZN2',savedAt:p.savedAt||(Date.now()-idx*60000),photoCount:9,videoCount:0,coverArtIndex:6,coverUrl:'',coverIsVideo:false,summaryResolved:true,mediaLoaded:false,selectedIndices:[],pictures:[]}}const legacyPics=Array.isArray(p.pictures)?p.pictures:[];const isReel=/\/(?:reel|reels|tv)\//i.test(String(p.url||''));let photoCount=typeof p.photoCount==='number'?p.photoCount:(legacyPics.length?legacyPics.filter(x=>!Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?0:1));let videoCount=typeof p.videoCount==='number'?p.videoCount:(legacyPics.length?legacyPics.filter(x=>Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?1:0));if(photoCount===0&&videoCount===0)photoCount=1;let selectedIndices=[];const srcCover=p.coverPic||legacyPics[0]||null;const rawCover=String(p.coverUrl||srcCover?.rawUrl||srcCover?.imgUrl||'');const validCover=rawCover;const coverIsVideo=Boolean(p.coverIsVideo||srcCover?.isVideo||isVideoCdnUrl(validCover)||(videoCount>0&&photoCount===0));const dateClean=p.date==='Loading…'?'Recently':(p.date||'Recently');const summaryResolved=Boolean((p.summaryResolved||p.fullResolved||legacyPics.length>1)&&validCover);const built={title:fixInstagramMojibake(p.title||`${isReel?'Instagram reel':'Instagram post'} · ${p.shortcode}`),fullCaption:fixInstagramMojibake(p.fullCaption||p.title||''),owner:fixInstagramMojibake(p.owner||''),ownerFull:fixInstagramMojibake(p.ownerFull||''),rawJsonText:fixInstagramMojibake(p.rawJsonText||''),location:fixInstagramMojibake(p.location||''),date:dateClean,likes:p.likes||'—',url:p.url,shortcode:p.shortcode,savedAt:p.savedAt||(Date.now()-idx*60000),photoCount,videoCount,coverUrl:validCover,coverThumbnailUrl:String(p.coverThumbnailUrl||''),coverIsVideo,summaryResolved,summaryAttemptedAt:Number(p.summaryAttemptedAt)||0,resolveFailedReason:String(p.resolveFailedReason||''),mediaLoaded:false,loading:false,selectedIndices,pictures:[]};if(scLower&&clientSummaryCache[scLower])applyPostSummaryData(built,clientSummaryCache[scLower]);return built});restored=true}}}catch(_){}if(!restored)for(const cacheUrl of getApiUrls('/api/cached-posts')){try{const data=await fetchEndpointJson(cacheUrl,10000);if(restoreGeneration!==instagramSessionGeneration)break;if(data){const bySc=data.resolvedByShortcode||data.by_shortcode||{};Object.entries(bySc).forEach(([k,v])=>{if(v&&(v.summaryResolved||v.fullResolved))clientSummaryCache[k.toLowerCase()]=v});if(!restored&&Array.isArray(data.entries)&&data.entries.length){activeImportFileName=data.fileName||'imported.json';posts=data.entries.map((entry,idx)=>buildPostFromEntry(entry,idx,false));restored=true}if(restored){posts.forEach((p,idx)=>{if(currentPost===idx)return;const k=String(p.shortcode||'').toLowerCase();if(k&&clientSummaryCache[k])applyPostSummaryData(p,clientSummaryCache[k])})}break}}catch(_){}}if(restored){if(instagramSessionResetPending)invalidateSavedPostResolutionData();scheduleSaveImportedPostsState();const summary=document.getElementById('jsonFileSummary');if(summary)summary.value=`${activeImportFileName} (${posts.length} post${posts.length===1?'':'s'})`;render();loadCurrentPagePosts();updateSrcStatusNote()}}
-async function resolvePostsBatchChunk(chunk,token,signal=null,isWarm=false,deferUiRefresh=false){
-  if(!chunk.length)return false;
-  const sessionGeneration=instagramSessionGeneration;
-  const urlsParam=chunk.map(p=>p.url).join(',');
-  const batchEndpoints=getApiUrls(`/api/resolve-batch?urls=${encodeURIComponent(urlsParam)}`);
-  for(const ep of batchEndpoints){
-    const data=await fetchEndpointJson(ep,16000,signal?{signal}:{});
-    if(sessionGeneration!==instagramSessionGeneration)return false;
-    if(!isWarm&&token!==currentPageLoadToken)return false;
-    if(data&&(data.byShortcode||Array.isArray(data.posts))){
-      const bySc=data.byShortcode||{};
-      if(Array.isArray(data.posts))data.posts.forEach(r=>{if(r&&r.shortcode)bySc[String(r.shortcode).toLowerCase()]=r});
-      let changed=false;
-      chunk.forEach(post=>{
-        if(!post)return;
-        if(Number.isInteger(post._idx)&&posts[post._idx]!==post)return;
-        const k=String(post.shortcode||'').toLowerCase();
-        const res=bySc[k];
-        if(res&&res.ok===false){
-          if(currentPost===post._idx)return;
-          post.summaryAttemptedAt=Date.now();
-          post.resolveFailedReason=String(res.reason||res.error||'no_media');
-          if(typeof post._idx==='number'){if(deferUiRefresh)changed=true;else updateCardInDom(post._idx)}
-          return;
-        }
-        if(res&&res.ok){
-          const previousSourceKind=String(post.sourceKind||'');
-          if(currentPost===post._idx){
-            const resolvedKind=String(res.sourceKind||'');
-            if(['direct','api','mixed'].includes(resolvedKind))post.sourceKind=resolvedKind;
-            if(String(post.sourceKind||'')!==previousSourceKind){
-              post.summaryAttemptedAt=Date.now();
-              post.resolveFailedReason='';
-              changed=true;
-              if(typeof post._idx==='number'&&!deferUiRefresh){updateCardInDom(post._idx);updateCardSrcBadge(post._idx)}
-            }
-            return;
-          }
-          const summaryApplied=applyPostSummaryData(post,res);
-          const sourceKindChanged=String(post.sourceKind||'')!==previousSourceKind;
-          if(summaryApplied||sourceKindChanged){
-            post.summaryAttemptedAt=Date.now();
-            post.resolveFailedReason='';
-            changed=true;
-            if(typeof post._idx==='number'&&!deferUiRefresh){updateCardInDom(post._idx);updateCardSrcBadge(post._idx)}
-          }
-        }
-      });
-      if(changed){
-        scheduleSaveImportedPostsState();
-        const activeQuery=(document.getElementById('search')?.value||'').trim();
-        if(deferUiRefresh||(activeQuery&&!isWarm))render();
-      }
-      return true;
-    }
-  }
-  return false;
-}
 function needsOwnerResolution(post){
   // For full-list search we only need the account (owner) that posted it.
   // Posts whose owner already came from the imported JSON (or from a previous resolve) are skipped entirely.
@@ -2493,27 +2375,28 @@ function applyPostOwnerData(post,data){
     const loc='@'+String(post.owner).replace(/^@+/,'');
     if(post.location!==loc){post.location=loc;changed=true}
   }
-  if(data.sourceKind&&!post.sourceKind){post.sourceKind=data.sourceKind;changed=true}
+  const sourceKind=String(data.sourceKind||'').toLowerCase();
+  if(['direct','api','mixed'].includes(sourceKind)&&String(post.sourceKind||'').toLowerCase()!==sourceKind){post.sourceKind=sourceKind;changed=true}
   post.ownerResolved=true;
   return changed;
 }
-async function resolveOwnersChunk(chunk,token){
-  // Lightweight batch call: the server only fetches the post's account name (1 small request per post),
-  // instead of the heavyweight full metadata resolve (embed + page + 3rd party + session).
+async function resolveOwnersChunk(chunk,token,scope='background',signal=null){
+  // This summary-only endpoint supplies source labels/account names, not photo totals or carousel media.
   if(!chunk||!chunk.length)return false;
   const sessionGeneration=instagramSessionGeneration;
+  const isCurrentPage=scope==='currentPage';
   const urlsParam=chunk.map(p=>p.url).join(',');
   const endpoints=getApiUrls(`/api/resolve-owners?urls=${encodeURIComponent(urlsParam)}`);
   for(const ep of endpoints){
-    const data=await fetchEndpointJson(ep,16000);
-    if(sessionGeneration!==instagramSessionGeneration)return false;
-    if(token!==bgIndexToken)return false;
+    const data=await fetchEndpointJson(ep,16000,signal?{signal}:{});
+    if(sessionGeneration!==instagramSessionGeneration||signal?.aborted)return false;
+    if(isCurrentPage?token!==currentPageLoadToken:token!==bgIndexToken)return false;
     if(data&&(data.byShortcode||Array.isArray(data.posts))){
       const bySc=data.byShortcode||{};
       if(Array.isArray(data.posts))data.posts.forEach(r=>{if(r&&r.shortcode)bySc[String(r.shortcode).toLowerCase()]=r});
       let changed=false;
       chunk.forEach(post=>{
-        if(!post)return;
+        if(!post||Number.isInteger(post._idx)&&posts[post._idx]!==post)return;
         const k=String(post.shortcode||'').toLowerCase();
         const res=bySc[k];
         if(res&&applyPostOwnerData(post,res)){changed=true;if(typeof post._idx==='number')updateCardInDom(post._idx)}
@@ -2528,9 +2411,8 @@ async function resolveOwnersChunk(chunk,token){
   return false;
 }
 function startBackgroundAllPostsIndexing(){
-  // Lightweight FULL-LIST INDEX: only the account name (owner) of every post is resolved,
-  // because searching the whole library matches on the account name. Full metadata
-  // (caption/cover/counts) is still resolved for the visible page and for posts you open.
+  // Explicit full-list search indexing resolves account names only; it never requests
+  // collection photo totals or carousel media.
   if(!activeImportFileName||!posts.length||bgIndexRunning)return;
   const myBgToken=++bgIndexToken;
   posts.forEach(p=>{if(p&&!p.ownerResolved)p._bgOwnerAttempted=false});
@@ -2584,8 +2466,6 @@ function invalidateSavedPostResolutionData(){
   instagramSessionGeneration++;
   bgIndexToken++;
   bgIndexRunning=false;
-  collectionSummaryResolutionList=null;
-  if(collectionSummaryRetryTimer){clearTimeout(collectionSummaryRetryTimer);collectionSummaryRetryTimer=0;collectionSummaryRetryList=null}
   currentPageLoadToken++;
   if(currentPageSummaryController){currentPageSummaryController.abort();currentPageSummaryController=null}
   coverResolveQueue.length=0;
@@ -2634,34 +2514,33 @@ function loadCurrentPagePosts(){
     if(!p||currentPost===idx)return;
     p._idx=idx;
     const scLower=String(p.shortcode||'').toLowerCase();
-    if(scLower&&clientSummaryCache[scLower]&&(needsSummaryResolution(p)||needsSourceKindResolution(p))){
-      applyPostSummaryData(p,clientSummaryCache[scLower]);
-      updateCardInDom(idx);
+    if(scLower&&clientSummaryCache[scLower]&&(needsSourceKindResolution(p)||needsOwnerResolution(p))){
+      if(applyPostOwnerData(p,clientSummaryCache[scLower]))updateCardInDom(idx);
     }
   });
   const list=getFilteredSortedPosts();
   const startIdx=(currentPage-1)*PAGE_SIZE;
   const pagePosts=list.slice(startIdx,startIdx+PAGE_SIZE);
-  const unresolvedPosts=pagePosts.filter(p=>p&&currentPost!==p._idx&&p.url&&p.shortcode&&!String(p.shortcode).startsWith('Post #')&&(needsSummaryResolution(p)||needsSourceKindResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
+  const unresolvedPosts=pagePosts.filter(p=>p&&currentPost!==p._idx&&p.url&&p.shortcode&&!String(p.shortcode).startsWith('Post #')&&(needsSourceKindResolution(p)||needsOwnerResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
   (async()=>{
     try{
       if(unresolvedPosts.length){
-        const chunkSize=10;
+        const chunkSize=20;
         for(let c=0;c<unresolvedPosts.length;c+=chunkSize){
           if(token!==currentPageLoadToken)return;
-          const chunk=unresolvedPosts.slice(c,c+chunkSize).filter(p=>p&&currentPost!==p._idx&&(needsSummaryResolution(p)||needsSourceKindResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
+          const chunk=unresolvedPosts.slice(c,c+chunkSize).filter(p=>p&&currentPost!==p._idx&&(needsSourceKindResolution(p)||needsOwnerResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
           if(!chunk.length)continue;
           chunk.forEach(p=>{p._summaryResolveToken=token});
           let batchOk=false;
           try{
-            batchOk=await resolvePostsBatchChunk(chunk,token,controller?.signal||null);
+            batchOk=await resolveOwnersChunk(chunk,token,'currentPage',controller?.signal||null);
           }finally{
             let needsPersist=false;
             if(token===currentPageLoadToken){
               const attemptedAt=Date.now();
               chunk.forEach(post=>{
                 if(!post)return;
-                post.summaryAttemptedAt=(needsSummaryResolution(post)||needsSourceKindResolution(post))?attemptedAt:0;
+                post.summaryAttemptedAt=(needsSourceKindResolution(post)||needsOwnerResolution(post))?attemptedAt:0;
                 if(post.summaryAttemptedAt)needsPersist=true;
               });
             }
@@ -2669,28 +2548,13 @@ function loadCurrentPagePosts(){
             if(needsPersist)scheduleSaveImportedPostsState();
           }
           if(token!==currentPageLoadToken)return;
-          if(!batchOk){
-            for(const post of chunk){
-              if(token!==currentPageLoadToken)return;
-              if(!post||currentPost===post._idx||(!needsSummaryResolution(post)&&!needsSourceKindResolution(post)))continue;
-              const ok=false;/* porting: third-party scraper fallback removed */
-              if(ok){
-                scheduleSaveImportedPostsState();
-                updateCardInDom(post._idx);
-                if((document.getElementById('search')?.value||'').trim())render();
-              }
-            }
-          }
+          if(!batchOk&&controller?.signal.aborted)return;
         }
       }
       if(token===currentPageLoadToken)updateSrcStatusNote();
     }finally{
       if(token===currentPageLoadToken&&currentPageSummaryController===controller){
         currentPageSummaryController=null;
-        if(posts.length&&collectionSummaryResolutionList!==posts){
-          collectionSummaryResolutionList=posts;
-          resolveCollectionSummariesInBackground();
-        }
       }
     }
   })();
@@ -3617,7 +3481,7 @@ async function useLastUploadedJson(){
   }
 }
 function refreshLastJsonUi(){const rec=lastJsonMeta||null;const count=Number(rec&&rec.postCount)||0;const isActive=Boolean(rec&&activeImportFileName&&rec.name===activeImportFileName);const ago=rec?jsonTimeAgo(rec.savedAt):'';const row=document.getElementById('jsonLastRow');const metaEl=document.getElementById('jsonLastMeta');const label=document.getElementById('jsonUseLastLabel');const useButton=document.getElementById('jsonUseLastBtn');if(row)row.hidden=!rec;if(metaEl)metaEl.textContent=rec?`${rec.name} · ${count} post${count===1?'':'s'} · ${jsonBytesLabel(rec.size)} · uploaded ${ago}`:'';if(label)label.textContent=isActive?'Reload posts':'Use last uploaded JSON';if(useButton)useButton.title=isActive?'Reload saved posts using the current Instagram session':'Load the JSON file uploaded last time';const or=document.getElementById('uploadJsonOr');const box=document.getElementById('uploadJsonRecent');const nm=document.getElementById('uploadJsonRecentName');const mm=document.getElementById('uploadJsonRecentMeta');const rb=document.getElementById('uploadJsonRecentBtn');if(or)or.hidden=!rec;if(box)box.hidden=!rec;if(nm)nm.textContent=rec?rec.name:'';if(mm)mm.textContent=rec?`${count} post${count===1?'':'s'} · ${jsonBytesLabel(rec.size)} · uploaded ${ago}`:'';if(rb)rb.textContent=isActive?'Reload':'Use it'}
-async function importPostsFromJson(event){const file=event.target.files?.[0];event.target.value='';if(!file)return;await processImportedJsonFile(file)}const SAVE_FOLDER_KEY='stillSane.downloadFolderV1';function persistDownloadFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(SAVE_FOLDER_KEY,path.trim())}catch(_){}}function loadDownloadFolder(){const input=document.getElementById('saveFolder');if(!input)return;try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())input.value=saved}catch(_){}}function getConfiguredDownloadFolder(){try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())return saved.trim()}catch(_){}const input=document.getElementById('saveFolder');return String(input?.value||'~/Pictures/Instagram').trim()||'~/Pictures/Instagram'}window.getConfiguredDownloadFolder=getConfiguredDownloadFolder;async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
+async function importPostsFromJson(event){const file=event.target.files?.[0];event.target.value='';if(!file)return;await processImportedJsonFile(file)}const SAVE_FOLDER_KEY='stillSane.downloadFolderV1';function persistDownloadFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(SAVE_FOLDER_KEY,path.trim())}catch(_){}}function loadDownloadFolder(){const input=document.getElementById('saveFolder');if(!input)return;try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())input.value=saved}catch(_){}}function getConfiguredDownloadFolder(){try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())return saved.trim()}catch(_){}const input=document.getElementById('saveFolder');return String(input?.value||'~/Pictures/Instagram').trim()||'~/Pictures/Instagram'}window.getConfiguredDownloadFolder=getConfiguredDownloadFolder;async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);scheduleDownloadHistorySync(true);toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
 const RESIZER_OUTPUT_FOLDER_KEY='stillSane.photoResizerOutputFolderV1';
 const RESIZER_MAX_SIDE_KEY='stillSane.photoResizerMaxSideV1';
 const RESIZER_ALLOWED_EXTENSIONS=new Set(['.jpg','.jpeg','.png','.bmp','.tif','.tiff','.webp','.heic','.heif','.avif','.jxl']);
@@ -6022,8 +5886,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.150';
+const APP_VERSION='1.151';
 const VERSION_HISTORY=[
+  {version:'1.151',added:'Persistent photo/video download history marks with per-item dates and a theme-aware show/hide toggle.',removed:'Automatic collection-wide image-count resolution and the select-every-photo-across-the-collection control.',fixed:'Successful downloads and no-duplicate skips record timestamps; prior numbered files in the configured folder are imported into history. Routine collection/page count lookups are stopped; opening a post and targeted cover-error repair remain available, while visible source labels stay lightweight.',tone:'red'},
   {version:'1.150',added:'A Photo Resizer tab with folder selection, file-by-file loading, a maximum longest-side control, and a separate resized-photo folder in Settings > Saving.',removed:'No removals.',fixed:'Conversion starts only after the user presses Start converting and confirms; smaller images are copied unchanged, resized files use unique names, and the original no-duplicates download behavior remains separate.',tone:'green'},
   {version:'1.149',added:'A default-on No duplicates setting in Settings > Saving.',removed:'The shortcode_photo_N filename pattern for downloads.',fixed:'Downloads now use shortcode_N filenames. When No duplicates is on, an already-saved matching photo is skipped (including the previous filename pattern), the queue continues, and skips are reported in progress and the completion summary.',tone:'green'},
   {version:'1.148',added:'No new features.',removed:'Rate-limit warnings without the upstream retry-delay value.',fixed:'The throttled Instagram 429 warning now includes the raw Retry-After response header, or says it was not provided, so rate-limit cooldowns can be observed without restoring per-request log spam.',tone:'green'},
