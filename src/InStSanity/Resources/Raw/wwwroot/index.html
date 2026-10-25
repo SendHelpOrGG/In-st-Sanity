@@ -1104,7 +1104,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.146; open version history" title="Click to view what changed in each version">v.1.146</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.147; open version history" title="Click to view what changed in each version">v.1.147</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1416,6 +1416,12 @@ function warmNextPage(){
 }
 let collectionSummaryResolutionRunning=false;
 let collectionSummaryResolutionList=null;
+let collectionSummaryRetryTimer=0;
+let collectionSummaryRetryList=null;
+let collectionSummaryRateLimitPauseMs=30000;
+const COLLECTION_SUMMARY_RATE_LIMIT_RETRY_MS=10*60*1000;
+const COLLECTION_SUMMARY_RATE_LIMIT_PAUSE_INITIAL_MS=30000;
+const COLLECTION_SUMMARY_RATE_LIMIT_PAUSE_MAX_MS=5*60*1000;
 // Refresh card-sized counts in batches only; this never loads carousel photos.
 function resolveCollectionSummariesInBackground(){
   if(collectionSummaryResolutionRunning||!activeImportFileName||!posts.length)return null;
@@ -1433,6 +1439,7 @@ function resolveCollectionSummariesInBackground(){
       });
       if(cachedChanged){scheduleSaveImportedPostsState();render()}
       while(activeImportFileName&&posts===collection&&collection.length){
+        if(currentPageSummaryController){await new Promise(resolve=>setTimeout(resolve,250));continue}
         const pendingPosts=[];
         let waitingForInFlight=false;
         collection.forEach((post,index)=>{
@@ -1446,7 +1453,7 @@ function resolveCollectionSummariesInBackground(){
           if(waitingForInFlight){await new Promise(resolve=>setTimeout(resolve,120));continue}
           break;
         }
-        const chunk=pendingPosts.slice(0,10);
+        const chunk=pendingPosts.slice(0,2);
         const token={};
         chunk.forEach(post=>post._summaryResolveToken=token);
         const sessionGeneration=instagramSessionGeneration;
@@ -1470,14 +1477,31 @@ function resolveCollectionSummariesInBackground(){
           });
           if(needsPersist)scheduleSaveImportedPostsState();
         }
+        const batchRateLimited=chunk.some(post=>String(post?.resolveFailedReason||'')==='http_429');
+        const rateLimitPauseMs=batchRateLimited?collectionSummaryRateLimitPauseMs:0;
+        collectionSummaryRateLimitPauseMs=batchRateLimited?Math.min(collectionSummaryRateLimitPauseMs*2,COLLECTION_SUMMARY_RATE_LIMIT_PAUSE_MAX_MS):COLLECTION_SUMMARY_RATE_LIMIT_PAUSE_INITIAL_MS;
         if(!batchResolved&&sessionGeneration===instagramSessionGeneration)break;
-        await new Promise(resolve=>setTimeout(resolve,120));
+        const pauseUntil=Date.now()+(batchRateLimited?rateLimitPauseMs:800);
+        while(activeImportFileName&&posts===collection&&Date.now()<pauseUntil){
+          await new Promise(resolve=>setTimeout(resolve,Math.min(1000,pauseUntil-Date.now())));
+        }
       }
     }finally{
       collectionSummaryResolutionRunning=false;
+      if(collectionSummaryRetryTimer&&collectionSummaryRetryList!==posts){clearTimeout(collectionSummaryRetryTimer);collectionSummaryRetryTimer=0;collectionSummaryRetryList=null}
       if(activeImportFileName&&posts.length&&posts!==collection){
         collectionSummaryResolutionList=posts;
         resolveCollectionSummariesInBackground();
+      }else if(activeImportFileName&&posts===collection&&collection.some(post=>post&&needsSummaryResolution(post)&&String(post.resolveFailedReason||'')==='http_429')&&!collectionSummaryRetryTimer){
+        collectionSummaryRetryList=collection;
+        collectionSummaryRetryTimer=setTimeout(()=>{
+          collectionSummaryRetryTimer=0;
+          collectionSummaryRetryList=null;
+          if(!activeImportFileName||posts!==collection)return;
+          collection.forEach(post=>{if(post&&needsSummaryResolution(post)&&String(post.resolveFailedReason||'')==='http_429'){post.summaryAttemptedAt=0;post.resolveFailedReason=''}});
+          scheduleSaveImportedPostsState();
+          resolveCollectionSummariesInBackground();
+        },COLLECTION_SUMMARY_RATE_LIMIT_RETRY_MS);
       }
     }
   })();
@@ -1773,8 +1797,8 @@ function isVideoHtml(html){if(!html)return false;return /PlayButtonSprite|WatchO
 function hasOnlyUnresolvedMediaUrl(post){if(!post)return true;if(typeof post.coverArtIndex==='number'&&!post.coverUrl)return false;const u=String(post.coverUrl||post.pictures?.[0]?.rawUrl||post.pictures?.[0]?.imgUrl||'');return !u}
 function needsSummaryResolution(post){if(!post)return false;if(String(post.shortcode||'').toLowerCase()==='dewe8ltizn2')return false;if(typeof post.coverArtIndex==='number'&&!post.shortcode)return false;if(!post.summaryResolved)return true;const u=String(post.coverUrl||'');if(!u)return true;if(!post.fullResolved&&!post.serverResolved){const scKind=String(post.sourceKind||'');if(scKind==='api'){const pc=typeof post.photoCount==='number'?post.photoCount:1;const vc=typeof post.videoCount==='number'?post.videoCount:0;if(pc===1&&vc===0)return true}}return false}
 function needsSourceKindResolution(post){if(!post||!post.shortcode||String(post.shortcode).startsWith('Post #')||String(post.shortcode).toLowerCase()==='dewe8ltizn2')return false;return computePostSourceKind(post)==='unknown'}
-const SUMMARY_RETRY_COOLDOWN_MS=6*60*60*1000;const SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE=5*60*1000;const SUMMARY_RETRY_COOLDOWN_MS_SOURCE_KIND=2*60*1000;
-function summaryResolutionCoolingDown(post){const attemptedAt=Number(post?.summaryAttemptedAt)||0;if(!attemptedAt)return false;if(needsSourceKindResolution(post))return Date.now()<attemptedAt+SUMMARY_RETRY_COOLDOWN_MS_SOURCE_KIND;const isApiSingle=!post.fullResolved&&String(post.sourceKind||'')==='api'&&Number(post.photoCount)===1&&Number(post.videoCount)===0;const cd=isApiSingle?SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE:SUMMARY_RETRY_COOLDOWN_MS;return Date.now()<attemptedAt+cd}
+const SUMMARY_RETRY_COOLDOWN_MS=6*60*60*1000;const SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE=5*60*1000;const SUMMARY_RETRY_COOLDOWN_MS_SOURCE_KIND=2*60*1000;const SUMMARY_RETRY_COOLDOWN_MS_RATE_LIMIT=10*60*1000;
+function summaryResolutionCoolingDown(post){const attemptedAt=Number(post?.summaryAttemptedAt)||0;if(!attemptedAt)return false;if(String(post?.resolveFailedReason||'')==='http_429')return Date.now()<attemptedAt+SUMMARY_RETRY_COOLDOWN_MS_RATE_LIMIT;if(needsSourceKindResolution(post))return Date.now()<attemptedAt+SUMMARY_RETRY_COOLDOWN_MS_SOURCE_KIND;const isApiSingle=!post.fullResolved&&String(post.sourceKind||'')==='api'&&Number(post.photoCount)===1&&Number(post.videoCount)===0;const cd=isApiSingle?SUMMARY_RETRY_COOLDOWN_MS_API_SINGLE:SUMMARY_RETRY_COOLDOWN_MS;return Date.now()<attemptedAt+cd}
 function needsFullCarouselResolution(post){if(!post)return false;if(!post.mediaLoaded||!Array.isArray(post.pictures)||!post.pictures.length)return true;if(String(post.shortcode||'').toLowerCase()==='dewe8ltizn2')return post.pictures.length<9;const pics=post.pictures;if(pics.some(pic=>(pic?.isVideo||isVideoCdnUrl(pic?.rawUrl||pic?.imgUrl))&&!pic?.videoUrl))return true;const {photoCount,videoCount}=getPostMediaCounts(post);if(pics.length<(photoCount+videoCount))return true;if(pics.length>1)return false;if(post.confirmedSingleMedia&&post.fullResolved&&post.serverResolved)return false;return true}
 function openPost(i){if(currentPost>=0&&currentPost!==i){const prev=posts[currentPost];if(prev){if(prev.mediaLoaded)syncPostSelectedIndicesFromPictures(prev);prev.pictures=[];prev.mediaLoaded=false}}currentPost=i;const post=posts[i];if(!post)return;const scLower=String(post.shortcode||'').toLowerCase();if(scLower==='dewe8ltizn2'&&!post.mediaLoaded){post.pictures=Array.from({length:9},(_,j)=>({artIndex:6+j,selected:false,isVideo:false}));applySelectedIndicesToPictures(post);post.mediaLoaded=true;post.fullResolved=true}else if(Array.isArray(post.seedSpec)&&!post.mediaLoaded){post.pictures=post.seedSpec.map(s=>({artIndex:s.artIndex,selected:false,isVideo:Boolean(s.isVideo)}));applySelectedIndicesToPictures(post);post.mediaLoaded=true;post.fullResolved=true}cancelImpButtonClickFx();resetStickerTransforms();renderDetail();document.getElementById('postDetail').classList.add('show');document.body.classList.add('post-detail-open');if(typeof window.startPostModalSneakPeek==='function')window.startPostModalSneakPeek();if(!post.mediaLoaded||needsFullCarouselResolution(post)){resolveSinglePostVisual(post,true).then(()=>{scheduleSaveImportedPostsState();updateCardInDom(i);if(currentPost===i)renderDetail()})}}
 async function copyPostUrlInput(inputEl){if(!inputEl)return;const url=String(inputEl.value||'').trim();if(!url)return;playUiClick();try{inputEl.focus();inputEl.select();inputEl.setSelectionRange(0,url.length)}catch(_){}let copied=false;if(navigator.clipboard&&navigator.clipboard.writeText){try{await navigator.clipboard.writeText(url);copied=true}catch(_){}}if(!copied){try{const ta=document.createElement('textarea');ta.value=url;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();copied=document.execCommand('copy');document.body.removeChild(ta)}catch(_){}}const lbl=inputEl.parentElement?.querySelector('span');if(lbl){lbl.textContent='POST URL · COPIED TO CLIPBOARD ✓';clearTimeout(lbl._copyTimer);lbl._copyTimer=setTimeout(()=>{lbl.textContent='POST URL'},1800)}toast('Post URL copied to clipboard')}
@@ -2314,7 +2338,7 @@ function saveImportedPostsState(){
     const compact=posts.map(p=>{
       const {photoCount,videoCount}=getPostMediaCounts(p);
       const selectedIndices=p.mediaLoaded?(()=>{syncPostSelectedIndicesFromPictures(p);return p.selectedIndices||[]})():(Array.isArray(p.selectedIndices)?p.selectedIndices:[]);
-      return{title:p.title,fullCaption:p.fullCaption||'',owner:p.owner||'',ownerFull:p.ownerFull||'',rawJsonText:p.rawJsonText||'',location:p.location,date:p.date,likes:p.likes,url:p.url,shortcode:p.shortcode,savedAt:p.savedAt,photoCount,videoCount,coverUrl:p.coverUrl||'',coverThumbnailUrl:p.coverThumbnailUrl||'',coverIsVideo:Boolean(p.coverIsVideo),summaryResolved:Boolean(p.coverIsVideo||p.summaryResolved),summaryAttemptedAt:Number(p.summaryAttemptedAt)||0,selectedIndices,sourceKind:p.sourceKind||''};
+      return{title:p.title,fullCaption:p.fullCaption||'',owner:p.owner||'',ownerFull:p.ownerFull||'',rawJsonText:p.rawJsonText||'',location:p.location,date:p.date,likes:p.likes,url:p.url,shortcode:p.shortcode,savedAt:p.savedAt,photoCount,videoCount,coverUrl:p.coverUrl||'',coverThumbnailUrl:p.coverThumbnailUrl||'',coverIsVideo:Boolean(p.coverIsVideo),summaryResolved:Boolean(p.coverIsVideo||p.summaryResolved),summaryAttemptedAt:Number(p.summaryAttemptedAt)||0,resolveFailedReason:String(p.resolveFailedReason||''),selectedIndices,sourceKind:p.sourceKind||''};
     });
     localStorage.setItem('stillSane.importedPostsV13',JSON.stringify({fileName:activeImportFileName,sourceHash:lastImportedJsonHash||'',importedAt:Number(lastImportedJsonSavedAt)||0,posts:compact}));
     const kinds={};
@@ -2323,7 +2347,7 @@ function saveImportedPostsState(){
   }catch(_){}
 }
 function scheduleSaveImportedPostsState(){if(!activeImportFileName)return;if(saveStateTimer)clearTimeout(saveStateTimer);saveStateTimer=setTimeout(()=>saveImportedPostsState(),450)}
-async function restoreImportedPostsState(){const restoreGeneration=instagramSessionGeneration;let restored=false;try{try{const kindsRaw=localStorage.getItem('stillSane.sourceKindsV1');if(kindsRaw){window.__savedSourceKinds=JSON.parse(kindsRaw)||{}}}catch(_){}['V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12'].forEach(v=>localStorage.removeItem('stillSane.importedPosts'+v));const raw=localStorage.getItem('stillSane.importedPostsV13');if(raw){const saved=JSON.parse(raw);if(saved&&Array.isArray(saved.posts)&&saved.posts.length){activeImportFileName=saved.fileName||'imported.json';lastImportedJsonHash=String(saved.sourceHash||'');lastImportedJsonSavedAt=Number(saved.importedAt)||0;posts=saved.posts.map((p,idx)=>{const scLower=String(p.shortcode||'').toLowerCase();if(scLower==='dewe8ltizn2'){return{title:seeds[0][0],fullCaption:seeds[0][0],owner:'s0meii0',ownerFull:'소히 ソヒ',rawJsonText:p.rawJsonText||'',location:seeds[0][1],date:seeds[0][2],likes:seeds[0][3],url:p.url||seeds[0][4],shortcode:'DeWe8lTiZN2',savedAt:p.savedAt||(Date.now()-idx*60000),photoCount:9,videoCount:0,coverArtIndex:6,coverUrl:'',coverIsVideo:false,summaryResolved:true,mediaLoaded:false,selectedIndices:[],pictures:[]}}const legacyPics=Array.isArray(p.pictures)?p.pictures:[];const isReel=/\/(?:reel|reels|tv)\//i.test(String(p.url||''));let photoCount=typeof p.photoCount==='number'?p.photoCount:(legacyPics.length?legacyPics.filter(x=>!Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?0:1));let videoCount=typeof p.videoCount==='number'?p.videoCount:(legacyPics.length?legacyPics.filter(x=>Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?1:0));if(photoCount===0&&videoCount===0)photoCount=1;let selectedIndices=[];const srcCover=p.coverPic||legacyPics[0]||null;const rawCover=String(p.coverUrl||srcCover?.rawUrl||srcCover?.imgUrl||'');const validCover=rawCover;const coverIsVideo=Boolean(p.coverIsVideo||srcCover?.isVideo||isVideoCdnUrl(validCover)||(videoCount>0&&photoCount===0));const dateClean=p.date==='Loading…'?'Recently':(p.date||'Recently');const summaryResolved=Boolean((p.summaryResolved||p.fullResolved||legacyPics.length>1)&&validCover);const built={title:fixInstagramMojibake(p.title||`${isReel?'Instagram reel':'Instagram post'} · ${p.shortcode}`),fullCaption:fixInstagramMojibake(p.fullCaption||p.title||''),owner:fixInstagramMojibake(p.owner||''),ownerFull:fixInstagramMojibake(p.ownerFull||''),rawJsonText:fixInstagramMojibake(p.rawJsonText||''),location:fixInstagramMojibake(p.location||''),date:dateClean,likes:p.likes||'—',url:p.url,shortcode:p.shortcode,savedAt:p.savedAt||(Date.now()-idx*60000),photoCount,videoCount,coverUrl:validCover,coverThumbnailUrl:String(p.coverThumbnailUrl||''),coverIsVideo,summaryResolved,summaryAttemptedAt:Number(p.summaryAttemptedAt)||0,mediaLoaded:false,loading:false,selectedIndices,pictures:[]};if(scLower&&clientSummaryCache[scLower])applyPostSummaryData(built,clientSummaryCache[scLower]);return built});restored=true}}}catch(_){}if(!restored)for(const cacheUrl of getApiUrls('/api/cached-posts')){try{const data=await fetchEndpointJson(cacheUrl,10000);if(restoreGeneration!==instagramSessionGeneration)break;if(data){const bySc=data.resolvedByShortcode||data.by_shortcode||{};Object.entries(bySc).forEach(([k,v])=>{if(v&&(v.summaryResolved||v.fullResolved))clientSummaryCache[k.toLowerCase()]=v});if(!restored&&Array.isArray(data.entries)&&data.entries.length){activeImportFileName=data.fileName||'imported.json';posts=data.entries.map((entry,idx)=>buildPostFromEntry(entry,idx,false));restored=true}if(restored){posts.forEach((p,idx)=>{if(currentPost===idx)return;const k=String(p.shortcode||'').toLowerCase();if(k&&clientSummaryCache[k])applyPostSummaryData(p,clientSummaryCache[k])})}break}}catch(_){}}if(restored){if(instagramSessionResetPending)invalidateSavedPostResolutionData();scheduleSaveImportedPostsState();const summary=document.getElementById('jsonFileSummary');if(summary)summary.value=`${activeImportFileName} (${posts.length} post${posts.length===1?'':'s'})`;render();loadCurrentPagePosts();updateSrcStatusNote()}}
+async function restoreImportedPostsState(){const restoreGeneration=instagramSessionGeneration;let restored=false;try{try{const kindsRaw=localStorage.getItem('stillSane.sourceKindsV1');if(kindsRaw){window.__savedSourceKinds=JSON.parse(kindsRaw)||{}}}catch(_){}['V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12'].forEach(v=>localStorage.removeItem('stillSane.importedPosts'+v));const raw=localStorage.getItem('stillSane.importedPostsV13');if(raw){const saved=JSON.parse(raw);if(saved&&Array.isArray(saved.posts)&&saved.posts.length){activeImportFileName=saved.fileName||'imported.json';lastImportedJsonHash=String(saved.sourceHash||'');lastImportedJsonSavedAt=Number(saved.importedAt)||0;posts=saved.posts.map((p,idx)=>{const scLower=String(p.shortcode||'').toLowerCase();if(scLower==='dewe8ltizn2'){return{title:seeds[0][0],fullCaption:seeds[0][0],owner:'s0meii0',ownerFull:'소히 ソヒ',rawJsonText:p.rawJsonText||'',location:seeds[0][1],date:seeds[0][2],likes:seeds[0][3],url:p.url||seeds[0][4],shortcode:'DeWe8lTiZN2',savedAt:p.savedAt||(Date.now()-idx*60000),photoCount:9,videoCount:0,coverArtIndex:6,coverUrl:'',coverIsVideo:false,summaryResolved:true,mediaLoaded:false,selectedIndices:[],pictures:[]}}const legacyPics=Array.isArray(p.pictures)?p.pictures:[];const isReel=/\/(?:reel|reels|tv)\//i.test(String(p.url||''));let photoCount=typeof p.photoCount==='number'?p.photoCount:(legacyPics.length?legacyPics.filter(x=>!Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?0:1));let videoCount=typeof p.videoCount==='number'?p.videoCount:(legacyPics.length?legacyPics.filter(x=>Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?1:0));if(photoCount===0&&videoCount===0)photoCount=1;let selectedIndices=[];const srcCover=p.coverPic||legacyPics[0]||null;const rawCover=String(p.coverUrl||srcCover?.rawUrl||srcCover?.imgUrl||'');const validCover=rawCover;const coverIsVideo=Boolean(p.coverIsVideo||srcCover?.isVideo||isVideoCdnUrl(validCover)||(videoCount>0&&photoCount===0));const dateClean=p.date==='Loading…'?'Recently':(p.date||'Recently');const summaryResolved=Boolean((p.summaryResolved||p.fullResolved||legacyPics.length>1)&&validCover);const built={title:fixInstagramMojibake(p.title||`${isReel?'Instagram reel':'Instagram post'} · ${p.shortcode}`),fullCaption:fixInstagramMojibake(p.fullCaption||p.title||''),owner:fixInstagramMojibake(p.owner||''),ownerFull:fixInstagramMojibake(p.ownerFull||''),rawJsonText:fixInstagramMojibake(p.rawJsonText||''),location:fixInstagramMojibake(p.location||''),date:dateClean,likes:p.likes||'—',url:p.url,shortcode:p.shortcode,savedAt:p.savedAt||(Date.now()-idx*60000),photoCount,videoCount,coverUrl:validCover,coverThumbnailUrl:String(p.coverThumbnailUrl||''),coverIsVideo,summaryResolved,summaryAttemptedAt:Number(p.summaryAttemptedAt)||0,resolveFailedReason:String(p.resolveFailedReason||''),mediaLoaded:false,loading:false,selectedIndices,pictures:[]};if(scLower&&clientSummaryCache[scLower])applyPostSummaryData(built,clientSummaryCache[scLower]);return built});restored=true}}}catch(_){}if(!restored)for(const cacheUrl of getApiUrls('/api/cached-posts')){try{const data=await fetchEndpointJson(cacheUrl,10000);if(restoreGeneration!==instagramSessionGeneration)break;if(data){const bySc=data.resolvedByShortcode||data.by_shortcode||{};Object.entries(bySc).forEach(([k,v])=>{if(v&&(v.summaryResolved||v.fullResolved))clientSummaryCache[k.toLowerCase()]=v});if(!restored&&Array.isArray(data.entries)&&data.entries.length){activeImportFileName=data.fileName||'imported.json';posts=data.entries.map((entry,idx)=>buildPostFromEntry(entry,idx,false));restored=true}if(restored){posts.forEach((p,idx)=>{if(currentPost===idx)return;const k=String(p.shortcode||'').toLowerCase();if(k&&clientSummaryCache[k])applyPostSummaryData(p,clientSummaryCache[k])})}break}}catch(_){}}if(restored){if(instagramSessionResetPending)invalidateSavedPostResolutionData();scheduleSaveImportedPostsState();const summary=document.getElementById('jsonFileSummary');if(summary)summary.value=`${activeImportFileName} (${posts.length} post${posts.length===1?'':'s'})`;render();loadCurrentPagePosts();updateSrcStatusNote()}}
 async function resolvePostsBatchChunk(chunk,token,signal=null,isWarm=false,deferUiRefresh=false){
   if(!chunk.length)return false;
   const sessionGeneration=instagramSessionGeneration;
@@ -2494,6 +2518,7 @@ function invalidateSavedPostResolutionData(){
   bgIndexToken++;
   bgIndexRunning=false;
   collectionSummaryResolutionList=null;
+  if(collectionSummaryRetryTimer){clearTimeout(collectionSummaryRetryTimer);collectionSummaryRetryTimer=0;collectionSummaryRetryList=null}
   currentPageLoadToken++;
   if(currentPageSummaryController){currentPageSummaryController.abort();currentPageSummaryController=null}
   coverResolveQueue.length=0;
@@ -2593,15 +2618,17 @@ function loadCurrentPagePosts(){
       }
       if(token===currentPageLoadToken)updateSrcStatusNote();
     }finally{
-      if(token===currentPageLoadToken&&currentPageSummaryController===controller)currentPageSummaryController=null;
+      if(token===currentPageLoadToken&&currentPageSummaryController===controller){
+        currentPageSummaryController=null;
+        if(posts.length&&collectionSummaryResolutionList!==posts){
+          collectionSummaryResolutionList=posts;
+          resolveCollectionSummariesInBackground();
+        }
+      }
     }
   })();
   const hint=document.getElementById('jsonImportHint');
   if(hint)hint.textContent=`Page ${currentPage} ready (${pagePosts.length} post${pagePosts.length===1?'':'s'} on this page · ${posts.length} total in ${activeImportFileName}). Click any post to load its photos and videos.`;
-  if(posts.length&&collectionSummaryResolutionList!==posts){
-    collectionSummaryResolutionList=posts;
-    resolveCollectionSummariesInBackground();
-  }
 }
 function openUploadJsonModal(){const modal=document.getElementById('uploadJsonModal');const linkWrap=document.getElementById('dyiLinkWrap');if(linkWrap)linkWrap.style.display=(activeImportFileName&&posts.length>0)?'none':'flex';refreshLastJsonUi();if(modal)modal.classList.add('show')}
 function openDyiDocPopup(){document.getElementById('dyiDocPopup')?.classList.add('show')}function closeDyiDocPopup(){document.getElementById('dyiDocPopup')?.classList.remove('show')}
@@ -5894,8 +5921,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.146';
+const APP_VERSION='1.147';
 const VERSION_HISTORY=[
+  {version:'1.147',added:'No new features.',removed:'Repeated per-post upstream status messages while collection photo totals resolve.',fixed:'Collection summaries now run in smaller, slower background batches after visible cards finish. A 429 triggers exponential backoff up to five minutes, and rate-limited posts retry after the resolver cache expires, expected 404s are silent and other per-post status details are Debug-only, with a single throttled 429 warning. Carousel media stays lazy-loaded.',tone:'green'},
   {version:'1.146',added:'No new features.',removed:'No removals.',fixed:'HTML responses from Instagram and Save-Free are detected before JSON parsing, so login/challenge pages use the existing fallback path instead of raising JsonReaderException.',tone:'green'},
   {version:'1.145',added:'Collection post/photo totals on All Posts.',removed:'The need to manually visit collection pages for photo totals.',fixed:'All Posts shows posts/photos, marks unresolved photo totals with a plus while lightweight summary-only background batches finish, and never preloads carousel media. All Posts and Selected keep matching widths.',tone:'green'},
   {version:'1.144',added:'No new features.',removed:'The saved folder path in download completion pop-ups.',fixed:'Completion notices keep saved, failed, and unconfirmed photo counts without showing the folder path.',tone:'green'},

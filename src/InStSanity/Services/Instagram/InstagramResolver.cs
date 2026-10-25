@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Globalization;
+using System.Net;
 using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -148,6 +149,7 @@ public sealed class InstagramResolver
 	readonly ConcurrentDictionary<string, CacheEntry> _cache = new(StringComparer.OrdinalIgnoreCase);
 	readonly object _cacheLock = new();
 	int _cacheGeneration;
+	long _nextRateLimitLogUtcTicks;
 
 	int _attempts;
 	int _resolved;
@@ -323,7 +325,10 @@ public sealed class InstagramResolver
 		else
 		{
 			Interlocked.Increment(ref _failed);
-			_logger.LogInformation("Resolve failed for {Shortcode}: {Reason}", shortcode, reason);
+			if (reason is not ("http_404" or "http_429"))
+			{
+				_logger.LogDebug("Resolve failed for {Shortcode}: {Reason}", shortcode, reason);
+			}
 		}
 
 		var written = DateTimeOffset.UtcNow;
@@ -420,6 +425,22 @@ public sealed class InstagramResolver
 		return post;
 	}
 
+	void LogRateLimitOnce()
+	{
+		var nowTicks = DateTime.UtcNow.Ticks;
+		var nextAllowedTicks = Interlocked.Read(ref _nextRateLimitLogUtcTicks);
+		if (nowTicks < nextAllowedTicks)
+		{
+			return;
+		}
+
+		var nextTicks = nowTicks + TimeSpan.FromMinutes(1).Ticks;
+		if (Interlocked.CompareExchange(ref _nextRateLimitLogUtcTicks, nextTicks, nextAllowedTicks) == nextAllowedTicks)
+		{
+			_logger.LogWarning("Instagram rate-limited post summary requests (HTTP 429); repeat notices are suppressed for 1 minute.");
+		}
+	}
+
 	/// <summary>
 	/// Instagram's own media-info endpoint — pure JSON, no HTML to parse, and the lightest
 	/// request available. It answers for public posts without a session; when it refuses
@@ -456,10 +477,17 @@ public sealed class InstagramResolver
 
 			if (!response.IsSuccessStatusCode)
 			{
-				_logger.LogInformation(
-					"Media info: upstream {Status} for {Shortcode}",
-					(int)response.StatusCode,
-					shortcode);
+				if (response.StatusCode == HttpStatusCode.TooManyRequests)
+				{
+					LogRateLimitOnce();
+				}
+				else if (response.StatusCode != HttpStatusCode.NotFound)
+				{
+					_logger.LogDebug(
+						"Media info: upstream {Status} for {Shortcode}",
+						(int)response.StatusCode,
+						shortcode);
+				}
 
 				return (null, $"http_{(int)response.StatusCode}");
 			}
@@ -494,7 +522,7 @@ public sealed class InstagramResolver
 		}
 		catch (HttpRequestException ex)
 		{
-			_logger.LogInformation(ex, "Media info failed for {Shortcode}", shortcode);
+			_logger.LogDebug(ex, "Media info failed for {Shortcode}", shortcode);
 			return (null, "unreachable");
 		}
 		catch (JsonException)
@@ -526,6 +554,10 @@ public sealed class InstagramResolver
 			if (info is not null && !NeedsSaveFree(info, summaryOnly))
 			{
 				return (WithShortcodeTimestamp(info, shortcode), string.Empty);
+			}
+			if (infoReason == "http_429")
+			{
+				return (null, infoReason);
 			}
 		}
 
@@ -789,16 +821,23 @@ public sealed class InstagramResolver
 			if (finalUrl.Contains("/accounts/login", StringComparison.OrdinalIgnoreCase) ||
 				finalUrl.Contains("/challenge/", StringComparison.OrdinalIgnoreCase))
 			{
-				_logger.LogInformation("Resolve fetch: login wall for {Url}", url);
+				_logger.LogDebug("Resolve fetch: login wall for {Url}", url);
 				return (null, "login_wall");
 			}
 
 			if (!response.IsSuccessStatusCode)
 			{
-				_logger.LogInformation(
-					"Resolve fetch: upstream {Status} for {Url}",
-					(int)response.StatusCode,
-					url);
+				if (response.StatusCode == HttpStatusCode.TooManyRequests)
+				{
+					LogRateLimitOnce();
+				}
+				else if (response.StatusCode != HttpStatusCode.NotFound)
+				{
+					_logger.LogDebug(
+						"Resolve fetch: upstream {Status} for {Url}",
+						(int)response.StatusCode,
+						url);
+				}
 
 				return (null, $"http_{(int)response.StatusCode}");
 			}
@@ -807,12 +846,12 @@ public sealed class InstagramResolver
 		}
 		catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
 		{
-			_logger.LogInformation("Resolve fetch timed out for {Url}", url);
+			_logger.LogDebug("Resolve fetch timed out for {Url}", url);
 			return (null, "timeout");
 		}
 		catch (HttpRequestException ex)
 		{
-			_logger.LogInformation(ex, "Resolve fetch failed for {Url}", url);
+			_logger.LogDebug(ex, "Resolve fetch failed for {Url}", url);
 			return (null, "unreachable");
 		}
 	}
