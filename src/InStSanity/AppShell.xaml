@@ -61,7 +61,7 @@
                      Color="{StaticResource SideBarStroke}"
                      HorizontalOptions="Fill" />
             <Label Grid.Row="1"
-                   Text="v1.141  ·  Lazy photo selection"
+                   Text="v1.142  ·  Footer progress toast"
                    Style="{StaticResource SideBarFooterText}" />
         </Grid>
     </Shell.FlyoutFooter>
