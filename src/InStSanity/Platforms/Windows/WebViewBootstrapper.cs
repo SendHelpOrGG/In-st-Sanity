@@ -113,7 +113,7 @@ internal static class WebViewBootstrapper
 			try { args.Handled = true; } catch { }
 			try
 			{
-				var result = await core.ExecuteScriptAsync("(()=>{try{return String(window.getConfiguredDownloadFolder?.()||'')}catch(e){return ''}})()").ConfigureAwait(false);
+				var result = await core.ExecuteScriptAsync("(()=>{try{return String(window.getConfiguredDownloadFolder?.()||'')}catch(e){return ''}})()");
 				var requestedFolder = JsonSerializer.Deserialize<string>(result);
 				if (string.IsNullOrWhiteSpace(requestedFolder))
 				{
@@ -130,7 +130,7 @@ internal static class WebViewBootstrapper
 			{
 				// Never let WebView2 silently fall back to its own Downloads folder.
 				try { args.Cancel = true; } catch { }
-				try { await core.ExecuteScriptAsync("window.toast?.('Video download canceled: could not use the folder selected in Settings')").ConfigureAwait(false); } catch { }
+				try { await core.ExecuteScriptAsync("window.toast?.('Video download canceled: could not use the folder selected in Settings')"); } catch { }
 				return;
 			}
 
@@ -177,7 +177,7 @@ internal static class WebViewBootstrapper
 				};
 			}
 
-			try { await core.ExecuteScriptAsync("window.showVideoDownloadNotice?.()").ConfigureAwait(false); } catch { }
+			try { await core.ExecuteScriptAsync("window.showVideoDownloadNotice?.()"); } catch { }
 		}
 		finally
 		{
@@ -190,7 +190,7 @@ internal static class WebViewBootstrapper
 		try
 		{
 			var sourceJson = JsonSerializer.Serialize(sourceUrl);
-			var result = await core.ExecuteScriptAsync($"window.__getVideoDownloadHistoryContext?.({sourceJson})||null").ConfigureAwait(false);
+			var result = await core.ExecuteScriptAsync($"window.__getVideoDownloadHistoryContext?.({sourceJson})||null");
 			using var document = JsonDocument.Parse(result);
 			var root = document.RootElement;
 			if (root.ValueKind != JsonValueKind.Object ||
@@ -346,7 +346,7 @@ internal static class WebViewBootstrapper
 					inner = TryUnwrapScriptJson(await ExecOnUiAsync(core, "window.__igAccountProbeResult||''"));
 				}
 
-				if (InstagramHttp.HasJsonValuePrefix(inner))
+				if (inner is not null && InstagramHttp.HasJsonValuePrefix(inner))
 				{
 					using var payload = JsonDocument.Parse(inner);
 					if (payload.RootElement.TryGetProperty("u", out var u)) username = u.GetString() ?? string.Empty;

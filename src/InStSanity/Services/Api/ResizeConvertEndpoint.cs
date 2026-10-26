@@ -45,12 +45,13 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			return HttpResponseInfo.Json(PhotoResizeConversionResult.Failure("invalid_request"), 400);
 		}
 
+		var validatedRequest = resizeRequest.Value;
 		try
 		{
 			var result = await _photoResizeService.ConvertAsync(
-				resizeRequest.SessionId,
-				resizeRequest.MaxSide,
-				resizeRequest.OutputFolder,
+				validatedRequest.SessionId,
+				validatedRequest.MaxSide,
+				validatedRequest.OutputFolder,
 				cancellationToken).ConfigureAwait(false);
 			return HttpResponseInfo.Json(result);
 		}
