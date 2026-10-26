@@ -75,7 +75,8 @@ internal static class ImageResizer
 	public static async Task<ImageResizeResult?> TryResizeToMaxSideAsync(
 		byte[] payload,
 		int maxSide,
-		string originalExtension)
+		string originalExtension,
+		bool upscale)
 	{
 		if (payload.Length < 32 || maxSide < 16)
 		{
@@ -94,7 +95,8 @@ internal static class ImageResizer
 			inStream.Seek(0);
 			var decoder = await BitmapDecoder.CreateAsync(inStream);
 			var largestSide = Math.Max(decoder.PixelWidth, decoder.PixelHeight);
-			if (largestSide <= (uint)maxSide)
+			var targetSide = (uint)maxSide;
+			if (largestSide == targetSide || (largestSide < targetSide && !upscale))
 			{
 				return new ImageResizeResult(payload, originalExtension, WasResized: false);
 			}

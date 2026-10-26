@@ -160,6 +160,7 @@ public sealed class PhotoResizeService
 	public async Task<PhotoResizeConversionResult> ConvertAsync(
 		Guid sessionId,
 		int maxSide,
+		bool upscale,
 		string? requestedOutputFolder,
 		CancellationToken cancellationToken)
 	{
@@ -209,7 +210,8 @@ public sealed class PhotoResizeService
 					var resized = await ImageResizer.TryResizeToMaxSideAsync(
 						payload,
 						maxSide,
-						Path.GetExtension(stagedFile.FileName)).ConfigureAwait(false);
+						Path.GetExtension(stagedFile.FileName),
+						upscale).ConfigureAwait(false);
 					if (resized is null)
 					{
 						results.Add(PhotoResizeFileResult.Failed(stagedFile.FileName, "image_decode_failed"));

@@ -51,6 +51,7 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			var result = await _photoResizeService.ConvertAsync(
 				validatedRequest.SessionId,
 				validatedRequest.MaxSide,
+				validatedRequest.Upscale,
 				validatedRequest.OutputFolder,
 				cancellationToken).ConfigureAwait(false);
 			return HttpResponseInfo.Json(result);
@@ -79,10 +80,27 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			return null;
 		}
 
+		var upscale = true;
+		if (TryGetProperty(root, "upscale", out var upscaleValue))
+		{
+			if (upscaleValue.ValueKind == JsonValueKind.True)
+			{
+				upscale = true;
+			}
+			else if (upscaleValue.ValueKind == JsonValueKind.False)
+			{
+				upscale = false;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
 		var outputFolder = TryGetProperty(root, "outputFolder", out var folderValue) && folderValue.ValueKind == JsonValueKind.String
 			? folderValue.GetString()
 			: null;
-		return new ResizeRequest(sessionId, maxSide, outputFolder);
+		return new ResizeRequest(sessionId, maxSide, upscale, outputFolder);
 	}
 
 	static bool TryGetProperty(JsonElement element, string name, out JsonElement value)
@@ -103,5 +121,5 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 		return false;
 	}
 
-	readonly record struct ResizeRequest(Guid SessionId, int MaxSide, string? OutputFolder);
+	readonly record struct ResizeRequest(Guid SessionId, int MaxSide, bool Upscale, string? OutputFolder);
 }
