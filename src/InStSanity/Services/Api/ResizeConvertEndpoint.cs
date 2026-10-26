@@ -52,6 +52,7 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 				validatedRequest.SessionId,
 				validatedRequest.MaxSide,
 				validatedRequest.Upscale,
+				validatedRequest.NoDuplicates,
 				validatedRequest.OutputFolder,
 				cancellationToken).ConfigureAwait(false);
 			return HttpResponseInfo.Json(result);
@@ -97,10 +98,27 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			}
 		}
 
+		var noDuplicates = true;
+		if (TryGetProperty(root, "noDuplicates", out var noDuplicatesValue))
+		{
+			if (noDuplicatesValue.ValueKind == JsonValueKind.True)
+			{
+				noDuplicates = true;
+			}
+			else if (noDuplicatesValue.ValueKind == JsonValueKind.False)
+			{
+				noDuplicates = false;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
 		var outputFolder = TryGetProperty(root, "outputFolder", out var folderValue) && folderValue.ValueKind == JsonValueKind.String
 			? folderValue.GetString()
 			: null;
-		return new ResizeRequest(sessionId, maxSide, upscale, outputFolder);
+		return new ResizeRequest(sessionId, maxSide, upscale, noDuplicates, outputFolder);
 	}
 
 	static bool TryGetProperty(JsonElement element, string name, out JsonElement value)
@@ -121,5 +139,5 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 		return false;
 	}
 
-	readonly record struct ResizeRequest(Guid SessionId, int MaxSide, bool Upscale, string? OutputFolder);
+	readonly record struct ResizeRequest(Guid SessionId, int MaxSide, bool Upscale, bool NoDuplicates, string? OutputFolder);
 }

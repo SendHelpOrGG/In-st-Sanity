@@ -161,6 +161,7 @@ public sealed class PhotoResizeService
 		Guid sessionId,
 		int maxSide,
 		bool upscale,
+		bool noDuplicates,
 		string? requestedOutputFolder,
 		CancellationToken cancellationToken)
 	{
@@ -203,6 +204,21 @@ public sealed class PhotoResizeService
 			foreach (var stagedFile in stagedFiles)
 			{
 				cancellationToken.ThrowIfCancellationRequested();
+				if (noDuplicates)
+				{
+					var possibleOutputName = BuildOutputFileName(
+						stagedFile.FileName,
+						Path.GetExtension(stagedFile.FileName));
+					var existingPath = FindExistingResizedFilePath(outputFolder, possibleOutputName);
+					if (existingPath is not null)
+					{
+						results.Add(PhotoResizeFileResult.Skipped(
+							stagedFile.FileName,
+							Path.GetFileName(existingPath)));
+						continue;
+					}
+				}
+
 				var payloadPath = GetPayloadPath(sessionDirectory, stagedFile.FileId);
 				try
 				{
@@ -219,14 +235,33 @@ public sealed class PhotoResizeService
 					}
 
 					var outputName = BuildOutputFileName(stagedFile.FileName, resized.Value.Extension);
-					var savedName = await WriteUniqueFileAsync(
+					if (noDuplicates)
+					{
+						var existingPath = FindExistingResizedFilePath(outputFolder, outputName);
+						if (existingPath is not null)
+						{
+							results.Add(PhotoResizeFileResult.Skipped(
+								stagedFile.FileName,
+								Path.GetFileName(existingPath)));
+							continue;
+						}
+					}
+
+					var writeResult = await WriteUniqueFileAsync(
 						outputFolder,
 						outputName,
 						resized.Value.Bytes,
+						noDuplicates,
 						cancellationToken).ConfigureAwait(false);
+					if (writeResult.Skipped)
+					{
+						results.Add(PhotoResizeFileResult.Skipped(stagedFile.FileName, writeResult.FileName));
+						continue;
+					}
+
 					results.Add(new PhotoResizeFileResult(
 						stagedFile.FileName,
-						savedName,
+						writeResult.FileName,
 						resized.Value.WasResized ? "resized" : "unchanged",
 						null));
 				}
@@ -245,6 +280,7 @@ public sealed class PhotoResizeService
 
 			var resizedCount = results.Count(item => item.Status == "resized");
 			var unchangedCount = results.Count(item => item.Status == "unchanged");
+			var skippedCount = results.Count(item => item.Status == "skipped");
 			var failedCount = results.Count(item => item.Status == "failed");
 			TryDeleteDirectory(sessionDirectory);
 			return new PhotoResizeConversionResult(
@@ -253,6 +289,7 @@ public sealed class PhotoResizeService
 				results.Count,
 				resizedCount,
 				unchangedCount,
+				skippedCount,
 				failedCount,
 				results);
 		}
@@ -359,10 +396,26 @@ public sealed class PhotoResizeService
 		return safeStem + extension.ToLowerInvariant();
 	}
 
-	static async Task<string> WriteUniqueFileAsync(
+	static string? FindExistingResizedFilePath(string folder, string filename)
+	{
+		var stem = Path.GetFileNameWithoutExtension(filename);
+		foreach (var extension in SupportedExtensions)
+		{
+			var path = Path.Combine(folder, stem + extension);
+			if (File.Exists(path))
+			{
+				return path;
+			}
+		}
+
+		return null;
+	}
+
+	static async Task<(string FileName, bool Skipped)> WriteUniqueFileAsync(
 		string folder,
 		string filename,
 		byte[] payload,
+		bool noDuplicates,
 		CancellationToken cancellationToken)
 	{
 		var extension = Path.GetExtension(filename);
@@ -384,6 +437,11 @@ public sealed class PhotoResizeService
 			}
 			catch (IOException) when (File.Exists(path))
 			{
+				if (noDuplicates)
+				{
+					return (candidate, true);
+				}
+
 				continue;
 			}
 
@@ -394,7 +452,7 @@ public sealed class PhotoResizeService
 					await output.WriteAsync(payload.AsMemory(), cancellationToken).ConfigureAwait(false);
 					await output.FlushAsync(cancellationToken).ConfigureAwait(false);
 				}
-				return candidate;
+				return (candidate, false);
 			}
 			catch
 			{
@@ -562,6 +620,9 @@ public sealed record PhotoResizeFileResult(string FileName, string? OutputName, 
 {
 	public static PhotoResizeFileResult Failed(string fileName, string error) =>
 		new(fileName, null, "failed", error);
+
+	public static PhotoResizeFileResult Skipped(string fileName, string existingName) =>
+		new(fileName, existingName, "skipped", null);
 }
 
 public sealed record PhotoResizeConversionResult(
@@ -570,9 +631,10 @@ public sealed record PhotoResizeConversionResult(
 	int RequestedCount,
 	int ResizedCount,
 	int UnchangedCount,
+	int SkippedCount,
 	int FailedCount,
 	IReadOnlyList<PhotoResizeFileResult> Files)
 {
 	public static PhotoResizeConversionResult Failure(string error) =>
-		new(false, error, 0, 0, 0, 0, Array.Empty<PhotoResizeFileResult>());
+		new(false, error, 0, 0, 0, 0, 0, Array.Empty<PhotoResizeFileResult>());
 }
