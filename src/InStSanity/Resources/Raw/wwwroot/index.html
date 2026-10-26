@@ -1146,10 +1146,15 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             </div>
           </div>
         </div>
-        <div class="settings-card">
-          <div class="settings-card-head"><div class="settings-card-head-inner"><div class="settings-card-head-text"><h2>Resized photo folder</h2><p>Choose where resized copies are written. Existing files are never overwritten.</p></div></div></div>
+        <div class="settings-card collapsed">
+          <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
+            <div class="settings-card-head-inner">
+              <div class="settings-card-head-text"><h2>Resized photo folder</h2><p>Choose where resized images are saved. Existing files are never overwritten.</p></div>
+              <span class="settings-card-chevron" aria-hidden="true">▾</span>
+            </div>
+          </div>
           <div class="setting-body">
-            <label class="field-label" for="resizerOutputFolder">Resized-photo location</label>
+            <label class="field-label" for="resizerOutputFolder">Save resized images to</label>
             <div class="folder-row"><input class="text-input" id="resizerOutputFolder" value="~/Pictures/Instagram/Resized" readonly><button type="button" class="outline" onclick="chooseResizerOutputFolder()">Browse…</button></div>
           </div>
         </div>
@@ -1159,7 +1164,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.155; open version history" title="Click to view what changed in each version">v.1.155</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.156; open version history" title="Click to view what changed in each version">v.1.156</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5888,8 +5893,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.155';
+const APP_VERSION='1.156';
 const VERSION_HISTORY=[
+  {version:'1.156',added:'A collapsible Resized photo folder section in Settings > Saving.',removed:'The collapsed, non-interactive resized-image destination panel.',fixed:'Expand the section to browse for and persist the folder where converted images are saved; the Resizer uses that destination during conversion.',tone:'green'},
   {version:'1.155',added:'A multi-image picker in the Photo Resizer.',removed:'Folder-only image selection and the extra tool-category label.',fixed:'The picker now opens a standard multi-file dialog so individual images can be selected from any folder. Resizer wording now describes image selection instead of choosing a folder.',tone:'green'},
   {version:'1.154',added:'No new features.',removed:'The gap between per-media history marks and the photo-count badge, and the slightly different outlines on carousel visibility controls.',fixed:'History marks now sit closer under the media-count badge. Post-carousel and Save-via-URL visibility buttons reuse the library control classes for an exact outline match.',tone:'green'},
   {version:'1.153',added:'A crossed-out double-check icon when download-history marks are hidden.',removed:'The unchanged double-check icon while history marks are disabled.',fixed:'The library and post-carousel history toggles now reflect the hidden state with a slash, consistent with the source and video visibility controls.',tone:'green'},
