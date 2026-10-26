@@ -838,7 +838,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
           <p class="hint" id="resizerMaxSideHint">Larger images are reduced proportionally so neither side exceeds this value. Smaller images are copied unchanged.</p>
           <div class="resizer-upload-count" id="resizerUploadedCount" aria-live="polite">0 files uploaded</div>
           <div class="resizer-state" id="resizerStatus" role="status" aria-live="polite">Choose images to begin.</div>
-          <div class="resizer-confirm-actions"><button type="button" class="primary" id="resizerStartBtn" onclick="startPhotoResizing()" disabled>Start converting</button><button type="button" class="outline" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button></div>
+          <div class="resizer-confirm-actions"><button type="button" class="primary" id="resizerStartBtn" onclick="startPhotoResizing()" disabled>Start converting</button><button type="button" class="primary" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button><button type="button" class="icon-btn resizer-open-output-folder-btn" id="resizerOpenOutputFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open resized images folder in File Explorer" aria-label="Open resized images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H10l2 2h7.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 10h17"/><path d="M9 14h6m-2.5-2.5L15 14l-2.5 2.5"/></svg></button></div>
           <div class="resizer-results" id="resizerResults" aria-live="polite"></div>
         </div>
       </section>
@@ -1164,7 +1164,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.156; open version history" title="Click to view what changed in each version">v.1.156</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.157; open version history" title="Click to view what changed in each version">v.1.157</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3522,6 +3522,16 @@ async function uploadResizerFiles(){if(photoResizeBusy||photoResizeCompleted)ret
 function renderPhotoResizeResults(result){const box=document.getElementById('resizerResults');if(!box)return;const files=Array.isArray(result?.files)?result.files:[];box.innerHTML=files.map(item=>{const status=item.status==='resized'?'Resized':item.status==='unchanged'?'Copied unchanged':'Failed';const error=item.error?` · ${photoResizeErrorMessage(item.error)}`:'';const output=item.outputName?` → ${item.outputName}`:'';const failed=item.status==='failed';return`<div class="resizer-result-row"><span class="resizer-result-name">${escapeHtml(item.fileName||'Image')}${escapeHtml(output)}${escapeHtml(error)}</span><span class="resizer-result-status${failed?' is-error':''}">${status}</span></div>`}).join('')}
 async function startPhotoResizing(){if(photoResizeBusy||photoResizeCompleted||photoResizeUploadedCount<1)return;const input=document.getElementById('resizerMaxSide');const maxSide=Number(input?.value);if(!Number.isInteger(maxSide)||maxSide<64||maxSide>16384){setPhotoResizeStatus('Enter a whole number from 64 to 16,384 pixels.','error');input?.focus();return}try{localStorage.setItem(RESIZER_MAX_SIDE_KEY,String(maxSide))}catch(_){}const confirmation=window.confirm(`Start converting ${photoResizeUploadedCount} uploaded image${photoResizeUploadedCount===1?'':'s'}? Images larger than ${maxSide.toLocaleString()} pixels on their longest side will be resized. Smaller images will be copied unchanged.`);if(!confirmation)return;photoResizeBusy=true;photoResizeConverting=true;syncPhotoResizeControls();setPhotoResizeStatus(`Converting ${photoResizeUploadedCount} uploaded image${photoResizeUploadedCount===1?'':'s'}…`);const body={sessionId:photoResizeSessionId,maxSide,outputFolder:getConfiguredPhotoResizerOutputFolder()};let data=null;for(const endpoint of getApiUrls('/api/resize-convert')){data=await fetchEndpointJson(endpoint,1740000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(data)break}photoResizeBusy=false;photoResizeConverting=false;if(!data?.ok){setPhotoResizeStatus(photoResizeErrorMessage(data?.error||'conversion_failed'),'error');syncPhotoResizeControls();return}photoResizeCompleted=true;photoResizeUploadedCount=Number(data.requestedCount)||photoResizeUploadedCount;photoResizeSessionId='';renderPhotoResizeResults(data);syncPhotoResizeControls();const resized=Number(data.resizedCount)||0;const unchanged=Number(data.unchangedCount)||0;const failed=Number(data.failedCount)||0;const summary=`Conversion finished: ${resized} resized, ${unchanged} copied unchanged, ${failed} failed.`;setPhotoResizeStatus(summary,failed?'error':'success')}
 function resetResizerQueue(){if(photoResizeBusy)return;const oldSession=photoResizeSessionId;if(oldSession)void deletePhotoResizeSession(oldSession);photoResizeQueue=[];photoResizeSessionId='';photoResizeUploadedCount=0;photoResizeBusy=false;photoResizeConverting=false;photoResizeCompleted=false;photoResizeSelectionLabel='';photoResizeAvailableCount=0;const picker=document.getElementById('resizerImagesInput');if(picker)picker.value='';const selectionLabel=document.getElementById('resizerSelectionLabel');if(selectionLabel)selectionLabel.textContent='No images selected';const results=document.getElementById('resizerResults');if(results)results.innerHTML='';setPhotoResizeStatus('Choose images to begin.');syncPhotoResizeControls()}
+async function openPhotoResizerOutputFolder(){
+  const folder=getConfiguredPhotoResizerOutputFolder();
+  let data=null;
+  for(const endpoint of getApiUrls('/api/open-download-folder')){
+    data=await fetchEndpointJson(endpoint,30000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder})});
+    if(data)break;
+  }
+  if(data?.ok){toast('Opened the resized images folder in File Explorer');return}
+  toast(data?.error?'Could not open the resized images folder':'Folder opening is available in the desktop app');
+}
 async function openDownloadFolder(){
   const folder=String(document.getElementById('saveFolder')?.value||'~/Pictures/Instagram').trim();
   persistDownloadFolder(folder);
@@ -5893,8 +5903,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.156';
+const APP_VERSION='1.157';
 const VERSION_HISTORY=[
+  {version:'1.157',added:'An icon-only shortcut to open the resized-images output folder.',removed:'The shorter, differently styled Start over button.',fixed:'Start over now matches the Start converting button template, and the folder shortcut opens the configured Resized photo folder in File Explorer.',tone:'green'},
   {version:'1.156',added:'A collapsible Resized photo folder section in Settings > Saving.',removed:'The collapsed, non-interactive resized-image destination panel.',fixed:'Expand the section to browse for and persist the folder where converted images are saved; the Resizer uses that destination during conversion.',tone:'green'},
   {version:'1.155',added:'A multi-image picker in the Photo Resizer.',removed:'Folder-only image selection and the extra tool-category label.',fixed:'The picker now opens a standard multi-file dialog so individual images can be selected from any folder. Resizer wording now describes image selection instead of choosing a folder.',tone:'green'},
   {version:'1.154',added:'No new features.',removed:'The gap between per-media history marks and the photo-count badge, and the slightly different outlines on carousel visibility controls.',fixed:'History marks now sit closer under the media-count badge. Post-carousel and Save-via-URL visibility buttons reuse the library control classes for an exact outline match.',tone:'green'},
