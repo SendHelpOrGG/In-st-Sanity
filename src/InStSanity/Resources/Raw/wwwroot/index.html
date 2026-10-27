@@ -1169,7 +1169,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.162; open version history" title="Click to view what changed in each version">v.1.162</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.163; open version history" title="Click to view what changed in each version">v.1.163</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -2367,6 +2367,66 @@ function saveImportedPostsState(){
 }
 function scheduleSaveImportedPostsState(){if(!activeImportFileName)return;if(saveStateTimer)clearTimeout(saveStateTimer);saveStateTimer=setTimeout(()=>saveImportedPostsState(),450)}
 async function restoreImportedPostsState(){const restoreGeneration=instagramSessionGeneration;let restored=false;try{try{const kindsRaw=localStorage.getItem('stillSane.sourceKindsV1');if(kindsRaw){window.__savedSourceKinds=JSON.parse(kindsRaw)||{}}}catch(_){}['V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12'].forEach(v=>localStorage.removeItem('stillSane.importedPosts'+v));const raw=localStorage.getItem('stillSane.importedPostsV13');if(raw){const saved=JSON.parse(raw);if(saved&&Array.isArray(saved.posts)&&saved.posts.length){activeImportFileName=saved.fileName||'imported.json';lastImportedJsonHash=String(saved.sourceHash||'');lastImportedJsonSavedAt=Number(saved.importedAt)||0;posts=saved.posts.map((p,idx)=>{const scLower=String(p.shortcode||'').toLowerCase();if(scLower==='dewe8ltizn2'){return{title:seeds[0][0],fullCaption:seeds[0][0],owner:'s0meii0',ownerFull:'소히 ソヒ',rawJsonText:p.rawJsonText||'',location:seeds[0][1],date:seeds[0][2],likes:seeds[0][3],url:p.url||seeds[0][4],shortcode:'DeWe8lTiZN2',savedAt:p.savedAt||(Date.now()-idx*60000),photoCount:9,videoCount:0,coverArtIndex:6,coverUrl:'',coverIsVideo:false,summaryResolved:true,mediaLoaded:false,selectedIndices:[],pictures:[]}}const legacyPics=Array.isArray(p.pictures)?p.pictures:[];const isReel=/\/(?:reel|reels|tv)\//i.test(String(p.url||''));let photoCount=typeof p.photoCount==='number'?p.photoCount:(legacyPics.length?legacyPics.filter(x=>!Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?0:1));let videoCount=typeof p.videoCount==='number'?p.videoCount:(legacyPics.length?legacyPics.filter(x=>Boolean(x?.isVideo||x?.videoUrl||isVideoCdnUrl(x?.rawUrl||x?.imgUrl))).length:(isReel?1:0));if(photoCount===0&&videoCount===0)photoCount=1;let selectedIndices=[];const srcCover=p.coverPic||legacyPics[0]||null;const rawCover=String(p.coverUrl||srcCover?.rawUrl||srcCover?.imgUrl||'');const validCover=rawCover;const coverIsVideo=Boolean(p.coverIsVideo||srcCover?.isVideo||isVideoCdnUrl(validCover)||(videoCount>0&&photoCount===0));const dateClean=p.date==='Loading…'?'Recently':(p.date||'Recently');const summaryResolved=Boolean((p.summaryResolved||p.fullResolved||legacyPics.length>1)&&validCover);const built={title:fixInstagramMojibake(p.title||`${isReel?'Instagram reel':'Instagram post'} · ${p.shortcode}`),fullCaption:fixInstagramMojibake(p.fullCaption||p.title||''),owner:fixInstagramMojibake(p.owner||''),ownerFull:fixInstagramMojibake(p.ownerFull||''),rawJsonText:fixInstagramMojibake(p.rawJsonText||''),location:fixInstagramMojibake(p.location||''),date:dateClean,likes:p.likes||'—',url:p.url,shortcode:p.shortcode,savedAt:p.savedAt||(Date.now()-idx*60000),photoCount,videoCount,coverUrl:validCover,coverThumbnailUrl:String(p.coverThumbnailUrl||''),coverIsVideo,summaryResolved,summaryAttemptedAt:Number(p.summaryAttemptedAt)||0,resolveFailedReason:String(p.resolveFailedReason||''),mediaLoaded:false,loading:false,selectedIndices,pictures:[]};if(scLower&&clientSummaryCache[scLower])applyPostSummaryData(built,clientSummaryCache[scLower]);return built});restored=true}}}catch(_){}if(!restored)for(const cacheUrl of getApiUrls('/api/cached-posts')){try{const data=await fetchEndpointJson(cacheUrl,10000);if(restoreGeneration!==instagramSessionGeneration)break;if(data){const bySc=data.resolvedByShortcode||data.by_shortcode||{};Object.entries(bySc).forEach(([k,v])=>{if(v&&(v.summaryResolved||v.fullResolved))clientSummaryCache[k.toLowerCase()]=v});if(!restored&&Array.isArray(data.entries)&&data.entries.length){activeImportFileName=data.fileName||'imported.json';posts=data.entries.map((entry,idx)=>buildPostFromEntry(entry,idx,false));restored=true}if(restored){posts.forEach((p,idx)=>{if(currentPost===idx)return;const k=String(p.shortcode||'').toLowerCase();if(k&&clientSummaryCache[k])applyPostSummaryData(p,clientSummaryCache[k])})}break}}catch(_){}}if(restored){if(instagramSessionResetPending)invalidateSavedPostResolutionData();scheduleSaveImportedPostsState();const summary=document.getElementById('jsonFileSummary');if(summary)summary.value=`${activeImportFileName} (${posts.length} post${posts.length===1?'':'s'})`;render();loadCurrentPagePosts();updateSrcStatusNote()}}
+async function resolvePostsBatchChunk(chunk,token,signal=null,isWarm=false,deferUiRefresh=false){
+  // Card summaries contain both the cover preview and photo/video counts; this endpoint
+  // resolves summaries only, leaving full carousel media lazy until a post is opened.
+  if(!chunk||!chunk.length)return false;
+  const sessionGeneration=instagramSessionGeneration;
+  const urlsParam=chunk.map(p=>p.url).join(',');
+  const batchEndpoints=getApiUrls(`/api/resolve-batch?urls=${encodeURIComponent(urlsParam)}`);
+  for(const ep of batchEndpoints){
+    const data=await fetchEndpointJson(ep,16000,signal?{signal}:{});
+    if(sessionGeneration!==instagramSessionGeneration||signal?.aborted)return false;
+    if(!isWarm&&token!==currentPageLoadToken)return false;
+    if(data&&(data.byShortcode||Array.isArray(data.posts))){
+      const bySc=data.byShortcode||{};
+      if(Array.isArray(data.posts))data.posts.forEach(r=>{if(r&&r.shortcode)bySc[String(r.shortcode).toLowerCase()]=r});
+      let changed=false;
+      chunk.forEach(post=>{
+        if(!post)return;
+        if(Number.isInteger(post._idx)&&posts[post._idx]!==post)return;
+        const k=String(post.shortcode||'').toLowerCase();
+        const res=bySc[k];
+        if(res&&res.ok===false){
+          if(currentPost===post._idx)return;
+          post.summaryAttemptedAt=Date.now();
+          post.resolveFailedReason=String(res.reason||res.error||'no_media');
+          if(typeof post._idx==='number'){if(deferUiRefresh)changed=true;else updateCardInDom(post._idx)}
+          return;
+        }
+        if(res&&res.ok){
+          const previousSourceKind=String(post.sourceKind||'');
+          if(currentPost===post._idx){
+            const resolvedKind=String(res.sourceKind||'');
+            if(['direct','api','mixed'].includes(resolvedKind))post.sourceKind=resolvedKind;
+            if(String(post.sourceKind||'')!==previousSourceKind){
+              post.summaryAttemptedAt=Date.now();
+              post.resolveFailedReason='';
+              changed=true;
+              if(typeof post._idx==='number'&&!deferUiRefresh){updateCardInDom(post._idx);updateCardSrcBadge(post._idx)}
+            }
+            return;
+          }
+          const summaryApplied=applyPostSummaryData(post,res);
+          const sourceKindChanged=String(post.sourceKind||'')!==previousSourceKind;
+          if(summaryApplied||sourceKindChanged){
+            post.summaryAttemptedAt=Date.now();
+            post.resolveFailedReason='';
+            changed=true;
+            if(typeof post._idx==='number'&&!deferUiRefresh){updateCardInDom(post._idx);updateCardSrcBadge(post._idx)}
+          }
+        }
+      });
+      if(changed){
+        scheduleSaveImportedPostsState();
+        const activeQuery=(document.getElementById('search')?.value||'').trim();
+        if(deferUiRefresh||(activeQuery&&!isWarm))render();
+      }
+      return true;
+    }
+  }
+  return false;
+}
 function needsOwnerResolution(post){
   // For full-list search we only need the account (owner) that posted it.
   // Posts whose owner already came from the imported JSON (or from a previous resolve) are skipped entirely.
@@ -2526,21 +2586,70 @@ function loadCurrentPagePosts(){
     if(!p||currentPost===idx)return;
     p._idx=idx;
     const scLower=String(p.shortcode||'').toLowerCase();
-    if(scLower&&clientSummaryCache[scLower]&&(needsSourceKindResolution(p)||needsOwnerResolution(p))){
-      if(applyPostOwnerData(p,clientSummaryCache[scLower]))updateCardInDom(idx);
+    const cachedSummary=scLower?clientSummaryCache[scLower]:null;
+    if(cachedSummary){
+      const changed=(needsSummaryResolution(p)||needsSourceKindResolution(p))
+        ?applyPostSummaryData(p,cachedSummary)
+        :needsOwnerResolution(p)&&applyPostOwnerData(p,cachedSummary);
+      if(changed)updateCardInDom(idx);
     }
   });
   const list=getFilteredSortedPosts();
   const startIdx=(currentPage-1)*PAGE_SIZE;
   const pagePosts=list.slice(startIdx,startIdx+PAGE_SIZE);
-  const unresolvedPosts=pagePosts.filter(p=>p&&currentPost!==p._idx&&p.url&&p.shortcode&&!String(p.shortcode).startsWith('Post #')&&(needsSourceKindResolution(p)||needsOwnerResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
+  // v1.151 used this timestamp for owner-only lookups. Those old attempts did not
+  // resolve a card cover, so let the restored summary lookup run once for those posts.
+  pagePosts.forEach(post=>{
+    if(post&&(needsSummaryResolution(post)||needsSourceKindResolution(post))&&Number(post.summaryAttemptedAt)>0&&!post.resolveFailedReason){
+      post.summaryAttemptedAt=0;
+    }
+  });
+  const unresolvedPosts=pagePosts.filter(p=>p&&currentPost!==p._idx&&p.url&&p.shortcode&&!String(p.shortcode).startsWith('Post #')&&(needsSummaryResolution(p)||needsSourceKindResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
   (async()=>{
     try{
       if(unresolvedPosts.length){
-        const chunkSize=20;
+        // Resolve only the current page in batches. The endpoint returns card covers
+        // and photo/video counts, but never the full carousel payload.
+        const chunkSize=10;
         for(let c=0;c<unresolvedPosts.length;c+=chunkSize){
           if(token!==currentPageLoadToken)return;
-          const chunk=unresolvedPosts.slice(c,c+chunkSize).filter(p=>p&&currentPost!==p._idx&&(needsSourceKindResolution(p)||needsOwnerResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
+          const chunk=unresolvedPosts.slice(c,c+chunkSize).filter(p=>p&&currentPost!==p._idx&&(needsSummaryResolution(p)||needsSourceKindResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
+          if(!chunk.length)continue;
+          chunk.forEach(p=>{p._summaryResolveToken=token});
+          let batchOk=false;
+          try{
+            batchOk=await resolvePostsBatchChunk(chunk,token,controller?.signal||null);
+          }finally{
+            let needsPersist=false;
+            if(token===currentPageLoadToken){
+              const attemptedAt=Date.now();
+              chunk.forEach(post=>{
+                if(!post)return;
+                const stillUnresolved=needsSummaryResolution(post)||needsSourceKindResolution(post);
+                if(stillUnresolved){
+                  post.summaryAttemptedAt=attemptedAt;
+                  if(needsSummaryResolution(post)&&!post.resolveFailedReason)post.resolveFailedReason=batchOk?'unresolved':'unreachable';
+                  if(typeof post._idx==='number')updateCardInDom(post._idx);
+                  needsPersist=true;
+                }else{
+                  post.summaryAttemptedAt=0;
+                }
+              });
+            }
+            chunk.forEach(post=>{if(post&&post._summaryResolveToken===token)post._summaryResolveToken=0});
+            if(needsPersist)scheduleSaveImportedPostsState();
+          }
+          if(token!==currentPageLoadToken)return;
+          if(controller?.signal.aborted)return;
+        }
+      }
+      if(token!==currentPageLoadToken)return;
+      const ownerPosts=pagePosts.filter(p=>p&&currentPost!==p._idx&&p.url&&p.shortcode&&!String(p.shortcode).startsWith('Post #')&&!needsSummaryResolution(p)&&(needsSourceKindResolution(p)||needsOwnerResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
+      if(ownerPosts.length){
+        const chunkSize=20;
+        for(let c=0;c<ownerPosts.length;c+=chunkSize){
+          if(token!==currentPageLoadToken)return;
+          const chunk=ownerPosts.slice(c,c+chunkSize).filter(p=>p&&currentPost!==p._idx&&!needsSummaryResolution(p)&&(needsSourceKindResolution(p)||needsOwnerResolution(p))&&!summaryResolutionCoolingDown(p)&&!p._summaryResolveToken);
           if(!chunk.length)continue;
           chunk.forEach(p=>{p._summaryResolveToken=token});
           let batchOk=false;
@@ -2571,7 +2680,7 @@ function loadCurrentPagePosts(){
     }
   })();
   const hint=document.getElementById('jsonImportHint');
-  if(hint)hint.textContent=`Page ${currentPage} ready (${pagePosts.length} post${pagePosts.length===1?'':'s'} on this page · ${posts.length} total in ${activeImportFileName}). Click any post to load its photos and videos.`;
+  if(hint)hint.textContent=`Page ${currentPage} ready (${pagePosts.length} post${pagePosts.length===1?'':'s'} on this page · ${posts.length} total in ${activeImportFileName}). Cover previews and photo/video counts load automatically; click any post for its full photos and videos.`;
 }
 function openUploadJsonModal(){const modal=document.getElementById('uploadJsonModal');const linkWrap=document.getElementById('dyiLinkWrap');if(linkWrap)linkWrap.style.display=(activeImportFileName&&posts.length>0)?'none':'flex';refreshLastJsonUi();if(modal)modal.classList.add('show')}
 function openDyiDocPopup(){document.getElementById('dyiDocPopup')?.classList.add('show')}function closeDyiDocPopup(){document.getElementById('dyiDocPopup')?.classList.remove('show')}
@@ -6109,8 +6218,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.162';
+const APP_VERSION='1.163';
 const VERSION_HISTORY=[
+  {version:'1.163',added:'Automatic cover previews and photo/video counts for visible Saved Posts JSON cards.',removed:'Placeholder cards that required opening each post to reveal its cover.',fixed:'The visible page again resolves card-sized summaries that include cover URLs and counts; carousel slides stay lazy-loaded, and full-collection summary sweeps remain off.',tone:'green'},
   {version:'1.162',added:'No new features.',removed:'The accidental outline-style override on Upload JSON.',fixed:'Upload JSON is restored unchanged; Convert now uses the standard primary-button glow and 1px border while retaining its 37px layout height.',tone:'green'},
   {version:'1.161',added:'A consistent primary-button outline treatment for Upload JSON and the Photo Resizer.',removed:'The wider outer glow around Upload JSON compared with Convert.',fixed:'Both buttons keep their 1px border and animated accents within the control frame, so the visible outline widths match without changing button height.',tone:'green'},
   {version:'1.160',added:'A unified Convert workflow and an accessible icon-only export-help shortcut.',removed:'The Resizer’s separate upload/convert steps and redundant upload-count controls.',fixed:'Convert and Open folder share an explicit 37px box with contained glow; the maximum-side/upscaler controls are more compact, active Theme 3 icons use high-contrast ink, and the JSON help button is a circled question mark.',tone:'green'},
