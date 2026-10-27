@@ -844,8 +844,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             <span class="resizer-max-side-control">
               <input class="text-input" id="resizerMaxSide" type="number" min="64" max="16384" step="50" value="2048" aria-describedby="resizerMaxSideHint" onchange="saveResizerMaxSide(this.value)">
               <span class="resizer-max-side-stepper" role="group" aria-label="Adjust maximum longest side in 50-pixel increments">
-                <button type="button" class="resizer-stepper-btn" id="resizerMaxSideUpBtn" onclick="stepResizerMaxSide(1)" title="Increase by 50 pixels" aria-label="Increase maximum longest side by 50 pixels"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 10 5-5 5 5"/></svg></button>
                 <button type="button" class="resizer-stepper-btn" id="resizerMaxSideDownBtn" onclick="stepResizerMaxSide(-1)" title="Decrease by 50 pixels" aria-label="Decrease maximum longest side by 50 pixels"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 6 5 5 5-5"/></svg></button>
+                <button type="button" class="resizer-stepper-btn" id="resizerMaxSideUpBtn" onclick="stepResizerMaxSide(1)" title="Increase by 50 pixels" aria-label="Increase maximum longest side by 50 pixels"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 10 5-5 5 5"/></svg></button>
               </span>
             </span>
             <span class="resizer-max-side-unit">px</span>
@@ -1194,7 +1194,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.168; open version history" title="Click to view what changed in each version">v.1.168</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.169; open version history" title="Click to view what changed in each version">v.1.169</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -6340,8 +6340,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.168';
+const APP_VERSION='1.169';
 const VERSION_HISTORY=[
+  {version:'1.169',added:'No new features.',removed:'The 50-pixel decrement and increment buttons appearing in the opposite order.',fixed:'The decrement button now appears before the increment button; each retains its original action.',tone:'green'},
   {version:'1.168',added:'Resizer (beta) labeling and custom 50-pixel size controls.',removed:'The native one-pixel size spinner and mismatched upscaler/output-folder button styling.',fixed:'Maximum-side controls now step by 50 pixels, the upscaler uses the Hide videos active outline, and Open resized folder matches the restricted-card Open in Browser height.',tone:'green'},
   {version:'1.167',added:'No new features.',removed:'The Resizer photo list becoming grey and unclickable after Convert.',fixed:'Photo checkboxes and Select all/Clear stay usable during uploads and conversion. An active batch keeps the selection captured when Convert was clicked; later selection edits are ready for the next run.',tone:'green'},
 
