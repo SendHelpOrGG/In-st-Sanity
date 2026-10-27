@@ -14,7 +14,7 @@ namespace InStSanity.Platforms.Windows;
 internal static class WebViewBootstrapper
 {
 	static readonly ConditionalWeakTable<object, object> Hooked = new();
-	sealed record VideoDownloadHistoryContext(string Shortcode, int ContentIndex, int? ContentCount);
+	sealed record VideoDownloadHistoryContext(string Shortcode, int? ContentIndex, int? VideoIndex, int? ContentCount);
 
 	// Same-origin call Instagram's own web app makes; the x-ig-app-id header is the
 	// public one every browser session uses. Page scripts cannot see HttpOnly cookies,
@@ -105,16 +105,21 @@ internal static class WebViewBootstrapper
 		var deferral = args.GetDeferral();
 		try
 		{
-			// The native HTML-video menu remains in place. Capture which carousel tile
-			// started the download so its completion date can be attached to that tile.
+			// Capture which carousel video started the native menu download before
+			// applying the user's folder and shortcode_vN filename preferences.
 			var historyContext = await TryGetVideoDownloadHistoryContextAsync(core, args.DownloadOperation.Uri).ConfigureAwait(false);
 
-			// Hide WebView2's default dialog while we read the app's selected folder.
 			try { args.Handled = true; } catch { }
 			try
 			{
-				var result = await core.ExecuteScriptAsync("(()=>{try{return String(window.getConfiguredDownloadFolder?.()||'')}catch(e){return ''}})()");
-				var requestedFolder = JsonSerializer.Deserialize<string>(result);
+				var result = await core.ExecuteScriptAsync("(()=>{try{return JSON.stringify({folder:String(window.getConfiguredVideoDownloadFolder?.()||window.getConfiguredDownloadFolder?.()||''),noDuplicates:window.isNoDuplicatesEnabled?.()===true})}catch(e){return '{}'}})()");
+				var preferencesJson = JsonSerializer.Deserialize<string>(result);
+				using var preferences = JsonDocument.Parse(string.IsNullOrWhiteSpace(preferencesJson) ? "{}" : preferencesJson);
+				var root = preferences.RootElement;
+				var requestedFolder = root.TryGetProperty("folder", out var folderValue) && folderValue.ValueKind == JsonValueKind.String
+					? folderValue.GetString()
+					: null;
+				var noDuplicates = root.TryGetProperty("noDuplicates", out var noDuplicatesValue) && noDuplicatesValue.ValueKind == JsonValueKind.True;
 				if (string.IsNullOrWhiteSpace(requestedFolder))
 				{
 					throw new InvalidOperationException("The Settings download folder is unavailable.");
@@ -122,8 +127,30 @@ internal static class WebViewBootstrapper
 
 				var folder = DownloadSelectedEndpoint.ResolveFolder(requestedFolder);
 				Directory.CreateDirectory(folder);
-				var fileName = Path.GetFileName(args.ResultFilePath);
-				if (string.IsNullOrWhiteSpace(fileName)) fileName = "video.mp4";
+				var fileName = BuildVideoDownloadFileName(historyContext, args.DownloadOperation);
+				if (noDuplicates && historyContext is not null && FindExistingVideoPath(folder, fileName) is { } existingPath)
+				{
+					try { args.Cancel = true; } catch { }
+					if (historyContext is not null)
+					{
+						var downloadedAtUtc = DateTimeOffset.UtcNow;
+						try { downloadedAtUtc = new DateTimeOffset(File.GetLastWriteTimeUtc(existingPath), TimeSpan.Zero); } catch { }
+						var historyRecord = new
+						{
+							shortcode = historyContext.Shortcode,
+							contentIndex = historyContext.ContentIndex,
+							videoIndex = historyContext.VideoIndex,
+							contentCount = historyContext.ContentCount,
+							downloadedAtUtc,
+							filename = Path.GetFileName(existingPath),
+						};
+						var recordJson = JsonSerializer.Serialize(historyRecord);
+						try { await core.ExecuteScriptAsync($"window.__recordVideoDownloadHistory?.({recordJson})"); } catch { }
+					}
+					var notice = JsonSerializer.Serialize($"Video already exists: {Path.GetFileName(existingPath)} (duplicate skipped)");
+					try { await core.ExecuteScriptAsync($"window.toast?.({notice})"); } catch { }
+					return;
+				}
 				args.ResultFilePath = GetUniqueDownloadPath(folder, fileName);
 			}
 			catch
@@ -163,6 +190,7 @@ internal static class WebViewBootstrapper
 						{
 							shortcode = historyContext.Shortcode,
 							contentIndex = historyContext.ContentIndex,
+							videoIndex = historyContext.VideoIndex,
 							contentCount = historyContext.ContentCount,
 							downloadedAtUtc,
 							filename = Path.GetFileName(resultPath),
@@ -185,6 +213,76 @@ internal static class WebViewBootstrapper
 		}
 	}
 
+	static string BuildVideoDownloadFileName(VideoDownloadHistoryContext? historyContext, CoreWebView2DownloadOperation operation)
+	{
+		var extension = GetVideoDownloadExtension(operation);
+		if (historyContext is not null)
+		{
+			var videoNumber = Math.Max(0, historyContext.VideoIndex ?? historyContext.ContentIndex ?? 0) + 1;
+			return $"{SafeVideoShortcode(historyContext.Shortcode)}_v{videoNumber}{extension}";
+		}
+
+		var requestedName = Path.GetFileName(operation.ResultFilePath);
+		var requestedStem = Path.GetFileNameWithoutExtension(requestedName);
+		if (string.IsNullOrWhiteSpace(requestedStem) || requestedStem.Equals("image", StringComparison.OrdinalIgnoreCase))
+		{
+			return "video" + extension;
+		}
+
+		return Path.GetFileNameWithoutExtension(requestedName) + extension;
+	}
+
+	static string GetVideoDownloadExtension(CoreWebView2DownloadOperation operation)
+	{
+		var mimeType = operation.MimeType?.Split(';', 2)[0].Trim().ToLowerInvariant();
+		var mimeExtension = mimeType switch
+		{
+			"video/mp4" or "video/m4v" => ".mp4",
+			"video/quicktime" => ".mov",
+			"video/webm" => ".webm",
+			"video/x-msvideo" => ".avi",
+			"video/x-matroska" => ".mkv",
+			"video/3gpp" => ".3gp",
+			"video/mpeg" => ".mpeg",
+			_ => string.Empty,
+		};
+		if (mimeExtension.Length > 0) return mimeExtension;
+
+		var resultExtension = Path.GetExtension(operation.ResultFilePath);
+		if (IsVideoExtension(resultExtension)) return resultExtension.ToLowerInvariant();
+		if (Uri.TryCreate(operation.Uri, UriKind.Absolute, out var uriExtension) && IsVideoExtension(Path.GetExtension(uriExtension.AbsolutePath)))
+		{
+			return Path.GetExtension(uriExtension.AbsolutePath).ToLowerInvariant();
+		}
+		return ".mp4";
+	}
+
+	static string SafeVideoShortcode(string? shortcode)
+	{
+		var source = string.IsNullOrWhiteSpace(shortcode) ? "instagram" : shortcode.Trim();
+		var safe = new string(source.Select(character => char.IsLetterOrDigit(character) || character is '_' or '-' or '.' ? character : '_').ToArray());
+		return string.IsNullOrWhiteSpace(safe) ? "instagram" : safe;
+	}
+
+	static string? FindExistingVideoPath(string folder, string requestedName)
+	{
+		var expectedStem = Path.GetFileNameWithoutExtension(requestedName);
+		if (string.IsNullOrWhiteSpace(expectedStem)) return null;
+		foreach (var path in Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly))
+		{
+			if (!IsVideoExtension(Path.GetExtension(path))) continue;
+			var stem = Path.GetFileNameWithoutExtension(path);
+			var suffixStart = stem.LastIndexOf(" (", StringComparison.Ordinal);
+			if (suffixStart > 0 && stem.EndsWith(')') &&
+				int.TryParse(stem.AsSpan(suffixStart + 2, stem.Length - suffixStart - 3), out _))
+			{
+				stem = stem[..suffixStart];
+			}
+			if (stem.Equals(expectedStem, StringComparison.OrdinalIgnoreCase)) return path;
+		}
+		return null;
+	}
+
 	static async Task<VideoDownloadHistoryContext?> TryGetVideoDownloadHistoryContextAsync(CoreWebView2 core, string sourceUrl)
 	{
 		try
@@ -194,8 +292,20 @@ internal static class WebViewBootstrapper
 			using var document = JsonDocument.Parse(result);
 			var root = document.RootElement;
 			if (root.ValueKind != JsonValueKind.Object ||
-				!root.TryGetProperty("shortcode", out var shortcodeValue) || shortcodeValue.ValueKind != JsonValueKind.String ||
-				!root.TryGetProperty("contentIndex", out var contentIndexValue) || !contentIndexValue.TryGetInt32(out var contentIndex) || contentIndex < 0)
+				!root.TryGetProperty("shortcode", out var shortcodeValue) || shortcodeValue.ValueKind != JsonValueKind.String)
+			{
+				return null;
+			}
+
+			int? contentIndex = root.TryGetProperty("contentIndex", out var contentIndexValue) &&
+				contentIndexValue.ValueKind == JsonValueKind.Number && contentIndexValue.TryGetInt32(out var parsedContentIndex) && parsedContentIndex >= 0
+				? parsedContentIndex
+				: null;
+			int? videoIndex = root.TryGetProperty("videoIndex", out var videoIndexValue) &&
+				videoIndexValue.ValueKind == JsonValueKind.Number && videoIndexValue.TryGetInt32(out var parsedVideoIndex) && parsedVideoIndex >= 0
+				? parsedVideoIndex
+				: null;
+			if (contentIndex is null && videoIndex is null)
 			{
 				return null;
 			}
@@ -204,7 +314,7 @@ internal static class WebViewBootstrapper
 				countValue.ValueKind == JsonValueKind.Number && countValue.TryGetInt32(out var parsedCount) && parsedCount > 0
 				? parsedCount
 				: null;
-			return new VideoDownloadHistoryContext(shortcodeValue.GetString()!, contentIndex, contentCount);
+			return new VideoDownloadHistoryContext(shortcodeValue.GetString()!, contentIndex, videoIndex, contentCount);
 		}
 		catch
 		{

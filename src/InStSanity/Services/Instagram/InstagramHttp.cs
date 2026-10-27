@@ -100,7 +100,7 @@ public sealed class InstagramHttp
 	/// </summary>
 	/// <param name="uri">Absolute media or page URL.</param>
 	/// <param name="referer">Origin to report; Instagram's CDN rejects empty referers on some hosts.</param>
-	public HttpRequestMessage CreateMediaGet(Uri uri, string? referer = InstagramOrigin)
+	public HttpRequestMessage CreateMediaGet(Uri uri, string? referer = InstagramOrigin, bool isVideo = false)
 	{
 		var request = new HttpRequestMessage(HttpMethod.Get, uri);
 
@@ -113,8 +113,8 @@ public sealed class InstagramHttp
 		// for HTML pages, and a default image Accept would follow those requests too.
 		request.Headers.TryAddWithoutValidation(
 			"Accept",
-			"image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
-		request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "image");
+			isVideo ? "video/mp4,video/*,*/*;q=0.8" : "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
+		request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", isVideo ? "video" : "image");
 		request.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "no-cors");
 		request.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "cross-site");
 

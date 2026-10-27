@@ -11,13 +11,25 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 {
 	const int MaxItemsPerRequest = 50;
 	const int MaxMediaBytes = 50 * 1024 * 1024;
+	const long MaxVideoBytes = 1024L * 1024 * 1024;
 	const int Parallelism = 4;
 
-	static readonly HashSet<string> SafeExtensions = new(StringComparer.OrdinalIgnoreCase)
+	static readonly HashSet<string> SafePhotoExtensions = new(StringComparer.OrdinalIgnoreCase)
 	{
 		".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".avif", ".heic", ".heif",
 		".bmp", ".tif", ".tiff", ".jxl", ".ico",
 	};
+
+	static readonly HashSet<string> SafeVideoExtensions = new(StringComparer.OrdinalIgnoreCase)
+	{
+		".mp4", ".m4v", ".mov", ".webm", ".avi", ".mkv", ".3gp", ".mpeg", ".mpg",
+	};
+
+	static readonly HashSet<string> SafeExtensions = new(SafePhotoExtensions, StringComparer.OrdinalIgnoreCase);
+	static DownloadSelectedEndpoint()
+	{
+		SafeExtensions.UnionWith(SafeVideoExtensions);
+	}
 
 	static readonly HashSet<string> ReservedNames = new(StringComparer.OrdinalIgnoreCase)
 	{
@@ -90,7 +102,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 			_logger.LogWarning(exception, "Could not prepare the selected download folder");
 			var failedFiles = batch.Items
 				.Select((item, index) => new DownloadFileResult(
-					SafeFileName(item.Filename, FallbackFileName(item, index), ".jpg", index),
+					SafeFileName(item.Filename, FallbackFileName(item, index), item.IsVideo ? ".mp4" : ".jpg", index),
 					Ok: false,
 					Error: "folder_unavailable"))
 				.ToArray();
@@ -163,12 +175,14 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		CancellationToken cancellationToken)
 	{
 		var fallbackName = FallbackFileName(item, index);
-		var initialName = SafeFileName(item.Filename, fallbackName, ".jpg", index);
+		var fallbackExtension = item.IsVideo ? ".mp4" : ".jpg";
+		var initialName = SafeFileName(item.Filename, fallbackName, fallbackExtension, index);
 		var writeTurnAcquired = false;
+		string? stagedVideoPath = null;
 
 		try
 		{
-			var existingPath = noDuplicates ? FindExistingPhotoPath(folder, item, initialName, index) : null;
+			var existingPath = noDuplicates ? FindExistingMediaPath(folder, item, initialName, index) : null;
 			if (existingPath is not null)
 			{
 				await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -176,12 +190,41 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 				return DuplicateSkipped(existingPath);
 			}
 
+			if (item.IsVideo)
+			{
+				var stagedVideo = await DownloadRemoteVideoAsync(item.RawUrl, folder, cancellationToken).ConfigureAwait(false);
+				stagedVideoPath = stagedVideo.Path;
+				await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
+				writeTurnAcquired = true;
+				existingPath = noDuplicates ? FindExistingMediaPath(folder, item, initialName, index) : null;
+				if (existingPath is not null)
+				{
+					return DuplicateSkipped(existingPath);
+				}
+
+				var videoExtension = VideoExtensionFor(stagedVideo, initialName);
+				var videoFilename = SafeFileName(item.Filename, fallbackName, videoExtension, index);
+				var moveResult = MoveUniqueVideoFile(folder, videoFilename, stagedVideoPath, noDuplicates);
+				if (!moveResult.Skipped)
+				{
+					stagedVideoPath = null;
+				}
+
+				return moveResult.Skipped
+					? DuplicateSkipped(Path.Combine(folder, moveResult.Filename))
+					: new DownloadFileResult(
+						moveResult.Filename,
+						Ok: true,
+						Error: null,
+						DownloadedAtUtc: moveResult.DownloadedAtUtc);
+			}
+
 			// Fetch concurrently, but serialize disk writes in request order so media
 			// from each post gets consecutive creation/modification timestamps.
 			var payload = await LoadPayloadAsync(item, cancellationToken).ConfigureAwait(false);
 			await writeTurn.WaitAsync(cancellationToken).ConfigureAwait(false);
 			writeTurnAcquired = true;
-			existingPath = noDuplicates ? FindExistingPhotoPath(folder, item, initialName, index) : null;
+			existingPath = noDuplicates ? FindExistingMediaPath(folder, item, initialName, index) : null;
 			if (existingPath is not null)
 			{
 				return DuplicateSkipped(existingPath);
@@ -213,7 +256,8 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 			}
 
 			_logger.LogInformation(
-				"Selected photo {Index} was not saved ({Reason})",
+				"Selected {MediaType} {Index} was not saved ({Reason})",
+				item.IsVideo ? "video" : "photo",
 				index + 1,
 				exception.Code);
 			return new DownloadFileResult(initialName, Ok: false, Error: exception.Code);
@@ -226,11 +270,15 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 				writeTurnAcquired = true;
 			}
 
-			_logger.LogWarning(exception, "Selected photo {Index} could not be saved", index + 1);
+			_logger.LogWarning(exception, "Selected {MediaType} {Index} could not be saved", item.IsVideo ? "video" : "photo", index + 1);
 			return new DownloadFileResult(initialName, Ok: false, Error: "download_failed");
 		}
 		finally
 		{
+			if (stagedVideoPath is not null)
+			{
+				TryDelete(stagedVideoPath);
+			}
 			if (writeTurnAcquired)
 			{
 				advanceWriteTurn();
@@ -323,6 +371,101 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		return new MediaPayload(payload, contentType);
 	}
 
+	async Task<StagedVideo> DownloadRemoteVideoAsync(string? rawUrl, string folder, CancellationToken cancellationToken)
+	{
+		if (string.IsNullOrWhiteSpace(rawUrl))
+		{
+			throw new DownloadFailureException("no_media_source");
+		}
+
+		var candidate = rawUrl.Trim();
+		if (candidate.StartsWith("//", StringComparison.Ordinal))
+		{
+			candidate = "https:" + candidate;
+		}
+
+		if (!Uri.TryCreate(candidate, UriKind.Absolute, out var uri) || !IsInstagramMediaUri(uri))
+		{
+			throw new DownloadFailureException("invalid_media_url");
+		}
+
+		using var mediaRequest = _http.CreateMediaGet(uri, isVideo: true);
+		using var response = await _http.Client
+			.SendAsync(mediaRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+			.ConfigureAwait(false);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			throw new DownloadFailureException($"upstream_status_{(int)response.StatusCode}");
+		}
+
+		var finalUri = response.RequestMessage?.RequestUri ?? uri;
+		if (!IsInstagramMediaUri(finalUri))
+		{
+			throw new DownloadFailureException("redirected_to_untrusted_host");
+		}
+
+		if (response.Content.Headers.ContentLength is > MaxVideoBytes)
+		{
+			throw new DownloadFailureException("video_too_large");
+		}
+
+		var contentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+		var temporaryPath = Path.Combine(folder, $".inst-sanity-{Guid.NewGuid():N}.download");
+		try
+		{
+			await using var source = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+			await using (var output = new FileStream(
+				temporaryPath,
+				FileMode.CreateNew,
+				FileAccess.Write,
+				FileShare.None,
+				bufferSize: 128 * 1024,
+				options: FileOptions.Asynchronous | FileOptions.SequentialScan))
+			{
+				var chunk = new byte[128 * 1024];
+				long totalBytes = 0;
+				while (true)
+				{
+					var read = await source.ReadAsync(chunk.AsMemory(), cancellationToken).ConfigureAwait(false);
+					if (read == 0) break;
+					totalBytes += read;
+					if (totalBytes > MaxVideoBytes)
+					{
+						throw new DownloadFailureException("video_too_large");
+					}
+					await output.WriteAsync(chunk.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+				}
+				if (totalBytes == 0)
+				{
+					throw new DownloadFailureException("empty_response");
+				}
+				await output.FlushAsync(cancellationToken).ConfigureAwait(false);
+			}
+
+			var prefix = await ReadFilePrefixAsync(temporaryPath, cancellationToken).ConfigureAwait(false);
+			if (!IsVideoPayload(contentType, prefix))
+			{
+				throw new DownloadFailureException("response_was_not_a_video");
+			}
+
+			return new StagedVideo(temporaryPath, contentType, prefix);
+		}
+		catch
+		{
+			TryDelete(temporaryPath);
+			throw;
+		}
+	}
+
+	static async Task<byte[]> ReadFilePrefixAsync(string path, CancellationToken cancellationToken)
+	{
+		await using var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 32, FileOptions.Asynchronous | FileOptions.SequentialScan);
+		var prefix = new byte[32];
+		var read = await input.ReadAsync(prefix.AsMemory(), cancellationToken).ConfigureAwait(false);
+		return prefix.AsSpan(0, read).ToArray();
+	}
+
 	static async Task<byte[]> ReadLimitedAsync(HttpContent content, CancellationToken cancellationToken)
 	{
 		await using var source = await content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
@@ -401,6 +544,62 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		}
 
 		return contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+	}
+
+	static bool IsVideoPayload(string contentType, byte[] payload) =>
+		contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase) || DetectVideoContentType(payload) is not null;
+
+	static string? DetectVideoContentType(byte[] payload)
+	{
+		if (payload.Length >= 12 &&
+			payload[4] == 0x66 && payload[5] == 0x74 && payload[6] == 0x79 && payload[7] == 0x70)
+		{
+			return "video/mp4";
+		}
+
+		if (payload.Length >= 4 && payload[0] == 0x1A && payload[1] == 0x45 && payload[2] == 0xDF && payload[3] == 0xA3)
+		{
+			return "video/webm";
+		}
+
+		if (payload.Length >= 12 &&
+			payload[0] == 0x52 && payload[1] == 0x49 && payload[2] == 0x46 && payload[3] == 0x46 &&
+			payload[8] == 0x41 && payload[9] == 0x56 && payload[10] == 0x49 && payload[11] == 0x20)
+		{
+			return "video/x-msvideo";
+		}
+
+		return null;
+	}
+
+	static string VideoExtensionFor(StagedVideo video, string fallbackName)
+	{
+		var contentType = video.ContentType.Split(';')[0].Trim().ToLowerInvariant();
+		var extension = contentType switch
+		{
+			"video/mp4" or "video/m4v" or "application/mp4" => ".mp4",
+			"video/quicktime" => ".mov",
+			"video/webm" => ".webm",
+			"video/x-msvideo" => ".avi",
+			"video/x-matroska" => ".mkv",
+			"video/3gpp" => ".3gp",
+			"video/mpeg" => ".mpeg",
+			_ => string.Empty,
+		};
+		if (extension.Length == 0)
+		{
+			var detectedType = DetectVideoContentType(video.Prefix);
+			extension = detectedType switch
+			{
+				"video/webm" => ".webm",
+				"video/x-msvideo" => ".avi",
+				"video/mp4" => ".mp4",
+				_ => string.Empty,
+			};
+		}
+		if (extension.Length > 0) return extension;
+		var requestedExtension = Path.GetExtension(fallbackName);
+		return SafeVideoExtensions.Contains(requestedExtension) ? requestedExtension : ".mp4";
 	}
 
 	static string? DetectImageContentType(byte[] payload)
@@ -508,7 +707,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		}
 
 		var requestedExtension = Path.GetExtension(fallbackName);
-		return SafeExtensions.Contains(requestedExtension) ? requestedExtension : ".jpg";
+		return SafePhotoExtensions.Contains(requestedExtension) ? requestedExtension : ".jpg";
 	}
 
 	static string SafeFileName(string? requestedName, string fallbackName, string extension, int index)
@@ -530,7 +729,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 
 		if (safeStem.Length == 0 || safeStem is "." or "..")
 		{
-			safeStem = $"instagram_photo_{index + 1}";
+			safeStem = $"instagram_{(SafeVideoExtensions.Contains(extension) ? "video" : "photo")}_{index + 1}";
 		}
 
 		if (ReservedNames.Contains(safeStem))
@@ -544,6 +743,12 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 
 	static string FallbackFileName(DownloadItem item, int index)
 	{
+		if (item.IsVideo)
+		{
+			var videoNumber = Math.Max(0, item.VideoIndex ?? index) + 1;
+			return $"{SafeShortcode(item.Shortcode)}_v{videoNumber}.mp4";
+		}
+
 		var photoNumber = Math.Max(0, item.PhotoIndex ?? index) + 1;
 		return $"{SafeShortcode(item.Shortcode)}_{photoNumber}.jpg";
 	}
@@ -557,50 +762,53 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		return safe.Length == 0 ? "instagram" : safe;
 	}
 
-	static string? FindExistingPhotoPath(string folder, DownloadItem item, string initialName, int index)
+	static string? FindExistingMediaPath(string folder, DownloadItem item, string initialName, int index)
 	{
 		var stems = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
 			Path.GetFileNameWithoutExtension(initialName),
 		};
-
-		var photoNumber = Math.Max(0, item.PhotoIndex ?? index) + 1;
+		var extensions = item.IsVideo ? SafeVideoExtensions : SafePhotoExtensions;
 		var shortcode = SafeShortcode(item.Shortcode);
-		var currentName = SafeFileName(
-			$"{shortcode}_{photoNumber}.jpg",
-			$"{shortcode}_{photoNumber}.jpg",
-			".jpg",
-			index);
-		var legacyName = SafeFileName(
-			$"{shortcode}_photo_{photoNumber}.jpg",
-			$"{shortcode}_photo_{photoNumber}.jpg",
-			".jpg",
-			index);
-		stems.Add(Path.GetFileNameWithoutExtension(currentName));
-		stems.Add(Path.GetFileNameWithoutExtension(legacyName));
+		if (item.IsVideo)
+		{
+			var videoNumber = Math.Max(0, item.VideoIndex ?? index) + 1;
+			var videoName = SafeFileName($"{shortcode}_v{videoNumber}.mp4", $"{shortcode}_v{videoNumber}.mp4", ".mp4", index);
+			stems.Add(Path.GetFileNameWithoutExtension(videoName));
+		}
+		else
+		{
+			var photoNumber = Math.Max(0, item.PhotoIndex ?? index) + 1;
+			var currentName = SafeFileName($"{shortcode}_{photoNumber}.jpg", $"{shortcode}_{photoNumber}.jpg", ".jpg", index);
+			var legacyName = SafeFileName($"{shortcode}_photo_{photoNumber}.jpg", $"{shortcode}_photo_{photoNumber}.jpg", ".jpg", index);
+			stems.Add(Path.GetFileNameWithoutExtension(currentName));
+			stems.Add(Path.GetFileNameWithoutExtension(legacyName));
+		}
 
 		string? latestPath = null;
 		var latestTimestamp = DateTimeOffset.MinValue;
-		foreach (var stem in stems)
+		foreach (var path in Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly))
 		{
-			foreach (var extension in SafeExtensions)
+			if (!extensions.Contains(Path.GetExtension(path))) continue;
+			var stem = RemoveDuplicateSuffix(Path.GetFileNameWithoutExtension(path));
+			if (!stems.Contains(stem)) continue;
+			var timestamp = TryGetDownloadedAtUtc(path) ?? DateTimeOffset.MinValue;
+			if (latestPath is null || timestamp >= latestTimestamp)
 			{
-				var path = Path.Combine(folder, stem + extension);
-				if (!File.Exists(path))
-				{
-					continue;
-				}
-
-				var timestamp = TryGetDownloadedAtUtc(path) ?? DateTimeOffset.MinValue;
-				if (latestPath is null || timestamp >= latestTimestamp)
-				{
-					latestPath = path;
-					latestTimestamp = timestamp;
-				}
+				latestPath = path;
+				latestTimestamp = timestamp;
 			}
 		}
-
 		return latestPath;
+	}
+
+	static string RemoveDuplicateSuffix(string stem)
+	{
+		var suffixStart = stem.LastIndexOf(" (", StringComparison.Ordinal);
+		return suffixStart > 0 && stem.EndsWith(')') &&
+			int.TryParse(stem.AsSpan(suffixStart + 2, stem.Length - suffixStart - 3), out _)
+			? stem[..suffixStart]
+			: stem;
 	}
 
 	static DownloadFileResult DuplicateSkipped(string existingPath) =>
@@ -675,6 +883,32 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 			}
 		}
 
+		throw new DownloadFailureException("filename_conflict");
+	}
+
+	static (string Filename, bool Skipped, DateTimeOffset? DownloadedAtUtc) MoveUniqueVideoFile(
+		string folder,
+		string filename,
+		string stagedPath,
+		bool noDuplicates)
+	{
+		var extension = Path.GetExtension(filename);
+		var stem = Path.GetFileNameWithoutExtension(filename);
+		for (var suffix = 1; suffix <= 1000; suffix++)
+		{
+			var candidate = suffix == 1 ? filename : $"{stem} ({suffix}){extension}";
+			var path = Path.Combine(folder, candidate);
+			try
+			{
+				File.Move(stagedPath, path);
+				try { File.SetLastWriteTimeUtc(path, DateTime.UtcNow); } catch (IOException) { }
+				return (candidate, false, TryGetDownloadedAtUtc(path));
+			}
+			catch (IOException) when (File.Exists(path))
+			{
+				if (noDuplicates) return (candidate, true, TryGetDownloadedAtUtc(path));
+			}
+		}
 		throw new DownloadFailureException("filename_conflict");
 	}
 
@@ -769,7 +1003,7 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		{
 			if (items.Count >= MaxItemsPerRequest)
 			{
-				items.Add(new DownloadItem(null, null, null, null, null, null));
+				items.Add(new DownloadItem(null, null, null, null, null, false, null, null, null));
 				break;
 			}
 
@@ -777,6 +1011,9 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 				ReadString(itemElement, "filename"),
 				ReadString(itemElement, "shortcode"),
 				ReadInt32(itemElement, "photoIndex"),
+				ReadInt32(itemElement, "videoIndex"),
+				ReadInt32(itemElement, "contentIndex"),
+				ReadBoolean(itemElement, "isVideo"),
 				ReadString(itemElement, "rawUrl"),
 				ReadString(itemElement, "dataUri"),
 				ReadString(itemElement, "svgMarkup")));
@@ -821,11 +1058,15 @@ public sealed class DownloadSelectedEndpoint : IApiEndpoint
 		string? Filename,
 		string? Shortcode,
 		int? PhotoIndex,
+		int? VideoIndex,
+		int? ContentIndex,
+		bool IsVideo,
 		string? RawUrl,
 		string? DataUri,
 		string? SvgMarkup);
 	sealed record DownloadFileResult(string Filename, bool Ok, string? Error, bool Skipped = false, DateTimeOffset? DownloadedAtUtc = null);
 	sealed record MediaPayload(byte[] Bytes, string ContentType);
+	sealed record StagedVideo(string Path, string ContentType, byte[] Prefix);
 
 	sealed class DownloadFailureException(string code) : Exception(code)
 	{

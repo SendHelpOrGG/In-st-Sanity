@@ -102,7 +102,7 @@ public sealed class DownloadHistoryEndpoint : IApiEndpoint
 						continue;
 					}
 
-					if (!TryParseNumberedFile(Path.GetFileNameWithoutExtension(path), out var shortcode, out var mediaIndex) ||
+					if (!TryParseNumberedFile(Path.GetFileNameWithoutExtension(path), isVideo, out var shortcode, out var mediaIndex) ||
 						!requested.TryGetValue(shortcode, out var canonicalShortcode))
 					{
 						continue;
@@ -152,7 +152,7 @@ public sealed class DownloadHistoryEndpoint : IApiEndpoint
 				}).ToArray(),
 				videos = pair.Value.Videos.Values.OrderBy(file => file.Index).Select(file => new
 				{
-					contentIndex = file.Index,
+					videoIndex = file.Index,
 					downloadedAtUtc = file.DownloadedAtUtc,
 					filename = file.Filename,
 				}).ToArray(),
@@ -186,7 +186,7 @@ public sealed class DownloadHistoryEndpoint : IApiEndpoint
 		return safe.Length <= 128 ? safe : string.Empty;
 	}
 
-	static bool TryParseNumberedFile(string stem, out string shortcode, out int zeroBasedIndex)
+	static bool TryParseNumberedFile(string stem, bool isVideo, out string shortcode, out int zeroBasedIndex)
 	{
 		shortcode = string.Empty;
 		zeroBasedIndex = -1;
@@ -195,7 +195,7 @@ public sealed class DownloadHistoryEndpoint : IApiEndpoint
 			return false;
 		}
 
-		// The previous unique-name mode appends " (2)", " (3)", and so on.
+		// The no-duplicates-off mode appends " (2)", " (3)", and so on.
 		var duplicateSuffixStart = stem.LastIndexOf(" (", StringComparison.Ordinal);
 		if (duplicateSuffixStart > 0 && stem.EndsWith(')') &&
 			int.TryParse(stem.AsSpan(duplicateSuffixStart + 2, stem.Length - duplicateSuffixStart - 3), out _))
@@ -203,20 +203,33 @@ public sealed class DownloadHistoryEndpoint : IApiEndpoint
 			stem = stem[..duplicateSuffixStart];
 		}
 
-		var numberSeparator = stem.LastIndexOf('_');
+		var numberSeparator = -1;
+		var numberStart = 0;
+		if (isVideo)
+		{
+			numberSeparator = stem.LastIndexOf("_v", StringComparison.OrdinalIgnoreCase);
+			if (numberSeparator > 0)
+			{
+				numberStart = numberSeparator + 2;
+			}
+		}
+		if (numberSeparator <= 0)
+		{
+			numberSeparator = stem.LastIndexOf('_');
+			numberStart = numberSeparator + 1;
+		}
 		if (numberSeparator <= 0 ||
-			!int.TryParse(stem.AsSpan(numberSeparator + 1), out var oneBasedIndex) ||
+			!int.TryParse(stem.AsSpan(numberStart), out var oneBasedIndex) ||
 			oneBasedIndex <= 0)
 		{
 			return false;
 		}
 
 		var parsedShortcode = stem[..numberSeparator];
-		if (parsedShortcode.EndsWith("_photo", StringComparison.OrdinalIgnoreCase))
+		if (!isVideo && parsedShortcode.EndsWith("_photo", StringComparison.OrdinalIgnoreCase))
 		{
 			parsedShortcode = parsedShortcode[..^6];
 		}
-
 		if (parsedShortcode.Length == 0)
 		{
 			return false;
