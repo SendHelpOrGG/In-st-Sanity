@@ -92,7 +92,7 @@ body[data-theme="v3"] .upload-dropzone-icon,body[data-theme="v3"] .upload-recent
    the themed `body .text-input` rule at (0,1,1) - so a hardcoded colour there
    silently pins the Download location field to the same look in every theme.
    Let the theme drive it: background var(--t-input-bg), border var(--t-input-border). */
-.folder-row{display:flex;gap:8px}.resizer-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:14px;align-items:start}.resizer-card{margin:14px 0}.resizer-card .settings-card-head{padding:17px 20px}.resizer-card .setting-body{padding:18px 20px}.resizer-pick-row,.resizer-upload-actions,.resizer-confirm-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.resizer-selection-label{min-width:0;flex:1 1 180px;color:var(--t-muted,#94a3b8);font-size:11px;overflow-wrap:anywhere}.resizer-files-panel{margin-top:16px}.resizer-files-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:9px;color:var(--t-muted,#94a3b8);font-size:11px}.resizer-files-toolbar>div{display:flex;gap:6px}.resizer-files-toolbar .outline{padding:6px 9px}.resizer-file-list{max-height:340px;overflow:auto;border:1px solid var(--t-input-border,rgba(255,255,255,.18));border-radius:9px;background:var(--t-input-bg,rgba(11,15,20,.55))}.resizer-file-row{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 11px;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:11px}.resizer-file-row:last-child{border-bottom:0}.resizer-file-row input{flex:0 0 auto;accent-color:var(--t-accent,#38bdf8)}.resizer-file-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t-ink,#f1f5f9)}.resizer-file-meta{flex:0 0 auto;color:var(--t-muted,#94a3b8);font-size:10px}.resizer-upload-actions{justify-content:space-between;margin-top:11px}.resizer-upload-actions>span{color:var(--t-muted,#94a3b8);font-size:11px}.resizer-max-row{display:flex;align-items:center;gap:9px;max-width:240px}.resizer-max-row .text-input{height:36px}.resizer-max-row>span{color:var(--t-muted,#94a3b8);font-size:11px}.resizer-upload-count{margin-top:16px;padding:10px 12px;border:1px solid var(--t-card-border,rgba(255,255,255,.16));border-radius:9px;background:var(--t-nav-bg,rgba(255,255,255,.04));font-size:12px;font-weight:600;color:var(--t-ink,#f1f5f9)}.resizer-state{margin-top:10px;min-height:40px;padding:10px 12px;border:1px solid var(--t-line,rgba(255,255,255,.14));border-radius:9px;color:var(--t-muted,#94a3b8);font-size:11px;line-height:1.5;overflow-wrap:anywhere}.resizer-state.is-error{border-color:rgba(248,113,113,.5);color:#fca5a5}.resizer-state.is-success{border-color:rgba(52,211,153,.45);color:#6ee7b7}.resizer-confirm-actions{margin-top:13px}.resizer-results{margin-top:12px;max-height:250px;overflow:auto}.resizer-result-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:10.5px}.resizer-result-row:last-child{border-bottom:0}.resizer-result-name{min-width:0;overflow-wrap:anywhere;color:var(--t-ink,#f1f5f9)}.resizer-result-status{flex:0 0 auto;color:var(--t-muted,#94a3b8)}.resizer-result-status.is-error{color:#fca5a5}@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}}.save-row{display:flex;justify-content:flex-end;margin-top:18px}.crop-modal-wrap{display:none;position:fixed;inset:0;background:rgba(5,9,12,.86);backdrop-filter:blur(5px);z-index:40;align-items:center;justify-content:center;padding:16px}.crop-modal-wrap.show{display:flex}.crop-modal{width:min(760px,calc(100vw - 32px));max-height:94vh;overflow:auto;background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border:1px solid #496073;border-radius:16px;padding:23px;box-shadow:0 24px 80px #000b}.crop-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px}.crop-heading h2{font-size:18px;margin:0 0 5px}.crop-heading p{font-size:11px;color:#9fb1c1;margin:0}.crop-ratios{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}.crop-ratio{border:1px solid #496073;background:linear-gradient(120deg,#1c252e,#161f27);color:#cbd5e1;border-radius:7px;padding:7px 10px;font:inherit;font-size:11px;cursor:pointer}.crop-ratio.active{background:linear-gradient(105deg,rgba(204,251,241,.20),rgba(45,212,191,.14));border-color:rgba(204,251,241,.38);color:#99f6e4}.crop-preview{position:relative;width:100%;aspect-ratio:16/9;margin-inline:auto;overflow:hidden;background:#080c10;border:1px solid #99f6e488;border-radius:10px;touch-action:none;cursor:grab}.crop-preview:active{cursor:grabbing}.crop-preview img{position:absolute;left:0;top:0;max-width:none;max-height:none;user-select:none;pointer-events:none}.crop-zoom-label{display:flex;justify-content:space-between;margin:14px 0 6px}.crop-zoom-label strong{color:#99f6e4}.opacity-slider:disabled{opacity:.38;cursor:not-allowed}.crop-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.crop-actions button{min-width:96px;justify-content:center}.status{position:fixed;bottom:24px;left:50%;background:#1c2832;border:1px solid #99f6e4;color:#f8fafc;border-radius:9px;padding:12px 16px;box-shadow:var(--shadow);font-size:12px;font-weight:600;opacity:0;transform:translate(-50%,8px);transition:.2s;pointer-events:none;z-index:100}.status.show{opacity:1;transform:translate(-50%,0)}.status.download-progress{max-width:min(92vw,760px);white-space:normal;text-align:center;line-height:1.45;overflow-wrap:anywhere}.modal-wrap{display:none;position:fixed;inset:0;background:rgba(7,11,15,.82);backdrop-filter:blur(3px);z-index:30;align-items:center;justify-content:center}.modal-wrap.show{display:flex}.modal{width:min(410px,calc(100vw - 32px));background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border-radius:16px;padding:27px;box-shadow:0 20px 70px #0009;position:relative}.close{position:absolute;right:17px;top:17px;border:0;background:#25313d;width:29px;height:29px;border-radius:8px;cursor:pointer;color:#cbd5e1}.modal-logo{margin:0 auto 17px;width:44px;height:44px;border-radius:14px;background:#1e2c36;display:grid;place-items:center;color:#99f6e4}.modal h2{text-align:center;font-size:19px;margin:0 0 8px}.modal p{text-align:center;color:#9fb1c1;font-size:12px;line-height:1.6;margin:0 5px 20px}.ig-login{width:100%;justify-content:center;background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);color:#091318;padding:12px;border:1px solid #f1f5f9}.fineprint{text-align:center;color:#9fb1c1;font-size:10px;line-height:1.5;margin-top:14px}.fineprint a{color:#99f6e4;text-decoration:underline}.logged-in{display:none;background:#1b2c2a;border-radius:10px;padding:13px;margin-bottom:14px;font-size:12px;color:#5eead4}.logged-in strong{display:block;margin-bottom:3px}
+.folder-row{display:flex;gap:8px}.resizer-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:14px;align-items:start}.resizer-card{margin:14px 0}.resizer-card .settings-card-head{padding:17px 20px}.resizer-card .setting-body{padding:18px 20px}.resizer-pick-row,.resizer-upload-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.resizer-files-panel{margin-top:16px}.resizer-files-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:9px;color:var(--t-muted,#94a3b8);font-size:11px}.resizer-files-toolbar>div{display:flex;gap:6px}.resizer-files-toolbar .outline{padding:6px 9px}.resizer-file-list{max-height:340px;overflow:auto;border:1px solid var(--t-input-border,rgba(255,255,255,.18));border-radius:9px;background:var(--t-input-bg,rgba(11,15,20,.55))}.resizer-file-row{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 11px;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:11px}.resizer-file-row:last-child{border-bottom:0}.resizer-file-row input{flex:0 0 auto;accent-color:var(--t-accent,#38bdf8)}.resizer-file-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t-ink,#f1f5f9)}.resizer-file-meta{flex:0 0 auto;color:var(--t-muted,#94a3b8);font-size:10px}.resizer-upload-actions{justify-content:flex-end;margin-top:11px}/* Keep active Convert glow inside the same-size folder-control frame. */body #resizerStartBtn,body #resizerOpenOutputFolderBtn{height:37px!important;min-height:37px!important;max-height:37px!important;box-sizing:border-box!important}body #resizerStartBtn::before,body #resizerOpenOutputFolderBtn::before{inset:0}body #resizerStartBtn::after,body #resizerOpenOutputFolderBtn::after{inset:0;filter:none}.resizer-max-row{display:flex;align-items:center;gap:9px;max-width:200px}.resizer-max-row .text-input{height:36px}#resizerMaxSide{flex:0 0 112px;width:112px;max-width:112px;box-sizing:border-box}.resizer-max-row>span{color:var(--t-muted,#94a3b8);font-size:11px}.resizer-state{margin-top:10px;padding:0;color:var(--t-muted,#94a3b8);font-size:11px;line-height:1.5;overflow-wrap:anywhere}.resizer-state[hidden]{display:none}.resizer-state.is-error{color:#fca5a5}.resizer-state.is-success{color:#6ee7b7}.resizer-results{margin-top:12px;max-height:250px;overflow:auto}.resizer-result-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:10.5px}.resizer-result-row:last-child{border-bottom:0}.resizer-result-name{min-width:0;overflow-wrap:anywhere;color:var(--t-ink,#f1f5f9)}.resizer-result-status{flex:0 0 auto;color:var(--t-muted,#94a3b8)}.resizer-result-status.is-error{color:#fca5a5}@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}}.save-row{display:flex;justify-content:flex-end;margin-top:18px}.crop-modal-wrap{display:none;position:fixed;inset:0;background:rgba(5,9,12,.86);backdrop-filter:blur(5px);z-index:40;align-items:center;justify-content:center;padding:16px}.crop-modal-wrap.show{display:flex}.crop-modal{width:min(760px,calc(100vw - 32px));max-height:94vh;overflow:auto;background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border:1px solid #496073;border-radius:16px;padding:23px;box-shadow:0 24px 80px #000b}.crop-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px}.crop-heading h2{font-size:18px;margin:0 0 5px}.crop-heading p{font-size:11px;color:#9fb1c1;margin:0}.crop-ratios{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}.crop-ratio{border:1px solid #496073;background:linear-gradient(120deg,#1c252e,#161f27);color:#cbd5e1;border-radius:7px;padding:7px 10px;font:inherit;font-size:11px;cursor:pointer}.crop-ratio.active{background:linear-gradient(105deg,rgba(204,251,241,.20),rgba(45,212,191,.14));border-color:rgba(204,251,241,.38);color:#99f6e4}.crop-preview{position:relative;width:100%;aspect-ratio:16/9;margin-inline:auto;overflow:hidden;background:#080c10;border:1px solid #99f6e488;border-radius:10px;touch-action:none;cursor:grab}.crop-preview:active{cursor:grabbing}.crop-preview img{position:absolute;left:0;top:0;max-width:none;max-height:none;user-select:none;pointer-events:none}.crop-zoom-label{display:flex;justify-content:space-between;margin:14px 0 6px}.crop-zoom-label strong{color:#99f6e4}.opacity-slider:disabled{opacity:.38;cursor:not-allowed}.crop-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.crop-actions button{min-width:96px;justify-content:center}.status{position:fixed;bottom:24px;left:50%;background:#1c2832;border:1px solid #99f6e4;color:#f8fafc;border-radius:9px;padding:12px 16px;box-shadow:var(--shadow);font-size:12px;font-weight:600;opacity:0;transform:translate(-50%,8px);transition:.2s;pointer-events:none;z-index:100}.status.show{opacity:1;transform:translate(-50%,0)}.status.download-progress{max-width:min(92vw,760px);white-space:normal;text-align:center;line-height:1.45;overflow-wrap:anywhere}.modal-wrap{display:none;position:fixed;inset:0;background:rgba(7,11,15,.82);backdrop-filter:blur(3px);z-index:30;align-items:center;justify-content:center}.modal-wrap.show{display:flex}.modal{width:min(410px,calc(100vw - 32px));background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border-radius:16px;padding:27px;box-shadow:0 20px 70px #0009;position:relative}.close{position:absolute;right:17px;top:17px;border:0;background:#25313d;width:29px;height:29px;border-radius:8px;cursor:pointer;color:#cbd5e1}.modal-logo{margin:0 auto 17px;width:44px;height:44px;border-radius:14px;background:#1e2c36;display:grid;place-items:center;color:#99f6e4}.modal h2{text-align:center;font-size:19px;margin:0 0 8px}.modal p{text-align:center;color:#9fb1c1;font-size:12px;line-height:1.6;margin:0 5px 20px}.ig-login{width:100%;justify-content:center;background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);color:#091318;padding:12px;border:1px solid #f1f5f9}.fineprint{text-align:center;color:#9fb1c1;font-size:10px;line-height:1.5;margin-top:14px}.fineprint a{color:#99f6e4;text-decoration:underline}.logged-in{display:none;background:#1b2c2a;border-radius:10px;padding:13px;margin-bottom:14px;font-size:12px;color:#5eead4}.logged-in strong{display:block;margin-bottom:3px}
 .detail-overlay{display:none;position:fixed;inset:0;background:rgba(7,11,15,.84);backdrop-filter:blur(7px);z-index:25;align-items:center;justify-content:center;padding:24px}.detail-overlay.show{display:flex;isolation:isolate}.post-peek-svg{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;overflow:visible;opacity:var(--sticker-opacity,.5);transition:opacity .2s ease}.post-peek-behind{z-index:1}.post-peek-front{z-index:3}body.sticker-hidden .post-peek-svg,body.animations-disabled .post-peek-svg,body.imp-anim-disabled .post-peek-svg{display:none!important}body.post-detail-open .sidebar-sticker-slot{opacity:0!important;pointer-events:none!important}.post-modal{position:relative;z-index:2;margin-top:56px;width:min(920px,calc(100vw - 136px));max-height:calc(100vh - 150px);background:linear-gradient(145deg,#25313d,#1a232c 56%,#131a21);border:1px solid #3d5060;border-radius:16px;box-shadow:0 25px 90px #000a;display:flex;flex-direction:column;overflow:hidden}.save-url-post-modal{width:100%;max-width:100%;max-height:none;overflow:visible;margin:0 auto}.detail-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--line);gap:20px;flex-shrink:0;position:relative}.video-download-notice{position:absolute;top:8px;right:22px;z-index:5;width:min(382px,42%);height:37px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1px solid var(--t-accent,#38bdf8);border-radius:10px;background:linear-gradient(115deg,var(--t-nav-act-bg,rgba(56,189,248,.16)),var(--t-modal-bg,rgba(15,23,42,.94)));color:var(--t-ink,#f8fafc);box-shadow:0 12px 28px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.08);font-size:13px;font-weight:650;letter-spacing:.1px;opacity:0;visibility:hidden;transform:translateY(-4px);pointer-events:none;transition:opacity .16s ease,transform .16s ease,visibility .16s}.video-download-notice.show{opacity:1;visibility:visible;transform:translateY(0)}@media(max-width:700px){.video-download-notice{left:16px;right:16px;top:8px;width:auto;height:37px}}.detail-heading{min-width:0}.detail-heading .eyebrow{margin:0 0 6px}.detail-heading h2{font-size:19px;letter-spacing:-.4px;margin:0 0 5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;word-break:break-word}.detail-heading p{font-size:11px;color:#9fb1c1;margin:0}.detail-meta-label{display:block;color:var(--green);font-size:9px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase;opacity:.9;margin:6px 0 3px}.detail-meta-list{display:flex;flex-wrap:wrap;gap:4px 26px;margin-top:7px}.detail-meta-row{min-width:0;max-width:100%}.detail-meta-value{display:block;font-size:11.5px;color:#cbd5e1;line-height:1.5;word-break:break-word}.detail-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}.detail-head .detail-actions{align-self:flex-end}.brand-collapse{margin-left:0;flex-shrink:0}.post-url-bar{display:flex;align-items:end;gap:12px;margin:12px 23px 0;padding:11px 12px;border:1px solid #99f6e466;border-radius:10px;background:linear-gradient(112deg,#16222c 0%,#1c2b36 67%,#213f44 86%,#182630 100%);box-shadow:inset 0 1px rgba(204,251,241,.18);flex-shrink:0}.post-url-input{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;cursor:pointer}.post-url-input span{font-size:9px;letter-spacing:1.2px;font-weight:700;color:#99f6e4}.post-url-input input{height:37px;width:100%;min-width:0;padding:0 10px;border:1px solid #496073;border-radius:7px;background:linear-gradient(115deg,#121a22 0 68%,#1d3338 86%,#141e27 100%);color:#f8fafc;font:inherit;font-size:11px;outline:0;cursor:pointer;transition:border-color .15s,box-shadow .15s}.post-url-input:hover input,.post-url-input input:focus{border-color:#99f6e4;box-shadow:0 0 0 2px rgba(153,246,228,.18)}.open-browser{height:37px;white-space:nowrap;font-size:12px!important;line-height:1!important}
 .detail-actions .primary,.detail-actions .outline,.post-url-bar .primary,.post-url-bar .outline{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-size:13px!important;font-weight:600!important;letter-spacing:-0.1px!important;line-height:1!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;white-space:nowrap!important;vertical-align:middle!important;height:37px!important;min-height:37px!important;padding:0 14px!important;border-radius:8px!important}/* v1.91 global font: Inter for all text — size/weight untouched */html,body,button,input,textarea,select,div,span,p,a,h1,h2,h3,h4,h5,h6,li,label,strong,em,code,pre,small,kbd,summary{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}.detail-count{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
 .detail-actions .primary svg,.detail-actions .outline svg,.post-url-bar .primary svg,.post-url-bar .outline svg{width:14px!important;height:14px!important;flex-shrink:0!important;display:block!important;stroke-width:1.9!important}
@@ -212,6 +212,7 @@ body .post-count{background:var(--t-count-bg);border:1px solid var(--t-count-bor
 .download-history-mark .download-history-count{font-variant-numeric:tabular-nums}
 .download-status-hidden .download-history-mark{display:none!important}
 body .active-outline-control.active{color:var(--t-accent,#5eead4);border-color:var(--t-accent,#5eead4)}
+body[data-theme="v3"] .icon-filter-btn.active-outline-control.active{color:var(--t-nav-act-ink,#090a0c)}
 
 body .status{background:var(--t-card-bg);border-color:var(--t-accent);color:var(--t-ink)}
 body .opacity-slider{accent-color:var(--t-accent)}
@@ -752,7 +753,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 #libraryPage #srcStatusNote { margin-left:auto; }
 #libraryPage #srcStatusNote:empty { display:none; }
 #videoDownloadNotice { height:37px; min-height:37px; padding:0 12px; line-height:1; white-space:nowrap; }
-.resizer-max-label-row { display:flex; align-items:center; justify-content:space-between; gap:10px; max-width:320px; margin-bottom:8px; }
+.resizer-max-label-row { display:flex; align-items:center; justify-content:flex-start; max-width:320px; margin-bottom:8px; }
 .resizer-max-label-row .field-label { margin:0; }
 #resizerUpscaleToggleBtn { flex:0 0 37px; }
 #resizerUpscaleToggleBtn.is-enabled { background:var(--t-nav-act-bg,rgba(56,189,248,.15)); border-color:var(--t-nav-act-border,rgba(125,211,252,.55)); color:var(--t-accent,#38bdf8); }
@@ -822,29 +823,27 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
     <div class="browser-viewport" id="browserViewport"><div class="browser-viewport-placeholder">Instagram opens here in the Windows desktop app.</div></div>
   </section>
   <section class="content resizer-page" id="resizerPage" style="display:none">
-    <div class="heading-row"><div><h1>Photo Resizer</h1><p>Choose images from the folder you are viewing, then confirm before resizing.</p></div></div>
+    <div class="heading-row"><div><h1>Photo Resizer</h1><p>Choose images from the folder you are viewing, set the output size, then press Convert.</p></div></div>
     <div class="resizer-grid">
       <section class="settings-card resizer-card">
         <div class="settings-card-head"><h2>1. Choose images</h2><p>Select one or more supported images from the folder you are viewing.</p></div>
         <div class="setting-body">
-          <div class="resizer-pick-row"><button type="button" class="primary" id="resizerChooseImagesBtn" onclick="chooseResizerImages()">Choose images…</button><span class="resizer-selection-label" id="resizerSelectionLabel">No images selected</span></div>
+          <div class="resizer-pick-row"><button type="button" class="primary" id="resizerChooseImagesBtn" onclick="chooseResizerImages()">Choose images…</button><button type="button" class="primary" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button></div>
           <input id="resizerImagesInput" type="file" accept="image/*" multiple hidden onchange="handleResizerImagesPicked(event)">
           <div class="resizer-files-panel" id="resizerFilePanel" hidden>
             <div class="resizer-files-toolbar"><span id="resizerAvailableCount">No images found</span><div><button type="button" class="outline" id="resizerSelectAllBtn" onclick="selectAllResizerFiles(true)">Select all</button><button type="button" class="outline" id="resizerClearSelectionBtn" onclick="selectAllResizerFiles(false)">Clear</button></div></div>
             <div class="resizer-file-list" id="resizerFileList" role="group" aria-label="Selected images"></div>
-            <div class="resizer-upload-actions"><span id="resizerSelectedCount">0 selected</span><button type="button" class="primary" id="resizerUploadBtn" onclick="uploadResizerFiles()" disabled>Upload selected files</button></div>
+            <div class="resizer-upload-actions"><button type="button" class="primary" id="resizerStartBtn" onclick="startPhotoResizing()" disabled>Convert</button><button type="button" class="icon-btn resizer-open-output-folder-btn" id="resizerOpenOutputFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open resized images folder in File Explorer" aria-label="Open resized images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button></div>
           </div>
         </div>
       </section>
       <section class="settings-card resizer-card">
-        <div class="settings-card-head"><h2>2. Confirm and resize</h2><p>Set the output size, check the uploaded count, and press the button when you want conversion to begin.</p></div>
+        <div class="settings-card-head"><h2>Resizing configuration</h2><p>Set the output size and upscaling preference, then press Convert in the image list.</p></div>
         <div class="setting-body">
-          <div class="resizer-max-label-row"><label class="field-label" for="resizerMaxSide">Maximum longest side (pixels)</label><button type="button" class="icon-btn resizer-upscale-toggle is-enabled" id="resizerUpscaleToggleBtn" onclick="togglePhotoResizerUpscale()" aria-label="Upscale smaller images" aria-pressed="true" aria-describedby="resizerMaxSideHint" title="Upscaling smaller images is on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.2"/><path d="m6.5 16 4-4 2.5 2.5"/><path d="m13 10 4.5-4.5m-4.5 0h4.5V10"/></svg></button></div>
-          <div class="resizer-max-row"><input class="text-input" id="resizerMaxSide" type="number" min="64" max="16384" step="1" value="2048" aria-describedby="resizerMaxSideHint" onchange="saveResizerMaxSide(this.value)"><span>px</span></div>
+          <div class="resizer-max-label-row"><label class="field-label" for="resizerMaxSide">Maximum longest side (pixels)</label></div>
+          <div class="resizer-max-row"><input class="text-input" id="resizerMaxSide" type="number" min="64" max="16384" step="1" value="2048" aria-describedby="resizerMaxSideHint" onchange="saveResizerMaxSide(this.value)"><span>px</span><button type="button" class="icon-btn resizer-upscale-toggle is-enabled" id="resizerUpscaleToggleBtn" onclick="togglePhotoResizerUpscale()" aria-label="Upscale smaller images" aria-pressed="true" aria-describedby="resizerMaxSideHint" title="Upscaling smaller images is on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.2"/><path d="m6.5 16 4-4 2.5 2.5"/><path d="m13 10 4.5-4.5m-4.5 0h4.5V10"/></svg></button></div>
           <p class="hint" id="resizerMaxSideHint">Larger images are reduced proportionally; smaller images are enlarged to this longest-side target.</p>
-          <div class="resizer-upload-count" id="resizerUploadedCount" aria-live="polite">0 files uploaded</div>
-          <div class="resizer-state" id="resizerStatus" role="status" aria-live="polite">Choose images to begin.</div>
-          <div class="resizer-confirm-actions"><button type="button" class="primary" id="resizerStartBtn" onclick="startPhotoResizing()" disabled>Start converting</button><button type="button" class="primary" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button><button type="button" class="icon-btn resizer-open-output-folder-btn" id="resizerOpenOutputFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open resized images folder in File Explorer" aria-label="Open resized images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H10l2 2h7.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 10h17"/><path d="M9 14h6m-2.5-2.5L15 14l-2.5 2.5"/></svg></button></div>
+          <div class="resizer-state" id="resizerStatus" role="status" aria-live="polite" hidden></div>
           <div class="resizer-results" id="resizerResults" aria-live="polite"></div>
         </div>
       </section>
@@ -1170,7 +1169,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.159; open version history" title="Click to view what changed in each version">v.1.159</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.160; open version history" title="Click to view what changed in each version">v.1.160</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1191,7 +1190,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 <div class="detail-overlay" id="postDetail" onclick="if(event.target===this)closePost()"><svg class="post-peek-svg post-peek-behind" fill="none" id="postPeekBehind" aria-hidden="true"></svg><section class="post-modal"><header class="detail-head"><div class="detail-heading"><div class="eyebrow">Instagram post</div><span class="detail-meta-label">Caption</span><h2 id="detailTitle">Post title</h2><div class="detail-meta-list"><div class="detail-meta-row"><span class="detail-meta-label">Account</span><span class="detail-meta-value" id="detailAccount">—</span></div><div class="detail-meta-row"><span class="detail-meta-label">Posted</span><span class="detail-meta-value" id="detailMeta">—</span></div></div></div><div class="detail-actions"><button type="button" class="filter icon-filter-btn source-toggle-button active-outline-control" id="detailDownloadHistoryToggleBtn" data-role="download-history-toggle" onclick="toggleDownloadHistoryVisibility()" title="Hide download history marks" aria-label="Hide download history marks" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2.5 12.5 3.3 3.3L12.5 8"/><path d="m9.5 12.5 3.3 3.3L21 7.5"/></svg></button><button type="button" class="filter icon-filter-btn source-toggle-button active-outline-control" id="detailSourceToggleBtn" data-role="source-toggle" onclick="toggleSourceBadges()" title="Toggle source labels" aria-label="Toggle source labels" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button type="button" class="filter icon-filter-btn source-toggle-button active-outline-control" id="detailVideoToggleBtn" data-role="video-toggle" onclick="toggleVideoVisibility()" title="Toggle video visibility" aria-label="Toggle video visibility" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="M15 10l5-3v10l-5-3z"/></svg></button><button class="primary detail-select-all" id="selectAllButton" onclick="toggleSelectAll()">Select all photos</button><button class="primary download-toolbar" id="detailDownloadBtn" onclick="downloadSelected()" style="display:none"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</button><button type="button" class="icon-btn" id="detailOpenFolderBtn" title="Open download folder" aria-label="Open download folder" onclick="openDownloadFolder()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button><button class="icon-btn" onclick="closePost()" aria-label="Close">✕</button></div><div class="video-download-notice" id="videoDownloadNotice" role="status" aria-live="polite">Downloading video</div></header><div class="post-url-bar"><div class="post-url-input" onclick="copyPostUrlInput(document.getElementById('detailUrl'))" title="Click to copy post URL"><span id="detailUrlLabel">POST URL</span><input id="detailUrl" readonly aria-label="Instagram post URL" title="Click to copy post URL" onclick="event.stopPropagation();copyPostUrlInput(this)"></div><button class="outline open-browser" onclick="openCurrentPostInBuiltInBrowser()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>Open in App</button><button class="outline open-browser" onclick="openCurrentPost()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open in Browser</button></div><div class="detail-grid" id="detailGrid"></div><footer class="detail-foot"><span><strong id="detailSelected">0</strong> photos selected in this post</span><button class="primary detail-done" onclick="closePost()">Done</button></footer></section><svg class="post-peek-svg post-peek-front" fill="none" id="postPeekFront" aria-hidden="true"></svg></div>
 <div class="photo-fullsize-overlay" id="photoFullSizeModal" onclick="if(event.target===this)closePhotoFullSize()" role="dialog" aria-modal="true" aria-label="Full size photo"><div class="photo-fullsize-inner"><div class="photo-fullsize-bar"><span id="photoFullSizeLabel">Photo</span><div style="display:flex;gap:8px;align-items:center"><a id="photoFullSizeExternal" class="primary open-browser" href="#" target="_blank" rel="noopener noreferrer" style="height:37px;text-decoration:none;display:none">↗ &nbsp; Open original</a><button class="icon-btn" onclick="closePhotoFullSize()" aria-label="Close full size photo">✕</button></div></div><div class="photo-fullsize-media" id="photoFullSizeMedia"></div></div></div>
 <div class="crop-modal-wrap" id="backgroundCropModal"><section class="crop-modal" role="dialog" aria-modal="true" aria-labelledby="cropTitle"><div class="crop-heading"><div><div class="eyebrow">BACKGROUND IMAGE</div><h2 id="cropTitle">Choose the crop</h2><p>Drag the picture to reposition it, then zoom to frame the area you want.</p></div><button class="icon-btn" onclick="cancelBackgroundCrop()" aria-label="Cancel crop">✕</button></div><div class="crop-ratios" role="group" aria-label="Crop shape"><button class="crop-ratio active" onclick="setCropRatio(16,9,this)">Wide · 16:9</button><button class="crop-ratio" onclick="setCropRatio(4,3,this)">Classic · 4:3</button><button class="crop-ratio" onclick="setCropRatio(1,1,this)">Square</button><button class="crop-ratio" onclick="setCropFullSize(this)">Full size</button></div><div class="crop-preview" id="cropViewport" onpointerdown="startCropDrag(event)"><img id="cropImage" alt="Move and zoom to select the background crop" draggable="false"></div><label class="field-label crop-zoom-label" for="cropZoom">Zoom <strong id="cropZoomValue">100%</strong></label><input class="opacity-slider" id="cropZoom" type="range" min="1" max="3" step="0.01" value="1" oninput="setCropZoom(this.value)"><div class="crop-actions"><button class="outline" onclick="cancelBackgroundCrop()">Cancel</button><button class="primary" onclick="applyBackgroundCrop()">Use this crop</button></div></section></div>
-<div class="crop-modal-wrap" id="uploadJsonModal" onclick="if(event.target===this)closeUploadJsonModal()"><section class="upload-json-modal" role="dialog" aria-modal="true" aria-labelledby="uploadJsonModalTitle"><div class="crop-heading"><div><div class="eyebrow">IMPORT SAVED POSTS</div><h2 id="uploadJsonModalTitle">Upload JSON file</h2><p>Select or drag &amp; drop your Instagram <code>saved_posts.json</code> file to load your saved posts.</p></div><button class="icon-btn" onclick="closeUploadJsonModal()" aria-label="Close Upload JSON window">✕</button></div><div class="upload-dropzone" id="uploadJsonDropzone" onclick="document.getElementById('postJsonFile').click()" ondragover="handleJsonDragOver(event)" ondragleave="handleJsonDragLeave(event)" ondrop="handleJsonDrop(event)"><div class="upload-dropzone-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div><strong>Click to choose a JSON file, or drag &amp; drop it here</strong><span>Supports Instagram saved posts JSON exports (<code>.json</code>)</span></div><div class="upload-or" id="uploadJsonOr" hidden>or</div><div class="upload-recent" id="uploadJsonRecent" hidden><div class="upload-recent-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3.5 2"/></svg></div><div class="upload-recent-copy"><strong id="uploadJsonRecentName"></strong><span id="uploadJsonRecentMeta"></span></div><div class="upload-recent-actions"><button class="primary" id="uploadJsonRecentBtn" onclick="useLastUploadedJson()">Use it</button><button class="icon-btn" onclick="forgetLastUploadedJson()" aria-label="Forget the last uploaded JSON file" title="Forget this file"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button></div></div><div id="dyiLinkWrap" style="display:flex;align-items:center;gap:12px;margin-top:12px"><span style="font-size:11.5px;color:#94a3b8;flex:1 1 auto;min-width:0">Get your export here: <a href="https://accountscenter.instagram.com/info_and_permissions/dyi/?theme=dark" target="_blank" rel="noopener noreferrer" style="color:#99f6e4;text-decoration:underline;font-size:11.5px;font-weight:600;word-break:break-all">https://accountscenter.instagram.com/info_and_permissions/dyi/?theme=dark</a></span><button type="button" class="icon-btn" onclick="openDyiDocPopup()" aria-label="Open how to export docs" title="How to export" style="width:37px;height:37px;flex:0 0 37px;margin-left:auto;font-size:13px;font-weight:700">Doc</button></div><div id="dyiDocPopup" class="detail-overlay" style="z-index:95" onclick="if(event.target===this)closeDyiDocPopup()"><section class="post-modal" style="width:min(560px,90vw);padding:22px 20px"><header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0;font-size:14px;color:#f1f5f9">How to export</h3><button type="button" class="icon-btn" onclick="closeDyiDocPopup()" aria-label="Close">✕</button></header><p style="margin:0;color:#cbd5e1;font-size:12px;line-height:1.7;white-space:pre-wrap">Profile -&gt; Settings -&gt; Account Center -&gt; Your information and permissions -&gt; Export your information, then click Create export -&gt; Customize it and then click on Start Export -&gt; Wait</p></section></div></div></section></div>
+<div class="crop-modal-wrap" id="uploadJsonModal" onclick="if(event.target===this)closeUploadJsonModal()"><section class="upload-json-modal" role="dialog" aria-modal="true" aria-labelledby="uploadJsonModalTitle"><div class="crop-heading"><div><div class="eyebrow">IMPORT SAVED POSTS</div><h2 id="uploadJsonModalTitle">Upload JSON file</h2><p>Select or drag &amp; drop your Instagram <code>saved_posts.json</code> file to load your saved posts.</p></div><button class="icon-btn" onclick="closeUploadJsonModal()" aria-label="Close Upload JSON window">✕</button></div><div class="upload-dropzone" id="uploadJsonDropzone" onclick="document.getElementById('postJsonFile').click()" ondragover="handleJsonDragOver(event)" ondragleave="handleJsonDragLeave(event)" ondrop="handleJsonDrop(event)"><div class="upload-dropzone-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div><strong>Click to choose a JSON file, or drag &amp; drop it here</strong><span>Supports Instagram saved posts JSON exports (<code>.json</code>)</span></div><div class="upload-or" id="uploadJsonOr" hidden>or</div><div class="upload-recent" id="uploadJsonRecent" hidden><div class="upload-recent-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3.5 2"/></svg></div><div class="upload-recent-copy"><strong id="uploadJsonRecentName"></strong><span id="uploadJsonRecentMeta"></span></div><div class="upload-recent-actions"><button class="primary" id="uploadJsonRecentBtn" onclick="useLastUploadedJson()">Use it</button><button class="icon-btn" onclick="forgetLastUploadedJson()" aria-label="Forget the last uploaded JSON file" title="Forget this file"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button></div></div><div id="dyiLinkWrap" style="display:flex;align-items:center;gap:12px;margin-top:12px"><span style="font-size:11.5px;color:#94a3b8;flex:1 1 auto;min-width:0">Get your export here: <a href="https://accountscenter.instagram.com/info_and_permissions/dyi/?theme=dark" target="_blank" rel="noopener noreferrer" style="color:#99f6e4;text-decoration:underline;font-size:11.5px;font-weight:600;word-break:break-all">https://accountscenter.instagram.com/info_and_permissions/dyi/?theme=dark</a></span><button type="button" class="icon-btn" id="dyiHelpBtn" onclick="openDyiDocPopup()" aria-label="Open how to export instructions" title="How to export" style="width:37px;height:37px;flex:0 0 37px;margin-left:auto"><svg class="dyi-help-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.25"/><path d="M9.8 9.1a2.25 2.25 0 1 1 3.7 1.72c-1.05.84-1.5 1.29-1.5 2.68"/><circle cx="12" cy="16.85" r=".72" fill="currentColor" stroke="none"/></svg></button></div><div id="dyiDocPopup" class="detail-overlay" style="z-index:95" onclick="if(event.target===this)closeDyiDocPopup()"><section class="post-modal" style="width:min(560px,90vw);padding:22px 20px"><header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0;font-size:14px;color:#f1f5f9">How to export</h3><button type="button" class="icon-btn" onclick="closeDyiDocPopup()" aria-label="Close">✕</button></header><p style="margin:0;color:#cbd5e1;font-size:12px;line-height:1.7;white-space:pre-wrap">Profile -&gt; Settings -&gt; Account Center -&gt; Your information and permissions -&gt; Export your information, then click Create export -&gt; Customize it and then click on Start Export -&gt; Wait</p></section></div></div></section></div>
 <div class="modal-wrap" id="logoutConfirmModal" onclick="if(event.target===this)dismissLogoutConfirm()"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="logoutConfirmTitle" aria-describedby="logoutConfirmMessage"><button class="close" onclick="dismissLogoutConfirm()" aria-label="Close">✕</button><div class="modal-logo"><svg width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></div><h2 id="logoutConfirmTitle">Log out of Instagram?</h2><p id="logoutConfirmMessage">The Instagram session kept in the app's browser profile on this PC will be cleared. You can sign in again any time in the in-app browser.</p><div class="input-row" style="justify-content:flex-end;margin-top:6px"><button class="outline" onclick="dismissLogoutConfirm()">Cancel</button><button class="outline danger" onclick="confirmLogout()">Log Out</button></div></div></div>
 <div class="modal-wrap" id="jsonNoticeModal" onclick="if(event.target===this)closeJsonNoticeModal()"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="jsonNoticeTitle" aria-describedby="jsonNoticeMessage"><button class="close" onclick="closeJsonNoticeModal()" aria-label="Close">✕</button><div class="modal-logo"><svg width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><circle cx="12" cy="16.5" r=".8" fill="currentColor"/></svg></div><h2 id="jsonNoticeTitle">No posts found in this file</h2><p id="jsonNoticeMessage">The uploaded JSON file contains no posts, or this may be the wrong file overall. Please double-check the file and try again.</p><button class="primary ig-login" onclick="closeJsonNoticeModal()">Got it</button></div></div>
 <div class="json-throw-fx-layer" id="jsonThrowFxLayer" aria-hidden="true">
@@ -3519,19 +3518,216 @@ function togglePhotoResizerUpscale(){if(photoResizeBusy)return;photoResizeUpscal
 function saveResizerMaxSide(value){const input=document.getElementById('resizerMaxSide');const n=Number(value);if(!Number.isInteger(n)||n<64||n>16384){if(input)input.value='2048';setPhotoResizeStatus('Enter a whole number from 64 to 16,384 pixels.','error');syncPhotoResizeControls();return}try{localStorage.setItem(RESIZER_MAX_SIDE_KEY,String(n))}catch(_){}setPhotoResizeStatus('Maximum longest side set to '+n.toLocaleString()+' pixels.');syncPhotoResizeControls()}
 async function chooseResizerOutputFolder(){const input=document.getElementById('resizerOutputFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistPhotoResizerOutputFolder(data.path);toast('Resized-photo folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
 function chooseResizerImages(){if(photoResizeBusy)return;const input=document.getElementById('resizerImagesInput');if(!input)return;input.value='';input.click()}
-function photoResizeErrorMessage(code){const messages={invalid_upload:'This file could not be added.',empty_file:'The selected file is empty.',file_too_large:'Each image must be 50 MB or smaller.',unsupported_image_type:'That file type is not supported.',too_many_files:'A maximum of 500 images can be loaded at once.',upload_limit_reached:'The 1 GB staging limit has been reached.',upload_failed:'The image could not be uploaded.',invalid_max_side:'Choose a maximum side from 64 to 16,384 pixels.',no_uploaded_files:'Upload at least one selected image first.',output_folder_unavailable:'The resized-photo folder could not be opened. Check its location and permissions.',image_decode_failed:'The image format could not be decoded by Windows.',resize_failed:'The image could not be resized or saved.',conversion_failed:'The conversion did not complete. Your uploaded images are still staged.',invalid_request:'The conversion request was invalid.'};return messages[code]||'The request could not be completed.'}
-function setPhotoResizeStatus(message,kind=''){const status=document.getElementById('resizerStatus');if(!status)return;status.textContent=String(message||'');status.classList.toggle('is-error',kind==='error');status.classList.toggle('is-success',kind==='success')}
+function photoResizeErrorMessage(code){const messages={invalid_upload:'This file could not be added.',empty_file:'The selected file is empty.',file_too_large:'Each image must be 50 MB or smaller.',unsupported_image_type:'That file type is not supported.',too_many_files:'A maximum of 500 images can be loaded at once.',upload_limit_reached:'The 1 GB staging limit has been reached.',upload_failed:'The image could not be uploaded.',invalid_max_side:'Choose a maximum side from 64 to 16,384 pixels.',no_uploaded_files:'Select at least one image to convert.',output_folder_unavailable:'The resized-photo folder could not be opened. Check its location and permissions.',image_decode_failed:'The image format could not be decoded by Windows.',resize_failed:'The image could not be resized or saved.',conversion_failed:'The conversion did not complete. Your uploaded images are still staged.',invalid_request:'The conversion request was invalid.'};return messages[code]||'The request could not be completed.'}
+function setPhotoResizeStatus(message,kind=''){
+  const status=document.getElementById('resizerStatus');
+  if(!status)return;
+  const text=String(message||'');
+  status.textContent=text;
+  status.hidden=!text;
+  status.classList.toggle('is-error',kind==='error');
+  status.classList.toggle('is-success',kind==='success');
+}
 function formatPhotoResizeBytes(bytes){const n=Math.max(0,Number(bytes)||0);if(n<1024)return n+' B';if(n<1024*1024)return(n/1024).toFixed(n<10*1024?1:0)+' KB';return(n/(1024*1024)).toFixed(n<10*1024*1024?1:0)+' MB'}
-function renderPhotoResizeFileList(){const list=document.getElementById('resizerFileList');if(!list)return;list.innerHTML=photoResizeQueue.map((item,index)=>{const label=item.uploaded?'Uploaded':item.error?'Upload failed':formatPhotoResizeBytes(item.file.size);const checked=item.selected?' checked':'';const disabled=photoResizeBusy||item.uploaded?' disabled':'';const statusClass=item.error?' class="resizer-file-meta is-error"':' class="resizer-file-meta"';const fileName=item.file.name;return`<label class="resizer-file-row"><input type="checkbox" ${checked}${disabled} onchange="setPhotoResizeSelected(${index},this.checked)"><span class="resizer-file-name" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</span><span${statusClass}>${escapeHtml(label)}</span></label>`}).join('');const available=document.getElementById('resizerAvailableCount');if(available){const queued=photoResizeQueue.length;available.textContent=photoResizeAvailableCount>queued?`${queued} images listed · first ${RESIZER_MAX_FILES} of ${photoResizeAvailableCount} supported files`:`${queued} supported image${queued===1?'':'s'} found`}const selected=photoResizeQueue.filter(item=>item.selected&&!item.uploaded).length;const selectedLabel=document.getElementById('resizerSelectedCount');if(selectedLabel)selectedLabel.textContent=`${selected} selected · ${photoResizeUploadedCount} uploaded`;}
-function syncPhotoResizeControls(){const busy=photoResizeBusy;const upscaleToggle=document.getElementById('resizerUpscaleToggleBtn');if(upscaleToggle)upscaleToggle.disabled=busy;const choose=document.getElementById('resizerChooseImagesBtn');if(choose)choose.disabled=busy;const maxSideInput=document.getElementById('resizerMaxSide');if(maxSideInput)maxSideInput.disabled=busy;const selectAll=document.getElementById('resizerSelectAllBtn');if(selectAll)selectAll.disabled=busy||!photoResizeQueue.some(item=>!item.uploaded);const clearSelection=document.getElementById('resizerClearSelectionBtn');if(clearSelection)clearSelection.disabled=busy||!photoResizeQueue.some(item=>!item.uploaded);const upload=document.getElementById('resizerUploadBtn');const pendingSelected=photoResizeQueue.some(item=>item.selected&&!item.uploaded);if(upload){upload.disabled=busy||photoResizeCompleted||!pendingSelected;upload.textContent=busy?(photoResizeConverting?'Converting…':'Uploading…'):'Upload selected files'}const start=document.getElementById('resizerStartBtn');if(start){const input=document.getElementById('resizerMaxSide');const max=Number(input?.value);const valid=Number.isInteger(max)&&max>=64&&max<=16384;start.disabled=busy||photoResizeCompleted||photoResizeUploadedCount===0||!valid}const reset=document.getElementById('resizerResetBtn');if(reset)reset.disabled=busy||(!photoResizeSelectionLabel&&!photoResizeQueue.length&&!photoResizeUploadedCount&&!photoResizeCompleted);const count=document.getElementById('resizerUploadedCount');if(count){if(photoResizeCompleted)count.textContent=`${photoResizeUploadedCount} files processed`;else count.textContent=`${photoResizeUploadedCount} file${photoResizeUploadedCount===1?'':'s'} uploaded`}const panel=document.getElementById('resizerFilePanel');if(panel)panel.hidden=!photoResizeSelectionLabel&&!photoResizeQueue.length;renderPhotoResizeFileList()}
+function renderPhotoResizeFileList(){
+  const list=document.getElementById('resizerFileList');
+  if(!list)return;
+  list.innerHTML=photoResizeQueue.map((item,index)=>{
+    const label=item.uploaded?'Uploaded':item.error?'Upload failed':formatPhotoResizeBytes(item.file.size);
+    const checked=item.selected?' checked':'';
+    const disabled=photoResizeBusy||item.uploaded?' disabled':'';
+    const statusClass=item.error?' class="resizer-file-meta is-error"':' class="resizer-file-meta"';
+    const fileName=item.file.name;
+    return`<label class="resizer-file-row"><input type="checkbox" ${checked}${disabled} onchange="setPhotoResizeSelected(${index},this.checked)"><span class="resizer-file-name" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</span><span${statusClass}>${escapeHtml(label)}</span></label>`
+  }).join('');
+  const available=document.getElementById('resizerAvailableCount');
+  if(available){
+    const queued=photoResizeQueue.length;
+    available.textContent=photoResizeAvailableCount>queued
+      ?`${queued} images listed · first ${RESIZER_MAX_FILES} of ${photoResizeAvailableCount} supported files`
+      :`${queued} supported image${queued===1?'':'s'} found`;
+  }
+}
+function syncPhotoResizeControls(){
+  const busy=photoResizeBusy;
+  const upscaleToggle=document.getElementById('resizerUpscaleToggleBtn');
+  if(upscaleToggle)upscaleToggle.disabled=busy;
+  const choose=document.getElementById('resizerChooseImagesBtn');
+  if(choose)choose.disabled=busy;
+  const maxSideInput=document.getElementById('resizerMaxSide');
+  if(maxSideInput)maxSideInput.disabled=busy;
+  const hasPendingFiles=photoResizeQueue.some(item=>!item.uploaded);
+  const selectAll=document.getElementById('resizerSelectAllBtn');
+  if(selectAll)selectAll.disabled=busy||!hasPendingFiles;
+  const clearSelection=document.getElementById('resizerClearSelectionBtn');
+  if(clearSelection)clearSelection.disabled=busy||!hasPendingFiles;
+  const start=document.getElementById('resizerStartBtn');
+  if(start){
+    const input=document.getElementById('resizerMaxSide');
+    const max=Number(input?.value);
+    const valid=Number.isInteger(max)&&max>=64&&max<=16384;
+    const hasSelection=photoResizeQueue.some(item=>item.selected);
+    start.disabled=busy||photoResizeCompleted||!hasSelection||!valid;
+    start.textContent=busy?(photoResizeConverting?'Converting…':'Uploading…'):'Convert';
+  }
+  const reset=document.getElementById('resizerResetBtn');
+  if(reset)reset.disabled=busy||(!photoResizeSelectionLabel&&!photoResizeQueue.length&&!photoResizeUploadedCount&&!photoResizeCompleted);
+  const panel=document.getElementById('resizerFilePanel');
+  if(panel)panel.hidden=!photoResizeSelectionLabel&&!photoResizeQueue.length;
+  renderPhotoResizeFileList();
+}
 function setPhotoResizeSelected(index,selected){const item=photoResizeQueue[index];if(!item||item.uploaded||photoResizeBusy)return;item.selected=Boolean(selected);syncPhotoResizeControls()}
 function selectAllResizerFiles(selected){if(photoResizeBusy)return;photoResizeQueue.forEach(item=>{if(!item.uploaded)item.selected=Boolean(selected)});syncPhotoResizeControls()}
 async function deletePhotoResizeSession(sessionId){if(!sessionId)return;const path='/api/resize-upload?sessionId='+encodeURIComponent(sessionId);for(const endpoint of getApiUrls(path)){await fetchEndpointJson(endpoint,30000,{method:'DELETE'});break}}
-function handleResizerImagesPicked(event){const files=Array.from(event?.target?.files||[]);if(!files.length)return;const previousSession=photoResizeSessionId;if(previousSession)void deletePhotoResizeSession(previousSession);const supported=files.filter(file=>{const dot=file.name.lastIndexOf('.');const ext=dot>=0?file.name.slice(dot).toLowerCase():'';return RESIZER_ALLOWED_EXTENSIONS.has(ext)&&file.size>0&&file.size<=RESIZER_MAX_FILE_BYTES});photoResizeAvailableCount=supported.length;photoResizeQueue=supported.slice(0,RESIZER_MAX_FILES).map((file,index)=>({file,id:makePhotoResizeGuid(),order:index,selected:true,uploaded:false,error:''}));photoResizeSelectionLabel=photoResizeQueue.length?`${photoResizeQueue.length} supported image${photoResizeQueue.length===1?'':'s'} available`:'No supported images found';photoResizeSessionId=makePhotoResizeGuid();photoResizeUploadedCount=0;photoResizeBusy=false;photoResizeConverting=false;photoResizeCompleted=false;const selectionLabel=document.getElementById('resizerSelectionLabel');if(selectionLabel)selectionLabel.textContent=photoResizeSelectionLabel;document.getElementById('resizerResults').innerHTML='';const omitted=files.length-supported.length;let message=`${photoResizeQueue.length} supported image${photoResizeQueue.length===1?'':'s'} ready to select.`;if(omitted)message+=` ${omitted} unsupported, empty, or over-50-MB file${omitted===1?' was':'s were'} skipped.`;if(supported.length>RESIZER_MAX_FILES)message+=` Only the first ${RESIZER_MAX_FILES} supported images are listed.`;setPhotoResizeStatus(message,photoResizeQueue.length?'':'error');syncPhotoResizeControls()}
-async function uploadResizerFiles(){if(photoResizeBusy||photoResizeCompleted)return;const selected=photoResizeQueue.filter(item=>item.selected&&!item.uploaded);if(!selected.length){setPhotoResizeStatus('Select one or more images that have not been uploaded yet.','error');return}if(!photoResizeSessionId)photoResizeSessionId=makePhotoResizeGuid();photoResizeBusy=true;photoResizeConverting=false;syncPhotoResizeControls();let failed=0;for(let index=0;index<selected.length;index++){const item=selected[index];setPhotoResizeStatus(`Uploading ${index+1} of ${selected.length} selected images… ${photoResizeUploadedCount} uploaded so far.`);const query=`?sessionId=${encodeURIComponent(photoResizeSessionId)}&fileId=${encodeURIComponent(item.id)}&order=${encodeURIComponent(item.order)}&fileName=${encodeURIComponent(item.file.name)}`;let data=null;for(const endpoint of getApiUrls('/api/resize-upload'+query)){data=await fetchEndpointJson(endpoint,300000,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:item.file});if(data)break}if(data?.ok){item.uploaded=true;item.error='';photoResizeUploadedCount=Math.max(photoResizeUploadedCount,Number(data.uploadedCount)||0)}else{item.error=data?.error||'upload_failed';failed++}syncPhotoResizeControls()}photoResizeBusy=false;photoResizeConverting=false;syncPhotoResizeControls();if(failed){setPhotoResizeStatus(`${photoResizeUploadedCount} image${photoResizeUploadedCount===1?'':'s'} uploaded; ${failed} upload${failed===1?'':'s'} failed. You can retry the failed files.`,photoResizeUploadedCount?'':'error')}else{setPhotoResizeStatus(`${photoResizeUploadedCount} image${photoResizeUploadedCount===1?'':'s'} uploaded and ready. Review the maximum side, then press Start converting when you are ready.`,'success')}}
+function handleResizerImagesPicked(event){
+  const files=Array.from(event?.target?.files||[]);
+  if(!files.length)return;
+  const previousSession=photoResizeSessionId;
+  if(previousSession)void deletePhotoResizeSession(previousSession);
+  const supported=files.filter(file=>{
+    const dot=file.name.lastIndexOf('.');
+    const ext=dot>=0?file.name.slice(dot).toLowerCase():'';
+    return RESIZER_ALLOWED_EXTENSIONS.has(ext)&&file.size>0&&file.size<=RESIZER_MAX_FILE_BYTES;
+  });
+  photoResizeAvailableCount=supported.length;
+  photoResizeQueue=supported.slice(0,RESIZER_MAX_FILES).map((file,index)=>({file,id:makePhotoResizeGuid(),order:index,selected:true,uploaded:false,error:''}));
+  photoResizeSelectionLabel=photoResizeQueue.length?'selected':'';
+  photoResizeSessionId=photoResizeQueue.length?makePhotoResizeGuid():'';
+  photoResizeUploadedCount=0;
+  photoResizeBusy=false;
+  photoResizeConverting=false;
+  photoResizeCompleted=false;
+  document.getElementById('resizerResults').innerHTML='';
+  const omitted=files.length-supported.length;
+  const notes=[];
+  if(omitted)notes.push(`${omitted} unsupported, empty, or over-50-MB file${omitted===1?' was':'s were'} skipped.`);
+  if(supported.length>RESIZER_MAX_FILES)notes.push(`Only the first ${RESIZER_MAX_FILES} supported images are listed.`);
+  if(!photoResizeQueue.length)setPhotoResizeStatus('No supported images found. Choose supported image files up to 50 MB each.','error');
+  else setPhotoResizeStatus(notes.join(' '));
+  syncPhotoResizeControls();
+}
+async function uploadResizerFiles(selected){
+  let failed=0;
+  for(let index=0;index<selected.length;index++){
+    const item=selected[index];
+    setPhotoResizeStatus(`Uploading image ${index+1} of ${selected.length}… ${photoResizeUploadedCount} uploaded so far.`);
+    const query=`?sessionId=${encodeURIComponent(photoResizeSessionId)}&fileId=${encodeURIComponent(item.id)}&order=${encodeURIComponent(item.order)}&fileName=${encodeURIComponent(item.file.name)}`;
+    let data=null;
+    try{
+      for(const endpoint of getApiUrls('/api/resize-upload'+query)){
+        data=await fetchEndpointJson(endpoint,300000,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:item.file});
+        if(data)break;
+      }
+    }catch(_){data=null}
+    if(data?.ok){
+      item.uploaded=true;
+      item.error='';
+      photoResizeUploadedCount=Math.max(photoResizeUploadedCount,Number(data.uploadedCount)||0);
+    }else{
+      item.error=data?.error||'upload_failed';
+      failed++;
+    }
+    syncPhotoResizeControls();
+  }
+  return failed;
+}
 function renderPhotoResizeResults(result){const box=document.getElementById('resizerResults');if(!box)return;const files=Array.isArray(result?.files)?result.files:[];box.innerHTML=files.map(item=>{const status=item.status==='resized'?'Resized':item.status==='unchanged'?'Copied unchanged':item.status==='skipped'?'Skipped (duplicate)':'Failed';const error=item.error?` · ${photoResizeErrorMessage(item.error)}`:'';const output=item.outputName?` → ${item.outputName}`:'';const failed=item.status==='failed';return`<div class="resizer-result-row"><span class="resizer-result-name">${escapeHtml(item.fileName||'Image')}${escapeHtml(output)}${escapeHtml(error)}</span><span class="resizer-result-status${failed?' is-error':''}">${status}</span></div>`}).join('')}
-async function startPhotoResizing(){if(photoResizeBusy||photoResizeCompleted||photoResizeUploadedCount<1)return;const input=document.getElementById('resizerMaxSide');const maxSide=Number(input?.value);if(!Number.isInteger(maxSide)||maxSide<64||maxSide>16384){setPhotoResizeStatus('Enter a whole number from 64 to 16,384 pixels.','error');input?.focus();return}try{localStorage.setItem(RESIZER_MAX_SIDE_KEY,String(maxSide))}catch(_){}const smallerImageAction=photoResizeUpscaleEnabled?'Smaller images will be enlarged proportionally to this longest-side target.':'Smaller images will be copied unchanged.';const noDuplicates=isNoDuplicatesEnabled();const duplicateAction=noDuplicates?'Existing resized-image names will be skipped.':'Existing output names will get numbered suffixes.';const confirmation=window.confirm(`Start converting ${photoResizeUploadedCount} uploaded image${photoResizeUploadedCount===1?'':'s'}? Images larger than ${maxSide.toLocaleString()} pixels on their longest side will be reduced proportionally. ${smallerImageAction} ${duplicateAction}`);if(!confirmation)return;photoResizeBusy=true;photoResizeConverting=true;syncPhotoResizeControls();setPhotoResizeStatus(`Converting ${photoResizeUploadedCount} uploaded image${photoResizeUploadedCount===1?'':'s'}…`);const body={sessionId:photoResizeSessionId,maxSide,upscale:photoResizeUpscaleEnabled,noDuplicates,outputFolder:getConfiguredPhotoResizerOutputFolder()};let data=null;for(const endpoint of getApiUrls('/api/resize-convert')){data=await fetchEndpointJson(endpoint,1740000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(data)break}photoResizeBusy=false;photoResizeConverting=false;if(!data?.ok){setPhotoResizeStatus(photoResizeErrorMessage(data?.error||'conversion_failed'),'error');syncPhotoResizeControls();return}photoResizeCompleted=true;photoResizeUploadedCount=Number(data.requestedCount)||photoResizeUploadedCount;photoResizeSessionId='';renderPhotoResizeResults(data);syncPhotoResizeControls();const resized=Number(data.resizedCount)||0;const unchanged=Number(data.unchangedCount)||0;const skipped=Number(data.skippedCount)||0;const failed=Number(data.failedCount)||0;const summary=`Conversion finished: ${resized} resized, ${unchanged} copied unchanged, ${skipped} duplicate${skipped===1?'':'s'} skipped, ${failed} failed.`;setPhotoResizeStatus(summary,failed?'error':'success')}
-function resetResizerQueue(){if(photoResizeBusy)return;const oldSession=photoResizeSessionId;if(oldSession)void deletePhotoResizeSession(oldSession);photoResizeQueue=[];photoResizeSessionId='';photoResizeUploadedCount=0;photoResizeBusy=false;photoResizeConverting=false;photoResizeCompleted=false;photoResizeSelectionLabel='';photoResizeAvailableCount=0;const picker=document.getElementById('resizerImagesInput');if(picker)picker.value='';const selectionLabel=document.getElementById('resizerSelectionLabel');if(selectionLabel)selectionLabel.textContent='No images selected';const results=document.getElementById('resizerResults');if(results)results.innerHTML='';setPhotoResizeStatus('Choose images to begin.');syncPhotoResizeControls()}
+async function startPhotoResizing(){
+  if(photoResizeBusy||photoResizeCompleted)return;
+  const selected=photoResizeQueue.filter(item=>item.selected);
+  if(!selected.length){
+    setPhotoResizeStatus('Select one or more images to convert.','error');
+    return;
+  }
+  const input=document.getElementById('resizerMaxSide');
+  const maxSide=Number(input?.value);
+  if(!Number.isInteger(maxSide)||maxSide<64||maxSide>16384){
+    setPhotoResizeStatus('Enter a whole number from 64 to 16,384 pixels.','error');
+    input?.focus();
+    return;
+  }
+  try{localStorage.setItem(RESIZER_MAX_SIDE_KEY,String(maxSide))}catch(_){}
+  const pending=selected.filter(item=>!item.uploaded);
+  const conversionCount=photoResizeUploadedCount+pending.length;
+  const smallerImageAction=photoResizeUpscaleEnabled
+    ?'Smaller images will be enlarged proportionally to this longest-side target.'
+    :'Smaller images will be copied unchanged.';
+  const noDuplicates=isNoDuplicatesEnabled();
+  const duplicateAction=noDuplicates
+    ?'Existing resized-image names will be skipped.'
+    :'Existing output names will get numbered suffixes.';
+  const confirmation=window.confirm(`Upload and convert ${conversionCount} selected image${conversionCount===1?'':'s'}? Images larger than ${maxSide.toLocaleString()} pixels on their longest side will be reduced proportionally. ${smallerImageAction} ${duplicateAction}`);
+  if(!confirmation)return;
+  if(!photoResizeSessionId)photoResizeSessionId=makePhotoResizeGuid();
+  photoResizeBusy=true;
+  photoResizeConverting=false;
+  syncPhotoResizeControls();
+  if(pending.length){
+    const failed=await uploadResizerFiles(pending);
+    if(failed){
+      photoResizeBusy=false;
+      photoResizeConverting=false;
+      syncPhotoResizeControls();
+      setPhotoResizeStatus(`${photoResizeUploadedCount} uploaded; ${failed} failed. Press Convert again to retry the remaining images.`,photoResizeUploadedCount?'':'error');
+      return;
+    }
+  }
+  if(photoResizeUploadedCount<1){
+    photoResizeBusy=false;
+    photoResizeConverting=false;
+    syncPhotoResizeControls();
+    setPhotoResizeStatus('No selected images could be uploaded. Check the file list and try again.','error');
+    return;
+  }
+  photoResizeConverting=true;
+  syncPhotoResizeControls();
+  setPhotoResizeStatus(`Converting ${photoResizeUploadedCount} image${photoResizeUploadedCount===1?'':'s'}…`);
+  const body={sessionId:photoResizeSessionId,maxSide,upscale:photoResizeUpscaleEnabled,noDuplicates,outputFolder:getConfiguredPhotoResizerOutputFolder()};
+  let data=null;
+  try{
+    for(const endpoint of getApiUrls('/api/resize-convert')){
+      data=await fetchEndpointJson(endpoint,1740000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(data)break;
+    }
+  }catch(_){data=null}
+  photoResizeBusy=false;
+  photoResizeConverting=false;
+  if(!data?.ok){
+    setPhotoResizeStatus(photoResizeErrorMessage(data?.error||'conversion_failed'),'error');
+    syncPhotoResizeControls();
+    return;
+  }
+  photoResizeCompleted=true;
+  photoResizeUploadedCount=Number(data.requestedCount)||photoResizeUploadedCount;
+  photoResizeSessionId='';
+  renderPhotoResizeResults(data);
+  syncPhotoResizeControls();
+  const resized=Number(data.resizedCount)||0;
+  const unchanged=Number(data.unchangedCount)||0;
+  const skipped=Number(data.skippedCount)||0;
+  const failed=Number(data.failedCount)||0;
+  const summary=`Conversion finished: ${resized} resized, ${unchanged} copied unchanged, ${skipped} duplicate${skipped===1?'':'s'} skipped, ${failed} failed.`;
+  setPhotoResizeStatus(summary,failed?'error':'success');
+}
+function resetResizerQueue(){
+  if(photoResizeBusy)return;
+  const oldSession=photoResizeSessionId;
+  if(oldSession)void deletePhotoResizeSession(oldSession);
+  photoResizeQueue=[];
+  photoResizeSessionId='';
+  photoResizeUploadedCount=0;
+  photoResizeBusy=false;
+  photoResizeConverting=false;
+  photoResizeCompleted=false;
+  photoResizeSelectionLabel='';
+  photoResizeAvailableCount=0;
+  const picker=document.getElementById('resizerImagesInput');
+  if(picker)picker.value='';
+  const results=document.getElementById('resizerResults');
+  if(results)results.innerHTML='';
+  setPhotoResizeStatus('');
+  syncPhotoResizeControls();
+}
 async function openPhotoResizerOutputFolder(){
   const folder=getConfiguredPhotoResizerOutputFolder();
   let data=null;
@@ -5913,8 +6109,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.159';
+const APP_VERSION='1.160';
 const VERSION_HISTORY=[
+  {version:'1.160',added:'A unified Convert workflow and an accessible icon-only export-help shortcut.',removed:'The Resizer’s separate upload/convert steps and redundant upload-count controls.',fixed:'Convert and Open folder share an explicit 37px box with contained glow; the maximum-side/upscaler controls are more compact, active Theme 3 icons use high-contrast ink, and the JSON help button is a circled question mark.',tone:'green'},
   {version:'1.159',added:'No duplicates also skips resized images whose output name already exists.',removed:'The Resizer creating numbered copies when No duplicates is on.',fixed:'The shared default-on No duplicates setting now skips matching Resizer outputs, counts each skip, and continues the batch. Turning it off keeps unique-suffix naming.',tone:'green'},
   {version:'1.158',added:'Upscaling for images smaller than the selected longest-side target.',removed:'Smaller images always being copied unchanged.',fixed:'Images are enlarged proportionally to the target by default; the icon-only control switches upscaling off or on and remembers the choice.',tone:'green'},
   {version:'1.157',added:'An icon-only shortcut to open the resized-images output folder.',removed:'The shorter, differently styled Start over button.',fixed:'Start over now matches the Start converting button template, and the folder shortcut opens the configured Resized photo folder in File Explorer.',tone:'green'},
@@ -7746,30 +7943,83 @@ function stickerParts(u,o={}){
         ${impHand(u,isLeft)}
       </g></g>`;
   }
-  /* the app's own trident, verbatim: pommel (white stub + diamond) behind the fist,
-     shaft with rings, and the fork at the far end — so the fork is unmistakably the business end */
+  /* Blood Eclipse size/grip in the concept SVG's original 600 × 900 coordinates. */
+  const BLOOD_TRIDENT_SCALE=0.25; // 25% larger than its previous in-app scale.
+  const BLOOD_TRIDENT_GRIP_SOURCE_Y=600; // lower on the wrapped shaft, closer to the pommel.
+  const BLOOD_TRIDENT_HEAD_TIP_Y=43, BLOOD_TRIDENT_HEAD_BASE_Y=316, BLOOD_TRIDENT_POMMEL_TIP_Y=884;
+  /* Full Blood Eclipse weapon geometry, adapted from the selected concept art.
+     The palette follows the active theme; the imp's hand and the original timing stay intact. */
+  function bloodEclipseHead(L,weaponScale,steelId,gemId,accentId,accentA,accentB,metalDark,metalLight){
+    const side='M300 287 C278 263 261 241 247 211 C231 176 208 152 166 130 C180 158 176 178 160 194 L131 202 L153 219 L137 242 L170 240 C198 259 233 254 266 282 L300 305 Z';
+    const sideLines='M290 279 C249 247 220 202 169 140 M161 206 L145 218 M168 235 L154 238';
+    const head='M300 43 C324 83 316 115 310 146 L330 184 L313 213 L300 284 L287 213 L270 184 L290 146 C284 115 276 83 300 43 Z';
+    const headCut='M300 66 L305 148 L300 232 L295 148 Z';
+    const gem='M300 256 L326 281 L300 316 L274 281 Z';
+    const sideArt=`<path d="${side}" fill="none" stroke="${accentA}" stroke-width="16" opacity=".08"/><path d="${side}" fill="url(#${steelId})" stroke="${metalDark}" stroke-width="5.2" stroke-linejoin="round"/><path d="${sideLines}" fill="none" stroke="${accentA}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="${side}" fill="none" stroke="${metalLight}" stroke-width="2.2" stroke-linejoin="round" opacity=".8"/>`;
+    return `<g transform="translate(${L.toFixed(1)},0) scale(${weaponScale}) rotate(90) translate(-300,-316)">
+      <path d="M300 265 C278 260 255 266 238 280 L216 300 L239 300 C260 300 280 308 300 322 C320 308 340 300 361 300 L384 300 L362 280 C345 266 322 260 300 265 Z" fill="url(#${steelId})" stroke="${metalDark}" stroke-width="4.5" stroke-linejoin="round"/>
+      <path d="M245 289 Q273 282 300 304 Q327 282 355 289" fill="none" stroke="${accentA}" stroke-width="4" stroke-linecap="round"/>
+      <g>${sideArt}</g><g transform="translate(600 0) scale(-1 1)">${sideArt}</g>
+      <path d="M245 212 L230 201 L225 184 M355 212 L370 201 L375 184" fill="none" stroke="${accentB}" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="${head}" fill="url(#${steelId})" stroke="${metalDark}" stroke-width="5.2" stroke-linejoin="round"/>
+      <path d="${headCut}" fill="url(#${accentId})" opacity=".5"/>
+      <path d="M300 80 L300 213" stroke="${accentB}" stroke-width="3" stroke-linecap="round" opacity=".95"/>
+      <path d="M300 67 L300 228" stroke="${metalLight}" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+      <path d="${gem}" fill="url(#${gemId})" stroke="${metalLight}" stroke-width="3.8" stroke-linejoin="round"/>
+      <path d="M300 266 L300 307" stroke="${metalLight}" stroke-width="2.5" opacity=".86"/>
+      <path d="M286 280 L300 290 L314 280" fill="none" stroke="${accentB}" stroke-width="2.7" stroke-linecap="round"/>
+    </g>`;
+  }
   function tridentFork(u,shX,shY,gx,gy,tipX,tipY,isLeft,forkOffset,scaleFac){
-    const c1=T().logo1, c3=T().logo3;
-    const hs = scaleFac||0.65;
+    const theme=T(), hs=scaleFac||0.65;
+    const accentA=`var(--t-logo-c1,${theme.logo1})`, accentB=`var(--t-logo-c3,${theme.logo3})`;
+    const metalLight=`var(--t-ink,${theme.ink})`, metalDark=theme.deep2||'#273244';
     const ang=Math.atan2(tipY-gy,tipX-gx)*180/Math.PI;
     const dist=Math.max(44,Math.hypot(tipX-gx,tipY-gy));
     const shaftEnd=Math.max(18,dist-(forkOffset||28));
-    let rings=''; const rc=Math.max(2,Math.min(9,Math.floor(shaftEnd/65)));
-    for(let i=1;i<=rc;i++){const rx=(shaftEnd*(i/(rc+1))).toFixed(1);
-      rings+=`<rect x="${rx}" y="-5.5" width="5" height="11" rx="2.2" fill="#ffffff" stroke="${c3}" stroke-width="1.5"/>`;}
+    const weaponScale=(BLOOD_TRIDENT_SCALE*hs).toFixed(4);
+    const gripSourceY=(BLOOD_TRIDENT_HEAD_BASE_Y+shaftEnd/parseFloat(weaponScale)).toFixed(2);
+    const steelId=`bloodSteel${u}`, gemId=`bloodGem${u}`, accentId=`bloodAccent${u}`;
+    let wraps='';
+    for(let i=0,y=464;y<=625;y+=23,i++) wraps+=`<path d="M284 ${y+14} L316 ${y-4}" stroke="${i%2?accentA:accentB}" stroke-width="3.2" stroke-linecap="round" opacity=".88"/>`;
+    const collars=[
+      'M283 329 Q300 324 317 329 L317 336 Q300 341 283 336 Z',
+      'M283 349 Q300 344 317 349 L317 354 Q300 359 283 354 Z',
+      'M283 372 Q300 367 317 372 L317 379 Q300 384 283 379 Z',
+      'M283 676 Q300 671 317 676 L317 681 Q300 686 283 681 Z',
+      'M283 701 Q300 696 317 701 L317 708 Q300 713 283 708 Z'
+    ];
+    const collarY=[331,351,374,678,703];
+    let collarArt='';
+    collars.forEach((d,i)=>{
+      const y=collarY[i];
+      collarArt+=`<path d="${d}" fill="${metalDark}" stroke="${accentA}" stroke-width="2.4"/><path d="M288 ${y} Q300 ${y-3} 312 ${y}" fill="none" stroke="${metalLight}" stroke-width="2" opacity=".9"/>`;
+    });
     return `<g>
-      <line x1="${shX.toFixed(1)}" y1="${shY.toFixed(1)}" x2="${gx.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${c3}" stroke-width="${(11*hs).toFixed(1)}" stroke-linecap="round" opacity="0.28"/>
-      <line x1="${shX.toFixed(1)}" y1="${shY.toFixed(1)}" x2="${gx.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${c1}" stroke-width="${(5.5*hs).toFixed(1)}" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="${steelId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${metalLight}"/><stop offset=".28" stop-color="#f3f6fa"/><stop offset=".62" stop-color="#aab6c5"/><stop offset="1" stop-color="${metalDark}"/></linearGradient>
+        <linearGradient id="${gemId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${accentB}"/><stop offset=".48" stop-color="${accentA}"/><stop offset="1" stop-color="${metalDark}"/></linearGradient>
+        <linearGradient id="${accentId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${accentB}"/><stop offset="1" stop-color="${accentA}"/></linearGradient>
+      </defs>
+      <line x1="${shX.toFixed(1)}" y1="${shY.toFixed(1)}" x2="${gx.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${accentB}" stroke-width="${(11*hs).toFixed(1)}" stroke-linecap="round" opacity=".24"/>
+      <line x1="${shX.toFixed(1)}" y1="${shY.toFixed(1)}" x2="${gx.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${accentA}" stroke-width="${(5.5*hs).toFixed(1)}" stroke-linecap="round"/>
       <g transform="translate(${gx.toFixed(1)},${gy.toFixed(1)}) rotate(${ang.toFixed(1)})">
-        <line x1="-30" y1="0" x2="0" y2="0" stroke="#f8fafc" stroke-width="5" stroke-linecap="round"/>
-        <polygon points="-42,0 -28,-8 -23,0 -28,8" fill="${c3}" stroke="#ffffff" stroke-width="${(1.8*hs).toFixed(1)}"/>
-        <circle cx="-28" cy="0" r="2.5" fill="#ffffff"/>
-        <line x1="0" y1="0" x2="${shaftEnd.toFixed(1)}" y2="0" stroke="${c3}" stroke-width="13" stroke-linecap="round" opacity="0.32"/>
-        <line x1="0" y1="0" x2="${shaftEnd.toFixed(1)}" y2="0" stroke="${c1}" stroke-width="${(7*hs).toFixed(1)}" stroke-linecap="round"/>
-        <line x1="0" y1="0" x2="${shaftEnd.toFixed(1)}" y2="0" stroke="#ffffff" stroke-width="${(2.6*hs).toFixed(1)}" stroke-linecap="round"/>
-        ${rings}
+        <g transform="scale(${weaponScale}) rotate(90) translate(-300,-${gripSourceY})">
+          <path d="M300 300 L300 821" stroke="${accentA}" stroke-width="25" stroke-linecap="round" opacity=".1"/>
+          <path d="M300 306 L300 817" stroke="${metalDark}" stroke-width="28" stroke-linecap="round" opacity=".72"/>
+          <path d="M300 306 L300 817" stroke="url(#${steelId})" stroke-width="17" stroke-linecap="round"/>
+          <path d="M295 330 L295 790" stroke="${metalLight}" stroke-width="2.8" stroke-linecap="round" opacity=".9"/>
+          <path d="M283 436 Q300 426 317 436 L317 618 Q300 630 283 618 Z" fill="${metalDark}" stroke="${metalLight}" stroke-width="3.5" stroke-linejoin="round"/>
+          <path d="M286 443 L314 443 M286 611 L314 611" stroke="${accentB}" stroke-width="4"/>
+          ${wraps}${collarArt}
+          <path d="M300 792 L326 816 L300 842 L274 816 Z" fill="${metalDark}" stroke="${accentA}" stroke-width="4"/>
+          <path d="M300 799 L316 816 L300 832 L284 816 Z" fill="url(#${steelId})" stroke="${metalLight}" stroke-width="2.5"/>
+          <path d="M300 793 L335 836 L300 884 L265 836 Z" fill="${metalDark}" stroke="${accentA}" stroke-width="4"/>
+          <path d="M300 805 L319 833 L307 845 L323 863 L300 878 L277 863 L293 845 L281 833 Z" fill="url(#${gemId})" stroke="${metalLight}" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M300 820 L300 859" stroke="${accentB}" stroke-width="3" opacity=".95"/>
+        </g>
         ${impHand(u,isLeft,scaleFac*0.7)}
-        ${prongs(u,shaftEnd,scaleFac)}
+        ${bloodEclipseHead(shaftEnd,weaponScale,steelId,gemId,accentId,accentA,accentB,metalDark,metalLight)}
       </g></g>`;
   }
   let lsBrandUid=0;
@@ -7939,11 +8189,15 @@ function stickerParts(u,o={}){
       if(t<SLAM-0.16)      gy=lerp(CY+44,CY+8,ease.out(lift));
       else if(t<SLAM+0.22) gy=lerp(CY+8,CY+44,ease.in(hit));
       else                 gy=lerp(CY+44,CY+34,rec);
-      const TILT=lerp(-3,8,win(t,1.75,SLAM))*Math.PI/180, DIST=33.8, POM=27.3; // POM = butt, below the fist
+      const TRIDENT_SCALE=BLOOD_TRIDENT_SCALE*0.65, GRIP_Y=BLOOD_TRIDENT_GRIP_SOURCE_Y;
+      const DIST=(GRIP_Y-BLOOD_TRIDENT_HEAD_TIP_Y)*TRIDENT_SCALE;
+      const POM=(BLOOD_TRIDENT_POMMEL_TIP_Y-GRIP_Y)*TRIDENT_SCALE; // butt-end impact, below the fist
+      const FORK_OFFSET=(BLOOD_TRIDENT_HEAD_BASE_Y-BLOOD_TRIDENT_HEAD_TIP_Y)*TRIDENT_SCALE;
+      const TILT=lerp(-3,8,win(t,1.75,SLAM))*Math.PI/180;
       const gx=CX+36.2;
       const tipX=gx+Math.sin(TILT)*DIST, tipY=gy-Math.cos(TILT)*DIST;   // fork end, up in the air
       const pomX=gx-Math.sin(TILT)*POM,  pomY=gy+Math.cos(TILT)*POM;    // butt end, strikes the floor
-      E.tri.innerHTML=tridentFork(u,CX+27.5,CY+22.7,gx,gy,tipX,tipY,false,18.2,0.65); // unified: 126,118 @0.598 (was CX+16.9,CY+6)
+      E.tri.innerHTML=tridentFork(u,CX+27.5,CY+22.7,gx,gy,tipX,tipY,false,FORK_OFFSET,0.65); // hand sits at source y=600 on the lower grip
       const ip=win(t,SLAM,SLAM+0.52);
       E.burst.innerHTML=(t>=SLAM&&ip<1)?`<circle cx="${pomX.toFixed(1)}" cy="${pomY.toFixed(1)}" r="${(8+ip*46).toFixed(1)}" fill="none" stroke="${T().accent2}" stroke-width="3" stroke-dasharray="10 6" opacity="${(1-ip).toFixed(2)}"/><circle cx="${pomX.toFixed(1)}" cy="${pomY.toFixed(1)}" r="${(4+ip*27).toFixed(1)}" fill="none" stroke="#ffffff" stroke-width="2.6" opacity="${((1-ip)*0.9).toFixed(2)}"/>`:'';
       E.flash.setAttribute('opacity',(t>=SLAM?0.5*Math.max(0,1-(t-SLAM)/0.16):0).toFixed(3));
@@ -10355,6 +10609,21 @@ window.playImpJsonThrowRandom = function(fileName, totalCount){
   }
   if(!(v >= 1 && v <= 5)) v = 1 + Math.floor(Math.random() * 5);
   if(v === 2) return window.playImpJsonGrabAndThrow1B(fileName, totalCount);
+  return play(v, fileName, totalCount);
+};
+})();
+</script>
+</body></html>
+= parseInt(s, 10); }catch(_){}
+  }
+  if(!(v >= 1 && v <= 5)) v = 1 + Math.floor(Math.random() * 5);
+  if(v === 2) return window.playImpJsonGrabAndThrow1B(fileName, totalCount);
+  return play(v, fileName, totalCount);
+};
+})();
+</script>
+</body></html>
+, totalCount);
   return play(v, fileName, totalCount);
 };
 })();
