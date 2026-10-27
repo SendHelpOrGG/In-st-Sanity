@@ -92,7 +92,7 @@ body[data-theme="v3"] .upload-dropzone-icon,body[data-theme="v3"] .upload-recent
    the themed `body .text-input` rule at (0,1,1) - so a hardcoded colour there
    silently pins the Download location field to the same look in every theme.
    Let the theme drive it: background var(--t-input-bg), border var(--t-input-border). */
-.folder-row{display:flex;gap:8px}.resizer-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:14px;align-items:start}.resizer-card{margin:14px 0}.resizer-card .settings-card-head{padding:17px 20px}.resizer-card .setting-body{padding:18px 20px}.resizer-pick-row,.resizer-upload-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.resizer-files-panel{margin-top:16px}.resizer-files-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:9px;color:var(--t-muted,#94a3b8);font-size:11px}.resizer-files-toolbar>div{display:flex;gap:6px}.resizer-files-toolbar .outline{padding:6px 9px}.resizer-file-list{max-height:340px;overflow:auto;border:1px solid var(--t-input-border,rgba(255,255,255,.18));border-radius:9px;background:var(--t-input-bg,rgba(11,15,20,.55))}.resizer-file-row{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 11px;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:11px}.resizer-file-row:last-child{border-bottom:0}.resizer-file-row input{flex:0 0 auto;accent-color:var(--t-accent,#38bdf8)}.resizer-file-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t-ink,#f1f5f9)}.resizer-file-meta{flex:0 0 auto;color:var(--t-muted,#94a3b8);font-size:10px}.resizer-upload-actions{justify-content:flex-end;margin-top:11px}/* Preserve Upload JSON's native primary outline; let Convert use that same outline. */body #resizerStartBtn,body #resizerOpenOutputFolderBtn{height:37px!important;min-height:37px!important;max-height:37px!important;box-sizing:border-box!important}body #resizerStartBtn{border-width:1px!important}.resizer-max-row{display:flex;align-items:center;gap:9px;max-width:200px}.resizer-max-row .text-input{height:36px}#resizerMaxSide{flex:0 0 112px;width:112px;max-width:112px;box-sizing:border-box}.resizer-max-row>span{color:var(--t-muted,#94a3b8);font-size:11px}.resizer-state{margin-top:10px;padding:0;color:var(--t-muted,#94a3b8);font-size:11px;line-height:1.5;overflow-wrap:anywhere}.resizer-state[hidden]{display:none}.resizer-state.is-error{color:#fca5a5}.resizer-state.is-success{color:#6ee7b7}.resizer-results{margin-top:12px;max-height:250px;overflow:auto}.resizer-result-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:10.5px}.resizer-result-row:last-child{border-bottom:0}.resizer-result-name{min-width:0;overflow-wrap:anywhere;color:var(--t-ink,#f1f5f9)}.resizer-result-status{flex:0 0 auto;color:var(--t-muted,#94a3b8)}.resizer-result-status.is-error{color:#fca5a5}@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}}.save-row{display:flex;justify-content:flex-end;margin-top:18px}.crop-modal-wrap{display:none;position:fixed;inset:0;background:rgba(5,9,12,.86);backdrop-filter:blur(5px);z-index:40;align-items:center;justify-content:center;padding:16px}.crop-modal-wrap.show{display:flex}.crop-modal{width:min(760px,calc(100vw - 32px));max-height:94vh;overflow:auto;background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border:1px solid #496073;border-radius:16px;padding:23px;box-shadow:0 24px 80px #000b}.crop-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px}.crop-heading h2{font-size:18px;margin:0 0 5px}.crop-heading p{font-size:11px;color:#9fb1c1;margin:0}.crop-ratios{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}.crop-ratio{border:1px solid #496073;background:linear-gradient(120deg,#1c252e,#161f27);color:#cbd5e1;border-radius:7px;padding:7px 10px;font:inherit;font-size:11px;cursor:pointer}.crop-ratio.active{background:linear-gradient(105deg,rgba(204,251,241,.20),rgba(45,212,191,.14));border-color:rgba(204,251,241,.38);color:#99f6e4}.crop-preview{position:relative;width:100%;aspect-ratio:16/9;margin-inline:auto;overflow:hidden;background:#080c10;border:1px solid #99f6e488;border-radius:10px;touch-action:none;cursor:grab}.crop-preview:active{cursor:grabbing}.crop-preview img{position:absolute;left:0;top:0;max-width:none;max-height:none;user-select:none;pointer-events:none}.crop-zoom-label{display:flex;justify-content:space-between;margin:14px 0 6px}.crop-zoom-label strong{color:#99f6e4}.opacity-slider:disabled{opacity:.38;cursor:not-allowed}.crop-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.crop-actions button{min-width:96px;justify-content:center}.status{position:fixed;bottom:24px;left:50%;background:#1c2832;border:1px solid #99f6e4;color:#f8fafc;border-radius:9px;padding:12px 16px;box-shadow:var(--shadow);font-size:12px;font-weight:600;opacity:0;transform:translate(-50%,8px);transition:.2s;pointer-events:none;z-index:100}.status.show{opacity:1;transform:translate(-50%,0)}.status.download-progress{max-width:min(92vw,760px);white-space:normal;text-align:center;line-height:1.45;overflow-wrap:anywhere}.modal-wrap{display:none;position:fixed;inset:0;background:rgba(7,11,15,.82);backdrop-filter:blur(3px);z-index:30;align-items:center;justify-content:center}.modal-wrap.show{display:flex}.modal{width:min(410px,calc(100vw - 32px));background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border-radius:16px;padding:27px;box-shadow:0 20px 70px #0009;position:relative}.close{position:absolute;right:17px;top:17px;border:0;background:#25313d;width:29px;height:29px;border-radius:8px;cursor:pointer;color:#cbd5e1}.modal-logo{margin:0 auto 17px;width:44px;height:44px;border-radius:14px;background:#1e2c36;display:grid;place-items:center;color:#99f6e4}.modal h2{text-align:center;font-size:19px;margin:0 0 8px}.modal p{text-align:center;color:#9fb1c1;font-size:12px;line-height:1.6;margin:0 5px 20px}.ig-login{width:100%;justify-content:center;background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);color:#091318;padding:12px;border:1px solid #f1f5f9}.fineprint{text-align:center;color:#9fb1c1;font-size:10px;line-height:1.5;margin-top:14px}.fineprint a{color:#99f6e4;text-decoration:underline}.logged-in{display:none;background:#1b2c2a;border-radius:10px;padding:13px;margin-bottom:14px;font-size:12px;color:#5eead4}.logged-in strong{display:block;margin-bottom:3px}
+.folder-row{display:flex;gap:8px}.resizer-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:14px;align-items:start}.resizer-card{margin:14px 0}.resizer-card .settings-card-head{padding:17px 20px}.resizer-card .setting-body{padding:18px 20px}.resizer-pick-row,.resizer-upload-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.resizer-files-panel{margin-top:16px}.resizer-files-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:9px;color:var(--t-muted,#94a3b8);font-size:11px}.resizer-files-toolbar>div{display:flex;gap:6px}.resizer-files-toolbar .outline{padding:6px 9px}.resizer-file-list{max-height:340px;overflow:auto;border:1px solid var(--t-input-border,rgba(255,255,255,.18));border-radius:9px;background:var(--t-input-bg,rgba(11,15,20,.55))}.resizer-file-row{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 11px;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:11px;cursor:pointer;transition:background .15s}.resizer-file-row:hover{background:rgba(56,189,248,.06)}.resizer-file-row:last-child{border-bottom:0}.resizer-file-row input{flex:0 0 auto;accent-color:var(--t-accent,#38bdf8);cursor:pointer}.resizer-file-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t-ink,#f1f5f9)}.resizer-file-meta{flex:0 0 auto;color:var(--t-muted,#94a3b8);font-size:10px}.resizer-upload-actions{justify-content:flex-end;margin-top:11px}/* Preserve Upload JSON's native primary outline; let Convert use that same outline. */body #resizerStartBtn,body #resizerOpenOutputFolderBtn{height:37px!important;min-height:37px!important;max-height:37px!important;box-sizing:border-box!important}body #resizerStartBtn{border-width:1px!important}.resizer-max-row{display:flex;align-items:center;gap:9px;max-width:200px}.resizer-max-row .text-input{height:36px}#resizerMaxSide{flex:0 0 112px;width:112px;max-width:112px;box-sizing:border-box}.resizer-max-row>span{color:var(--t-muted,#94a3b8);font-size:11px}.resizer-state{margin-top:10px;padding:0;color:var(--t-muted,#94a3b8);font-size:11px;line-height:1.5;overflow-wrap:anywhere}.resizer-state[hidden]{display:none}.resizer-state.is-error{color:#fca5a5}.resizer-state.is-success{color:#6ee7b7}.resizer-results{margin-top:12px;max-height:250px;overflow:auto}.resizer-result-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:10.5px}.resizer-result-row:last-child{border-bottom:0}.resizer-result-name{min-width:0;overflow-wrap:anywhere;color:var(--t-ink,#f1f5f9)}.resizer-result-status{flex:0 0 auto;color:var(--t-muted,#94a3b8)}.resizer-result-status.is-error{color:#fca5a5}@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}}.save-row{display:flex;justify-content:flex-end;margin-top:18px}.crop-modal-wrap{display:none;position:fixed;inset:0;background:rgba(5,9,12,.86);backdrop-filter:blur(5px);z-index:40;align-items:center;justify-content:center;padding:16px}.crop-modal-wrap.show{display:flex}.crop-modal{width:min(760px,calc(100vw - 32px));max-height:94vh;overflow:auto;background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border:1px solid #496073;border-radius:16px;padding:23px;box-shadow:0 24px 80px #000b}.crop-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px}.crop-heading h2{font-size:18px;margin:0 0 5px}.crop-heading p{font-size:11px;color:#9fb1c1;margin:0}.crop-ratios{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}.crop-ratio{border:1px solid #496073;background:linear-gradient(120deg,#1c252e,#161f27);color:#cbd5e1;border-radius:7px;padding:7px 10px;font:inherit;font-size:11px;cursor:pointer}.crop-ratio.active{background:linear-gradient(105deg,rgba(204,251,241,.20),rgba(45,212,191,.14));border-color:rgba(204,251,241,.38);color:#99f6e4}.crop-preview{position:relative;width:100%;aspect-ratio:16/9;margin-inline:auto;overflow:hidden;background:#080c10;border:1px solid #99f6e488;border-radius:10px;touch-action:none;cursor:grab}.crop-preview:active{cursor:grabbing}.crop-preview img{position:absolute;left:0;top:0;max-width:none;max-height:none;user-select:none;pointer-events:none}.crop-zoom-label{display:flex;justify-content:space-between;margin:14px 0 6px}.crop-zoom-label strong{color:#99f6e4}.opacity-slider:disabled{opacity:.38;cursor:not-allowed}.crop-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.crop-actions button{min-width:96px;justify-content:center}.status{position:fixed;bottom:24px;left:50%;background:#1c2832;border:1px solid #99f6e4;color:#f8fafc;border-radius:9px;padding:12px 16px;box-shadow:var(--shadow);font-size:12px;font-weight:600;opacity:0;transform:translate(-50%,8px);transition:.2s;pointer-events:none;z-index:100}.status.show{opacity:1;transform:translate(-50%,0)}.status.download-progress{max-width:min(92vw,760px);white-space:normal;text-align:center;line-height:1.45;overflow-wrap:anywhere}.modal-wrap{display:none;position:fixed;inset:0;background:rgba(7,11,15,.82);backdrop-filter:blur(3px);z-index:30;align-items:center;justify-content:center}.modal-wrap.show{display:flex}.modal{width:min(410px,calc(100vw - 32px));background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border-radius:16px;padding:27px;box-shadow:0 20px 70px #0009;position:relative}.close{position:absolute;right:17px;top:17px;border:0;background:#25313d;width:29px;height:29px;border-radius:8px;cursor:pointer;color:#cbd5e1}.modal-logo{margin:0 auto 17px;width:44px;height:44px;border-radius:14px;background:#1e2c36;display:grid;place-items:center;color:#99f6e4}.modal h2{text-align:center;font-size:19px;margin:0 0 8px}.modal p{text-align:center;color:#9fb1c1;font-size:12px;line-height:1.6;margin:0 5px 20px}.ig-login{width:100%;justify-content:center;background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);color:#091318;padding:12px;border:1px solid #f1f5f9}.fineprint{text-align:center;color:#9fb1c1;font-size:10px;line-height:1.5;margin-top:14px}.fineprint a{color:#99f6e4;text-decoration:underline}.logged-in{display:none;background:#1b2c2a;border-radius:10px;padding:13px;margin-bottom:14px;font-size:12px;color:#5eead4}.logged-in strong{display:block;margin-bottom:3px}
 .detail-overlay{display:none;position:fixed;inset:0;background:rgba(7,11,15,.84);backdrop-filter:blur(7px);z-index:25;align-items:center;justify-content:center;padding:24px}.detail-overlay.show{display:flex;isolation:isolate}.post-peek-svg{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;overflow:visible;opacity:var(--sticker-opacity,.5);transition:opacity .2s ease}.post-peek-behind{z-index:1}.post-peek-front{z-index:3}body.sticker-hidden .post-peek-svg,body.animations-disabled .post-peek-svg,body.imp-anim-disabled .post-peek-svg{display:none!important}body.post-detail-open .sidebar-sticker-slot{opacity:0!important;pointer-events:none!important}.post-modal{position:relative;z-index:2;margin-top:56px;width:min(920px,calc(100vw - 136px));max-height:calc(100vh - 150px);background:linear-gradient(145deg,#25313d,#1a232c 56%,#131a21);border:1px solid #3d5060;border-radius:16px;box-shadow:0 25px 90px #000a;display:flex;flex-direction:column;overflow:hidden}.save-url-post-modal{width:100%;max-width:100%;max-height:none;overflow:visible;margin:0 auto}.detail-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--line);gap:20px;flex-shrink:0;position:relative}.video-download-notice{position:absolute;top:8px;right:22px;z-index:5;width:min(382px,42%);height:37px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1px solid var(--t-accent,#38bdf8);border-radius:10px;background:linear-gradient(115deg,var(--t-nav-act-bg,rgba(56,189,248,.16)),var(--t-modal-bg,rgba(15,23,42,.94)));color:var(--t-ink,#f8fafc);box-shadow:0 12px 28px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.08);font-size:13px;font-weight:650;letter-spacing:.1px;opacity:0;visibility:hidden;transform:translateY(-4px);pointer-events:none;transition:opacity .16s ease,transform .16s ease,visibility .16s}.video-download-notice.show{opacity:1;visibility:visible;transform:translateY(0)}@media(max-width:700px){.video-download-notice{left:16px;right:16px;top:8px;width:auto;height:37px}}.detail-heading{min-width:0}.detail-heading .eyebrow{margin:0 0 6px}.detail-heading h2{font-size:19px;letter-spacing:-.4px;margin:0 0 5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;word-break:break-word}.detail-heading p{font-size:11px;color:#9fb1c1;margin:0}.detail-meta-label{display:block;color:var(--green);font-size:9px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase;opacity:.9;margin:6px 0 3px}.detail-meta-list{display:flex;flex-wrap:wrap;gap:4px 26px;margin-top:7px}.detail-meta-row{min-width:0;max-width:100%}.detail-meta-value{display:block;font-size:11.5px;color:#cbd5e1;line-height:1.5;word-break:break-word}.detail-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}.detail-head .detail-actions{align-self:flex-end}.brand-collapse{margin-left:0;flex-shrink:0}.post-url-bar{display:flex;align-items:end;gap:12px;margin:12px 23px 0;padding:11px 12px;border:1px solid #99f6e466;border-radius:10px;background:linear-gradient(112deg,#16222c 0%,#1c2b36 67%,#213f44 86%,#182630 100%);box-shadow:inset 0 1px rgba(204,251,241,.18);flex-shrink:0}.post-url-input{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;cursor:pointer}.post-url-input span{font-size:9px;letter-spacing:1.2px;font-weight:700;color:#99f6e4}.post-url-input input{height:37px;width:100%;min-width:0;padding:0 10px;border:1px solid #496073;border-radius:7px;background:linear-gradient(115deg,#121a22 0 68%,#1d3338 86%,#141e27 100%);color:#f8fafc;font:inherit;font-size:11px;outline:0;cursor:pointer;transition:border-color .15s,box-shadow .15s}.post-url-input:hover input,.post-url-input input:focus{border-color:#99f6e4;box-shadow:0 0 0 2px rgba(153,246,228,.18)}.open-browser{height:37px;white-space:nowrap;font-size:12px!important;line-height:1!important}
 .detail-actions .primary,.detail-actions .outline,.post-url-bar .primary,.post-url-bar .outline{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-size:13px!important;font-weight:600!important;letter-spacing:-0.1px!important;line-height:1!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;white-space:nowrap!important;vertical-align:middle!important;height:37px!important;min-height:37px!important;padding:0 14px!important;border-radius:8px!important}/* v1.91 global font: Inter for all text — size/weight untouched */html,body,button,input,textarea,select,div,span,p,a,h1,h2,h3,h4,h5,h6,li,label,strong,em,code,pre,small,kbd,summary{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}.detail-count{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
 .detail-actions .primary svg,.detail-actions .outline svg,.post-url-bar .primary svg,.post-url-bar .outline svg{width:14px!important;height:14px!important;flex-shrink:0!important;display:block!important;stroke-width:1.9!important}
@@ -833,6 +833,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
           <div class="resizer-files-panel" id="resizerFilePanel" hidden>
             <div class="resizer-files-toolbar"><span id="resizerAvailableCount">No images found</span><div><button type="button" class="outline" id="resizerSelectAllBtn" onclick="selectAllResizerFiles(true)">Select all</button><button type="button" class="outline" id="resizerClearSelectionBtn" onclick="selectAllResizerFiles(false)">Clear</button></div></div>
             <div class="resizer-file-list" id="resizerFileList" role="group" aria-label="Selected images"></div>
+            <div class="hint" style="margin-top:7px">You can adjust the selection during a run; changes apply to the next conversion.</div>
             <div class="resizer-upload-actions"><button type="button" class="primary" id="resizerStartBtn" onclick="startPhotoResizing()" disabled>Convert</button><button type="button" class="icon-btn resizer-open-output-folder-btn" id="resizerOpenOutputFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open resized images folder in File Explorer" aria-label="Open resized images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button></div>
           </div>
         </div>
@@ -1185,7 +1186,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.166; open version history" title="Click to view what changed in each version">v.1.166</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.167; open version history" title="Click to view what changed in each version">v.1.167</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3682,6 +3683,7 @@ let photoResizeUploadedCount=0;
 let photoResizeBusy=false;
 let photoResizeConverting=false;
 let photoResizeCompleted=false;
+let photoResizeSelectionChangedDuringRun=false;
 let photoResizeSelectionLabel='';
 let photoResizeAvailableCount=0;
 let photoResizeUpscaleEnabled=true;
@@ -3711,10 +3713,9 @@ function renderPhotoResizeFileList(){
   list.innerHTML=photoResizeQueue.map((item,index)=>{
     const label=item.uploaded?'Uploaded':item.error?'Upload failed':formatPhotoResizeBytes(item.file.size);
     const checked=item.selected?' checked':'';
-    const disabled=photoResizeBusy||item.uploaded?' disabled':'';
     const statusClass=item.error?' class="resizer-file-meta is-error"':' class="resizer-file-meta"';
     const fileName=item.file.name;
-    return`<label class="resizer-file-row"><input type="checkbox" ${checked}${disabled} onchange="setPhotoResizeSelected(${index},this.checked)"><span class="resizer-file-name" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</span><span${statusClass}>${escapeHtml(label)}</span></label>`
+    return`<label class="resizer-file-row"><input type="checkbox" ${checked} onchange="setPhotoResizeSelected(${index},this.checked)"><span class="resizer-file-name" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</span><span${statusClass}>${escapeHtml(label)}</span></label>`
   }).join('');
   const available=document.getElementById('resizerAvailableCount');
   if(available){
@@ -3732,11 +3733,11 @@ function syncPhotoResizeControls(){
   if(choose)choose.disabled=busy;
   const maxSideInput=document.getElementById('resizerMaxSide');
   if(maxSideInput)maxSideInput.disabled=busy;
-  const hasPendingFiles=photoResizeQueue.some(item=>!item.uploaded);
+  const hasFiles=photoResizeQueue.length>0;
   const selectAll=document.getElementById('resizerSelectAllBtn');
-  if(selectAll)selectAll.disabled=busy||!hasPendingFiles;
+  if(selectAll)selectAll.disabled=!hasFiles;
   const clearSelection=document.getElementById('resizerClearSelectionBtn');
-  if(clearSelection)clearSelection.disabled=busy||!hasPendingFiles;
+  if(clearSelection)clearSelection.disabled=!hasFiles;
   const start=document.getElementById('resizerStartBtn');
   if(start){
     const input=document.getElementById('resizerMaxSide');
@@ -3752,9 +3753,53 @@ function syncPhotoResizeControls(){
   if(panel)panel.hidden=!photoResizeSelectionLabel&&!photoResizeQueue.length;
   renderPhotoResizeFileList();
 }
-function setPhotoResizeSelected(index,selected){const item=photoResizeQueue[index];if(!item||item.uploaded||photoResizeBusy)return;item.selected=Boolean(selected);syncPhotoResizeControls()}
-function selectAllResizerFiles(selected){if(photoResizeBusy)return;photoResizeQueue.forEach(item=>{if(!item.uploaded)item.selected=Boolean(selected)});syncPhotoResizeControls()}
+function resetPhotoResizeStaging(clearResults=true){
+  const previousSession=photoResizeSessionId;
+  if(previousSession)void deletePhotoResizeSession(previousSession);
+  photoResizeSessionId='';
+  photoResizeUploadedCount=0;
+  photoResizeCompleted=false;
+  photoResizeQueue.forEach(item=>{item.uploaded=false;item.error=''});
+  if(clearResults){const results=document.getElementById('resizerResults');if(results)results.innerHTML=''}
+}
+function notePhotoResizeSelectionChange(){
+  if(photoResizeBusy){photoResizeSelectionChangedDuringRun=true;return false}
+  const hasStagedData=photoResizeCompleted||photoResizeUploadedCount>0||photoResizeQueue.some(item=>item.uploaded||item.error);
+  if(hasStagedData){resetPhotoResizeStaging();return true}
+  return false;
+}
+function setPhotoResizeSelected(index,selected){
+  const item=photoResizeQueue[index];
+  if(!item)return;
+  const next=Boolean(selected);
+  if(item.selected===next)return;
+  const restaged=notePhotoResizeSelectionChange();
+  item.selected=next;
+  syncPhotoResizeControls();
+  if(restaged)setPhotoResizeStatus('Selection updated. Press Convert to process the selected images.');
+}
+function selectAllResizerFiles(selected){
+  const next=Boolean(selected);
+  if(!photoResizeQueue.some(item=>item.selected!==next))return;
+  const restaged=notePhotoResizeSelectionChange();
+  photoResizeQueue.forEach(item=>{item.selected=next});
+  syncPhotoResizeControls();
+  if(restaged)setPhotoResizeStatus('Selection updated. Press Convert to process the selected images.');
+}
 async function deletePhotoResizeSession(sessionId){if(!sessionId)return;const path='/api/resize-upload?sessionId='+encodeURIComponent(sessionId);for(const endpoint of getApiUrls(path)){await fetchEndpointJson(endpoint,30000,{method:'DELETE'});break}}
+function finishPhotoResizeOperation(originalSelection){
+  const originalIds=new Set((originalSelection||[]).map(item=>item.id));
+  const currentSelection=photoResizeQueue.filter(item=>item.selected);
+  const selectionChanged=photoResizeSelectionChangedDuringRun&&(
+    currentSelection.length!==originalIds.size||currentSelection.some(item=>!originalIds.has(item.id))
+  );
+  photoResizeSelectionChangedDuringRun=false;
+  photoResizeBusy=false;
+  photoResizeConverting=false;
+  if(selectionChanged)resetPhotoResizeStaging(false);
+  syncPhotoResizeControls();
+  return selectionChanged;
+}
 function handleResizerImagesPicked(event){
   const files=Array.from(event?.target?.files||[]);
   if(!files.length)return;
@@ -3773,6 +3818,7 @@ function handleResizerImagesPicked(event){
   photoResizeBusy=false;
   photoResizeConverting=false;
   photoResizeCompleted=false;
+  photoResizeSelectionChangedDuringRun=false;
   document.getElementById('resizerResults').innerHTML='';
   const omitted=files.length-supported.length;
   const notes=[];
@@ -3826,24 +3872,25 @@ async function startPhotoResizing(){
   const pending=selected.filter(item=>!item.uploaded);
   const noDuplicates=isResizerNoDuplicatesEnabled();
   if(!photoResizeSessionId)photoResizeSessionId=makePhotoResizeGuid();
+  photoResizeSelectionChangedDuringRun=false;
   photoResizeBusy=true;
   photoResizeConverting=false;
   syncPhotoResizeControls();
   if(pending.length){
     const failed=await uploadResizerFiles(pending);
     if(failed){
-      photoResizeBusy=false;
-      photoResizeConverting=false;
-      syncPhotoResizeControls();
-      setPhotoResizeStatus(`${photoResizeUploadedCount} uploaded; ${failed} failed. Press Convert again to retry the remaining images.`,photoResizeUploadedCount?'':'error');
+      const uploaded=photoResizeUploadedCount;
+      const selectionChanged=finishPhotoResizeOperation(selected);
+      const message=selectionChanged
+        ?`Upload attempt ended with ${uploaded} uploaded and ${failed} failed. Your updated selection is ready; press Convert to upload and process it.`
+        :`${uploaded} uploaded; ${failed} failed. Press Convert again to retry the remaining images.`;
+      setPhotoResizeStatus(message,uploaded?'':'error');
       return;
     }
   }
   if(photoResizeUploadedCount<1){
-    photoResizeBusy=false;
-    photoResizeConverting=false;
-    syncPhotoResizeControls();
-    setPhotoResizeStatus('No selected images could be uploaded. Check the file list and try again.','error');
+    const selectionChanged=finishPhotoResizeOperation(selected);
+    setPhotoResizeStatus(selectionChanged?'No images were uploaded. Your updated selection is ready to try again.':'No selected images could be uploaded. Check the file list and try again.','error');
     return;
   }
   photoResizeConverting=true;
@@ -3857,24 +3904,25 @@ async function startPhotoResizing(){
       if(data)break;
     }
   }catch(_){data=null}
-  photoResizeBusy=false;
-  photoResizeConverting=false;
   if(!data?.ok){
-    setPhotoResizeStatus(photoResizeErrorMessage(data?.error||'conversion_failed'),'error');
-    syncPhotoResizeControls();
+    const message=photoResizeErrorMessage(data?.error||'conversion_failed');
+    const selectionChanged=finishPhotoResizeOperation(selected);
+    const note=selectionChanged?' Selection changes made during this run are ready for another conversion.':'';
+    setPhotoResizeStatus(message+note,'error');
     return;
   }
   photoResizeCompleted=true;
   photoResizeUploadedCount=Number(data.requestedCount)||photoResizeUploadedCount;
   photoResizeSessionId='';
   renderPhotoResizeResults(data);
-  syncPhotoResizeControls();
+  const selectionChanged=finishPhotoResizeOperation(selected);
   const resized=Number(data.resizedCount)||0;
   const unchanged=Number(data.unchangedCount)||0;
   const skipped=Number(data.skippedCount)||0;
   const failed=Number(data.failedCount)||0;
   const summary=`Conversion finished: ${resized} resized, ${unchanged} copied unchanged, ${skipped} duplicate${skipped===1?'':'s'} skipped, ${failed} failed.`;
-  setPhotoResizeStatus(summary,failed?'error':'success');
+  const note=selectionChanged?' Your updated selection is ready for the next conversion.':'';
+  setPhotoResizeStatus(summary+note,failed?'error':'success');
 }
 function resetResizerQueue(){
   if(photoResizeBusy)return;
@@ -3886,6 +3934,7 @@ function resetResizerQueue(){
   photoResizeBusy=false;
   photoResizeConverting=false;
   photoResizeCompleted=false;
+  photoResizeSelectionChangedDuringRun=false;
   photoResizeSelectionLabel='';
   photoResizeAvailableCount=0;
   const picker=document.getElementById('resizerImagesInput');
@@ -6278,8 +6327,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.166';
+const APP_VERSION='1.167';
 const VERSION_HISTORY=[
+  {version:'1.167',added:'No new features.',removed:'The Resizer photo list becoming grey and unclickable after Convert.',fixed:'Photo checkboxes and Select all/Clear stay usable during uploads and conversion. An active batch keeps the selection captured when Convert was clicked; later selection edits are ready for the next run.',tone:'green'},
   {version:'1.166',added:'No new features.',removed:'The cramped gap between the Separate video folder toggle and its location label.',fixed:'The Video download location label now has a 10px gap below its toggle.',tone:'green'},
   {version:'1.165',added:'No new features.',removed:'The browser confirmation dialog before Convert and the inset glow around the resized-output folder button.',fixed:'Convert now proceeds immediately after the selection and size checks, and the output-folder icon uses the standard exterior button glow.',tone:'green'},
   {version:'1.164',added:'Selectable video tiles, shortcode_vN video downloads, a separate video-folder preference, and an independent Resized photos No duplicates toggle.',removed:'Video tiles that could play but could not be selected; the native player-menu image filename; one shared duplicate preference for downloaded and resized media.',fixed:'The video visibility toggle now controls video selection and downloading, with an explicit tile selector that does not interfere with playback. Videos save as shortcode_vN in the selected download folder; history maps them by video ordinal even when contentIndex is unknown. Resized-photos duplicate handling persists independently from downloaded-media duplicates.',tone:'green'},
