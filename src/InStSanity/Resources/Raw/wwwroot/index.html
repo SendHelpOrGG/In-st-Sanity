@@ -1144,7 +1144,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             <label class="field-label" for="saveFolder">Download location</label>
             <div class="folder-row"><input class="text-input" id="saveFolder" value="~/Pictures/Instagram" readonly><button class="outline" onclick="chooseFolder()">Browse…</button></div>
             <div class="anim-group" style="margin-top:18px">
-              <div class="background-actions" style="margin-bottom:6px">
+              <div class="background-actions" style="margin-bottom:10px">
                 <button type="button" class="outline ui-toggle-btn" id="separateVideoFolderBtn" aria-pressed="false" onclick="toggleSeparateVideoFolder()">Separate video folder: Off</button>
               </div>
               <div id="separateVideoFolderSettings" hidden>
@@ -1185,7 +1185,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.165; open version history" title="Click to view what changed in each version">v.1.165</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 1.166; open version history" title="Click to view what changed in each version">v.1.166</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -6278,8 +6278,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.165';
+const APP_VERSION='1.166';
 const VERSION_HISTORY=[
+  {version:'1.166',added:'No new features.',removed:'The cramped gap between the Separate video folder toggle and its location label.',fixed:'The Video download location label now has a 10px gap below its toggle.',tone:'green'},
   {version:'1.165',added:'No new features.',removed:'The browser confirmation dialog before Convert and the inset glow around the resized-output folder button.',fixed:'Convert now proceeds immediately after the selection and size checks, and the output-folder icon uses the standard exterior button glow.',tone:'green'},
   {version:'1.164',added:'Selectable video tiles, shortcode_vN video downloads, a separate video-folder preference, and an independent Resized photos No duplicates toggle.',removed:'Video tiles that could play but could not be selected; the native player-menu image filename; one shared duplicate preference for downloaded and resized media.',fixed:'The video visibility toggle now controls video selection and downloading, with an explicit tile selector that does not interfere with playback. Videos save as shortcode_vN in the selected download folder; history maps them by video ordinal even when contentIndex is unknown. Resized-photos duplicate handling persists independently from downloaded-media duplicates.',tone:'green'},
   {version:'1.163',added:'Automatic cover previews and photo/video counts for visible Saved Posts JSON cards.',removed:'Placeholder cards that required opening each post to reveal their cover.',fixed:'The visible page again resolves card-sized summaries that include cover URLs and counts; carousel slides stay lazy-loaded, and full-collection summary sweeps remain off.',tone:'green'},
