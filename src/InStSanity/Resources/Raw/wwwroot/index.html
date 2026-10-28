@@ -936,8 +936,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
           <div class="photo-editor-layout">
             <div class="photo-preview-panel">
               <div class="photo-preview-heading"><strong id="photoResizePreviewTitle">Live preview</strong><div class="photo-preview-tools"><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomOut" onclick="changePhotoResizePreviewZoom(-0.25)" aria-label="Zoom out" title="Zoom out" disabled>−</button><output class="photo-preview-zoom-label" id="photoResizePreviewZoomLabel">Fit</output><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomIn" onclick="changePhotoResizePreviewZoom(0.25)" aria-label="Zoom in" title="Zoom in" disabled>+</button><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomFit" onclick="resetPhotoResizePreviewZoom()" aria-label="Fit preview" title="Fit preview" disabled>↔</button><button type="button" class="outline photo-preview-toggle" id="photoResizePreviewToggle" onclick="togglePhotoResizePreviewMode()" aria-pressed="false" disabled>Show original</button></div></div>
-              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Scroll to zoom; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
-              <p class="hint">Scroll to zoom, drag to pan when zoomed, or double-click to fit the preview.</p>
+              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Ctrl+scroll to zoom; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
+              <p class="hint">Ctrl+scroll to zoom, drag to pan when zoomed, or double-click to fit the preview.</p>
             </div>
             <div class="photo-adjustment-groups" role="region" aria-label="Image adjustment controls" tabindex="0">
               <div class="photo-adjustment-group">
@@ -4150,7 +4150,7 @@ function resetPhotoResizePreviewZoom(){
 function handlePhotoResizePreviewWheel(event){
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const canvas=document.getElementById('photoResizePreviewCanvas');
-  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap))return;
+  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||!event.ctrlKey||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap))return;
   event.preventDefault();event.stopPropagation();
   let next=Math.max(1,Math.min(4.5,photoResizePreviewZoom*(event.deltaY<0?1.12:.88)));
   if(next<1.06)next=1;
@@ -7008,8 +7008,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.190';
+const APP_VERSION='1.191';
 const VERSION_HISTORY=[
+  {version:'1.191',added:'Ctrl+scroll zoom for the Image Edit photo preview.',removed:'Unmodified wheel zoom over the preview photo.',fixed:'Reserved ordinary wheel scrolling for page navigation and kept Ctrl+scroll focused on preview zoom.',tone:'green'},
   {version:'1.190',added:'Reliable double-click Fit for the photo preview.',removed:'A strict canvas-target check that could ignore double-clicks after pointer capture.',fixed:'Recognized gestures by their visible photo coordinates while still ignoring the surrounding checkerboard.',tone:'green'},
   {version:'1.189',added:'Photo-bounded Image Edit preview zoom and panning.',removed:'Zoom gestures on the checkerboard and free panning beyond the image edges.',fixed:'Kept the photo covering the preview while zoomed and allowed drag, wheel, and double-click gestures only on the photo itself.',tone:'green'},
   {version:'1.188',added:'Aligned the bottom edges of the Image Edit preview and scrollable adjustment panels.',removed:'The small height mismatch between the desktop preview and controls.',fixed:'Stretched the side-by-side panels to a shared row height without changing narrow-layout scrolling.',tone:'green'},
