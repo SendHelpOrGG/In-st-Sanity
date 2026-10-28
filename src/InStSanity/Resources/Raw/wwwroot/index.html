@@ -602,7 +602,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .resizer-adjustments-card{grid-column:1/-1}
 .photo-adjustment-summary{display:inline-flex;align-items:center;margin-left:8px;padding:3px 8px;border:1px solid var(--t-line,rgba(255,255,255,.16));border-radius:999px;color:var(--t-muted,#94a3b8);font-size:10px;font-weight:600;vertical-align:middle}
 .photo-adjustment-summary.is-active{color:var(--t-accent,#38bdf8);border-color:color-mix(in srgb,var(--t-accent,#38bdf8) 45%,transparent);background:color-mix(in srgb,var(--t-accent,#38bdf8) 10%,transparent)}
-.photo-editor-layout{display:grid;grid-template-columns:minmax(220px,.78fr) minmax(0,2.22fr);gap:16px;align-items:start}
+.photo-editor-layout{display:grid;grid-template-columns:minmax(220px,.72fr) minmax(0,2.28fr);gap:16px;align-items:start}
 .photo-preview-panel{min-width:0;padding:12px;border:1px solid var(--t-line,rgba(255,255,255,.13));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.28))}
 .photo-preview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;font-size:11px;color:var(--t-ink,#f1f5f9)}.photo-preview-heading strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .photo-preview-toggle{padding:5px 8px;font-size:10px}
@@ -630,7 +630,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-footer .hint{margin:0}
 .photo-adjustment-reset{flex:0 0 auto}
 @media(max-width:1120px){.photo-adjustment-groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:1200px){.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-panel{max-width:520px}.photo-preview-canvas-wrap{max-height:300px}}
+@media(max-width:760px){.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-panel{max-width:none}.photo-preview-canvas-wrap{max-height:300px}}
 @media(max-width:600px){.photo-adjustment-groups{grid-template-columns:minmax(0,1fr)}.photo-adjustment-control-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.photo-adjustment-footer{align-items:flex-start;flex-direction:column}.photo-adjustment-reset{align-self:flex-end}}
 </style>
 <style id="lsBootStyle">
@@ -6728,8 +6728,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.180';
+const APP_VERSION='1.181';
 const VERSION_HISTORY=[
+  {version:'1.181',added:'No new features.',removed:'No removals.',fixed:'Kept the Resizer photo preview in its own left-hand panel beside the adjustment controls on the right. The layout only stacks on narrow screens.',tone:'green'},
   {version:'1.180',added:'Live preview and basic photo adjustments in Resizer: exposure, brightness, contrast, highlights, shadows, temperature, tint, saturation, vibrance, sharpness, clarity, texture, grain with size and monochrome options, blur, denoise, fade, and vignette.',removed:'No removals.',fixed:'Reset and batch-apply controls now create adjusted copies with an _Edited suffix without overwriting originals. Existing resize, upscale, output-folder, duplicate-handling, and repeat-conversion behavior remains available.',tone:'green'},
   {version:'1.179',added:'No new features.',removed:'The “Interface sounds” heading in Sound settings.',fixed:'Renamed the heading to “UI sounds”.',tone:'green'},
   {version:'1.178',added:'Ten selectable interface click sounds with remembered preference and an instant sample preview.',removed:'The single synthesized button-click sound.',fixed:'Choose from Snap, Soft tick, Crisp click, Double, Round pop, Warm knock, Thin tick, Firm click, Bright tick, or Dull tap in Sound settings; selection is saved and follows the existing click-sound toggle and volume.',tone:'green'},
