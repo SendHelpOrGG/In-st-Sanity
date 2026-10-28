@@ -879,7 +879,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             </div>
             <span class="settings-card-chevron" aria-hidden="true">▾</span>
           </div></div>
-          <div class="setting-body"><div class="input-row account-row"><img id="igAccountAvatar" class="account-avatar" alt="" hidden><span class="account-avatar account-avatar-fallback" id="igAccountAvatarFallback" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><div class="account-text"><strong id="igAccountName">No account linked</strong><span id="igAccountHandle" class="account-handle account-status is-out"><i class="status-dot"></i><span id="igAccountStatusText">You are not signed in</span></span></div><button class="primary" onclick="openInstagramBrowser()">Open Browser</button><button class="outline" id="igLogoutBtn" onclick="showLogoutConfirm()">Log Out</button></div><p class="hint" id="igSettingsHint">Instagram handles sign-in directly. The app does not collect your password, and your browser sign-in also unlocks restricted posts in saved-post resolution. Log Out clears the Instagram session kept in the app's browser profile on this PC.</p></div>
+          <div class="setting-body"><div class="input-row account-row"><img id="igAccountAvatar" class="account-avatar" alt="" hidden><span class="account-avatar account-avatar-fallback" id="igAccountAvatarFallback" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><div class="account-text"><strong id="igAccountName">No account linked</strong><span id="igAccountHandle" class="account-handle account-status is-out"><i class="status-dot"></i><span id="igAccountStatusText">You are not signed in</span></span></div><button class="primary" onclick="openMyInstagramAccount()">Open Browser</button><button class="outline" id="igLogoutBtn" onclick="showLogoutConfirm()">Log Out</button></div><p class="hint" id="igSettingsHint">Instagram handles sign-in directly. The app does not collect your password, and your browser sign-in also unlocks restricted posts in saved-post resolution. Log Out clears the Instagram session kept in the app's browser profile on this PC.</p></div>
         </div>
         <div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
@@ -4069,9 +4069,11 @@ async function loadInstagramSession(forceRefresh=false,suppressSavedPostsReset=f
   }
   return null;
 }
-function onTopLoginBtnClick(){
-  return openInstagramBrowser(igSession.loggedIn&&igSession.username?('https://www.instagram.com/'+encodeURIComponent(igSession.username)+'/'):'https://www.instagram.com/accounts/login/');
+function openMyInstagramAccount(){
+  const targetUrl=igSession.loggedIn&&igSession.username?('https://www.instagram.com/'+encodeURIComponent(igSession.username)+'/'):'https://www.instagram.com/accounts/login/';
+  return openInstagramBrowser(targetUrl);
 }
+function onTopLoginBtnClick(){return openMyInstagramAccount()}
 async function showLogoutConfirm(){const m=document.getElementById('logoutConfirmModal');if(m)m.classList.add('show');playUiClick()}
 function dismissLogoutConfirm(){document.getElementById('logoutConfirmModal')?.classList.remove('show')}
 function confirmLogout(){dismissLogoutConfirm();logOutInstagram()}
@@ -6345,8 +6347,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.176';
+const APP_VERSION='1.177';
 const VERSION_HISTORY=[
+  {version:'1.177',added:'No new features.',removed:'Open Browser in My Account opening the general browser page instead of your profile.',fixed:'Open Browser now uses the same account-aware destination as the top account button, taking signed-in users to their Instagram profile and signed-out users to Instagram login.',tone:'green'},
   {version:'1.176',added:'No new features.',removed:'The one-conversion-only lockout in the Photo Resizer.',fixed:'Convert becomes available again after each completed run. Repeating a run starts a fresh upload session for the selected images.',tone:'green'},
   {version:'1.175',added:'No new features.',removed:'The undersized Resizer output-folder button beside Convert.',fixed:'Open resized folder is restored to a 37px square beside Convert; compact 28px sizing is confined to restricted-card actions.',tone:'green'},
   {version:'1.174',added:'No new features.',removed:'Theme-specific gradients and opacity being lost from loading-screen stickers.',fixed:'Loading-screen stickers now keep the full original theme SVG gradients and opacity stops, matching the side-panel artwork across themes.',tone:'green'},
