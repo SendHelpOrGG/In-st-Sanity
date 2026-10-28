@@ -4092,6 +4092,14 @@ function clampPhotoResizePreviewPan(){
   photoResizePreviewPanX=Math.max(-maxX,Math.min(maxX,photoResizePreviewPanX));
   photoResizePreviewPanY=Math.max(-maxY,Math.min(maxY,photoResizePreviewPanY));
 }
+function isPhotoResizePreviewEventOnPhoto(event,canvas,wrap){
+  if(!canvas||!wrap)return false;
+  if(!Number.isFinite(event.clientX)||!Number.isFinite(event.clientY))return event.target===canvas||canvas.contains(event.target);
+  const photo=canvas.getBoundingClientRect(),viewport=wrap.getBoundingClientRect();
+  const left=Math.max(photo.left,viewport.left+(wrap.clientLeft||0)),top=Math.max(photo.top,viewport.top+(wrap.clientTop||0));
+  const right=Math.min(photo.right,viewport.left+(wrap.clientLeft||0)+wrap.clientWidth),bottom=Math.min(photo.bottom,viewport.top+(wrap.clientTop||0)+wrap.clientHeight);
+  return right>left&&bottom>top&&event.clientX>=left&&event.clientX<=right&&event.clientY>=top&&event.clientY<=bottom;
+}
 function syncPhotoResizePreviewZoomControls(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
   const available=Boolean(canvas&&!canvas.hidden&&photoResizePreviewImageData);
@@ -4142,7 +4150,7 @@ function resetPhotoResizePreviewZoom(){
 function handlePhotoResizePreviewWheel(event){
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const canvas=document.getElementById('photoResizePreviewCanvas');
-  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||event.target!==canvas)return;
+  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap))return;
   event.preventDefault();event.stopPropagation();
   let next=Math.max(1,Math.min(4.5,photoResizePreviewZoom*(event.deltaY<0?1.12:.88)));
   if(next<1.06)next=1;
@@ -4153,7 +4161,7 @@ function handlePhotoResizePreviewWheel(event){
 function handlePhotoResizePreviewPointerDown(event){
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const canvas=document.getElementById('photoResizePreviewCanvas');
-  if(!wrap||!canvas||canvas.hidden||event.target!==canvas||photoResizePreviewZoom<=1.01||event.button!==0)return;
+  if(!wrap||!canvas||canvas.hidden||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap)||photoResizePreviewZoom<=1.01||event.button!==0)return;
   photoResizePreviewDragging=true;photoResizePreviewDragPointerId=event.pointerId;
   photoResizePreviewDragStartX=event.clientX;photoResizePreviewDragStartY=event.clientY;
   photoResizePreviewDragOriginX=photoResizePreviewPanX;photoResizePreviewDragOriginY=photoResizePreviewPanY;
@@ -4177,7 +4185,7 @@ function initPhotoResizePreviewZoom(){
   wrap._photoResizeZoomBound=true;
   wrap.addEventListener('wheel',handlePhotoResizePreviewWheel,{passive:false});
   wrap.addEventListener('pointerdown',handlePhotoResizePreviewPointerDown);
-  wrap.addEventListener('dblclick',event=>{const canvas=document.getElementById('photoResizePreviewCanvas');if(!canvas||canvas.hidden||event.target!==canvas)return;event.preventDefault();resetPhotoResizePreviewZoom()});
+  wrap.addEventListener('dblclick',event=>{const canvas=document.getElementById('photoResizePreviewCanvas');if(!canvas||canvas.hidden||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap))return;event.preventDefault();resetPhotoResizePreviewZoom()});
   window.addEventListener('pointermove',handlePhotoResizePreviewPointerMove);
   window.addEventListener('pointerup',handlePhotoResizePreviewPointerUp);
   window.addEventListener('pointercancel',handlePhotoResizePreviewPointerUp);
@@ -7000,8 +7008,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.189';
+const APP_VERSION='1.190';
 const VERSION_HISTORY=[
+  {version:'1.190',added:'Reliable double-click Fit for the photo preview.',removed:'A strict canvas-target check that could ignore double-clicks after pointer capture.',fixed:'Recognized gestures by their visible photo coordinates while still ignoring the surrounding checkerboard.',tone:'green'},
   {version:'1.189',added:'Photo-bounded Image Edit preview zoom and panning.',removed:'Zoom gestures on the checkerboard and free panning beyond the image edges.',fixed:'Kept the photo covering the preview while zoomed and allowed drag, wheel, and double-click gestures only on the photo itself.',tone:'green'},
   {version:'1.188',added:'Aligned the bottom edges of the Image Edit preview and scrollable adjustment panels.',removed:'The small height mismatch between the desktop preview and controls.',fixed:'Stretched the side-by-side panels to a shared row height without changing narrow-layout scrolling.',tone:'green'},
   {version:'1.187',added:'An independently scrollable Image Edit adjustment-control panel on desktop.',removed:'The unscrollable full-height slider stack.',fixed:'Kept adjustment controls within the visible viewport while preserving normal page scrolling on narrow layouts.',tone:'green'},
