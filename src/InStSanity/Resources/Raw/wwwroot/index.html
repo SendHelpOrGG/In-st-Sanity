@@ -757,6 +757,9 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 #videoDownloadNotice { height:37px; min-height:37px; padding:0 12px; line-height:1; white-space:nowrap; }
 .resizer-max-label-row { display:flex; align-items:center; justify-content:flex-start; max-width:320px; margin-bottom:8px; }
 .resizer-max-label-row .field-label { margin:0; }
+#settings-sound .ui-click-sound-select { width:100%; height:38px; min-height:38px; padding:0 11px; border:1px solid var(--t-input-border,#496073); border-radius:8px; background:var(--t-input-bg,rgba(15,23,42,.62)); color:var(--t-ink,#f1f5f9); font:inherit; font-size:11px; cursor:pointer; box-shadow:inset 0 1px rgba(204,251,241,.14); }
+#settings-sound .ui-click-sound-select:focus-visible { outline:2px solid var(--t-accent,#38bdf8); outline-offset:2px; }
+#settings-sound .ui-click-sound-select option { background:#161f26; color:#f1f5f9; }
 #resizerUpscaleToggleBtn:disabled { opacity:.45; cursor:not-allowed; }
 #resizerUpscaleToggleBtn:focus-visible { outline:2px solid var(--t-accent,#38bdf8); outline-offset:2px; }
 @media(max-width:760px) {
@@ -1124,7 +1127,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             <div class="settings-card-head-inner">
           <div class="settings-card-head-text">
           <h2>Interface sounds</h2>
-          <p>A short click plays whenever you press a button. Turn it off or change how loud it is.</p>
+          <p>Choose the button-click sound, turn it off, or adjust its loudness.</p>
           </div>
           <span class="settings-card-chevron" aria-hidden="true">▾</span>
           </div></div>
@@ -1134,6 +1137,20 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
           <div class="background-actions">
           <button type="button" class="outline ui-toggle-btn active" id="uiClickBtn" aria-pressed="true" onclick="toggleUiClickSound()">Button click sounds: On</button>
           </div>
+          <label class="field-label" for="uiClickSoundSelect">Click sound</label>
+          <select class="ui-click-sound-select" id="uiClickSoundSelect" aria-describedby="uiClickSoundHint" onchange="setUiClickSound(this.value)">
+            <option value="snap">Snap</option>
+            <option value="soft-tick">Soft tick</option>
+            <option value="crisp-click">Crisp click</option>
+            <option value="double">Double</option>
+            <option value="round-pop">Round pop</option>
+            <option value="warm-knock">Warm knock</option>
+            <option value="thin-tick">Thin tick</option>
+            <option value="firm-click">Firm click</option>
+            <option value="bright-tick">Bright tick</option>
+            <option value="dull-tap">Dull tap</option>
+          </select>
+          <p class="hint" id="uiClickSoundHint">Choosing a sound previews it, using the current click-sound switch and volume.</p>
           <label class="field-label opacity-label" for="uiClickVolume">Click loudness <strong id="uiClickVolumeValue">100%</strong></label>
           <input class="opacity-slider" id="uiClickVolume" type="range" min="0" max="100" value="100" oninput="setUiClickVolume(this.value)">
           <p class="hint">100% is the level the click was designed at. Drop it to 0% to silence button clicks while leaving them switched on.</p>
@@ -1252,14 +1269,31 @@ const art=[
 const seeds=[['몇 층으로 가세요❔','@s0meii0 · 소히 ソヒ','1 hour ago','378','https://www.instagram.com/p/DeWe8lTiZN2'],['Slow mornings, good coffee','Copenhagen · Denmark','5 days ago','1.8k','https://www.instagram.com/p/D1f2K8pL3Qs/'],['Somewhere in the Dolomites','South Tyrol · Italy','1 week ago','3.1k','https://www.instagram.com/p/C8v4L2nR6Wb/'],['A little bit of sunshine','Sunday market · Sicily','2 weeks ago','986','https://www.instagram.com/p/D0b7M3hQ9Xe/'],['The long way home','Lake Como · Italy','3 weeks ago','1.2k','https://www.instagram.com/p/C7k9P5tV2Ac/'],['Afternoons at the villa','Puglia · Italy','1 month ago','2.7k','https://www.instagram.com/p/D2c6N1wF8Yz/'],['Morning light in Hydra','Greek Isles · Greece','6 weeks ago','1.6k','https://www.instagram.com/p/E3h7R4vQ2Lm/'],['Olive grove weekend','Crete · Greece','2 months ago','2.1k','https://www.instagram.com/p/E4j8S5wR3Nn/'],['The blue hour in Lisbon','Alfama · Portugal','2 months ago','4.2k','https://www.instagram.com/p/E5k9T6xS4Po/'],['Market flowers & peaches','Provence · France','3 months ago','1.1k','https://www.instagram.com/p/E6m2V7yT5Qr/'],['A table by the water','Dubrovnik · Croatia','4 months ago','2.9k','https://www.instagram.com/p/E7n3W8zU6Rs/'],['Last swim of summer','Mallorca · Spain','5 months ago','3.6k','https://www.instagram.com/p/E8p4X9aV7St/']];
 let posts=[];let filter='all';let sortMode='newest';let connected=false;let currentPost=-1;let instagramSessionGeneration=0;let instagramSessionKnown=false;let instagramSessionKey='';let instagramSessionResetPending=false;let instagramSessionResetTimer=0;let toastHideTimer=0;let downloadRunActive=false;let downloadProgressActive=false;
 let uiAudioContext;
-/* click-sound settings - declared before playUiClick, which reads them on every click */
+const UI_CLICK_SOUND_SOURCES={
+  'snap':'/sounds/click-snap.wav',
+  'soft-tick':'/sounds/click-soft-tick.wav',
+  'crisp-click':'/sounds/click-crisp-click.wav',
+  'double':'/sounds/click-double.wav',
+  'round-pop':'/sounds/click-round-pop.wav',
+  'warm-knock':'/sounds/click-warm-knock.wav',
+  'thin-tick':'/sounds/click-thin-tick.wav',
+  'firm-click':'/sounds/click-firm-click.wav',
+  'bright-tick':'/sounds/click-bright-tick.wav',
+  'dull-tap':'/sounds/click-dull-tap.wav'
+};
 var uiClickEnabled = true;
 var uiClickVolumePercent = 100;
+var uiClickSoundId = 'snap';
+var uiClickAudioPlayers = Object.create(null);
 function loadUiClickSettings(){
   try{ if(localStorage.getItem('stillSane.uiClick') === '0') uiClickEnabled = false; }catch(_){}
   try{
     var n = parseInt(localStorage.getItem('stillSane.uiClickVol'), 10);
     if(isFinite(n)) uiClickVolumePercent = Math.max(0, Math.min(100, n));
+  }catch(_){}
+  try{
+    var soundId=localStorage.getItem('stillSane.uiClickSound');
+    if(soundId&&Object.prototype.hasOwnProperty.call(UI_CLICK_SOUND_SOURCES,soundId))uiClickSoundId=soundId;
   }catch(_){}
 }
 function applyUiClickSettings(save){
@@ -1268,6 +1302,8 @@ function applyUiClickSettings(save){
   try{
     var sl = document.getElementById('uiClickVolume');
     if(sl && Number(sl.value) !== pct) sl.value = String(pct);
+    var soundSelect=document.getElementById('uiClickSoundSelect');
+    if(soundSelect&&soundSelect.value!==uiClickSoundId)soundSelect.value=uiClickSoundId;
     var ve = document.getElementById('uiClickVolumeValue');
     if(ve) ve.textContent = pct + '%';
     var b = document.getElementById('uiClickBtn');
@@ -1281,6 +1317,7 @@ function applyUiClickSettings(save){
     try{
       localStorage.setItem('stillSane.uiClick', uiClickEnabled ? '1' : '0');
       localStorage.setItem('stillSane.uiClickVol', String(pct));
+      localStorage.setItem('stillSane.uiClickSound', uiClickSoundId);
     }catch(_){}
   }
 }
@@ -1294,7 +1331,37 @@ function setUiClickVolume(val){
   uiClickVolumePercent = Math.max(0, Math.min(100, Number(val)||0));
   applyUiClickSettings(true);
 }
-function playUiClick(){try{const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass)return;if(!uiClickEnabled||uiClickVolumePercent<=0)return;uiAudioContext??=new AudioContextClass();if(uiAudioContext.state==='suspended')uiAudioContext.resume();const now=uiAudioContext.currentTime;const length=Math.floor(uiAudioContext.sampleRate*.028);const buffer=uiAudioContext.createBuffer(1,length,uiAudioContext.sampleRate);const data=buffer.getChannelData(0);for(let i=0;i<length;i++){const t=i/uiAudioContext.sampleRate;data[i]=(Math.random()*2-1)*Math.exp(-t/.0038)*.18}const source=uiAudioContext.createBufferSource();source.buffer=buffer;const filter=uiAudioContext.createBiquadFilter();filter.type='highpass';filter.frequency.value=1200;const noiseGain=uiAudioContext.createGain();noiseGain.gain.setValueAtTime(.038*uiClickVolumePercent/100,now);noiseGain.gain.exponentialRampToValueAtTime(.0001,now+.028);source.connect(filter);filter.connect(noiseGain);noiseGain.connect(uiAudioContext.destination);source.start(now);const thump=uiAudioContext.createOscillator();const thumpGain=uiAudioContext.createGain();thump.type='sine';thump.frequency.setValueAtTime(175,now);thumpGain.gain.setValueAtTime(.018*uiClickVolumePercent/100,now);thumpGain.gain.exponentialRampToValueAtTime(.0001,now+.022);thump.connect(thumpGain);thumpGain.connect(uiAudioContext.destination);thump.start(now);thump.stop(now+.025)}catch(_){}}
+function setUiClickSound(value){
+  const soundId=String(value||'');
+  if(!Object.prototype.hasOwnProperty.call(UI_CLICK_SOUND_SOURCES,soundId))return;
+  uiClickSoundId=soundId;
+  applyUiClickSettings(true);
+  playUiClick();
+}
+function preloadUiClickAudio(){
+  Object.keys(UI_CLICK_SOUND_SOURCES).forEach(soundId=>{
+    try{
+      const audio=new Audio();
+      audio.preload='auto';
+      audio.src=UI_CLICK_SOUND_SOURCES[soundId];
+      uiClickAudioPlayers[soundId]=audio;
+      audio.load();
+    }catch(_){}
+  });
+}
+function playUiClickFallback(){try{if(!uiClickEnabled||uiClickVolumePercent<=0)return;const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass)return;uiAudioContext??=new AudioContextClass();if(uiAudioContext.state==='suspended')uiAudioContext.resume();const now=uiAudioContext.currentTime;const length=Math.floor(uiAudioContext.sampleRate*.028);const buffer=uiAudioContext.createBuffer(1,length,uiAudioContext.sampleRate);const data=buffer.getChannelData(0);for(let i=0;i<length;i++){const t=i/uiAudioContext.sampleRate;data[i]=(Math.random()*2-1)*Math.exp(-t/.0038)*.18}const source=uiAudioContext.createBufferSource();source.buffer=buffer;const filter=uiAudioContext.createBiquadFilter();filter.type='highpass';filter.frequency.value=1200;const noiseGain=uiAudioContext.createGain();noiseGain.gain.setValueAtTime(.038*uiClickVolumePercent/100,now);noiseGain.gain.exponentialRampToValueAtTime(.0001,now+.028);source.connect(filter);filter.connect(noiseGain);noiseGain.connect(uiAudioContext.destination);source.start(now);const thump=uiAudioContext.createOscillator();const thumpGain=uiAudioContext.createGain();thump.type='sine';thump.frequency.setValueAtTime(175,now);thumpGain.gain.setValueAtTime(.018*uiClickVolumePercent/100,now);thumpGain.gain.exponentialRampToValueAtTime(.0001,now+.022);thump.connect(thumpGain);thumpGain.connect(uiAudioContext.destination);thump.start(now);thump.stop(now+.025)}catch(_){}}
+function playUiClick(){
+  if(!uiClickEnabled||uiClickVolumePercent<=0)return;
+  try{
+    const soundId=Object.prototype.hasOwnProperty.call(UI_CLICK_SOUND_SOURCES,uiClickSoundId)?uiClickSoundId:'snap';
+    let audio=uiClickAudioPlayers[soundId];
+    if(!audio){audio=new Audio();audio.preload='auto';audio.src=UI_CLICK_SOUND_SOURCES[soundId];uiClickAudioPlayers[soundId]=audio;}
+    audio.volume=uiClickVolumePercent/100;
+    try{audio.currentTime=0}catch(_){}
+    const playback=audio.play();
+    if(playback&&typeof playback.catch==='function')playback.catch(()=>playUiClickFallback());
+  }catch(_){playUiClickFallback();}
+}
 document.addEventListener('click',event=>{const button=event.target.closest('button');if(button&&!button.disabled)playUiClick()});
 let hasCustomBackground=false;
 function updateMainBgStickerVisibility(){const bgEl=document.getElementById('mainBgSticker');if(!bgEl)return;const opSlider=document.getElementById('backgroundOpacity');const opVal=opSlider?Number(opSlider.value):30;const shouldShow=!hasCustomBackground||opVal<=0;bgEl.style.display=shouldShow?'flex':'none'}
@@ -6347,8 +6414,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.177';
+const APP_VERSION='1.178';
 const VERSION_HISTORY=[
+  {version:'1.178',added:'Ten selectable interface click sounds with remembered preference and an instant sample preview.',removed:'The single synthesized button-click sound.',fixed:'Choose from Snap, Soft tick, Crisp click, Double, Round pop, Warm knock, Thin tick, Firm click, Bright tick, or Dull tap in Sound settings; selection is saved and follows the existing click-sound toggle and volume.',tone:'green'},
   {version:'1.177',added:'No new features.',removed:'Open Browser in My Account opening the general browser page instead of your profile.',fixed:'Open Browser now uses the same account-aware destination as the top account button, taking signed-in users to their Instagram profile and signed-out users to Instagram login.',tone:'green'},
   {version:'1.176',added:'No new features.',removed:'The one-conversion-only lockout in the Photo Resizer.',fixed:'Convert becomes available again after each completed run. Repeating a run starts a fresh upload session for the selected images.',tone:'green'},
   {version:'1.175',added:'No new features.',removed:'The undersized Resizer output-folder button beside Convert.',fixed:'Open resized folder is restored to a 37px square beside Convert; compact 28px sizing is confined to restricted-card actions.',tone:'green'},
@@ -6776,6 +6844,7 @@ loadLsScreensSetting();
 try{ if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncLsSoundBtn); else syncLsSoundBtn(); }catch(_){}
 try{ if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncLsScreensBtn); else syncLsScreensBtn(); }catch(_){}
 loadUiClickSettings();
+preloadUiClickAudio();
 try{ if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ applyUiClickSettings(false); }); else applyUiClickSettings(false); }catch(_){}
 
 /* =====================================================================
