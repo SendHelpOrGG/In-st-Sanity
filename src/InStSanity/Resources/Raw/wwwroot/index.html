@@ -626,7 +626,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-download-btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 .photo-adjustment-summary{display:inline-flex;align-items:center;margin-left:8px;padding:3px 8px;border:1px solid var(--t-line,rgba(255,255,255,.16));border-radius:999px;color:var(--t-muted,#94a3b8);font-size:10px;font-weight:600;vertical-align:middle}
 .photo-adjustment-summary.is-active{color:var(--t-accent,#38bdf8);border-color:color-mix(in srgb,var(--t-accent,#38bdf8) 45%,transparent);background:color-mix(in srgb,var(--t-accent,#38bdf8) 10%,transparent)}
-.photo-editor-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:16px;align-items:stretch}
+.photo-editor-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:16px;align-items:start}
 .photo-preview-panel{min-width:0;padding:12px;border:1px solid var(--t-line,rgba(255,255,255,.2));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.34))}
 .photo-preview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:9px;font-size:11px;color:var(--t-ink,#f1f5f9)}.photo-preview-heading strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .photo-preview-tools{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
@@ -643,7 +643,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-canvas-wrap.is-zoomed canvas:active{cursor:grabbing}
 .photo-preview-canvas-wrap canvas[hidden]{display:none!important}
 .photo-preview-panel>.hint{margin:8px 0 0;font-size:10px}
-.photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0;max-height:min(82vh,900px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 6px 5px 0;scrollbar-width:thin;scrollbar-color:var(--t-accent,#38bdf8) transparent;-webkit-overflow-scrolling:touch}
+.photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0;max-height:min(82vh,900px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 6px 5px 0;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--t-accent,#38bdf8) transparent;-webkit-overflow-scrolling:touch}
 .photo-adjustment-groups:focus-visible{outline:2px solid var(--t-accent,#38bdf8);outline-offset:2px}
 .photo-adjustment-group{min-width:0;padding:14px;border:1px solid var(--t-line,rgba(255,255,255,.12));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.2))}
 .photo-adjustment-group h3{margin:0 0 12px;color:var(--t-ink,#f1f5f9);font-size:12px;font-weight:700}
@@ -934,12 +934,12 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">3. Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Adjusted copies get an _Edited filename suffix; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoResizing('editor-download')" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open edited images folder in File Explorer" aria-label="Open edited images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button></div></div>
         <div class="setting-body">
           <div class="photo-editor-layout">
-            <div class="photo-preview-panel">
+            <div class="photo-preview-panel" id="photoResizePreviewPanel">
               <div class="photo-preview-heading"><strong id="photoResizePreviewTitle">Live preview</strong><div class="photo-preview-tools"><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomOut" onclick="changePhotoResizePreviewZoom(-0.25)" aria-label="Zoom out" title="Zoom out" disabled>−</button><output class="photo-preview-zoom-label" id="photoResizePreviewZoomLabel">Fit</output><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomIn" onclick="changePhotoResizePreviewZoom(0.25)" aria-label="Zoom in" title="Zoom in" disabled>+</button><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomFit" onclick="resetPhotoResizePreviewZoom()" aria-label="Fit preview" title="Fit preview" disabled>↔</button><button type="button" class="outline photo-preview-toggle" id="photoResizePreviewToggle" onclick="togglePhotoResizePreviewMode()" aria-pressed="false" disabled>Show original</button></div></div>
               <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Ctrl+scroll to zoom; ordinary scroll moves the page; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
               <p class="hint">Ctrl+scroll to zoom, scroll normally to move the page, drag to pan when zoomed, or double-click to fit.</p>
             </div>
-            <div class="photo-adjustment-groups" role="region" aria-label="Image adjustment controls" tabindex="0">
+            <div class="photo-adjustment-groups" id="photoAdjustmentGroups" role="region" aria-label="Image adjustment controls" tabindex="0">
               <div class="photo-adjustment-group">
                 <h3>Tone &amp; color</h3>
                 <div class="photo-adjustment-control-grid">
@@ -4053,11 +4053,23 @@ function loadPhotoResizePreviewWithImage(file,token,installPreview){
     image.src=url;
   }catch(_){const message=document.getElementById('photoResizePreviewMessage');if(message){message.hidden=false;message.textContent='Preview is unavailable for this image format.'}}
 }
+function syncPhotoAdjustmentGroupsHeight(){
+  const groups=document.getElementById('photoAdjustmentGroups');
+  const preview=document.getElementById('photoResizePreviewPanel');
+  if(!groups||!preview)return;
+  if(window.innerWidth<=850){groups.style.height='';groups.style.maxHeight='';return}
+  const height=preview.getBoundingClientRect().height;
+  if(!Number.isFinite(height)||height<=0)return;
+  const value=`${height}px`;
+  if(groups.style.height!==value)groups.style.height=value;
+  if(groups.style.maxHeight!==value)groups.style.maxHeight=value;
+}
 function resetPhotoResizePreviewViewport(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   if(canvas){canvas.style.width='';canvas.style.height=''}
   if(wrap){wrap.style.width='';wrap.style.height='';wrap.classList.remove('has-image')}
+  syncPhotoAdjustmentGroupsHeight();
 }
 function syncPhotoResizePreviewViewport(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
@@ -4080,6 +4092,7 @@ function syncPhotoResizePreviewViewport(){
   wrap.style.width=`${imageWidth+chromeWidth}px`;wrap.style.height=`${imageHeight+chromeHeight}px`;
   wrap.classList.add('has-image');
   if(photoResizePreviewZoom>1.01){clampPhotoResizePreviewPan();canvas.style.transform=`translate(${photoResizePreviewPanX}px, ${photoResizePreviewPanY}px) scale(${photoResizePreviewZoom})`}
+  syncPhotoAdjustmentGroupsHeight();
 }
 function clampPhotoResizePreviewPan(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
@@ -7008,8 +7021,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.192';
+const APP_VERSION='1.193';
 const VERSION_HISTORY=[
+  {version:'1.193',added:'A scrollable adjustments panel sized to the current preview panel.',removed:'The fixed viewport-based control-panel height.',fixed:'Kept the scroll area aligned with the preview as its image size or viewport changes.',tone:'green'},
   {version:'1.192',added:'Normal page scrolling works while the pointer is over the Image Edit preview.',removed:'Scroll-chain containment around the preview.',fixed:'Let unmodified wheel input reach the page while Ctrl+scroll continues to zoom the photo.',tone:'green'},
   {version:'1.191',added:'Ctrl+scroll zoom for the Image Edit photo preview.',removed:'Unmodified wheel zoom over the preview photo.',fixed:'Reserved ordinary wheel scrolling for page navigation and kept Ctrl+scroll focused on preview zoom.',tone:'green'},
   {version:'1.190',added:'Reliable double-click Fit for the photo preview.',removed:'A strict canvas-target check that could ignore double-clicks after pointer capture.',fixed:'Recognized gestures by their visible photo coordinates while still ignoring the surrounding checkerboard.',tone:'green'},
