@@ -53,7 +53,9 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 				validatedRequest.MaxSide,
 				validatedRequest.Upscale,
 				validatedRequest.NoDuplicates,
+				validatedRequest.ApplyAdjustmentsToBatch,
 				validatedRequest.OutputFolder,
+				validatedRequest.Adjustments,
 				cancellationToken).ConfigureAwait(false);
 			return HttpResponseInfo.Json(result);
 		}
@@ -115,10 +117,115 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			}
 		}
 
+		var applyAdjustmentsToBatch = true;
+		if (TryGetProperty(root, "applyAdjustmentsToBatch", out var applyToBatchValue))
+		{
+			if (applyToBatchValue.ValueKind == JsonValueKind.True)
+			{
+				applyAdjustmentsToBatch = true;
+			}
+			else if (applyToBatchValue.ValueKind == JsonValueKind.False)
+			{
+				applyAdjustmentsToBatch = false;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
 		var outputFolder = TryGetProperty(root, "outputFolder", out var folderValue) && folderValue.ValueKind == JsonValueKind.String
 			? folderValue.GetString()
 			: null;
-		return new ResizeRequest(sessionId, maxSide, upscale, noDuplicates, outputFolder);
+		var adjustments = new PhotoImageAdjustments();
+		if (TryGetProperty(root, "adjustments", out var adjustmentsValue) &&
+			(adjustmentsValue.ValueKind != JsonValueKind.Object || !TryParseAdjustments(adjustmentsValue, out adjustments)))
+		{
+			return null;
+		}
+
+		return new ResizeRequest(sessionId, maxSide, upscale, noDuplicates, applyAdjustmentsToBatch, outputFolder, adjustments);
+	}
+
+	static bool TryParseAdjustments(JsonElement element, out PhotoImageAdjustments adjustments)
+	{
+		adjustments = new PhotoImageAdjustments();
+		if (!TryReadNumber(element, "exposure", -100, 100, 0, out var exposure) ||
+			!TryReadNumber(element, "brightness", -100, 100, 0, out var brightness) ||
+			!TryReadNumber(element, "contrast", -100, 100, 0, out var contrast) ||
+			!TryReadNumber(element, "highlights", -100, 100, 0, out var highlights) ||
+			!TryReadNumber(element, "shadows", -100, 100, 0, out var shadows) ||
+			!TryReadNumber(element, "temperature", -100, 100, 0, out var temperature) ||
+			!TryReadNumber(element, "tint", -100, 100, 0, out var tint) ||
+			!TryReadNumber(element, "saturation", -100, 100, 0, out var saturation) ||
+			!TryReadNumber(element, "vibrance", -100, 100, 0, out var vibrance) ||
+			!TryReadNumber(element, "sharpness", 0, 100, 0, out var sharpness) ||
+			!TryReadNumber(element, "clarity", -100, 100, 0, out var clarity) ||
+			!TryReadNumber(element, "texture", -100, 100, 0, out var texture) ||
+			!TryReadNumber(element, "blur", 0, 100, 0, out var blur) ||
+			!TryReadNumber(element, "denoise", 0, 100, 0, out var denoise) ||
+			!TryReadNumber(element, "grain", 0, 100, 0, out var grain) ||
+			!TryReadNumber(element, "grainSize", 1, 100, 35, out var grainSize) ||
+			!TryReadNumber(element, "fade", 0, 100, 0, out var fade) ||
+			!TryReadNumber(element, "vignette", 0, 100, 0, out var vignette))
+		{
+			return false;
+		}
+
+		var monochromeGrain = false;
+		if (TryGetProperty(element, "monochromeGrain", out var monochromeValue))
+		{
+			if (monochromeValue.ValueKind == JsonValueKind.True)
+			{
+				monochromeGrain = true;
+			}
+			else if (monochromeValue.ValueKind != JsonValueKind.False)
+			{
+				return false;
+			}
+		}
+
+		adjustments = new PhotoImageAdjustments
+		{
+			Exposure = exposure,
+			Brightness = brightness,
+			Contrast = contrast,
+			Highlights = highlights,
+			Shadows = shadows,
+			Temperature = temperature,
+			Tint = tint,
+			Saturation = saturation,
+			Vibrance = vibrance,
+			Sharpness = sharpness,
+			Clarity = clarity,
+			Texture = texture,
+			Blur = blur,
+			Denoise = denoise,
+			Grain = grain,
+			GrainSize = grainSize,
+			MonochromeGrain = monochromeGrain,
+			Fade = fade,
+			Vignette = vignette,
+		};
+		return true;
+	}
+
+	static bool TryReadNumber(JsonElement element, string name, double minimum, double maximum, double defaultValue, out double result)
+	{
+		result = defaultValue;
+		if (!TryGetProperty(element, name, out var value))
+		{
+			return true;
+		}
+
+		if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out var parsed) ||
+			!double.IsFinite(parsed) || parsed < minimum || parsed > maximum)
+		{
+			return false;
+		}
+
+		result = parsed;
+		return true;
 	}
 
 	static bool TryGetProperty(JsonElement element, string name, out JsonElement value)
@@ -139,5 +246,12 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 		return false;
 	}
 
-	readonly record struct ResizeRequest(Guid SessionId, int MaxSide, bool Upscale, bool NoDuplicates, string? OutputFolder);
+	readonly record struct ResizeRequest(
+		Guid SessionId,
+		int MaxSide,
+		bool Upscale,
+		bool NoDuplicates,
+		bool ApplyAdjustmentsToBatch,
+		string? OutputFolder,
+		PhotoImageAdjustments Adjustments);
 }

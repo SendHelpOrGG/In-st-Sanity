@@ -162,7 +162,9 @@ public sealed class PhotoResizeService
 		int maxSide,
 		bool upscale,
 		bool noDuplicates,
+		bool applyAdjustmentsToBatch,
 		string? requestedOutputFolder,
+		PhotoImageAdjustments? requestedAdjustments,
 		CancellationToken cancellationToken)
 	{
 		if (sessionId == Guid.Empty)
@@ -175,6 +177,7 @@ public sealed class PhotoResizeService
 			return PhotoResizeConversionResult.Failure("invalid_max_side");
 		}
 
+		var adjustments = requestedAdjustments ?? new PhotoImageAdjustments();
 		var gate = SessionLocks.GetOrAdd(sessionId, static _ => new SemaphoreSlim(1, 1));
 		await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
 		try
@@ -204,7 +207,10 @@ public sealed class PhotoResizeService
 			foreach (var stagedFile in stagedFiles)
 			{
 				cancellationToken.ThrowIfCancellationRequested();
-				if (noDuplicates)
+				var fileAdjustments = applyAdjustmentsToBatch || stagedFile.FileId == stagedFiles[0].FileId
+					? adjustments
+					: new PhotoImageAdjustments();
+				if (noDuplicates && !fileAdjustments.HasEdits)
 				{
 					var possibleOutputName = BuildOutputFileName(
 						stagedFile.FileName,
@@ -212,9 +218,7 @@ public sealed class PhotoResizeService
 					var existingPath = FindExistingResizedFilePath(outputFolder, possibleOutputName);
 					if (existingPath is not null)
 					{
-						results.Add(PhotoResizeFileResult.Skipped(
-							stagedFile.FileName,
-							Path.GetFileName(existingPath)));
+						results.Add(PhotoResizeFileResult.Skipped(stagedFile.FileName, Path.GetFileName(existingPath)));
 						continue;
 					}
 				}
@@ -227,14 +231,15 @@ public sealed class PhotoResizeService
 						payload,
 						maxSide,
 						Path.GetExtension(stagedFile.FileName),
-						upscale).ConfigureAwait(false);
+						upscale,
+						fileAdjustments).ConfigureAwait(false);
 					if (resized is null)
 					{
 						results.Add(PhotoResizeFileResult.Failed(stagedFile.FileName, "image_decode_failed"));
 						continue;
 					}
 
-					var outputName = BuildOutputFileName(stagedFile.FileName, resized.Value.Extension);
+					var outputName = BuildOutputFileName(stagedFile.FileName, resized.Value.Extension, resized.Value.WasEdited);
 					if (noDuplicates)
 					{
 						var existingPath = FindExistingResizedFilePath(outputFolder, outputName);
@@ -262,12 +267,18 @@ public sealed class PhotoResizeService
 					results.Add(new PhotoResizeFileResult(
 						stagedFile.FileName,
 						writeResult.FileName,
-						resized.Value.WasResized ? "resized" : "unchanged",
-						null));
+						resized.Value.WasResized ? "resized" : resized.Value.WasEdited ? "edited" : "unchanged",
+						null,
+						resized.Value.WasEdited));
 				}
 				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 				{
 					throw;
+				}
+				catch (PhotoImageTooLargeException exception)
+				{
+					_logger.LogInformation(exception, "Could not safely apply adjustments to {FileName}", stagedFile.FileName);
+					results.Add(PhotoResizeFileResult.Failed(stagedFile.FileName, "image_too_large"));
 				}
 				catch (Exception exception) when (
 					exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or
@@ -279,6 +290,7 @@ public sealed class PhotoResizeService
 			}
 
 			var resizedCount = results.Count(item => item.Status == "resized");
+			var editedCount = results.Count(item => item.Status == "edited");
 			var unchangedCount = results.Count(item => item.Status == "unchanged");
 			var skippedCount = results.Count(item => item.Status == "skipped");
 			var failedCount = results.Count(item => item.Status == "failed");
@@ -288,6 +300,7 @@ public sealed class PhotoResizeService
 				null,
 				results.Count,
 				resizedCount,
+				editedCount,
 				unchangedCount,
 				skippedCount,
 				failedCount,
@@ -365,7 +378,7 @@ public sealed class PhotoResizeService
 		return safeStem + extension;
 	}
 
-	static string BuildOutputFileName(string originalFileName, string extension)
+	static string BuildOutputFileName(string originalFileName, string extension, bool edited = false)
 	{
 		if (!SupportedExtensions.Contains(extension))
 		{
@@ -378,9 +391,11 @@ public sealed class PhotoResizeService
 			.Select(character => char.IsControl(character) || invalidCharacters.Contains(character) ? '_' : character)
 			.ToArray())
 			.Trim(' ', '.');
-		if (safeStem.Length > 120)
+		var outputSuffix = edited ? "_Edited" : string.Empty;
+		var maximumStemLength = 120 - outputSuffix.Length;
+		if (safeStem.Length > maximumStemLength)
 		{
-			safeStem = safeStem[..120].TrimEnd(' ', '.');
+			safeStem = safeStem[..maximumStemLength].TrimEnd(' ', '.');
 		}
 
 		if (safeStem.Length == 0 || safeStem is "." or "..")
@@ -393,7 +408,7 @@ public sealed class PhotoResizeService
 			safeStem = "_" + safeStem;
 		}
 
-		return safeStem + extension.ToLowerInvariant();
+		return safeStem + outputSuffix + extension.ToLowerInvariant();
 	}
 
 	static string? FindExistingResizedFilePath(string folder, string filename)
@@ -616,7 +631,7 @@ public sealed record PhotoResizeUploadResult(
 		new(false, error, null, uploadedCount, uploadedBytes);
 }
 
-public sealed record PhotoResizeFileResult(string FileName, string? OutputName, string Status, string? Error)
+public sealed record PhotoResizeFileResult(string FileName, string? OutputName, string Status, string? Error, bool Edited = false)
 {
 	public static PhotoResizeFileResult Failed(string fileName, string error) =>
 		new(fileName, null, "failed", error);
@@ -630,11 +645,12 @@ public sealed record PhotoResizeConversionResult(
 	string? Error,
 	int RequestedCount,
 	int ResizedCount,
+	int EditedCount,
 	int UnchangedCount,
 	int SkippedCount,
 	int FailedCount,
 	IReadOnlyList<PhotoResizeFileResult> Files)
 {
 	public static PhotoResizeConversionResult Failure(string error) =>
-		new(false, error, 0, 0, 0, 0, 0, Array.Empty<PhotoResizeFileResult>());
+		new(false, error, 0, 0, 0, 0, 0, 0, Array.Empty<PhotoResizeFileResult>());
 }

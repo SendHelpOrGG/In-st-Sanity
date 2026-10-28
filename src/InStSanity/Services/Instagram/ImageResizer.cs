@@ -1,3 +1,4 @@
+using InStSanity.Services.Images;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 
@@ -76,13 +77,15 @@ internal static class ImageResizer
 		byte[] payload,
 		int maxSide,
 		string originalExtension,
-		bool upscale)
+		bool upscale,
+		PhotoImageAdjustments? requestedAdjustments = null)
 	{
 		if (payload.Length < 32 || maxSide < 16)
 		{
 			return null;
 		}
 
+		var adjustments = requestedAdjustments ?? new PhotoImageAdjustments();
 		try
 		{
 			using var inStream = new InMemoryRandomAccessStream();
@@ -96,12 +99,13 @@ internal static class ImageResizer
 			var decoder = await BitmapDecoder.CreateAsync(inStream);
 			var largestSide = Math.Max(decoder.PixelWidth, decoder.PixelHeight);
 			var targetSide = (uint)maxSide;
-			if (largestSide == targetSide || (largestSide < targetSide && !upscale))
+			var wasResized = largestSide > targetSide || (largestSide < targetSide && upscale);
+			if (!wasResized && !adjustments.HasEdits)
 			{
-				return new ImageResizeResult(payload, originalExtension, WasResized: false);
+				return new ImageResizeResult(payload, originalExtension, WasResized: false, WasEdited: false);
 			}
 
-			var scale = (double)maxSide / largestSide;
+			var scale = wasResized ? (double)maxSide / largestSide : 1.0;
 			var targetWidth = Math.Max(1u, (uint)Math.Round(decoder.PixelWidth * scale));
 			var targetHeight = Math.Max(1u, (uint)Math.Round(decoder.PixelHeight * scale));
 			var transform = new BitmapTransform
@@ -111,30 +115,68 @@ internal static class ImageResizer
 				InterpolationMode = BitmapInterpolationMode.Fant,
 			};
 
-			using var software = await decoder.GetSoftwareBitmapAsync(
-				BitmapPixelFormat.Bgra8,
-				BitmapAlphaMode.Premultiplied,
-				transform,
-				ExifOrientationMode.RespectExifOrientation,
-				ColorManagementMode.DoNotColorManage);
-
 			var isPng = payload.Length >= 8 && payload[0] == 0x89 &&
 				payload[1] == (byte)'P' && payload[2] == (byte)'N' && payload[3] == (byte)'G';
 			using var outStream = new InMemoryRandomAccessStream();
 			var encoder = await BitmapEncoder.CreateAsync(
 				isPng ? BitmapEncoder.PngEncoderId : BitmapEncoder.JpegEncoderId,
 				outStream);
-			encoder.SetSoftwareBitmap(software);
-			await encoder.FlushAsync();
 
+			if (adjustments.HasEdits)
+			{
+				var pixelCount = (long)targetWidth * targetHeight;
+				if (pixelCount > PhotoImageAdjustmentProcessor.MaxAdjustedPixelCount)
+				{
+					throw new PhotoImageTooLargeException();
+				}
+
+				var pixelData = await decoder.GetPixelDataAsync(
+					BitmapPixelFormat.Bgra8,
+					BitmapAlphaMode.Straight,
+					transform,
+					ExifOrientationMode.RespectExifOrientation,
+					ColorManagementMode.DoNotColorManage);
+				var pixels = pixelData.DetachPixelData();
+				PhotoImageAdjustmentProcessor.Apply(
+					pixels,
+					checked((int)targetWidth),
+					checked((int)targetHeight),
+					adjustments,
+					payload);
+
+				encoder.SetPixelData(
+					BitmapPixelFormat.Bgra8,
+					isPng ? BitmapAlphaMode.Straight : BitmapAlphaMode.Ignore,
+					targetWidth,
+					targetHeight,
+					Math.Max(1, decoder.DpiX),
+					Math.Max(1, decoder.DpiY),
+					pixels);
+			}
+			else
+			{
+				using var software = await decoder.GetSoftwareBitmapAsync(
+					BitmapPixelFormat.Bgra8,
+					BitmapAlphaMode.Premultiplied,
+					transform,
+					ExifOrientationMode.RespectExifOrientation,
+					ColorManagementMode.DoNotColorManage);
+				encoder.SetSoftwareBitmap(software);
+			}
+
+			await encoder.FlushAsync();
 			outStream.Seek(0);
 			using var reader = new DataReader(outStream.GetInputStreamAt(0));
 			await reader.LoadAsync((uint)outStream.Size);
 			var bytes = new byte[reader.UnconsumedBufferLength];
 			reader.ReadBytes(bytes);
 			return bytes.Length > 0
-				? new ImageResizeResult(bytes, isPng ? ".png" : ".jpg", WasResized: true)
+				? new ImageResizeResult(bytes, isPng ? ".png" : ".jpg", WasResized: wasResized, WasEdited: adjustments.HasEdits)
 				: null;
+		}
+		catch (PhotoImageTooLargeException)
+		{
+			throw;
 		}
 		catch
 		{
@@ -144,4 +186,4 @@ internal static class ImageResizer
 	}
 }
 
-internal readonly record struct ImageResizeResult(byte[] Bytes, string Extension, bool WasResized);
+internal readonly record struct ImageResizeResult(byte[] Bytes, string Extension, bool WasResized, bool WasEdited);
