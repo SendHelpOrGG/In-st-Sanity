@@ -3759,7 +3759,7 @@ function syncPhotoResizeControls(){
     const max=Number(input?.value);
     const valid=Number.isInteger(max)&&max>=64&&max<=16384;
     const hasSelection=photoResizeQueue.some(item=>item.selected);
-    start.disabled=busy||photoResizeCompleted||!hasSelection||!valid;
+    start.disabled=busy||!hasSelection||!valid;
     start.textContent=busy?(photoResizeConverting?'Converting…':'Uploading…'):'Convert';
   }
   const reset=document.getElementById('resizerResetBtn');
@@ -3870,7 +3870,7 @@ async function uploadResizerFiles(selected){
 }
 function renderPhotoResizeResults(result){const box=document.getElementById('resizerResults');if(!box)return;const files=Array.isArray(result?.files)?result.files:[];box.innerHTML=files.map(item=>{const status=item.status==='resized'?'Resized':item.status==='unchanged'?'Copied unchanged':item.status==='skipped'?'Skipped (duplicate)':'Failed';const error=item.error?` · ${photoResizeErrorMessage(item.error)}`:'';const output=item.outputName?` → ${item.outputName}`:'';const failed=item.status==='failed';return`<div class="resizer-result-row"><span class="resizer-result-name">${escapeHtml(item.fileName||'Image')}${escapeHtml(output)}${escapeHtml(error)}</span><span class="resizer-result-status${failed?' is-error':''}">${status}</span></div>`}).join('')}
 async function startPhotoResizing(){
-  if(photoResizeBusy||photoResizeCompleted)return;
+  if(photoResizeBusy)return;
   const selected=photoResizeQueue.filter(item=>item.selected);
   if(!selected.length){
     setPhotoResizeStatus('Select one or more images to convert.','error');
@@ -3884,6 +3884,9 @@ async function startPhotoResizing(){
     return;
   }
   try{localStorage.setItem(RESIZER_MAX_SIDE_KEY,String(maxSide))}catch(_){}
+  // A successful conversion consumes and deletes its upload session. If the user
+  // presses Convert again, restage the selected local files into a fresh session.
+  if(photoResizeCompleted)resetPhotoResizeStaging();
   const pending=selected.filter(item=>!item.uploaded);
   const noDuplicates=isResizerNoDuplicatesEnabled();
   if(!photoResizeSessionId)photoResizeSessionId=makePhotoResizeGuid();
@@ -6342,8 +6345,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.175';
+const APP_VERSION='1.176';
 const VERSION_HISTORY=[
+  {version:'1.176',added:'No new features.',removed:'The one-conversion-only lockout in the Photo Resizer.',fixed:'Convert becomes available again after each completed run. Repeating a run starts a fresh upload session for the selected images.',tone:'green'},
   {version:'1.175',added:'No new features.',removed:'The undersized Resizer output-folder button beside Convert.',fixed:'Open resized folder is restored to a 37px square beside Convert; compact 28px sizing is confined to restricted-card actions.',tone:'green'},
   {version:'1.174',added:'No new features.',removed:'Theme-specific gradients and opacity being lost from loading-screen stickers.',fixed:'Loading-screen stickers now keep the full original theme SVG gradients and opacity stops, matching the side-panel artwork across themes.',tone:'green'},
   {version:'1.173',added:'No new features.',removed:'Low-contrast active icon-only controls in Theme 15 and the rotating sticker frame in trident loading scenes.',fixed:'Active icon-only controls—including the Resizer upscaler—now match Theme 15’s All Posts text color. The trident loading scene no longer rotates the sticker frame in any theme.',tone:'green'},
