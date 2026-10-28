@@ -1,0 +1,1493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In[st]Sanity — the black hole, five ways</title>
+<style>
+  :root{
+    --bg:#04060b; --line:rgba(148,163,184,.16);
+    --ink:#e6edf7; --muted:#8fa1b8; --c1:#38bdf8; --c2:#ec4899;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink);
+    background:radial-gradient(1100px 520px at 50% -8%, #0c1a2c 0%, rgba(6,10,18,0) 62%), var(--bg);
+    font:15px/1.6 "Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:54px 24px 90px}
+  .eyebrow{
+    font:700 10px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    letter-spacing:.26em; text-transform:uppercase; color:var(--c1);
+    display:inline-flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,var(--c1),transparent)}
+  h1{font-size:clamp(30px,4.4vw,46px);line-height:1.05;letter-spacing:-.025em;margin:18px 0 14px;font-weight:750}
+  h1 em{font-style:normal;background:linear-gradient(100deg,#f8fbff 0%,#7dd3fc 42%,#f472b6 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{max-width:76ch;color:var(--muted);font-size:15.5px}
+  .lede b{color:#cfe3f7;font-weight:600}
+  .hint{margin-top:14px;font:600 10.5px/1.5 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:rgba(148,163,184,.62)}
+  .hint a{color:#7dd3fc;text-decoration:none;border-bottom:1px solid rgba(125,211,252,.3)}
+  .cards{display:grid;gap:34px;margin-top:42px}
+  .card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:linear-gradient(180deg,rgba(17,24,35,.92),rgba(8,12,19,.94));box-shadow:0 26px 70px rgba(0,0,0,.5), inset 0 1px rgba(255,255,255,.03)}
+  .head{display:flex;align-items:baseline;gap:14px;padding:17px 22px 15px;flex-wrap:wrap}
+  .num{font:700 10.5px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.16em;color:var(--c1);border:1px solid rgba(56,189,248,.32);border-radius:999px;padding:6px 9px;background:rgba(56,189,248,.06)}
+  .head h2{margin:0;font-size:16.5px;letter-spacing:.01em;font-weight:650;white-space:nowrap}
+  .head p{margin:0;color:var(--muted);font-size:13.5px;flex:1 1 340px;min-width:220px}
+  .fs{appearance:none;cursor:pointer;border:1px solid rgba(148,163,184,.28);border-radius:9px;background:rgba(148,163,184,.08);color:#cfe3f7;padding:7px 11px;font:600 11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;transition:background .16s,border-color .16s}
+  .fs:hover{background:rgba(56,189,248,.14);border-color:rgba(56,189,248,.5)}
+  .stage{position:relative;aspect-ratio:16/9;background:#070a10;cursor:zoom-in;border-top:1px solid rgba(148,163,184,.10)}
+  .stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .stage:fullscreen{aspect-ratio:auto;width:100vw;height:100vh;cursor:default;background:#000;border:0}
+  .cap{position:absolute;left:21px;bottom:17px;pointer-events:none;user-select:none;font:600 10.5px/1.3 "Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.22em;text-transform:uppercase;color:rgba(148,163,184,.92)}
+  .pips{display:inline-flex;gap:5px;margin-left:9px;vertical-align:middle}
+  .pip{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);transition:background .18s,box-shadow .18s}
+  .pip.on{background:var(--c1);box-shadow:0 0 8px var(--c1)}
+  footer{margin-top:44px;color:rgba(148,163,184,.62);font-size:12.5px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  footer code{font:600 11.5px ui-monospace,Menlo,Consolas,monospace;color:#b9cde3}
+  @media (max-width:640px){.wrap{padding:34px 14px 60px}.head{gap:10px}.cap{left:14px;bottom:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">In[st]Sanity · boot screen studies</span>
+    <h1>The black hole, <em>five ways</em></h1>
+    <p class="lede">
+      The same idea every time: the imp, his two arms, and a black hole opened between his palms.
+      The shipped boot screen already does this once — these five keep that scene intact and push
+      one part of it harder: the camera, the hands, the jaw, the light, or the clap.
+      <b>Nothing here is wired into the app.</b>
+    </p>
+    <p class="hint" style="margin-top:10px">The wordmark uses the boot screen's own glitch: the RGB slices, the skew and the 0.65–3.4 s bursts are ported straight from <code>lsBrandGlitch</code>.</p>
+    <div class="hint">click a panel for fullscreen · press 1–5 · esc to return ·
+      <a href="wild-concepts.html">the five wild off-shoot concepts →</a></div>
+  </header>
+
+  <main class="cards" id="cards"></main>
+
+  <footer>
+    <span>Same sticker, same arms, same open palms and same animated wordmark as the boot screen — inline SVG, no libraries, no images.</span>
+    <span><code>preview/blackhole-loading-screens/index.html</code></span>
+  </footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+const NS = 'http://www.w3.org/2000/svg';
+const TAU = Math.PI * 2;
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const lerp  = (a,b,t) => a + (b - a) * t;
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const easeIn  = t => t * t * t;
+const smooth  = t => { t = clamp(t,0,1); return t * t * (3 - 2 * t); };
+const win     = (t,a,b) => smooth(clamp((t - a) / (b - a), 0, 1));
+const back    = t => { const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+const f1 = n => n.toFixed(1), f2 = n => n.toFixed(2), f3 = n => n.toFixed(3);
+
+/* ── the shipped theme, frozen ─────────────────────────────────────────── */
+const TH = {
+  solid:'#0a0f18', ink:'#f1f5f9', muted:'#94a3b8',
+  accent:'#38bdf8', accent2:'#ec4899',
+  logo1:'#38bdf8', logo3:'#ec4899',
+  light:false,
+  pal:{ c1:'#38bdf8', c2:'#ec4899', line:'#ffffff', pupil:'#ffffff', mouthFill:'rgba(15,23,42,0.90)' }
+};
+
+/* ── the real sticker artwork (default theme, exactly as shipped) ──────── */
+const STICKER = `<svg viewBox="0 0 160 160" fill="none"><defs><linearGradient id="st_def_b_{uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="50%" stop-color="#818cf8"/><stop offset="100%" stop-color="#ec4899"/></linearGradient><radialGradient id="st_def_g_{uid}" cx="50%" cy="50%" r="48%"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.38"/><stop offset="55%" stop-color="#ec4899" stop-opacity="0.22"/><stop offset="100%" stop-color="#0f172a" stop-opacity="0"/></radialGradient></defs><g class="imp-outer-frame"><rect x="14" y="14" width="132" height="132" rx="30" fill="rgba(15,23,42,0.42)" stroke="url(#st_def_b_{uid})" stroke-width="3.6"/><rect x="20" y="20" width="120" height="120" rx="24" fill="url(#st_def_g_{uid})" stroke="rgba(236,72,153,0.45)" stroke-width="1.5"/><polygon points="80,20 132,80 80,140 28,80" fill="rgba(30,41,59,0.36)" stroke="url(#st_def_b_{uid})" stroke-width="2.4" stroke-linejoin="round"/></g><g class="imp-decor"><path d="M24 126 C52 110, 82 136, 136 116" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" opacity="0.65"/><path d="M26 134 C58 118, 88 140, 134 124" stroke="#ec4899" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/><path d="M34 30 L36.5 37 L43.5 39.5 L36.5 42 L34 49 L31.5 42 L24.5 39.5 L31.5 37 Z" fill="#38bdf8"/><path d="M126 30 L128.5 37 L135.5 39.5 L128.5 42 L126 49 L123.5 42 L116.5 39.5 L123.5 37 Z" fill="#ec4899"/><path d="M34 114 L36 119 L41 121 L36 123 L34 128 L32 123 L27 121 L32 119 Z" fill="#818cf8"/><path d="M126 114 L128 119 L133 121 L128 123 L126 128 L124 123 L119 121 L124 119 Z" fill="#38bdf8"/></g><g class="imp-face-group"><circle class="imp-head-circle" cx="80" cy="80" r="41" fill="rgba(15,23,42,0.52)" stroke="url(#st_def_b_{uid})" stroke-width="2.6"/><g class="imp-horns"><path d="M56 56 L52 72 L71 78 M104 56 L108 72 L89 78" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g><g class="imp-eyes-track"><g class="imp-eyes-blink"><circle cx="68" cy="83" r="4.2" fill="#38bdf8"/><circle cx="92" cy="83" r="4.2" fill="#ec4899"/></g></g><g class="imp-grin"><path d="M62 94 Q80 109 98 94" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" fill="none"/></g></g></svg>`;
+
+function grabGroup(html, cls){
+  const open = html.indexOf('<g class="' + cls + '"');
+  if (open < 0) return '';
+  let i = html.indexOf('>', open) + 1, depth = 1;
+  while (i < html.length){
+    if (html.charAt(i) === '<' && html.charAt(i+1) === 'g' && (html.charAt(i+2) === ' ' || html.charAt(i+2) === '>')){ depth++; i += 2; }
+    else if (html.substr(i, 4) === '</g>'){ depth--; if (depth === 0) return html.slice(open, i + 4); i += 4; }
+    else i++;
+  }
+  return '';
+}
+function stickerParts(uid){
+  const tpl = STICKER.replace(/\{uid\}/g, uid);
+  const inner = tpl.replace(/^\s*<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+  const defs = (inner.match(/<defs>[\s\S]*?<\/defs>/) || [''])[0];
+  return {
+    defs,
+    frame: grabGroup(inner, 'imp-outer-frame'),
+    decor: grabGroup(inner, 'imp-decor'),
+    face:  grabGroup(inner, 'imp-face-group')
+  };
+}
+const PARTS = {};
+function parts(uid){
+  if (!PARTS[uid]) PARTS[uid] = stickerParts(uid);
+  return PARTS[uid];
+}
+
+/* the face, with the same knobs the boot screen uses */
+function faceFor(uid, o){
+  o = o || {};
+  let face = parts(uid).face;
+  const eyeK = o.eyeK || 1, shift = o.eyeShift || 0;
+  face = face.replace(/<g class="imp-eyes-blink"[^>]*>([\s\S]*?)<\/g>/, (m, inner) => {
+    const nin = inner.replace(/r="([\d.]+)"/g, (mm, r) => `r="${f2(parseFloat(r) * eyeK)}"`);
+    const g = o.glow ? ` filter="url(#glow${uid})"` : '';
+    const s = shift ? ` transform="translate(${f1(shift)},0)"` : '';
+    return `<g class="imp-eyes-blink"${g}${s}>${nin}</g>`;
+  });
+  if (o.mouth) face = face.replace(/(<g class="imp-grin">\s*<path d=")[^"]*(")/, `$1${o.mouth}$2`);
+  if (o.fangs) face = face.replace(/(<g class="imp-grin">[\s\S]*?)(<\/g>)/, `$1${o.fangs}$2`);
+  if (o.horn)  face = face.replace('<g class="imp-horns">', `<g class="imp-horns" transform="rotate(${f2(o.horn)} 80 72)">`);
+  return face;
+}
+function stickerFor(uid, x, y, scale, rot, o){
+  const p = parts(uid);
+  return `<g class="sticker" transform="translate(${f1(x)} ${f1(y)}) rotate(${f2(rot||0)}) scale(${f3(scale)}) translate(-80 -80)">`
+       + `${p.defs}${p.frame}${p.decor}${faceFor(uid, o)}</g>`;
+}
+
+/* Where a point of the sticker's own 160x160 art lands on screen, after the
+   same translate / rotate / scale that stickerFor() applies. Scenes can anchor
+   to the card's border corners instead of guessing at offsets. */
+function stickerPoint(x, y, s, r, vx, vy){
+  const px = (vx - 80) * s, py = (vy - 80) * s;
+  const rad = (r || 0) * Math.PI / 180;
+  return {
+    x: x + px * Math.cos(rad) - py * Math.sin(rad),
+    y: y + px * Math.sin(rad) + py * Math.cos(rad)
+  };
+}
+/* the imp-outer-frame rect is x14 y14 w132 h132 -> bottom corners 14,146 / 146,146 */
+const CARD_BL = [14, 146], CARD_BR = [146, 146];
+
+/* ── the hands, exactly the shipped drawings ───────────────────────────── */
+function openHand(uid, isLeft, handAngle){
+  const c1 = TH.logo1, c3 = TH.logo3;
+  const rad = handAngle * Math.PI / 180;
+  const flip = isLeft ? -1 : 1;
+  const thumbMirror = isLeft ? 1 : -1;
+  const thumbX = -Math.sin(rad) * 8, thumbY = -flip * Math.cos(rad) * 8;
+  const digit = (d, crease, fill) => `<path d="${d}" fill="none" stroke="#07111e" stroke-width="6.1" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${d}" fill="none" stroke="${fill}" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${d}" fill="none" stroke="${c1}" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${crease}" fill="none" stroke="#94a3b8" stroke-width="0.75" stroke-linecap="round" opacity="0.78"/>`;
+  const fing = (x, y, len, bend, fill) => {
+    const knuckle = x + len * 0.56;
+    const d = `M ${x} ${y} C ${x + len * 0.18} ${y - 2.2} ${knuckle - 3} ${y - 1.3} ${knuckle} ${y + 0.4} C ${knuckle + 3} ${y + 2.8 + bend * 0.2} ${x + len - 4} ${y + bend + 1.8} ${x + len} ${y + bend}`;
+    const crease = `M ${knuckle - 1.8} ${y - 1.4} Q ${knuckle} ${y + 0.5} ${knuckle + 1.8} ${y + 1.2}`;
+    return digit(d, crease, fill);
+  };
+  const thumbD = 'M 0 1 C -1.8 -0.8 -2.5 -3.4 -1.2 -6 C 0 -8 1.3 -9.5 0.9 -11.8 C 0.5 -14 1.3 -16.1 3 -17.5';
+  const thumbCrease = 'M -0.3 -7.4 Q 1.0 -6.0 2.4 -6.9';
+  return `
+      ${fing(8,-9,19,-2.8,'#e2e8f0')}
+      ${fing(9,-3,25,-1.1,'#ffffff')}
+      ${fing(9,3,24,1.5,'#e2e8f0')}
+      ${fing(8,9,18,3.0,'#cbd5e1')}
+      <g transform="translate(${f1(thumbX)},${f1(thumbY)}) scale(1,${flip}) rotate(${f1(-handAngle)}) scale(${thumbMirror},1)">
+        ${digit(thumbD, thumbCrease, '#ffffff')}
+      </g>
+      <path d="M -15 -9 C -7 -14, 6 -14, 13 -8 Q 16 0 13 8 C 6 14, -7 14, -15 9 Z" fill="rgba(15,23,42,0.96)" stroke="${c1}" stroke-width="2.6" stroke-linejoin="round"/>
+      <polygon points="-6,0 0,-5 6,0 0,5" fill="${c3}"/>
+      <circle cx="0" cy="0" r="2.2" fill="#ffffff"/>`;
+}
+
+/* One arm, drawn exactly as the shipped loader draws it (armToHandAimed):
+   upper arm in the two theme strokes, the white forearm, then the splayed
+   impHandOpen palm with the fingers aimed at the hole. No cuffs, no extra
+   lit edges — the app's own line weights and wrist colour are the look. */
+function arm(uid, sx, sy, gx, gy, ax, ay, isLeft, op, o){
+  o = o || {};
+  const c1 = TH.logo1, c3 = TH.logo3;
+  const k = o.scale || 1;
+  const d = Math.hypot(ax - gx, ay - gy) || 1;
+  const ux = (ax - gx) / d, uy = (ay - gy) / d;
+  /* The app's elbow sits 26 units behind the wrist. Scale it with the hand,
+     or the forearm stub overshoots the upper arm and the limb reads broken. */
+  const ex = gx - ux * 26 * k, ey = gy - uy * 26 * k;
+  const ang = Math.atan2(uy, ux) * 180 / Math.PI;     // fingers point straight at the hole
+  return `<g opacity="${f2(op)}">
+      <line x1="${f1(sx)}" y1="${f1(sy)}" x2="${f1(ex)}" y2="${f1(ey)}" stroke="${c3}" stroke-width="${f1(11 * k)}" stroke-linecap="round" opacity="0.26"/>
+      <line x1="${f1(sx)}" y1="${f1(sy)}" x2="${f1(ex)}" y2="${f1(ey)}" stroke="${c1}" stroke-width="${f1(5.5 * k)}" stroke-linecap="round"/>
+      <g transform="translate(${f1(gx)} ${f1(gy)}) rotate(${f1(ang)}) scale(${f3(k)}) scale(1,${isLeft ? -1 : 1})">
+        <line x1="-26" y1="0" x2="0" y2="0" stroke="#f8fafc" stroke-width="5" stroke-linecap="round"/>
+        ${openHand(uid, isLeft, ang)}
+      </g></g>`;
+}
+
+/* ── shared pieces of scenery ──────────────────────────────────────────── */
+function glowDef(uid){
+  return `<filter id="glow${uid}" x="-140%" y="-140%" width="380%" height="380%">
+    <feGaussianBlur stdDeviation="3.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+}
+function holeDefs(uid){
+  return `<radialGradient id="halo${uid}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="46%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="60%" stop-color="${TH.accent}" stop-opacity=".20"/>
+      <stop offset="72%" stop-color="#ffffff" stop-opacity=".55"/>
+      <stop offset="84%" stop-color="${TH.accent2}" stop-opacity=".26"/>
+      <stop offset="100%" stop-color="${TH.accent}" stop-opacity="0"/></radialGradient>
+    <radialGradient id="core${uid}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="1"/>
+      <stop offset="62%" stop-color="#000" stop-opacity=".98"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient>
+    <linearGradient id="disk${uid}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="${TH.accent}"/><stop offset="45%" stop-color="#ffffff"/><stop offset="100%" stop-color="${TH.accent2}"/></linearGradient>
+    <radialGradient id="palmGlow${uid}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
+      <stop offset="38%" stop-color="${TH.accent}" stop-opacity=".55"/>
+      <stop offset="100%" stop-color="${TH.accent}" stop-opacity="0"/></radialGradient>
+    <linearGradient id="brandGrad${uid}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f8fbff"/><stop offset="52%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#f472b6"/></linearGradient>`;
+}
+function holeMarkup(uid){
+  return `<g class="hole">
+      <circle class="hole-halo" r="0" fill="url(#halo${uid})" opacity="0" filter="url(#glow${uid})"/>
+      <g class="hole-disk" transform="rotate(-16)" filter="url(#glow${uid})">
+        <ellipse class="disk-ring" rx="34" ry="10" fill="none" stroke="url(#disk${uid})" stroke-width="3.2" opacity="0"/>
+        <ellipse class="disk-ring" rx="52" ry="15" fill="none" stroke="url(#disk${uid})" stroke-width="2.6" opacity="0"/>
+        <ellipse class="disk-ring" rx="74" ry="21" fill="none" stroke="url(#disk${uid})" stroke-width="2" opacity="0"/>
+        <ellipse class="disk-ring" rx="98" ry="28" fill="none" stroke="url(#disk${uid})" stroke-width="1.5" opacity="0"/>
+        <ellipse class="disk-spin" rx="24" ry="7" fill="none" stroke="#ffffff" stroke-width="3" opacity="0"/>
+      </g>
+      <circle class="hole-core" r="0" fill="url(#core${uid})"/>
+      <g class="hole-lens" opacity="0">
+        <path d="M -27 -3 A 27 27 0 0 1 27 -3" fill="none" stroke="url(#disk${uid})" stroke-width="2.4"/>
+        <path d="M -27 3 A 27 27 0 0 0 27 3" fill="none" stroke="url(#disk${uid})" stroke-width="2.4"/>
+      </g>
+      <circle class="hole-ein" r="0" fill="none" stroke="url(#disk${uid})" stroke-width="2"/>
+      <circle class="hole-ring" r="0" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0"/>
+    </g>`;
+}
+function ringFx(x, y, r, sw, col, op, crisp){
+  if (r <= 0 || op <= 0) return '';
+  return crisp
+    ? `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="none" stroke="${col}" stroke-width="${f2(sw)}" opacity="${f3(op)}"/>`
+    : `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="none" stroke="${col}" stroke-width="${f2(sw)}" opacity="${f3(op)}" filter="url(#glowFx)"/>`;
+}
+function burst(x, y, k, n, col, r0, r1){
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const a = i / n * TAU + .2;
+    const rr0 = r0 * k, rr1 = rr0 + (r1 - r0) * (1 - k) * .8;
+    s += `<line x1="${f1(x + Math.cos(a) * rr0)}" y1="${f1(y + Math.sin(a) * rr0)}" x2="${f1(x + Math.cos(a) * rr1)}" y2="${f1(y + Math.sin(a) * rr1)}" stroke="${col}" stroke-width="${f2(1.8 * (1 - k) + .35)}" stroke-linecap="round" opacity="${f3((1 - k) * .72)}"/>`;
+  }
+  return s;
+}
+/* ── the wordmark, exactly the boot screen's ──────────────────────────────
+   Same gradient fill, same [st] in theme ink, same weight/tracking, and the
+   same RGB-split slices driven by lsBrandGlitch() on every other screen. */
+let brandUid = 0;
+function brandMarkup(uid, x, y, size){
+  const ink = TH.ink, c1 = TH.logo1, c3 = TH.logo3;
+  const gid = 'bn' + (++brandUid) + '_' + uid;
+  const w = 8.0 * size;                                   // advance width of "In[st]Sanity"
+  const left = x - w / 2;
+  const top = y - 0.86 * size, h = 1.12 * size, bot = top + h;
+  const cx = left + w / 2, cy = (top + bot) / 2;
+  const ls = size * (1.1 / 13);                           // same tracking, scaled with the type
+  const txt = (fill, extra) => `<text x="${f1(x)}" y="${f1(y)}" text-anchor="middle" font-size="${f2(size)}" font-weight="800"
+      font-family="ui-sans-serif,system-ui,'Segoe UI',Roboto,sans-serif" letter-spacing="${f2(ls)}" fill="${fill}"${extra || ''}>In<tspan fill="${ink}">[st]</tspan>Sanity</text>`;
+  const clip = id2 => `<clipPath id="${id2}"><rect class="ls-brand-clip" x="${f1(left - 2 * size)}" y="${f1(top)}" width="${f1(w + 4 * size)}" height="${f1(h)}"/></clipPath>`;
+  return `<g class="ls-brand" data-top="${f1(top)}" data-h="${f1(h)}" data-cx="${f1(cx)}" data-cy="${f1(cy)}" data-k="${f3(size / 16.5)}">
+      <defs>
+        <linearGradient id="bg${gid}" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="${c1}"/><stop offset="50%" stop-color="${c3}"/><stop offset="100%" stop-color="${c1}"/>
+        </linearGradient>
+        ${clip('bc1' + gid)}${clip('bc2' + gid)}
+      </defs>
+      <g class="ls-brand-word">
+        ${txt(`url(#bg${gid})`)}
+        <g class="ls-brand-slices" opacity="0">
+          ${txt(c1, ` clip-path="url(#bc1${gid})"`)}
+          ${txt(c3, ` clip-path="url(#bc2${gid})"`)}
+        </g>
+      </g></g>`;
+}
+/* The boot screen's glitch driver, ported: random 0.65-3.4 s gaps, 42%
+   chance of an aftershock, sine envelope, RGB slices and skew, with the clip
+   bands reshuffled every 55 ms. start()/stop() let the gallery pause it
+   when a card scrolls away or another card goes fullscreen. */
+function brandGlitch(root){
+  const items = [];
+  root.querySelectorAll('.ls-brand').forEach(g => {
+    items.push({
+      word: g.querySelector('.ls-brand-word'),
+      slices: g.querySelector('.ls-brand-slices'),
+      sliceText: g.querySelectorAll('.ls-brand-slices text'),
+      clips: g.querySelectorAll('.ls-brand-clip'),
+      top: parseFloat(g.getAttribute('data-top')) || 0,
+      h: parseFloat(g.getAttribute('data-h')) || 10,
+      cx: parseFloat(g.getAttribute('data-cx')) || 0,
+      cy: parseFloat(g.getAttribute('data-cy')) || 0,
+      k: parseFloat(g.getAttribute('data-k')) || 1
+    });
+  });
+  if (!items.length) return { start(){}, stop(){} };
+
+  let running = true, timer = 0, raf = 0, queued = false;
+  function reset(){
+    for (const it of items){
+      try {
+        if (it.word) it.word.setAttribute('transform', 'translate(0,0)');
+        if (it.slices) it.slices.setAttribute('opacity', '0');
+      } catch (_){}
+    }
+  }
+  function band(el, topP, botP, it){
+    if (!el) return;
+    const y = it.top + it.h * topP / 100, hh = Math.max(0, it.h * (100 - topP - botP) / 100);
+    try { el.setAttribute('y', y.toFixed(2)); el.setAttribute('height', hh.toFixed(2)); } catch (_){}
+  }
+  function apply(it, env, w1, w2, amp, t1, b1, t2, b2){
+    const k = it.k;
+    const tx1 = w1 * 6.2 * amp * k, ty1 = w2 * -1.2 * amp * k;
+    const tx2 = -w1 * 6.2 * amp * k, ty2 = -w2 * 1.2 * amp * k;
+    try {
+      if (it.slices){
+        it.slices.setAttribute('opacity', Math.min(1, env * 1.35).toFixed(3));
+        const a = it.sliceText[0], b = it.sliceText[1];
+        if (a) a.setAttribute('transform', 'translate(' + tx1.toFixed(2) + ',' + ty1.toFixed(2) + ')');
+        if (b) b.setAttribute('transform', 'translate(' + tx2.toFixed(2) + ',' + ty2.toFixed(2) + ')');
+      }
+      if (it.clips && it.clips.length > 1){ band(it.clips[0], t1, b1, it); band(it.clips[1], t2, b2, it); }
+      if (it.word){
+        const wx = (w2 * 2.4 * amp * k).toFixed(2), sk = (w1 * -10.5 * amp).toFixed(2);
+        it.word.setAttribute('transform', 'translate(' + wx + ',0) translate(' + it.cx.toFixed(2) + ',' + it.cy.toFixed(2) + ') skewX(' + sk + ') translate(' + (-it.cx).toFixed(2) + ',' + (-it.cy).toFixed(2) + ')');
+      }
+    } catch (_){}
+  }
+  function schedule(){
+    if (!running) return;
+    let delay;
+    if (!queued && Math.random() < 0.42){ queued = true; delay = 140 + Math.random() * 190; }
+    else { queued = false; delay = 650 + Math.pow(Math.random(), 1.25) * 2750; }
+    timer = setTimeout(burst, delay);
+  }
+  function burst(){
+    if (!running) return;
+    const dur = queued ? (130 + Math.random() * 90) : (210 + Math.random() * 170);
+    const base = queued ? (0.75 + Math.random() * 0.35) : (0.95 + Math.random() * 0.45);
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    const start = (window.performance && performance.now) ? performance.now() : Date.now();
+    let lastShuffle = start;
+    let t1 = Math.floor(Math.random() * 24), b1 = 46 + Math.floor(Math.random() * 22);
+    let t2 = 42 + Math.floor(Math.random() * 22), b2 = Math.floor(Math.random() * 20);
+    function step(now){
+      if (!running) return;
+      const elapsed = now - start, p = elapsed / dur;
+      if (p >= 1){ reset(); schedule(); return; }
+      const env = Math.sin(p * Math.PI), w1 = Math.sin(elapsed * 0.065 * dir), w2 = Math.cos(elapsed * 0.092);
+      const amp = base * env;
+      if (now - lastShuffle > 55){
+        lastShuffle = now;
+        t1 = Math.floor(Math.random() * 28); b1 = 42 + Math.floor(Math.random() * 26);
+        t2 = 40 + Math.floor(Math.random() * 26); b2 = Math.floor(Math.random() * 24);
+      }
+      for (const it of items) apply(it, env, w1, w2, amp, t1, b1, t2, b2);
+      raf = requestAnimationFrame(step);
+    }
+    raf = requestAnimationFrame(step);
+  }
+  schedule();
+  return {
+    start(){ if (running) return; running = true; schedule(); },
+    stop(){
+      running = false;
+      try { clearTimeout(timer); } catch (_){}
+      try { cancelAnimationFrame(raf); } catch (_){}
+      reset();
+    }
+  };
+}
+function vignette(uid){
+  const a = TH.light ? 0.16 : 0.5;
+  return `<defs>
+    <radialGradient id="flash${uid}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
+      <stop offset="26%" stop-color="${TH.accent}" stop-opacity=".34"/>
+      <stop offset="60%" stop-color="${TH.accent2}" stop-opacity=".12"/>
+      <stop offset="100%" stop-color="${TH.accent2}" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vig${uid}" cx="50%" cy="50%" r="74%">
+    <stop offset="52%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="${a}"/></radialGradient>
+    <filter id="glowFx" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.2"/></filter>
+    <radialGradient id="mote${uid}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#eaf9ff" stop-opacity=".95"/>
+      <stop offset="46%" stop-color="#cfefff" stop-opacity=".38"/>
+      <stop offset="100%" stop-color="#bfe6ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="spot${uid}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="${TH.accent}" stop-opacity=".30"/>
+      <stop offset="46%" stop-color="${TH.accent}" stop-opacity=".10"/>
+      <stop offset="74%" stop-color="${TH.accent2}" stop-opacity=".07"/>
+      <stop offset="100%" stop-color="${TH.accent2}" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sun${uid}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
+      <stop offset="26%" stop-color="${TH.accent}" stop-opacity=".55"/>
+      <stop offset="62%" stop-color="${TH.accent2}" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="${TH.accent2}" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ana${uid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#eaf7ff" stop-opacity=".95"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>`;
+}
+/* The world lives inside <g class="cam"> so a scene can push, dolly, tilt and
+   shake it as one unit; flashes and the vignette stay in screen space. */
+function makeSvg(stage, uid, world, screen){
+  stage.innerHTML = `<svg viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet" xmlns="${NS}">`
+    + `<defs>${holeDefs(uid)}${glowDef(uid)}</defs>` + vignette(uid)
+    + `<g class="cam">${world}</g>` + (screen || '') + `</svg>`
+    + `<div class="cap">loading<span class="pips"><i class="pip"></i><i class="pip"></i><i class="pip"></i><i class="pip"></i></span></div>`;
+  const svg = stage.querySelector('svg');
+  svg.__cam = svg.querySelector('.cam');
+  return svg;
+}
+const q = (svg, sel) => svg.querySelector(sel);
+
+/* ── camera ────────────────────────────────────────────────────────────── */
+function applyCam(cam, o){
+  if (!cam) return;
+  const px = o.px === undefined ? CX : o.px, py = o.py === undefined ? 258 : o.py;
+  const s = o.s || 1, r = o.r || 0, x = o.x || 0, y = o.y || 0;
+  cam.setAttribute('transform',
+    `translate(${f1(px + x)} ${f1(py + y)}) rotate(${f2(r)}) scale(${f3(s)}) translate(${f1(-px)} ${f1(-py)})`);
+}
+function shake2(t, amp){
+  return {
+    x: (Math.sin(t * 91) + .48 * Math.sin(t * 147 + 1.2)) * amp,
+    y: (Math.cos(t * 103 + .6) + .38 * Math.sin(t * 169)) * amp
+  };
+}
+
+/* ── depth ─────────────────────────────────────────────────────────────── */
+function stars(n, seed, w, h){
+  let s = seed >>> 0;
+  const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const out = [];
+  for (let i = 0; i < n; i++) out.push({
+    x: rnd() * w, y: rnd() * h, r: .5 + rnd() * 1.4, a: .16 + rnd() * .5, ph: rnd() * TAU
+  });
+  return out;
+}
+function starField(pts, t, op, ox, oy){
+  let s = '';
+  for (const p of pts){
+    const tw = .55 + .45 * Math.sin(t * 1.7 + p.ph);
+    s += `<circle cx="${f1(p.x + ox)}" cy="${f1(p.y + oy)}" r="${f2(p.r)}" fill="#d8f1ff" opacity="${f3(p.a * tw * op)}"/>`;
+  }
+  return s;
+}
+function dustField(pts, t, o, uid){
+  const cx = o.cx, cy = o.cy, pull = o.pull || 0;
+  let s = '';
+  for (const p of pts){
+    const dx = p.x - cx, dy = p.y - cy;
+    let a = Math.atan2(dy, dx) + t * .10 + pull * 1.9;
+    let d = Math.hypot(dx, dy) * (1 - pull * (.42 + .5 * p.r));
+    const x = cx + Math.cos(a) * d + Math.sin(t * .6 + p.ph) * 7;
+    const y = cy + Math.sin(a) * d * .92 + Math.cos(t * .45 + p.ph) * 6;
+    const soft = o.soft === undefined ? 2.4 : o.soft;
+    s += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f2(p.r * soft)}" fill="url(#mote${uid})" opacity="${f3(p.a * (o.op || 1) * (1 - pull * .35))}"/>`;
+  }
+  return s;
+}
+
+/* ── motion and light ──────────────────────────────────────────────────── */
+/* swirling arcs around the hole: the frame reads as moving even when the
+   hole itself is only breathing */
+function windLines(cx, cy, t, k, n, rIn, rOut, col, op){
+  if (k <= .01) return '';
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const a = (i / n) * TAU + t * (.5 + (i % 5) * .14);
+    const rr = Math.max(6, lerp(rIn, rOut, ((i * 37) % 100) / 100));
+    const len = (7 + ((i * 13) % 26)) * k / rr;
+    const x1 = cx + Math.cos(a) * rr, y1 = cy + Math.sin(a) * rr * .62;
+    const x2 = cx + Math.cos(a + len) * rr, y2 = cy + Math.sin(a + len) * rr * .62;
+    s += `<path d="M ${f1(x1)} ${f1(y1)} A ${f1(rr)} ${f1(rr * .62)} 0 0 1 ${f1(x2)} ${f1(y2)}" fill="none" stroke="${col}" stroke-width="${f2(.7 + (i % 3) * .55)}" stroke-linecap="round" opacity="${f3(op * (.22 + .58 * ((i * 7) % 10) / 10) * k)}"/>`;
+  }
+  return s;
+}
+/* radial speed lines, longest at the rim: used on impacts and the drag-in */
+function speedStreaks(cx, cy, t, p, n, r0, r1, col, op){
+  if (p <= .01 || p >= 1) return '';
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const a = (i / n) * TAU + .19 + Math.sin(i * 4.7) * .06;
+    const k = ((i * 29) % 100) / 100;
+    const inner = r0 + (r1 - r0) * (.18 + .55 * k) * (1 - p * .55);
+    const outer = inner + (10 + 46 * k) * (1 - p);
+    s += `<line x1="${f1(cx + Math.cos(a) * inner)}" y1="${f1(cy + Math.sin(a) * inner * .78)}"
+      x2="${f1(cx + Math.cos(a) * outer)}" y2="${f1(cy + Math.sin(a) * outer * .78)}"
+      stroke="${col}" stroke-width="${f2(1.6 + k * 1.6)}" stroke-linecap="round" opacity="${f3(op * (1 - p) * (.3 + .7 * k))}"/>`;
+  }
+  return s;
+}
+function chromaRing(cx, cy, r, sw, op){
+  if (op <= .01 || r <= 1) return '';
+  return `<g opacity="${f3(op)}">
+    <circle cx="${f1(cx - 3)}" cy="${f1(cy)}" r="${f1(r)}" fill="none" stroke="#ff2d7a" stroke-width="${f2(sw)}" opacity=".85"/>
+    <circle cx="${f1(cx + 3)}" cy="${f1(cy)}" r="${f1(r)}" fill="none" stroke="#20d9ff" stroke-width="${f2(sw)}" opacity=".85"/>
+  </g>`;
+}
+function anamorphic(cx, cy, w, h, op, uid){
+  op = Math.max(0, Math.min(1, op));
+  if (op <= .01) return '';
+  return `<g opacity="${f3(op)}" style="mix-blend-mode:screen">
+    <ellipse cx="${f1(cx)}" cy="${f1(cy)}" rx="${f1(w)}" ry="${f2(h)}" fill="url(#ana${uid})"/>
+    <ellipse cx="${f1(cx)}" cy="${f1(cy)}" rx="${f1(w * .46)}" ry="${f2(h * 3.2)}" fill="url(#ana${uid})" opacity=".5"/>
+    <circle cx="${f1(cx)}" cy="${f1(cy)}" r="${f2(h * 2.1)}" fill="#ffffff"/>
+    <circle cx="${f1(cx - w * .54)}" cy="${f1(cy)}" r="${f2(h * 1.4)}" fill="${TH.accent}" opacity=".7"/>
+    <circle cx="${f1(cx + w * .72)}" cy="${f1(cy)}" r="${f2(h * 1.1)}" fill="${TH.accent2}" opacity=".6"/>
+  </g>`;
+}
+function debris(cx, cy, p, n, colA, colB){
+  if (p <= 0 || p >= 1) return '';
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const a = (i * 2.399963) % TAU;
+    const sp = .55 + ((i * 17) % 23) / 23 * .95;
+    const d = p * (46 + 200 * sp);
+    const x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d * .78;
+    s += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f2(Math.max(.2, (1 - p) * (1.5 + (i % 3))))}" fill="${i % 3 ? colA : colB}" opacity="${f3((1 - p) * .8)}"/>`;
+  }
+  return s;
+}
+const qa = (svg, sel) => Array.from(svg.querySelectorAll(sel));
+
+/* ════════════════════════════════════════════════════════════════════════
+   the rig every scene shares
+   The shipped loader is one compact object: the sticker is the whole body,
+   the shoulders are tucked in under the head, and the hole is born at the
+   chin. Every remix keeps that rig — only what the hole and the palms do
+   changes. Same imp, same arms, same hole between the hands.
+   ═══════════════════════════════════════════════════════════════════════ */
+const S = 1.5;                  /* sticker scale (the card is 240 px tall)  */
+const ARMK = S;                 /* the arms are the app's, at the same scale */
+const CX = 480, CY = 212;       /* the sticker's centre                     */
+/* The app's rig, scaled 1.5x from its 320x200 viewBox. In the app the
+   sticker sits at CY-24; the hole is 32 units below that and the shifted
+   shoulders 68 below it, so both get multiplied by S here. */
+const HY = CY + 48;             /* the hole, at the chin                    */
+const SHX = 96 * 1.5, SHY = CY + 102;  /* shoulders under the head          */
+const BRANDY = 372;          /* under the hole rig, clear of the disk        */
+const BRAND_SIZE = 19.5;      /* 13 in the boot viewBox, scaled with the rig      */
+
+function paintHole(el, t, o){
+  const size = o.size || 0, col = o.colP || 0, coreK = o.coreK || 74;
+  const k = coreK / 74;
+  el.halo.setAttribute('r', f1((o.haloK || 1.78) * coreK * size));
+  el.halo.setAttribute('opacity', f3(size * (.78 + .22 * Math.sin(t * 15))));
+  el.disk.setAttribute('transform', `rotate(${f1(o.rot || 0)})`);
+  el.rings.forEach((r2, i) => {
+    const on = o.ringOn === undefined ? 1 : o.ringOn;
+    r2.setAttribute('opacity', f3(on * (1 - col) * (.9 - i * .14)));
+    r2.setAttribute('transform', `scale(${f3(.06 + size * k * (1 + i * .02))})`);
+    r2.setAttribute('stroke-dasharray', `${f1((o.dash || 26) + i * 20)} ${f1(12 + i * 8)}`);
+    r2.setAttribute('stroke-dashoffset', f1(-((t * (o.dashSpd || 90) * (1 + i * .35)) % 240)));
+  });
+  el.spin.setAttribute('opacity', f3(size * .85));
+  el.spin.setAttribute('transform', `scale(${f3(.10 + size * k * .95)})`);
+  el.core.setAttribute('r', f1(coreK * size));
+  el.lens.setAttribute('opacity', f3(size * .8));
+  el.lens.setAttribute('transform', `scale(${f3((coreK * size + 4) / 27)}) rotate(${f1(o.lensRot || 0)})`);
+  el.ein.setAttribute('r', f1((coreK + 10) * size));
+  el.ein.setAttribute('opacity', f3(.9 * size));
+  el.ein.setAttribute('stroke-width', f2(2 + 1.4 * size * (.55 + .45 * Math.sin(t * 13))));
+  el.ring.setAttribute('r', f1(coreK * size + 3));
+  el.ring.setAttribute('opacity', f3(size * .8));
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   01 — REMASTERED
+   The shipped sequence, shot properly. A slow push-in on the imp, the orbs
+   spiral in trailing light, a filament ignites between the palms, the core
+   punches open on a flash, the camera dollies through the disk while the
+   hands drag it wide, and the clap lands as a hard punch-in while the whole
+   frame is pulled into the hole.
+   ═══════════════════════════════════════════════════════════════════════ */
+function sceneRim(stage, uid){
+  const svg = makeSvg(stage, uid, `
+    <rect x="-260" y="-180" width="1480" height="900" fill="${TH.solid}"/>
+    <g class="sky"></g>
+    <circle class="wash" cx="${CX}" cy="${HY - 8}" r="330" fill="url(#spot${uid})" opacity="0"/>
+    <g class="farDust"></g>
+    <g class="orbs"></g>
+    <g class="suck"><g class="face"></g><g class="brand"></g></g>
+    <g class="holeWrap" transform="translate(${CX} ${HY})">${holeMarkup(uid)}</g>
+    <g class="wind"></g>
+    <g class="arms"></g>
+    <g class="lightFront" style="mix-blend-mode:screen"></g>
+    <g class="nearDust"></g>
+    <g class="shock"></g>
+  `, `
+    <rect class="flash" x="-260" y="-180" width="1480" height="900" fill="url(#flash${uid})" opacity="0"/>
+    <rect class="white" x="-260" y="-180" width="1480" height="900" fill="#ffffff" opacity="0"/>
+    <rect x="-260" y="-180" width="1480" height="900" fill="url(#vig${uid})" opacity="0.62"/>
+  `);
+  const el = {
+    cam: svg.__cam, sky: q(svg, '.sky'), wash: q(svg, '.wash'),
+    farDust: q(svg, '.farDust'), nearDust: q(svg, '.nearDust'),
+    orbs: q(svg, '.orbs'), suck: q(svg, '.suck'), face: q(svg, '.face'), brand: q(svg, '.brand'),
+    wind: q(svg, '.wind'), arms: q(svg, '.arms'), lightFront: q(svg, '.lightFront'),
+    shock: q(svg, '.shock'), flash: q(svg, '.flash'), white: q(svg, '.white'),
+    halo: q(svg, '.hole-halo'), disk: q(svg, '.hole-disk'), rings: qa(svg, '.disk-ring'),
+    spin: q(svg, '.disk-spin'), core: q(svg, '.hole-core'), lens: q(svg, '.hole-lens'),
+    ein: q(svg, '.hole-ein'), ring: q(svg, '.hole-ring')
+  };
+  el.brand.innerHTML = brandMarkup(uid, CX, BRANDY, BRAND_SIZE);
+  const SKY = stars(46, 1337, 960, 540);
+  const FDUST = stars(18, 2027, 960, 540);
+  const NDUST = stars(14, 7717, 960, 540);
+  const ORB_AT = [.50, .88, 1.26, 1.64];
+  const IGNITE = 1.88, WARP = 3.70, CLAP = 4.58;
+
+  return { period: 7.4, update(t){
+    const enter = win(t, .02, .40);
+    const intro = back(enter);
+    const cup = win(t, 1.06, 1.80);
+    const openP = win(t, 1.80, 2.98);
+    const spinP = win(t, 2.98, WARP);
+    const warpP = win(t, WARP, CLAP);
+    const clap = win(t, CLAP - .22, CLAP);
+    const colP = win(t, CLAP, CLAP + .34);
+    const out = win(t, 6.15, 7.40);
+    const impact = t - CLAP;
+    const hit = Math.max(0, 1 - Math.abs(impact) / .36);
+    const ignAge = t - IGNITE;
+
+    const grow = .24 + .76 * (openP * .40 + spinP * .32 + warpP * .28);
+    const size = Math.max(0, Math.pow(grow, 1.06) * (1 - colP));
+
+    /* camera: slow push, a dolly through the disk, a punch on the clap */
+    const push = 1.005 + .045 * openP + .055 * spinP + .085 * Math.pow(warpP, 1.45);
+    const punch = impact >= 0 ? .09 * Math.max(0, 1 - impact / .48) : 0;
+    const sh = shake2(t, cup * (1 - clap) * .8 + hit * 6.4);
+    applyCam(el.cam, { s: push + punch, r: -.8 + 1.2 * openP + hit * 1.7, x: sh.x, y: sh.y });
+
+    /* deep sky, key light, drifting dust */
+    el.sky.innerHTML = starField(SKY, t, .55, sh.x * .18, -push * 8);
+    el.wash.setAttribute('opacity', f3(.30 * Math.max(0, 1 - Math.abs(ignAge) / .5) + .55 * size));
+    el.wash.setAttribute('r', f1(300 + 150 * size));
+    el.farDust.innerHTML = dustField(FDUST, t, { op: .55, pull: warpP * .55, cx: CX, cy: HY, soft: 3.4 }, uid);
+    el.nearDust.innerHTML = dustField(NDUST, t, { op: .42, pull: warpP * .95, cx: CX, cy: HY, soft: 2.2 }, uid);
+
+    /* four orbs, each dragging a short light trail into the hole */
+    let orbS = '';
+    ORB_AT.forEach((a, i) => {
+      const p = (t - a) / .92;
+      if (p < 0 || p > 1) return;
+      const col = i % 2 ? TH.accent2 : TH.accent;
+      for (let k = 3; k >= 1; k--){
+        const pp = Math.max(0, p - k * .055);
+        const ang = i * 1.7 + pp * 7.4 + t * .10;
+        const rr = lerp(198, 6, easeIn(pp));
+        const op = Math.min(1, p * 6) * (1 - pp * pp) * (.30 / (k * .9 + .5));
+        orbS += `<circle cx="${f1(CX + Math.cos(ang) * rr)}" cy="${f1(HY + Math.sin(ang) * rr * .60)}" r="${f2(2.2 * (1 - pp * .5))}" fill="${col}" opacity="${f3(op)}"/>`;
+      }
+      const ang = i * 1.7 + p * 7.4 + t * .10;
+      const rr = lerp(198, 6, easeIn(p));
+      const ox = CX + Math.cos(ang) * rr, oy = HY + Math.sin(ang) * rr * .60;
+      const op = Math.min(1, p * 6) * (1 - p * p);
+      orbS += `<g transform="translate(${f1(ox)} ${f1(oy)}) scale(${f2(1 - p * .72)})" opacity="${f3(op)}">
+        <circle r="7" fill="${col}"/>
+        <circle r="12.5" fill="none" stroke="${col}" stroke-width="1.3" opacity=".5"/>
+        <circle r="18" fill="none" stroke="${col}" stroke-width=".9" opacity=".2"/></g>`;
+    });
+    el.orbs.innerHTML = orbS;
+
+    /* the imp: leans in, jaw drops as the core lights, eyes track the hole */
+    const jaw = win(t, 1.35, 2.25) * (1 - warpP * .55);
+    const lean = win(t, 1.40, 3.55) * (1 - warpP);
+    const mouth = jaw > 0 ? `M56 92 Q80 ${f1(110 + jaw * 30)} 104 92 Z` : 'M62 94 Q80 109 98 94';
+    const fangs = jaw > 0 ? [[68, 4.5], [92, 4.5]].map(([x, hw]) =>
+      `<polygon points="${x - hw},92 ${x},${f1(101 + jaw * 8)} ${x + hw},92" fill="#ffffff"/>`).join('') : '';
+    const cardX = CX, cardY = CY - jaw * 3, cardS = intro * S, cardR = -lean * 2.0;
+    el.face.innerHTML = stickerFor(uid, cardX, cardY, cardS, cardR, {
+      eyeK: 1.06 + jaw * .42 + hit * .14,
+      eyeShift: Math.sin(t * .9) * 1.4 + sh.x * .45,
+      mouth, fangs, glow: true, horn: Math.sin(t * 3) * 2 + jaw * 5
+    });
+    el.brand.setAttribute('opacity', f3(win(t, .30, .85) * (1 - win(t, WARP, WARP + .22))));
+
+    paintHole(el, t, { size, coreK: 88, colP, rot: -16 + t * 42, lensRot: t * 24, dash: 28, dashSpd: 90 });
+
+    /* the frame itself starts to rotate into the hole */
+    el.wind.innerHTML = windLines(CX, HY, t, Math.min(1, spinP * .55 + warpP), 22, 54, 246, TH.accent, .5);
+
+    /* arms: rise, cup, strain, drag wide, clap */
+    const enterArm = win(t, .28, .95);
+    let gap = 104;
+    gap = lerp(gap, 66, cup);
+    gap = lerp(gap, 122, spinP);
+    gap = lerp(gap, 9, clap);
+    const trem = Math.sin(t * 15) * 3.4 * cup * (1 - clap) + Math.sin(t * 41) * .9 * spinP;
+    const hy = HY + 5 - 5 * cup + 9 * spinP + trem * .5;
+    const hOp = enterArm * (1 - Math.pow(warpP, 3));
+    /* both arms grow out of the card's own bottom corners, and ride with it
+       while it leans in */
+    const shL = stickerPoint(cardX, cardY, cardS, cardR, CARD_BL[0], CARD_BL[1]);
+    const shR = stickerPoint(cardX, cardY, cardS, cardR, CARD_BR[0], CARD_BR[1]);
+    el.arms.innerHTML = hOp > .02
+      ? arm(uid, shL.x, shL.y, CX - gap, hy, CX, HY, true, hOp, { scale: ARMK })
+      + arm(uid, shR.x, shR.y, CX + gap, hy, CX, HY, false, hOp, { scale: ARMK })
+      : '';
+
+    /* the filament between the palms before the core lights */
+    if (cup > .18 && hOp > .02 && t < 2.5){
+      const sp = win(t, 1.14, 1.60) * (1 - win(t, 1.90, 2.30));
+      if (sp > .02){
+        el.arms.innerHTML += `<g opacity="${f3(sp)}" filter="url(#glowFx)">
+          <line x1="${f1(CX - gap + 10)}" y1="${f1(hy)}" x2="${f1(CX + gap - 10)}" y2="${f1(hy)}" stroke="#ffffff" stroke-width="1.3" stroke-dasharray="2 7" stroke-dashoffset="${f1(-t * 90)}"/>
+          <line x1="${f1(CX - gap + 10)}" y1="${f1(hy - 4)}" x2="${f1(CX + gap - 10)}" y2="${f1(hy + 4)}" stroke="${TH.accent}" stroke-width=".9" stroke-dasharray="1 11" stroke-dashoffset="${f1(t * 70)}" opacity=".8"/>
+          <circle cx="${CX}" cy="${f1(hy)}" r="${f2(Math.max(.4, 1.8 + 2.2 * Math.sin(t * 34)))}" fill="#ffffff"/></g>`;
+      }
+    }
+
+    /* light in front of the rig: the hole washes over the palms and chin */
+    el.lightFront.innerHTML = size > .03
+      ? `<circle cx="${CX}" cy="${HY}" r="${f1(210 * size + 46)}" fill="url(#sun${uid})" opacity="${f3(.30 * size * (1 - colP * .6))}"/>`
+      : '';
+
+    /* the screen is dragged in */
+    const w2 = easeIn(warpP);
+    el.suck.setAttribute('transform',
+      `translate(${CX} ${HY}) scale(${f3(1 - w2 * .985)}) rotate(${f1(w2 * 32)}) translate(${-CX} ${-HY})`);
+    el.suck.setAttribute('opacity', f3(1 - w2 * .95));
+
+    /* ignition, clamp, and the clap */
+    let shock = '';
+    if (ignAge >= 0 && ignAge < .55){
+      const p = ignAge / .55;
+      shock += `<circle cx="${CX}" cy="${HY}" r="${f1(8 + p * 150)}" fill="none" stroke="${p < .5 ? '#ffffff' : TH.accent}" stroke-width="${f2(3.4 * (1 - p) + .3)}" opacity="${f3((1 - p) * .85)}"/>`;
+      shock += speedStreaks(CX, HY, t, p, 18, 18, 132, TH.accent, .5);
+    }
+    for (let k = 0; k < 3; k++){
+      const p = win(t, CLAP + k * .06, CLAP + k * .06 + .55);
+      if (t >= CLAP + k * .06 && p < 1)
+        shock += `<circle cx="${CX}" cy="${HY}" r="${f1(10 + p * (360 + k * 40))}" fill="none" stroke="${k === 0 ? '#ffffff' : (k % 2 ? TH.accent : TH.accent2)}" stroke-width="${f2(5.5 * (1 - p) + .4)}" opacity="${f3((1 - p) * .9)}"/>`;
+    }
+    if (impact >= 0 && impact < .34) shock += debris(CX, HY, impact / .34, 26, TH.accent, TH.accent2);
+    if (hit > .02) shock += chromaRing(CX, HY, 22 + (1 - hit) * 66, 2.4, hit * .6);
+    el.shock.innerHTML = shock;
+
+    el.flash.setAttribute('opacity', f3(t >= CLAP ? .20 * Math.max(0, 1 - impact / .17) : 0));
+    el.white.setAttribute('opacity', f3(t >= CLAP ? .05 * Math.max(0, 1 - Math.abs(impact - .02) / .05) : 0));
+    svg.style.opacity = f3(1 - out);
+  }};
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   02 — ORBITING PALMS
+   The hole is born between the hands; then the palms let go and sweep the
+   rim in opposite directions, dragging long-exposure light behind them.
+   The camera tilts and pushes with the sweep, the disk winds up under the
+   fingers, and the hands return from the sides to slam it shut.
+   ═══════════════════════════════════════════════════════════════════════ */
+function sceneOrbit(stage, uid){
+  const HX = CX, HY2 = CY + 56, R = 98, RY = 62;
+  const svg = makeSvg(stage, uid, `
+    <rect x="-260" y="-180" width="1480" height="900" fill="${TH.solid}"/>
+    <g class="sky"></g>
+    <circle class="wash" cx="${HX}" cy="${HY2}" r="320" fill="url(#spot${uid})" opacity="0"/>
+    <g class="farDust"></g>
+    <g class="guide" opacity="0">
+      <ellipse cx="${HX}" cy="${HY2}" rx="${R}" ry="${RY}" fill="none" stroke="${TH.accent}" stroke-width="1.2" stroke-dasharray="2 8" opacity=".7"/>
+      <ellipse cx="${HX}" cy="${HY2}" rx="${R + 18}" ry="${RY + 18}" fill="none" stroke="${TH.accent2}" stroke-width=".8" stroke-dasharray="1 14" opacity=".4"/>
+    </g>
+    <g class="suck"><g class="face"></g></g>
+    <g class="holeWrap" transform="translate(${HX} ${HY2})">${holeMarkup(uid)}</g>
+    <g class="trails"></g>
+    <g class="brand"></g>
+    <g class="arms"></g>
+    <g class="nearDust"></g>
+    <g class="shock"></g>
+  `, `
+    <rect class="flash" x="-260" y="-180" width="1480" height="900" fill="url(#flash${uid})" opacity="0"/>
+    <rect class="white" x="-260" y="-180" width="1480" height="900" fill="#ffffff" opacity="0"/>
+    <rect x="-260" y="-180" width="1480" height="900" fill="url(#vig${uid})" opacity="0.62"/>
+  `);
+  const el = {
+    cam: svg.__cam, sky: q(svg, '.sky'), wash: q(svg, '.wash'),
+    farDust: q(svg, '.farDust'), nearDust: q(svg, '.nearDust'), guide: q(svg, '.guide'),
+    hole: q(svg, '.holeWrap'), trails: q(svg, '.trails'), brand: q(svg, '.brand'),
+    arms: q(svg, '.arms'), shock: q(svg, '.shock'), flash: q(svg, '.flash'), white: q(svg, '.white'),
+    face: q(svg, '.face'), suck: q(svg, '.suck'),
+    halo: q(svg, '.hole-halo'), disk: q(svg, '.hole-disk'), rings: qa(svg, '.disk-ring'),
+    spin: q(svg, '.disk-spin'), core: q(svg, '.hole-core'), lens: q(svg, '.hole-lens'),
+    ein: q(svg, '.hole-ein'), ring: q(svg, '.hole-ring')
+  };
+  el.brand.innerHTML = brandMarkup(uid, CX, 388, BRAND_SIZE);
+  const SKY = stars(50, 991, 960, 540);
+  const FDUST = stars(20, 3131, 960, 540);
+  const NDUST = stars(12, 606, 960, 540);
+  const SWEEP = 1.98, SWEEP_END = 4.52, CLAP = 5.26;
+
+  return { period: 7.6, update(t){
+    const enter = win(t, .02, .50);
+    const intro = back(enter);
+    const openP = win(t, 1.05, 1.80);
+    const release = smooth(win(t, 1.12, 1.92));
+    const u = clamp((t - SWEEP) / (SWEEP_END - SWEEP), 0, 1);
+    const sweepP = smooth(Math.pow(u, 1.10));
+    const clap = win(t, CLAP - .26, CLAP);
+    const colP = win(t, CLAP, CLAP + .30);
+    const out = win(t, 6.30, 7.60);
+    const impact = t - CLAP;
+    const hit = Math.max(0, 1 - Math.abs(impact) / .36);
+    const size = Math.min(1, Math.max(0, Math.pow(.28 + .64 * openP + .10 * sweepP, 1.08))) * (1 - colP);
+
+    /* the camera leans into the sweep, then punches on the clap */
+    const punch = impact >= 0 ? .08 * Math.max(0, 1 - impact / .50) : 0;
+    const sh = shake2(t, .35 * sweepP * (1 - clap) + hit * 7);
+    applyCam(el.cam, {
+      s: 1.01 + .10 * sweepP + .03 * openP + punch,
+      r: -1.3 + 2.4 * sweepP + hit * 1.4,
+      x: sh.x, y: sh.y, px: HX, py: HY2
+    });
+
+    el.sky.innerHTML = starField(SKY, t, .55, sh.x * .16, sh.y * .16);
+    el.wash.setAttribute('opacity', f3(.35 * size + .2 * sweepP));
+    el.wash.setAttribute('r', f1(300 + 130 * size));
+    el.farDust.innerHTML = dustField(FDUST, t, { op: .5, pull: colP * .5, cx: HX, cy: HY2, soft: 3.4 }, uid);
+    el.nearDust.innerHTML = dustField(NDUST, t, { op: .38, pull: colP, cx: HX, cy: HY2, soft: 2.2 }, uid);
+
+    /* the imp above the hole, eyes following the left palm */
+    const jaw = win(t, 1.10, 2.10) * (1 - clap);
+    const aL = lerp(Math.PI / 2, Math.PI * .93, sweepP);
+    const aR = Math.PI - aL;
+    el.face.innerHTML = stickerFor(uid, CX, CY, intro * S, 0, {
+      eyeK: 1.12 + jaw * .30,
+      eyeShift: Math.cos(aL) * 4.5,
+      glow: true, horn: Math.sin(t * 2.2) * 2 + jaw * 5
+    });
+    el.brand.setAttribute('opacity', f3(win(t, .35, .9) * (1 - win(t, CLAP + .1, CLAP + .5))));
+
+    el.guide.setAttribute('opacity', f3(release * (1 - colP) * .9));
+    paintHole(el, t, {
+      size, coreK: 46, colP, rot: -14 + t * 30 + sweepP * 260, lensRot: -t * 26, dash: 24, dashSpd: 110
+    });
+
+    /* palms ride the rim, then come in from the sides */
+    const pxOf = a => HX + Math.cos(a) * R;
+    const pyOf = a => HY2 + Math.sin(a) * RY;
+    const palmX = (a, isLeft) => lerp(pxOf(a), HX + (isLeft ? -16 : 16), clap);
+    const palmY = a => lerp(pyOf(a), HY2 + 6, clap);
+    const hOp = win(t, .30, 1.0) * (1 - Math.pow(colP, 2.2));
+
+    /* long-exposure trail behind each palm */
+    function trailArc(a, dir, col){
+      let s = '';
+      const N = 20;
+      for (let i = 1; i <= N; i++){
+        const a0 = a - dir * (i - 1) * .028, a1 = a - dir * i * .028;
+        const fade = 1 - i / N;
+        s += `<line x1="${f1(pxOf(a0))}" y1="${f1(pyOf(a0))}" x2="${f1(pxOf(a1))}" y2="${f1(pyOf(a1))}" stroke="${col}" stroke-width="${f2(.7 + fade * 3.2)}" stroke-linecap="round" opacity="${f3(fade * fade * .85)}"/>`;
+      }
+      for (let i = 1; i <= 7; i++){
+        const aa = a - dir * i * .05;
+        s += `<circle cx="${f1(pxOf(aa))}" cy="${f1(pyOf(aa))}" r="${f2(2.2 - i * .16)}" fill="#ffffff" opacity="${f3((1 - i / 8) * .8)}"/>`;
+      }
+      return s;
+    }
+    el.trails.innerHTML = (release > .05 && colP < .98)
+      ? `<g filter="url(#glowFx)" opacity="${f3(release * (1 - colP))}">`
+        + trailArc(aL, 1, TH.accent) + trailArc(aR, -1, TH.accent2) + `</g>`
+      : '';
+
+    el.arms.innerHTML = hOp > .02
+      ? arm(uid, CX - SHX, SHY, palmX(aL, true), palmY(aL), HX, HY2, true, hOp, { scale: ARMK })
+      + arm(uid, CX + SHX, SHY, palmX(aR, false), palmY(aR), HX, HY2, false, hOp, { scale: ARMK })
+      : '';
+
+    /* the clap */
+    let shock = '';
+    for (let k = 0; k < 3; k++){
+      const p = win(t, CLAP + k * .06, CLAP + k * .06 + .6);
+      if (t >= CLAP + k * .06 && p < 1)
+        shock += `<ellipse cx="${HX}" cy="${HY2}" rx="${f1(12 + p * (330 + k * 40))}" ry="${f1(12 + p * (150 + k * 20))}" fill="none" stroke="${k === 0 ? '#ffffff' : (k % 2 ? TH.accent : TH.accent2)}" stroke-width="${f2(5 * (1 - p) + .35)}" opacity="${f3((1 - p) * .9)}"/>`;
+    }
+    if (impact >= 0 && impact < .34) shock += debris(HX, HY2, impact / .34, 24, TH.accent2, TH.accent);
+    if (hit > .02) shock += chromaRing(HX, HY2, 20 + (1 - hit) * 62, 2.4, hit * .55);
+    el.shock.innerHTML = shock;
+
+    el.flash.setAttribute('opacity', f3(t >= CLAP ? .19 * Math.max(0, 1 - impact / .17) : 0));
+    el.white.setAttribute('opacity', f3(t >= CLAP ? .05 * Math.max(0, 1 - Math.abs(impact - .02) / .05) : 0));
+    svg.style.opacity = f3(1 - out);
+  }};
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   03 — THE GREEDY MOUTH
+   The grin unhinges in three cracks, each one a little further than the
+   last, while the camera creeps in on it. The world is inhaled — the name
+   drags toward the throat, dust spirals in — and then the maw snaps shut
+   on a hard cut, leaving a glowing seam in the dark.
+   ═══════════════════════════════════════════════════════════════════════ */
+function sceneMouth(stage, uid){
+  const MY = CY + 54;
+  const WIDE = 1.46;
+  const svg = makeSvg(stage, uid, `
+    <rect x="-260" y="-180" width="1480" height="900" fill="${TH.solid}"/>
+    <g class="sky"></g>
+    <circle class="wash" cx="${CX}" cy="${MY}" r="300" fill="url(#spot${uid})" opacity="0"/>
+    <g class="farDust"></g>
+    <g class="suck"><g class="face"></g><g class="brand"></g></g>
+    <g class="holeWrap" transform="translate(${CX} ${MY})">${holeMarkup(uid)}</g>
+    <g class="teeth"></g>
+    <g class="strands"></g>
+    <g class="arms"></g>
+    <g class="nearDust"></g>
+    <g class="shock"></g>
+  `, `
+    <rect class="flash" x="-260" y="-180" width="1480" height="900" fill="url(#flash${uid})" opacity="0"/>
+    <rect class="white" x="-260" y="-180" width="1480" height="900" fill="#ffffff" opacity="0"/>
+    <rect x="-260" y="-180" width="1480" height="900" fill="url(#vig${uid})" opacity="0.66"/>
+  `);
+  const el = {
+    cam: svg.__cam, sky: q(svg, '.sky'), wash: q(svg, '.wash'),
+    farDust: q(svg, '.farDust'), nearDust: q(svg, '.nearDust'),
+    suck: q(svg, '.suck'), face: q(svg, '.face'), brand: q(svg, '.brand'),
+    hole: q(svg, '.holeWrap'), teeth: q(svg, '.teeth'), strands: q(svg, '.strands'),
+    arms: q(svg, '.arms'), shock: q(svg, '.shock'),
+    flash: q(svg, '.flash'), white: q(svg, '.white'),
+    halo: q(svg, '.hole-halo'), disk: q(svg, '.hole-disk'), rings: qa(svg, '.disk-ring'),
+    spin: q(svg, '.disk-spin'), core: q(svg, '.hole-core'), lens: q(svg, '.hole-lens'),
+    ein: q(svg, '.hole-ein'), ring: q(svg, '.hole-ring')
+  };
+  el.brand.innerHTML = brandMarkup(uid, CX, BRANDY, BRAND_SIZE);
+  const SKY = stars(42, 5150, 960, 540);
+  const FDUST = stars(20, 8080, 960, 540);
+  const NDUST = stars(14, 31337, 960, 540);
+  const SNAP = 4.72;
+
+  /* two rows of fangs biting into the maw, with a nervous jitter */
+  function fangs(rx, ry, op, len, wob){
+    if (op <= .02 || rx <= 1) return '';
+    let s = '';
+    const rows = [
+      { n: 6, a0: Math.PI + .16, a1: TAU - .16 },
+      { n: 6, a0: .16, a1: Math.PI - .16 }
+    ];
+    for (let r = 0; r < 2; r++){
+      const row = rows[r];
+      for (let i = 0; i < row.n; i++){
+        const a = lerp(row.a0, row.a1, (i + .5) / row.n);
+        const w = (row.a1 - row.a0) / row.n * .5 * .78;
+        const jit = wob * Math.sin(i * 2.3 + r * 1.7) * 2.6;
+        const bx1 = CX + Math.cos(a - w) * rx, by1 = MY + Math.sin(a - w) * ry;
+        const bx2 = CX + Math.cos(a + w) * rx, by2 = MY + Math.sin(a + w) * ry;
+        const ax = CX + Math.cos(a) * (rx - len * WIDE) + jit;
+        const ay = MY + Math.sin(a) * (ry - len) + jit;
+        s += `<polygon points="${f1(bx1)},${f1(by1)} ${f1(bx2)},${f1(by2)} ${f1(ax)},${f1(ay)}" fill="#ffffff" stroke="rgba(2,6,12,.6)" stroke-width="1.1"/>`;
+      }
+    }
+    return `<g opacity="${f3(op)}">${s}</g>`;
+  }
+
+  return { period: 7.0, update(t){
+    const enter = win(t, .02, .50);
+    const intro = back(enter);
+    const openJ = win(t, 1.05, 3.50);
+    const snapP = win(t, SNAP - .10, SNAP + .02);
+    const colP = win(t, SNAP, SNAP + .32);
+    const out = win(t, 6.00, 7.00);
+    const impact = t - SNAP;
+    const hit = Math.max(0, 1 - Math.abs(impact) / .34);
+
+    /* three cracks, each further than the last */
+    const jawRaw = .46 * back(win(t, 1.05, 1.32))
+                 + .26 * back(win(t, 2.10, 2.34))
+                 + .30 * back(win(t, 3.02, 3.24));
+    const jaw = Math.min(1, jawRaw) * (1 - snapP);
+
+    const punch = impact >= 0 ? .10 * Math.max(0, 1 - impact / .50) : 0;
+    const sh = shake2(t, .7 * jaw + hit * 7.2);
+    applyCam(el.cam, {
+      s: 1.01 + .20 * easeIn(openJ) * (1 - colP * .35) + punch,
+      r: -.7 + 1.6 * jaw + hit * 2.2,
+      x: sh.x, y: sh.y, px: CX, py: MY
+    });
+
+    el.sky.innerHTML = starField(SKY, t, .45, sh.x * .2, sh.y * .2);
+    el.wash.setAttribute('opacity', f3(.42 * jaw + .3 * openJ));
+    el.wash.setAttribute('r', f1(260 + 120 * openJ));
+    const pull = easeIn(win(t, 2.9, 4.5));
+    el.farDust.innerHTML = dustField(FDUST, t, { op: .5, pull: pull * .75, cx: CX, cy: MY, soft: 3.4 }, uid);
+    el.nearDust.innerHTML = dustField(NDUST, t, { op: .4, pull, cx: CX, cy: MY, soft: 2.2 }, uid);
+
+    /* the imp, eyes blown wide as the maw opens */
+    el.face.innerHTML = stickerFor(uid, CX, CY, intro * S, 0, {
+      eyeK: 1.10 + jaw * .55 + hit * .2,
+      glow: true,
+      horn: Math.sin(t * 3.4) * 2 + jaw * 9,
+      mouth: jaw > .08 ? 'M64 96 L96 96' : 'M62 94 Q80 109 98 94'
+    });
+
+    /* the name is dragged into the throat and shredded */
+    el.brand.setAttribute('transform',
+      `translate(${CX} ${MY}) rotate(${f1(pull * 14)}) scale(${f3(lerp(1, .16, pull))}) translate(${-CX} ${-MY})`);
+    el.brand.setAttribute('opacity', f3(win(t, .35, .85) * (1 - pull) * (1 - colP)));
+
+    /* the maw */
+    const mawSy = lerp(1, .05, colP);
+    el.hole.setAttribute('transform', `translate(${CX} ${MY}) scale(${WIDE} ${f3(mawSy)})`);
+    const size = Math.max(0, Math.pow(openJ, 1.1) * (1 - colP));
+    paintHole(el, t, {
+      size, coreK: 44, colP, rot: -12 + t * 34, lensRot: t * 22, dash: 18, dashSpd: 90, haloK: 1.3
+    });
+
+    const rx = 44 * size * WIDE, ry = 44 * size * mawSy;
+    el.teeth.innerHTML = fangs(rx + 2, ry + 2, size * (1 - colP) * .98, 13 + jaw * 10, jaw * (1 - snapP))
+      + `<ellipse cx="${CX}" cy="${MY}" rx="${f1(rx + 4)}" ry="${f1(ry + 4)}" fill="none" stroke="${TH.accent2}" stroke-width="${f2(1 + size * .9)}" opacity="${f3(size * .5)}"/>`;
+
+    /* strands of light strung between the fangs, snapping at the bite */
+    let strandS = '';
+    if (size > .06 && snapP < .95){
+      for (let i = 0; i < 6; i++){
+        const u = (i + .5) / 6;
+        const x0 = CX + lerp(-rx * .8, rx * .8, u);
+        const sag = Math.sin(t * 3 + i * 1.4) * 3.2 * jaw;
+        const y0 = MY - ry * .55, y1 = MY + ry * .62;
+        strandS += `<path d="M ${f1(x0)} ${f1(y0)} Q ${f1(x0 + sag * 2)} ${f1((y0 + y1) / 2)} ${f1(x0 - sag)} ${f1(y1)}" fill="none" stroke="#dff4ff" stroke-width="${f2(.7 + jaw * .6)}" opacity="${f3(.30 * jaw * (1 - snapP))}"/>`;
+      }
+    }
+    el.strands.innerHTML = strandS;
+
+    /* hands braced on the corners of the maw, then slammed shut */
+    const enterArm = win(t, .28, .98);
+    const hOp = enterArm * (1 - Math.pow(colP, 2));
+    let gap = lerp(102, 92, jaw);
+    gap = lerp(gap, 18, snapP);
+    const hy = MY + 2 + Math.sin(t * 4.2) * 1.6 * jaw;
+    const trem = Math.sin(t * 19) * (1.4 + 1.2 * jaw) * (1 - snapP);
+    el.arms.innerHTML = hOp > .02
+      ? arm(uid, CX - SHX, SHY, CX - gap, hy + trem, CX, MY, true, hOp, { scale: ARMK })
+      + arm(uid, CX + SHX, SHY, CX + gap, hy - trem, CX, MY, false, hOp, { scale: ARMK })
+      : '';
+
+    /* the bite: a flattened shockwave, debris, and a seam left in the dark */
+    let shock = '';
+    for (let k = 0; k < 3; k++){
+      const p = win(t, SNAP + k * .06, SNAP + k * .06 + .6);
+      if (t >= SNAP + k * .06 && p < 1)
+        shock += `<ellipse cx="${CX}" cy="${MY}" rx="${f1(14 + p * (380 + k * 30))}" ry="${f1(9 + p * (150 + k * 18))}" fill="none" stroke="${k === 0 ? '#ffffff' : (k % 2 ? TH.accent : TH.accent2)}" stroke-width="${f2(4.6 * (1 - p) + .3)}" opacity="${f3((1 - p) * .85)}"/>`;
+    }
+    if (impact >= 0 && impact < .38) shock += debris(CX, MY, impact / .38, 26, TH.accent, TH.accent2);
+    if (hit > .02) shock += chromaRing(CX, MY, 22 + (1 - hit) * 70, 2.6, hit * .6);
+    const seam = t >= SNAP ? Math.max(0, 1 - (t - SNAP) / .95) : 0;
+    if (seam > .01)
+      shock += `<ellipse cx="${CX}" cy="${MY}" rx="128" ry="2.4" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="${f3(seam * .85)}" filter="url(#glowFx)"/>`;
+    el.shock.innerHTML = shock;
+
+    el.flash.setAttribute('opacity', f3(t >= SNAP ? .20 * Math.max(0, 1 - impact / .17) : 0));
+    el.white.setAttribute('opacity', f3(t >= SNAP ? .05 * Math.max(0, 1 - Math.abs(impact - .02) / .05) : 0));
+    svg.style.opacity = f3(1 - out);
+  }};
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   04 — ECLIPSE
+   The hole rises behind the imp and becomes a sun: a slow dolly in, corona
+   breathing, rays crawling, then totality darkens the frame to a ring and
+   a diamond. The palms hold the rim and clap it out, and the afterimage
+   rings back through the dark.
+   ═══════════════════════════════════════════════════════════════════════ */
+function sceneEclipse(stage, uid){
+  const svg = makeSvg(stage, uid, `
+    <rect x="-260" y="-180" width="1480" height="900" fill="${TH.solid}"/>
+    <g class="sky"></g>
+    <g class="deep"></g>
+    <g class="corona" transform="translate(${CX} ${CY})">
+      <g class="streamers"></g>
+      <circle class="cGlow" r="0" fill="url(#sun${uid})" opacity="0"/>
+      <circle class="cBloom" r="0" fill="none" stroke="${TH.accent}" stroke-width="0" opacity="0" filter="url(#glow${uid})"/>
+      <circle class="cBody" r="0" fill="url(#core${uid})"/>
+      <circle class="cRim" r="0" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0"/>
+      <g class="diamond" opacity="0" style="mix-blend-mode:screen">
+        <circle r="3.2" fill="#ffffff"/>
+        <circle r="9" fill="none" stroke="#ffffff" stroke-width="2.2" opacity=".9"/>
+        <circle r="22" fill="none" stroke="#ffffff" stroke-width="1" opacity=".35"/>
+        <line x1="-46" y1="0" x2="-11" y2="0" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+        <line x1="11" y1="0" x2="46" y2="0" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+        <line x1="0" y1="-40" x2="0" y2="-11" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>
+        <line x1="0" y1="11" x2="0" y2="40" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>
+      </g>
+    </g>
+    <g class="rays"></g>
+    <g class="rimLight"></g>
+    <g class="flare"></g>
+    <g class="suck"><g class="face"></g></g>
+    <g class="arms"></g>
+    <g class="brand"></g>
+    <g class="nearDust"></g>
+    <g class="shock"></g>
+  `, `
+    <rect class="darken" x="-260" y="-180" width="1480" height="900" fill="#02040a" opacity="0"/>
+    <rect class="flash" x="-260" y="-180" width="1480" height="900" fill="url(#flash${uid})" opacity="0"/>
+    <rect class="white" x="-260" y="-180" width="1480" height="900" fill="#ffffff" opacity="0"/>
+    <rect x="-260" y="-180" width="1480" height="900" fill="url(#vig${uid})" opacity="0.62"/>
+  `);
+  const el = {
+    cam: svg.__cam, sky: q(svg, '.sky'), deep: q(svg, '.deep'), glow: q(svg, '.cGlow'), bloom: q(svg, '.cBloom'),
+    streamers: q(svg, '.streamers'), body: q(svg, '.cBody'),
+    ring: q(svg, '.cRim'), diamond: q(svg, '.diamond'), rays: q(svg, '.rays'),
+    rimLight: q(svg, '.rimLight'), flare: q(svg, '.flare'),
+    suck: q(svg, '.suck'), face: q(svg, '.face'), arms: q(svg, '.arms'), brand: q(svg, '.brand'),
+    nearDust: q(svg, '.nearDust'), shock: q(svg, '.shock'),
+    darken: q(svg, '.darken'), flash: q(svg, '.flash'), white: q(svg, '.white')
+  };
+  el.brand.innerHTML = brandMarkup(uid, CX, BRANDY, BRAND_SIZE);
+  const SKY = stars(48, 4242, 960, 540);
+  const DEEP = stars(70, 1717, 960, 540);
+  const NDUST = stars(14, 9091, 960, 540);
+  const CLOSE = 4.15, CLAP = 5.24;
+
+  return { period: 7.4, update(t){
+    const enter = win(t, .02, .55);
+    const intro = back(enter);
+    const grow = win(t, .45, 2.35);
+    const close = win(t, 2.35, CLOSE);
+    const totality = smooth(win(t, 3.55, 4.30));
+    const clap = win(t, CLAP - .26, CLAP);
+    const colP = win(t, CLAP, CLAP + .34);
+    const out = win(t, 6.30, 7.40);
+    const impact = t - CLAP;
+    const hit = Math.max(0, 1 - Math.abs(impact) / .40);
+    const diamond = Math.exp(-Math.pow((t - 4.34) / .13, 2));
+    const R = (188 - 34 * close) * grow * (1 - colP * .02);
+
+    /* slow dolly in, a nudge at totality, a punch on the clap */
+    const punch = impact >= 0 ? .09 * Math.max(0, 1 - impact / .55) : 0;
+    const sh = shake2(t, hit * 5.4 + totality * .35);
+    applyCam(el.cam, { s: .97 + .07 * grow + .09 * close + punch, r: -.6 + .9 * close, x: sh.x, y: sh.y });
+
+    el.sky.innerHTML = starField(SKY, t, .34 + .12 * totality, sh.x * .2, sh.y * .2);
+    el.deep.innerHTML = starField(DEEP, t, (.55 + .35 * totality) * (1 - colP), sh.x * .3, sh.y * .3);
+
+    /* the corona */
+    el.glow.setAttribute('r', f1(Math.max(0, R * (2.5 + .3 * Math.sin(t * 1.7)))));
+    el.glow.setAttribute('opacity', f3(grow * (.7 + .3 * totality) * (1 - colP)));
+    el.bloom.setAttribute('r', f1(Math.max(0, R + 1)));
+    el.bloom.setAttribute('stroke-width', f2(6 + 10 * totality + hit * 8));
+    el.bloom.setAttribute('opacity', f3(grow * (.20 + .55 * totality) * (1 - colP)));
+
+    /* coronal streamers: tapered wisps crawling off the rim */
+    let str = '';
+    const strOp = grow * (.16 + .5 * totality) * (1 - colP);
+    if (strOp > .02){
+      for (let i = 0; i < 16; i++){
+        const a = i / 16 * TAU + t * .05;
+        const len = (26 + (i % 5) * 26) * (.7 + .3 * Math.sin(t * 1.4 + i * 1.7));
+        const wid = .10 + (i % 3) * .035;
+        const x1 = Math.cos(a - wid) * (R + 3), y1 = Math.sin(a - wid) * (R + 3);
+        const x2 = Math.cos(a + wid) * (R + 3), y2 = Math.sin(a + wid) * (R + 3);
+        const x3 = Math.cos(a) * (R + 3 + len), y3 = Math.sin(a) * (R + 3 + len);
+        str += `<polygon points="${f1(x1)},${f1(y1)} ${f1(x2)},${f1(y2)} ${f1(x3)},${f1(y3)}" fill="${i % 3 ? TH.accent : TH.accent2}" opacity="${f3(strOp * (.25 + .5 * ((i * 5) % 7) / 7))}"/>`;
+      }
+    }
+    el.streamers.innerHTML = str;
+    el.body.setAttribute('r', f1(R));
+    el.body.setAttribute('opacity', f3(grow * .97 * (1 - colP)));
+    el.ring.setAttribute('r', f1(Math.max(0, R + 2)));
+    el.ring.setAttribute('opacity', f3(grow * (.7 + .3 * Math.sin(t * 9)) * (1 - colP)));
+    el.ring.setAttribute('stroke-width', f2(1 + 2.8 * (1 - close) + hit * 3));
+
+    el.diamond.setAttribute('transform', `translate(0 ${f1(-R - 2)})`);
+    el.diamond.setAttribute('opacity', f3(Math.max(diamond, hit * .7) * grow * (1 - colP)));
+
+    /* rays crawling off the corona, brightest at totality */
+    let rays = '';
+    const rayOp = grow * (1 - close * .55) * .6 * (1 - colP);
+    if (rayOp > .02){
+      for (let i = 0; i < 40; i++){
+        const a = i / 40 * TAU + t * .11;
+        const len = (30 + (i % 6) * 24) * (.55 + .45 * Math.sin(t * 2.2 + i));
+        rays += `<line x1="${f1(CX + Math.cos(a) * (R + 5))}" y1="${f1(CY + Math.sin(a) * (R + 5))}" x2="${f1(CX + Math.cos(a) * (R + 5 + len))}" y2="${f1(CY + Math.sin(a) * (R + 5 + len))}" stroke="${i % 3 ? TH.accent : TH.accent2}" stroke-width="${f2(.6 + (i % 3) * .5)}" opacity="${f3(rayOp * (.18 + .55 * (1 - (i % 4) / 4)))}"/>`;
+      }
+    }
+    el.rays.innerHTML = rays;
+
+    /* anamorphic flare across the sun at totality */
+    el.flare.innerHTML = anamorphic(CX, CY, 300 * totality + 30 * hit, 2.2, totality * .55 + hit * .28, uid);
+
+    /* rim light peeking around the sticker's card */
+    const rimOp = f3(grow * (.25 + .7 * totality) * (1 - colP));
+    el.rimLight.innerHTML = rimOp > .01
+      ? `<g opacity="${rimOp}">
+          <rect x="${CX - 124}" y="${CY - 124}" width="248" height="248" rx="48" fill="none" stroke="${TH.accent}" stroke-width="3"/>
+          <rect x="${CX - 128}" y="${CY - 128}" width="256" height="256" rx="50" fill="none" stroke="${TH.accent2}" stroke-width="1.4" opacity=".55"/>
+        </g>`
+      : '';
+
+    /* the imp in front of the sun */
+    const jaw = win(t, 1.9, 2.7) * (1 - clap);
+    el.suck.setAttribute('opacity', f3(1 - colP * .9));
+    el.face.innerHTML = stickerFor(uid, CX, CY, intro * S, 0, {
+      eyeK: 1.05 + jaw * .32 + hit * .12, glow: true,
+      mouth: jaw > 0 ? `M56 92 Q80 ${f1(112 + jaw * 18)} 104 92 Z` : 'M62 94 Q80 109 98 94',
+      fangs: jaw > 0 ? `<polygon points="66,92 70,${f1(101 + jaw * 5)} 74,92" fill="#ffffff"/><polygon points="86,92 90,${f1(101 + jaw * 5)} 94,92" fill="#ffffff"/>` : ''
+    });
+    el.brand.setAttribute('opacity', f3(win(t, .40, .90) * (1 - win(t, CLAP + .2, CLAP + .6))));
+
+    /* palms hold the rim, then clap it out */
+    const armP = win(t, .30, 1.05);
+    const spread = win(t, .9, 2.2);
+    const hOp = armP * (1 - Math.pow(colP, 2.5));
+    const gx = lerp(94, 76, spread);
+    const gy = CY + lerp(98, 104, spread);
+    const wx = lerp(CX - gx, CX - 18, clap), wy = lerp(gy, CY + 82, clap);
+    const wx2 = lerp(CX + gx, CX + 18, clap);
+    el.arms.innerHTML = hOp > .02
+      ? arm(uid, CX - SHX, SHY, wx, wy, CX, CY + 4, true, hOp, { scale: ARMK })
+      + arm(uid, CX + SHX, SHY, wx2, wy, CX, CY + 4, false, hOp, { scale: ARMK })
+      : '';
+
+    el.nearDust.innerHTML = dustField(NDUST, t, { op: .35, pull: colP * .6, cx: CX, cy: CY, soft: 2.4 }, uid);
+
+    /* clap, flare, afterimage */
+    let shock = '';
+    for (let k = 0; k < 3; k++){
+      const p = win(t, CLAP + k * .07, CLAP + k * .07 + .62);
+      if (t >= CLAP + k * .07 && p < 1)
+        shock += `<circle cx="${CX}" cy="${CY}" r="${f1(14 + p * (400 + k * 30))}" fill="none" stroke="${k === 0 ? '#ffffff' : (k % 2 ? TH.accent : TH.accent2)}" stroke-width="${f2(5 * (1 - p) + .3)}" opacity="${f3((1 - p) * .9)}"/>`;
+    }
+    if (impact >= 0 && impact < .34) shock += debris(CX, CY, impact / .34, 28, TH.accent, TH.accent2);
+    if (hit > .02) shock += chromaRing(CX, CY, 24 + (1 - hit) * 74, 2.6, hit * .6);
+    el.shock.innerHTML = shock;
+
+    el.darken.setAttribute('opacity', f3(.52 * totality * (1 - Math.max(0, 1 - Math.abs(impact) / .5))));
+    el.flash.setAttribute('opacity', f3(t >= CLAP ? .16 * Math.max(0, 1 - impact / .20) : 0));
+    el.white.setAttribute('opacity', f3(t >= CLAP ? .05 * Math.max(0, 1 - Math.abs(impact - .02) / .05) : 0));
+    svg.style.opacity = f3(1 - out);
+  }};
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   05 — THE CLAP
+   A fast loop where the clap is both the start and the end: the palms part,
+   the hole blooms out of the gap, they take the rim and squeeze until the
+   hole is a vertical line — then it snaps shut and the loop restarts.
+   ═══════════════════════════════════════════════════════════════════════ */
+function sceneClap(stage, uid){
+  const HY5 = CY + 58;
+  const svg = makeSvg(stage, uid, `
+    <rect width="960" height="540" fill="${TH.solid}"/>
+    <g class="suck"><g class="face"></g></g>
+    <g class="holeWrap" transform="translate(${CX} ${HY5})">${holeMarkup(uid)}</g>
+    <g class="arms"></g>
+    <g class="brand"></g>
+    <g class="shock"></g>
+    <rect class="flash" width="960" height="540" fill="url(#flash${uid})" opacity="0"/>
+    <rect width="960" height="540" fill="url(#vig${uid})" opacity="0.55"/>
+  `);
+  const el = {
+    suck: q(svg,'.suck'), face: q(svg,'.face'), hole: q(svg,'.holeWrap'),
+    arms: q(svg,'.arms'), brand: q(svg,'.brand'), shock: q(svg,'.shock'), flash: q(svg,'.flash'),
+    halo: q(svg,'.hole-halo'), disk: q(svg,'.hole-disk'), rings: qa(svg,'.disk-ring'),
+    spin: q(svg,'.disk-spin'), core: q(svg,'.hole-core'), lens: q(svg,'.hole-lens'),
+    ein: q(svg,'.hole-ein'), ring: q(svg,'.hole-ring')
+  };
+  const POP = .30, GRIP = 1.15, CLAP = 3.30;
+  el.brand.innerHTML = brandMarkup(uid, CX, BRANDY, BRAND_SIZE);
+
+  return { period: 4.5, update(t){
+    const enter = win(t, .02, .4);
+    const intro = back(win(t, .02, .4));
+    const pop = win(t, POP, POP + .55);
+    const grip = win(t, GRIP, CLAP - .3);
+    const clap = win(t, CLAP - .26, CLAP);
+    const colP = win(t, CLAP, CLAP + .22);
+    const out = win(t, 3.7, 4.5);
+    const size = Math.max(0, pop * lerp(1, .66, grip) * (1 - colP));
+    const sx = lerp(1, .58, grip) * (1 - colP * .96);
+    const sy = lerp(1, 1.14, grip);
+    const impact = t - CLAP;
+    const shake = Math.max(0, 1 - Math.abs(impact) / .3);
+
+    /* the imp, delighted then braced */
+    const jaw = pop * (1 - clap);
+    el.face.innerHTML = stickerFor(uid, CX, CY, intro * S, 0, {
+      eyeK: 1.10 + jaw * .42, glow: true, hornRot: Math.sin(t * 3) * 2 + grip * 4
+    });
+    el.brand.setAttribute('opacity', f3(win(t, .3, .75) * (1 - win(t, CLAP + .1, CLAP + .5))));
+
+    el.hole.setAttribute('transform', `translate(${CX} ${HY5}) scale(${f3(Math.max(.02, sx))} ${f3(sy)})`);
+    paintHole(el, t, {
+      size, coreK: 50, colP, rot: -20 + t * 58, lensRot: -t * 30, dash: 22, dashSpd: 120
+    });
+
+    /* palms part, take the rim, squeeze */
+    const enterArm = win(t, .05, .55);
+    let gap = lerp(7, 88, back(pop));
+    gap = lerp(gap, 68, grip);
+    gap = lerp(gap, 18, clap);
+    const trem = Math.sin(t * 22) * (1.2 + 1.6 * grip) * (1 - clap) * pop;
+    const hy = HY5 + 2 + trem * .5;
+    const hOp = enterArm * (1 - Math.pow(colP, 2.2));
+    el.arms.innerHTML = hOp > .02
+      ? arm(uid, CX - SHX, SHY, CX - gap, hy, CX, HY5, true, hOp, {scale: ARMK})
+      + arm(uid, CX + SHX, SHY, CX + gap, hy, CX, HY5, false, hOp, {scale: ARMK})
+      : '';
+
+    /* pressure rings squeezing inward between the palms */
+    let shock = '';
+    if (grip > .02 && clap < .9){
+      for (let k = 0; k < 3; k++){
+        const ph = ((t * .55 + k / 3) % 1);
+        const r = lerp(128, 46, ph) * (1 - clap * .4);
+        shock += `<circle cx="${CX}" cy="${HY5}" r="${f1(r)}" fill="none" stroke="${k % 2 ? TH.accent2 : TH.accent}" stroke-width="${f2(1.4 * (1 - ph) + .2)}" opacity="${f3((1 - ph) * .38 * grip)}" stroke-dasharray="${f1(8 + k * 5)} ${f1(16 + k * 4)}" stroke-dashoffset="${f1(-t * 60)}"/>`;
+      }
+    }
+    for (let k = 0; k < 4; k++){
+      const p = win(t, CLAP + k * .05, CLAP + k * .05 + .55);
+      if (t >= CLAP + k * .05 && p < 1)
+        shock += `<circle cx="${CX}" cy="${HY5}" r="${f1(8 + p * (420 + k * 30))}" fill="none" stroke="${k === 0 ? '#fff' : (k % 2 ? TH.accent : TH.accent2)}" stroke-width="${f2(5 * (1 - p) + .3)}" opacity="${f3((1 - p) * .8)}" filter="url(#glowFx)"/>`;
+    }
+    if (impact >= 0 && impact < .3) shock += burst(CX, HY5, impact / .3, 30, TH.accent, 6, 110);
+    el.shock.innerHTML = shock;
+    el.flash.setAttribute('opacity', f3(t >= CLAP ? .14 * Math.max(0, 1 - impact / .14) : 0));
+
+    const zoom = 1 + .03 * grip + .045 * Math.max(0, 1 - Math.abs(impact) / .34);
+    svg.style.transformOrigin = '50% 50%';
+    svg.style.transform = `translate(${f1(Math.sin(t * 97) * shake * 3.4)}px, ${f1(Math.cos(t * 103) * shake * 2.6)}px) scale(${f3(zoom)})`;
+    svg.style.opacity = f3(1 - out);
+  }};
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   definitions + gallery
+   ═══════════════════════════════════════════════════════════════════════ */
+const DEFS = [
+  { name:'Remastered', blurb:'The shipped sequence, shot: a slow push-in, orbs trailing light, a filament igniting between the palms, the core punching open on a flash, a dolly through the disk, then the clap pulls the frame into the hole.',
+    untilNow:'Same arms, palms and wordmark glitch — now with a camera, a light rig and impact frames.', period:7.4, still:3.30, draw:sceneRim },
+  { name:'Orbiting Palms', blurb:'The hole is born between the hands; the palms let go and sweep the rim in opposite directions, long-exposure trails behind them, the camera tilting and pushing with the sweep.',
+    untilNow:'The hands stay in the shot for the whole scene, and the sweep drives the camera.', period:7.6, still:3.60, draw:sceneOrbit },
+  { name:'The Greedy Mouth', blurb:'The grin unhinges in three cracks while the camera creeps in. The world is inhaled — the name drags toward the throat, dust spirals — and the maw snaps shut on a hard cut, leaving a glowing seam.',
+    untilNow:'The bite is the cut: the whole frame is swallowed, not just the mouth.', period:7.0, still:3.30, draw:sceneMouth },
+  { name:'Eclipse', blurb:'The hole rises behind the imp as a sun: a slow dolly in, corona breathing, rays crawling, totality darkening the frame to a ring and a diamond — then the palms clap it out.',
+    untilNow:'One light source, one silhouette, and a real lens flare.', period:7.4, still:4.10, draw:sceneEclipse },
+  { name:'The Clap', blurb:'A fast loop where the clap is both start and end: the palms part, the hole blooms out of the gap, they take the rim and squeeze until it is a vertical line.',
+    untilNow:'The arms are the protagonists and the hole is almost a prop.', period:4.5, still:2.35, draw:sceneClap }
+];
+
+const reduced = (() => {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; }
+})();
+
+const cards = document.getElementById('cards');
+const controls = [];
+
+document.addEventListener('fullscreenchange', () => {
+  const fs = document.fullscreenElement;
+  for (const c of controls){
+    if (!fs) c.start();
+    else if (c.stage === fs) c.start();
+    else c.stop();
+  }
+});
+
+DEFS.forEach((def, i) => {
+  const card = document.createElement('section');
+  card.className = 'card';
+  card.innerHTML =
+    '<div class="head">' +
+      '<span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
+      '<h2>' + def.name + '</h2>' +
+      '<p>' + def.blurb + ' <em style="color:rgba(125,211,252,.85);font-style:normal">' + def.untilNow + '</em></p>' +
+      '<button class="fs" type="button">Fullscreen</button>' +
+    '</div>' +
+    '<div class="stage"></div>';
+  cards.appendChild(card);
+
+  const stage = card.querySelector('.stage');
+  const btn = card.querySelector('.fs');
+  const pips = () => Array.from(stage.querySelectorAll('.pip'));
+
+  let scene;
+  try {
+    scene = def.draw(stage, 's' + (i + 1) + '_' + Math.floor(Math.random() * 1e6));
+  } catch (err) {
+    stage.innerHTML = '<div style="position:absolute;inset:0;display:grid;place-items:center;color:#f88">' + err.message + '</div>';
+    return;
+  }
+
+  /* the boot screen's wordmark glitch, per card; paused until the card runs */
+  const glitch = reduced ? null : brandGlitch(stage);
+  if (glitch) glitch.stop();
+
+  function paint(t){
+    scene.update(t);
+    const prog = clamp((t - .4) / (def.period - 1.0), 0, 1);
+    const on = Math.floor(prog * 3.999);
+    pips().forEach((p, k) => p.classList.toggle('on', k <= on));
+  }
+
+  if (reduced){ paint(def.still || def.period * .38); }
+
+  let t = 0, last = 0, raf = 0, running = false;
+  function frame(now){
+    if (!running) return;
+    if (!last) last = now;
+    const dt = Math.min(.05, (now - last) / 1000);
+    last = now;
+    t = (t + dt) % def.period;
+    paint(t);
+    raf = requestAnimationFrame(frame);
+  }
+  function start(){
+    if (running) return;
+    if (document.fullscreenElement && document.fullscreenElement !== stage) return;
+    running = true; last = 0;
+    if (glitch) glitch.start();
+    raf = requestAnimationFrame(frame);
+  }
+  function stop(){
+    running = false;
+    if (glitch) glitch.stop();
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  }
+
+  if (reduced){
+    /* static frame, nothing to run */
+  } else if (window.IntersectionObserver){
+    new IntersectionObserver(entries => {
+      entries[0].isIntersecting ? start() : stop();
+    }, { threshold: .02 }).observe(stage);
+  } else {
+    start();
+  }
+
+  function toggleFullscreen(){
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
+  }
+  btn.addEventListener('click', toggleFullscreen);
+  stage.addEventListener('click', toggleFullscreen);
+
+  controls.push({ stage, start, stop });
+});
+
+window.addEventListener('keydown', e => {
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= DEFS.length){
+    const stage = document.querySelectorAll('.stage')[n - 1];
+    if (stage && stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
+  }
+});
+})();
+</script>
+</body>
+</html>
