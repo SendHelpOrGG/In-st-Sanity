@@ -153,6 +153,7 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 		if (!TryReadNumber(element, "exposure", -100, 100, 0, out var exposure) ||
 			!TryReadNumber(element, "brightness", -100, 100, 0, out var brightness) ||
 			!TryReadNumber(element, "contrast", -100, 100, 0, out var contrast) ||
+			!TryReadNumber(element, "gamma", -100, 100, 0, out var gamma) ||
 			!TryReadNumber(element, "highlights", -100, 100, 0, out var highlights) ||
 			!TryReadNumber(element, "shadows", -100, 100, 0, out var shadows) ||
 			!TryReadNumber(element, "temperature", -100, 100, 0, out var temperature) ||
@@ -164,6 +165,8 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			!TryReadNumber(element, "texture", -100, 100, 0, out var texture) ||
 			!TryReadNumber(element, "blur", 0, 100, 0, out var blur) ||
 			!TryReadNumber(element, "denoise", 0, 100, 0, out var denoise) ||
+			!TryReadNumber(element, "sepia", 0, 100, 0, out var sepia) ||
+			!TryReadNumber(element, "invert", 0, 100, 0, out var invert) ||
 			!TryReadNumber(element, "grain", 0, 100, 0, out var grain) ||
 			!TryReadNumber(element, "grainSize", 0, 100, 35, out var grainSize) ||
 			!TryReadNumber(element, "fade", 0, 100, 0, out var fade) ||
@@ -190,6 +193,7 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			Exposure = exposure,
 			Brightness = brightness,
 			Contrast = contrast,
+			Gamma = gamma,
 			Highlights = highlights,
 			Shadows = shadows,
 			Temperature = temperature,
@@ -201,6 +205,8 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			Texture = texture,
 			Blur = blur,
 			Denoise = denoise,
+			Sepia = sepia,
+			Invert = invert,
 			Grain = grain,
 			GrainSize = grainSize,
 			MonochromeGrain = monochromeGrain,

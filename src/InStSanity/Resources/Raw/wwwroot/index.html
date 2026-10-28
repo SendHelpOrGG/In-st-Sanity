@@ -620,6 +620,8 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
 .photo-adjustment-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
 .photo-adjustment-actions svg{width:15px;height:15px;flex:0 0 auto}
+.photo-adjustment-open-folder-btn{position:relative!important;width:37px!important;min-width:37px!important;max-width:37px!important;height:37px!important;min-height:37px!important;max-height:37px!important;flex:0 0 37px!important;box-sizing:border-box!important;padding:0!important}
+.photo-adjustment-open-folder-btn svg{width:17px;height:17px}
 .photo-adjustment-download-btn{padding:8px 13px}
 .photo-adjustment-download-btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 .photo-adjustment-summary{display:inline-flex;align-items:center;margin-left:8px;padding:3px 8px;border:1px solid var(--t-line,rgba(255,255,255,.16));border-radius:999px;color:var(--t-muted,#94a3b8);font-size:10px;font-weight:600;vertical-align:middle}
@@ -632,9 +634,10 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-zoom-label{min-width:38px;color:var(--t-ink,#f1f5f9);font-size:9px;text-align:center;font-variant-numeric:tabular-nums}
 .photo-preview-toggle{padding:5px 8px;font-size:10px}
 .photo-preview-tools button:disabled{opacity:.4;cursor:not-allowed}
-.photo-preview-canvas-wrap{display:grid;place-items:center;min-height:420px;max-height:min(72vh,760px);overflow:auto;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:contain}
-.photo-preview-canvas-wrap.is-zoomed{place-items:start}
-.photo-preview-canvas-wrap canvas{display:block;max-width:none;max-height:none;width:auto;height:auto;object-fit:contain;flex:0 0 auto}
+.photo-preview-canvas-wrap{position:relative;display:grid;place-items:center;height:min(72vh,760px);min-height:min(420px,72vh);max-height:min(72vh,760px);overflow:hidden;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:contain;touch-action:none;cursor:zoom-in}
+.photo-preview-canvas-wrap.is-zoomed{cursor:grab}
+.photo-preview-canvas-wrap.is-zoomed:active{cursor:grabbing}
+.photo-preview-canvas-wrap canvas{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;flex:0 0 auto;transform-origin:center center;transition:transform .08s linear;user-select:none;-webkit-user-drag:none;touch-action:none}
 .photo-preview-canvas-wrap canvas[hidden]{display:none!important}
 .photo-preview-panel>.hint{margin:8px 0 0;font-size:10px}
 .photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
@@ -656,7 +659,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
 .photo-adjustment-footer .hint{margin:0}
 .photo-adjustment-reset{flex:0 0 auto}
-@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{min-height:320px;max-height:min(68vh,560px)}}
+@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{height:min(68vh,560px);min-height:min(320px,68vh);max-height:min(68vh,560px)}}
 @media(max-width:760px){.resizer-adjustments-card .settings-card-head{align-items:flex-start;flex-direction:column}.photo-adjustment-actions{align-self:flex-end}}
 @media(max-width:600px){.photo-adjustment-control-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.photo-adjustment-footer{align-items:flex-start;flex-direction:column}.photo-adjustment-reset{align-self:flex-end}}
 </style>
@@ -924,13 +927,13 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         </div>
       </section>
       <section class="settings-card resizer-card resizer-adjustments-card" aria-labelledby="photoAdjustmentsHeading">
-        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">3. Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Adjusted copies get an _Edited filename suffix; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoResizing('editor-download')" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="outline" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open the edited-image folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg>Open folder</button></div></div>
+        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">3. Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Adjusted copies get an _Edited filename suffix; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoResizing('editor-download')" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open edited images folder in File Explorer" aria-label="Open edited images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button></div></div>
         <div class="setting-body">
           <div class="photo-editor-layout">
             <div class="photo-preview-panel">
               <div class="photo-preview-heading"><strong id="photoResizePreviewTitle">Live preview</strong><div class="photo-preview-tools"><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomOut" onclick="changePhotoResizePreviewZoom(-0.25)" aria-label="Zoom out" title="Zoom out" disabled>−</button><output class="photo-preview-zoom-label" id="photoResizePreviewZoomLabel">Fit</output><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomIn" onclick="changePhotoResizePreviewZoom(0.25)" aria-label="Zoom in" title="Zoom in" disabled>+</button><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomFit" onclick="resetPhotoResizePreviewZoom()" aria-label="Fit preview" title="Fit preview" disabled>↔</button><button type="button" class="outline photo-preview-toggle" id="photoResizePreviewToggle" onclick="togglePhotoResizePreviewMode()" aria-pressed="false" disabled>Show original</button></div></div>
-              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" onwheel="handlePhotoResizePreviewWheel(event)" title="Hold Ctrl and scroll to zoom; scroll to pan when zoomed"><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
-              <p class="hint">Select a thumbnail to preview it. Use the zoom controls or Ctrl + scroll to inspect detail.</p>
+              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Scroll to zoom; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
+              <p class="hint">Scroll to zoom, drag to pan when zoomed, or double-click to fit the preview.</p>
             </div>
             <div class="photo-adjustment-groups">
               <div class="photo-adjustment-group">
@@ -939,6 +942,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                   <div class="photo-adjustment-control"><label for="photoAdjExposure"><span>Exposure</span><output id="photoAdjValueExposure">0.0 EV</output></label><input id="photoAdjExposure" type="range" min="-100" max="100" step="1" data-adjustment="exposure" oninput="updatePhotoResizeAdjustment('exposure',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjBrightness"><span>Brightness</span><output id="photoAdjValueBrightness">0%</output></label><input id="photoAdjBrightness" type="range" min="-100" max="100" step="1" data-adjustment="brightness" oninput="updatePhotoResizeAdjustment('brightness',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjContrast"><span>Contrast</span><output id="photoAdjValueContrast">0%</output></label><input id="photoAdjContrast" type="range" min="-100" max="100" step="1" data-adjustment="contrast" oninput="updatePhotoResizeAdjustment('contrast',this.value)"></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjGamma"><span>Gamma</span><output id="photoAdjValueGamma">1.00×</output></label><input id="photoAdjGamma" type="range" min="-100" max="100" step="1" data-adjustment="gamma" oninput="updatePhotoResizeAdjustment('gamma',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjHighlights"><span>Highlights</span><output id="photoAdjValueHighlights">0%</output></label><input id="photoAdjHighlights" type="range" min="-100" max="100" step="1" data-adjustment="highlights" oninput="updatePhotoResizeAdjustment('highlights',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjShadows"><span>Shadows</span><output id="photoAdjValueShadows">0%</output></label><input id="photoAdjShadows" type="range" min="-100" max="100" step="1" data-adjustment="shadows" oninput="updatePhotoResizeAdjustment('shadows',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjTemperature"><span>Temperature</span><output id="photoAdjValueTemperature">0%</output></label><input id="photoAdjTemperature" type="range" min="-100" max="100" step="1" data-adjustment="temperature" oninput="updatePhotoResizeAdjustment('temperature',this.value)"></div>
@@ -955,6 +959,13 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                   <div class="photo-adjustment-control"><label for="photoAdjTexture"><span>Texture</span><output id="photoAdjValueTexture">0%</output></label><input id="photoAdjTexture" type="range" min="-100" max="100" step="1" data-adjustment="texture" oninput="updatePhotoResizeAdjustment('texture',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjBlur"><span>Blur</span><output id="photoAdjValueBlur">0%</output></label><input id="photoAdjBlur" type="range" min="0" max="100" step="1" data-adjustment="blur" oninput="updatePhotoResizeAdjustment('blur',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjDenoise"><span>Denoise</span><output id="photoAdjValueDenoise">0%</output></label><input id="photoAdjDenoise" type="range" min="0" max="100" step="1" data-adjustment="denoise" oninput="updatePhotoResizeAdjustment('denoise',this.value)"></div>
+                </div>
+              </div>
+              <div class="photo-adjustment-group">
+                <h3>Creative effects</h3>
+                <div class="photo-adjustment-control-grid">
+                  <div class="photo-adjustment-control"><label for="photoAdjSepia"><span>Sepia</span><output id="photoAdjValueSepia">0%</output></label><input id="photoAdjSepia" type="range" min="0" max="100" step="1" data-adjustment="sepia" oninput="updatePhotoResizeAdjustment('sepia',this.value)"></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjInvert"><span>Invert</span><output id="photoAdjValueInvert">0%</output></label><input id="photoAdjInvert" type="range" min="0" max="100" step="1" data-adjustment="invert" oninput="updatePhotoResizeAdjustment('invert',this.value)"></div>
                 </div>
               </div>
               <div class="photo-adjustment-group">
@@ -3868,13 +3879,15 @@ const RESIZER_MAX_FILES=500;
 const RESIZER_MAX_FILE_BYTES=50*1024*1024;
 const RESIZER_ADJUSTMENTS_KEY='stillSane.photoResizeAdjustmentsV1';
 const RESIZER_ADJUST_BATCH_KEY='stillSane.photoResizeApplyToBatchV1';
-const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0});
-const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100]});
+const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,gamma:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,sepia:0,invert:0,grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0});
+const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],gamma:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],sepia:[0,100],invert:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100]});
 let photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS};
 let photoResizeApplyToBatch=true;
 let photoResizePreviewFileId='';
 let photoResizeCurrentFileId='';
 let photoResizePreviewZoom=1;
+let photoResizePreviewPanX=0,photoResizePreviewPanY=0,photoResizePreviewDragging=false,photoResizePreviewDragPointerId=null;
+let photoResizePreviewDragStartX=0,photoResizePreviewDragStartY=0,photoResizePreviewDragOriginX=0,photoResizePreviewDragOriginY=0;
 let photoResizePreviewGeneration=0;
 let photoResizePreviewImageData=null;
 let photoResizePreviewOriginal=false;
@@ -3894,7 +3907,7 @@ function makePhotoResizeGuid(){try{if(window.crypto?.randomUUID)return window.cr
 function photoAdjustmentSuffix(name){return name.charAt(0).toUpperCase()+name.slice(1)}
 function hasPhotoResizeAdjustmentEdits(settings=photoResizeAdjustments){return Object.keys(PHOTO_ADJUSTMENT_DEFAULTS).some(name=>{if(['grainSize','monochromeGrain'].includes(name))return false;const value=Number(settings?.[name]);return Number.isFinite(value)&&value!==0})}
 function getPhotoResizeAdjustmentPayload(){return{...photoResizeAdjustments}}
-function formatPhotoResizeAdjustmentValue(name,value){if(name==='exposure')return`${(Number(value)/50).toFixed(1)} EV`;return`${Math.round(Number(value)||0)}%`}
+function formatPhotoResizeAdjustmentValue(name,value){if(name==='exposure')return`${(Number(value)/50).toFixed(1)} EV`;if(name==='gamma')return`${Math.pow(2,(Number(value)||0)/100*1.2).toFixed(2)}×`;return`${Math.round(Number(value)||0)}%`}
 function syncPhotoResizeAdjustmentControls(){
   document.querySelectorAll('[data-adjustment]').forEach(input=>{
     const name=input.dataset.adjustment;
@@ -3989,7 +4002,8 @@ function refreshPhotoResizePreview(){
   const token=++photoResizePreviewGeneration;
   photoResizePreviewImageData=null;
   photoResizePreviewOriginal=false;
-  photoResizePreviewZoom=1;
+  photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
+  photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
   canvas.hidden=true;message.hidden=false;message.textContent='Loading preview…';
   const itemNumber=photoResizeQueue.indexOf(item)+1;
   if(title)title.textContent=`Photo ${itemNumber} of ${photoResizeQueue.length}`;
@@ -4041,44 +4055,87 @@ function syncPhotoResizePreviewZoomControls(){
   const zoomIn=document.getElementById('photoResizePreviewZoomIn');
   const zoomFit=document.getElementById('photoResizePreviewZoomFit');
   const label=document.getElementById('photoResizePreviewZoomLabel');
-  if(zoomOut)zoomOut.disabled=!available||photoResizePreviewZoom<=1;
-  if(zoomIn)zoomIn.disabled=!available||photoResizePreviewZoom>=4;
-  if(zoomFit)zoomFit.disabled=!available||photoResizePreviewZoom===1;
-  if(label)label.textContent=photoResizePreviewZoom===1?'Fit':`${Math.round(photoResizePreviewZoom*100)}%`;
+  if(zoomOut)zoomOut.disabled=!available||photoResizePreviewZoom<=1.01;
+  if(zoomIn)zoomIn.disabled=!available||photoResizePreviewZoom>=4.5;
+  if(zoomFit)zoomFit.disabled=!available||photoResizePreviewZoom<=1.01;
+  if(label)label.textContent=photoResizePreviewZoom<=1.01?'Fit':`${Math.round(photoResizePreviewZoom*100)}%`;
 }
 function applyPhotoResizePreviewZoom(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   if(!canvas||!wrap){syncPhotoResizePreviewZoomControls();return}
-  if(canvas.hidden||!canvas.width||!canvas.height){
-    canvas.style.width='';canvas.style.height='';wrap.classList.remove('is-zoomed');
+  if(canvas.hidden||!canvas.width||!canvas.height||!photoResizePreviewImageData){
+    photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
+    photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
+    canvas.style.transform='';wrap.classList.remove('is-zoomed');
     syncPhotoResizePreviewZoomControls();return;
   }
-  const availableWidth=Math.max(1,wrap.clientWidth-24);
-  const availableHeight=Math.max(1,wrap.clientHeight-24);
-  const fitScale=Math.min(1,availableWidth/canvas.width,availableHeight/canvas.height);
-  const scale=fitScale*photoResizePreviewZoom;
-  canvas.style.width=`${Math.max(1,Math.round(canvas.width*scale))}px`;
-  canvas.style.height=`${Math.max(1,Math.round(canvas.height*scale))}px`;
-  wrap.classList.toggle('is-zoomed',photoResizePreviewZoom>1);
+  if(photoResizePreviewZoom<=1.01){
+    photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
+    canvas.style.transform='';wrap.classList.remove('is-zoomed');
+  }else{
+    canvas.style.transform=`translate(${photoResizePreviewPanX}px, ${photoResizePreviewPanY}px) scale(${photoResizePreviewZoom})`;
+    wrap.classList.add('is-zoomed');
+  }
   syncPhotoResizePreviewZoomControls();
 }
-function changePhotoResizePreviewZoom(delta){
+function changePhotoResizePreviewZoom(direction){
   if(!photoResizePreviewImageData)return;
-  photoResizePreviewZoom=Math.max(1,Math.min(4,Math.round((photoResizePreviewZoom+delta)*100)/100));
+  const factor=Number(direction)>=0?1.25:.8;
+  let next=Math.max(1,Math.min(4.5,photoResizePreviewZoom*factor));
+  if(next<1.06)next=1;
+  photoResizePreviewZoom=next;
+  if(next===1){photoResizePreviewPanX=0;photoResizePreviewPanY=0}
   applyPhotoResizePreviewZoom();
 }
 function resetPhotoResizePreviewZoom(){
-  photoResizePreviewZoom=1;
+  photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
+  photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
   applyPhotoResizePreviewZoom();
-  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
-  if(wrap)wrap.scrollTo({left:0,top:0,behavior:'smooth'});
 }
 function handlePhotoResizePreviewWheel(event){
-  if(!event.ctrlKey||!photoResizePreviewImageData)return;
-  event.preventDefault();
-  changePhotoResizePreviewZoom(event.deltaY<0?0.25:-0.25);
+  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
+  const canvas=document.getElementById('photoResizePreviewCanvas');
+  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||!wrap.contains(event.target))return;
+  event.preventDefault();event.stopPropagation();
+  let next=Math.max(1,Math.min(4.5,photoResizePreviewZoom*(event.deltaY<0?1.12:.88)));
+  if(next<1.06)next=1;
+  photoResizePreviewZoom=next;
+  if(next===1){photoResizePreviewPanX=0;photoResizePreviewPanY=0}
+  applyPhotoResizePreviewZoom();
 }
+function handlePhotoResizePreviewPointerDown(event){
+  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
+  if(!wrap||!wrap.contains(event.target)||photoResizePreviewZoom<=1.01||event.button!==0)return;
+  photoResizePreviewDragging=true;photoResizePreviewDragPointerId=event.pointerId;
+  photoResizePreviewDragStartX=event.clientX;photoResizePreviewDragStartY=event.clientY;
+  photoResizePreviewDragOriginX=photoResizePreviewPanX;photoResizePreviewDragOriginY=photoResizePreviewPanY;
+  try{wrap.setPointerCapture(event.pointerId)}catch(_){}
+  event.preventDefault();
+}
+function handlePhotoResizePreviewPointerMove(event){
+  if(!photoResizePreviewDragging||event.pointerId!==photoResizePreviewDragPointerId)return;
+  photoResizePreviewPanX=photoResizePreviewDragOriginX+event.clientX-photoResizePreviewDragStartX;
+  photoResizePreviewPanY=photoResizePreviewDragOriginY+event.clientY-photoResizePreviewDragStartY;
+  applyPhotoResizePreviewZoom();
+}
+function handlePhotoResizePreviewPointerUp(event){
+  if(!photoResizePreviewDragging||event.pointerId!==photoResizePreviewDragPointerId)return;
+  photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
+  try{document.getElementById('photoResizePreviewCanvasWrap')?.releasePointerCapture(event.pointerId)}catch(_){}
+}
+function initPhotoResizePreviewZoom(){
+  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
+  if(!wrap||wrap._photoResizeZoomBound)return;
+  wrap._photoResizeZoomBound=true;
+  wrap.addEventListener('wheel',handlePhotoResizePreviewWheel,{passive:false});
+  wrap.addEventListener('pointerdown',handlePhotoResizePreviewPointerDown);
+  wrap.addEventListener('dblclick',event=>{event.preventDefault();resetPhotoResizePreviewZoom()});
+  window.addEventListener('pointermove',handlePhotoResizePreviewPointerMove);
+  window.addEventListener('pointerup',handlePhotoResizePreviewPointerUp);
+  window.addEventListener('pointercancel',handlePhotoResizePreviewPointerUp);
+}
+
 function togglePhotoResizePreviewMode(){if(!photoResizePreviewImageData)return;photoResizePreviewOriginal=!photoResizePreviewOriginal;const toggle=document.getElementById('photoResizePreviewToggle');if(toggle){toggle.textContent=photoResizePreviewOriginal?'Show edited':'Show original';toggle.setAttribute('aria-pressed',String(photoResizePreviewOriginal))}schedulePhotoResizePreviewRender()}
 function schedulePhotoResizePreviewRender(){if(photoResizePreviewRenderPending)return;photoResizePreviewRenderPending=true;requestAnimationFrame(()=>{photoResizePreviewRenderPending=false;renderPhotoResizePreview()})}
 function renderPhotoResizePreview(){
@@ -4131,15 +4188,31 @@ function photoPreviewBlur(pixels,width,height,radius,amount){
   for(let i=0;i<pixels.length;i+=4)for(let channel=0;channel<3;channel++)pixels[i+channel]=original[i+channel]*(1-amount)+blurred[i+channel]*amount;
 }
 function photoPreviewTone(pixels,width,height,settings){
-  const exposure=Math.pow(2,settings.exposure/50),brightness=settings.brightness/100*.35,contrast=1+settings.contrast/100,shadows=settings.shadows/100*.34,highlights=settings.highlights/100*.34,temperature=settings.temperature/100*.18,tint=settings.tint/100*.12,saturation=1+settings.saturation/100,vibrance=settings.vibrance/100;
+  const exposure=Math.pow(2,settings.exposure/50),brightness=settings.brightness/100*.35,contrast=1+settings.contrast/100,shadows=settings.shadows/100*.34,highlights=settings.highlights/100*.34,gammaExponent=Math.pow(2,-settings.gamma/100*1.2),temperature=settings.temperature/100*.18,tint=settings.tint/100*.12,saturation=1+settings.saturation/100,vibrance=settings.vibrance/100;
   for(let y=0;y<height;y++)for(let x=0;x<width;x++){
     const i=(y*width+x)*4;if(pixels[i+3]===0)continue;
     let blue=pixels[i]/255,green=pixels[i+1]/255,red=pixels[i+2]/255;
     red=(red*exposure+brightness-.5)*contrast+.5;green=(green*exposure+brightness-.5)*contrast+.5;blue=(blue*exposure+brightness-.5)*contrast+.5;
     let luminance=photoPreviewLuminance(red,green,blue);const shadowMask=(1-luminance)*(1-luminance),highlightMask=luminance*luminance,tonalShift=shadows*shadowMask+highlights*highlightMask;
-    red+=tonalShift;green+=tonalShift;blue+=tonalShift;red+=temperature+tint;green-=tint*1.45;blue-=temperature-tint;
+    red+=tonalShift;green+=tonalShift;blue+=tonalShift;
+    if(settings.gamma!==0){red=Math.pow(Math.max(0,Math.min(1,red)),gammaExponent);green=Math.pow(Math.max(0,Math.min(1,green)),gammaExponent);blue=Math.pow(Math.max(0,Math.min(1,blue)),gammaExponent)}
+    red+=temperature+tint;green-=tint*1.45;blue-=temperature-tint;
     luminance=photoPreviewLuminance(red,green,blue);const maximum=Math.max(red,green,blue),minimum=Math.min(red,green,blue),vibranceFactor=1+vibrance*(1-Math.max(0,Math.min(1,maximum-minimum))),factor=saturation*vibranceFactor;
     red=luminance+(red-luminance)*factor;green=luminance+(green-luminance)*factor;blue=luminance+(blue-luminance)*factor;
+    pixels[i]=blue*255;pixels[i+1]=green*255;pixels[i+2]=red*255;
+  }
+}
+function photoPreviewCreativeEffects(pixels,width,height,settings){
+  const sepia=settings.sepia/100,invert=settings.invert/100;
+  if(sepia<=0&&invert<=0)return;
+  for(let i=0;i<pixels.length;i+=4){
+    if(pixels[i+3]===0)continue;
+    let blue=pixels[i]/255,green=pixels[i+1]/255,red=pixels[i+2]/255;
+    if(sepia>0){
+      const sepiaRed=Math.min(1,red*.393+green*.769+blue*.189),sepiaGreen=Math.min(1,red*.349+green*.686+blue*.168),sepiaBlue=Math.min(1,red*.272+green*.534+blue*.131);
+      red=red*(1-sepia)+sepiaRed*sepia;green=green*(1-sepia)+sepiaGreen*sepia;blue=blue*(1-sepia)+sepiaBlue*sepia;
+    }
+    if(invert>0){red=red*(1-invert)+(1-red)*invert;green=green*(1-invert)+(1-green)*invert;blue=blue*(1-invert)+(1-blue)*invert}
     pixels[i]=blue*255;pixels[i+1]=green*255;pixels[i+2]=red*255;
   }
 }
@@ -4164,13 +4237,14 @@ function photoPreviewFinishing(pixels,width,height,settings,seedData){
 function applyPhotoResizePreviewAdjustments(pixels,width,height,settings,seedData){
   if(settings.denoise>0)photoPreviewDenoise(pixels,width,height,settings.denoise);
   photoPreviewTone(pixels,width,height,settings);
+  if(settings.sepia>0||settings.invert>0)photoPreviewCreativeEffects(pixels,width,height,settings);
   if(settings.sharpness>0)photoPreviewUnsharp(pixels,width,height,1,settings.sharpness/100*1.8,false);
   if(settings.clarity!==0)photoPreviewUnsharp(pixels,width,height,Math.max(2,Math.min(10,Math.floor(Math.min(width,height)/100))),settings.clarity/100*1.15,true);
   if(settings.texture!==0)photoPreviewUnsharp(pixels,width,height,2,settings.texture/100*1.35,false);
   if(settings.blur>0)photoPreviewBlur(pixels,width,height,1+Math.round(settings.blur/100*11),settings.blur/100);
   if(settings.fade>0||settings.vignette>0||settings.grain>0)photoPreviewFinishing(pixels,width,height,settings,seedData);
 }
-function loadPhotoResizerSettings(){const output=document.getElementById('resizerOutputFolder');const maxSide=document.getElementById('resizerMaxSide');if(output){try{const saved=localStorage.getItem(RESIZER_OUTPUT_FOLDER_KEY);if(saved&&saved.trim())output.value=saved.trim()}catch(_){}}if(maxSide){let saved=2048;try{const raw=Number(localStorage.getItem(RESIZER_MAX_SIDE_KEY));if(Number.isInteger(raw)&&raw>=64&&raw<=16384)saved=raw}catch(_){}maxSide.value=String(saved)}try{photoResizeUpscaleEnabled=localStorage.getItem(RESIZER_UPSCALE_KEY)!=='0'}catch(_){photoResizeUpscaleEnabled=true}renderPhotoResizeUpscaleToggle();syncResizerNoDuplicatesButton();loadPhotoResizeAdjustments();loadPhotoResizeBatchPreference()}
+function loadPhotoResizerSettings(){const output=document.getElementById('resizerOutputFolder');const maxSide=document.getElementById('resizerMaxSide');if(output){try{const saved=localStorage.getItem(RESIZER_OUTPUT_FOLDER_KEY);if(saved&&saved.trim())output.value=saved.trim()}catch(_){}}if(maxSide){let saved=2048;try{const raw=Number(localStorage.getItem(RESIZER_MAX_SIDE_KEY));if(Number.isInteger(raw)&&raw>=64&&raw<=16384)saved=raw}catch(_){}maxSide.value=String(saved)}try{photoResizeUpscaleEnabled=localStorage.getItem(RESIZER_UPSCALE_KEY)!=='0'}catch(_){photoResizeUpscaleEnabled=true}renderPhotoResizeUpscaleToggle();syncResizerNoDuplicatesButton();loadPhotoResizeAdjustments();loadPhotoResizeBatchPreference();initPhotoResizePreviewZoom()}
 function persistPhotoResizerOutputFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(RESIZER_OUTPUT_FOLDER_KEY,path.trim())}catch(_){}}
 function getConfiguredPhotoResizerOutputFolder(){const input=document.getElementById('resizerOutputFolder');const value=String(input?.value||'~/Pictures/Instagram/Resized').trim()||'~/Pictures/Instagram/Resized';persistPhotoResizerOutputFolder(value);return value}
 function renderPhotoResizeUpscaleToggle(){const button=document.getElementById('resizerUpscaleToggleBtn');if(button){button.classList.toggle('active',photoResizeUpscaleEnabled);button.setAttribute('aria-pressed',String(photoResizeUpscaleEnabled));button.title=photoResizeUpscaleEnabled?'Upscaling smaller images: on. Click to turn off.':'Upscaling smaller images: off. Click to turn on.';button.disabled=photoResizeBusy}const hint=document.getElementById('resizerMaxSideHint');if(hint)hint.textContent=photoResizeUpscaleEnabled?'Larger images are reduced proportionally; smaller images are enlarged to this longest-side target.':'Larger images are reduced proportionally; smaller images are copied unchanged.'}
@@ -4327,7 +4401,7 @@ function handleResizerImagesPicked(event){
   if(previousSession)void deletePhotoResizeSession(previousSession);
   revokePhotoResizeThumbnailUrls(photoResizeQueue);
   photoResizePreviewGeneration++;
-  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewZoom=1;
+  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
   revokePhotoResizePreviewUrl();
   const supported=files.filter(file=>{
     const dot=file.name.lastIndexOf('.');
@@ -4473,7 +4547,7 @@ function resetResizerQueue(){
   if(oldSession)void deletePhotoResizeSession(oldSession);
   revokePhotoResizeThumbnailUrls(photoResizeQueue);
   photoResizePreviewGeneration++;
-  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewZoom=1;
+  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
   revokePhotoResizePreviewUrl();
   photoResizeQueue=[];
   photoResizeSessionId='';
@@ -6876,8 +6950,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.184';
+const APP_VERSION='1.185';
 const VERSION_HISTORY=[
+  {version:'1.185',added:'Gamma control and a Creative effects panel with Sepia and Invert sliders.',removed:'Ctrl-only preview zoom and the labeled Open folder action in the adjustments header.',fixed:'Matched Saved Posts full-size zoom with wheel zoom, pointer-drag panning, and double-click fit; restored the folder action as a 37px icon-only button.',tone:'red'},
   {version:'1.184',added:'A wider image-picker panel and an always-visible row of square photo-thumbnail placeholders before images are chosen.',removed:'The narrow sticky picker and detached adjustment-panel placement.',fixed:'Restored the chooser/configuration two-column row, aligned Image adjustments across the row beneath it, and kept the preview beside its controls on desktop.',tone:'green'},
   {version:'1.183',added:'Square photo thumbnails with current-photo preview selection, preview zoom controls, and an editor Download action.',removed:'Visible photo filenames in the image picker and the side-by-side adjustment-group layout.',fixed:'Renamed Image Edit to Image Edit (beta), kept Convert/Open folder controls visible, made the three adjustment groups vertical, routed Download to the current preview or all checked photos according to batch mode, and added right-click slider reset.',tone:'green'},
   {version:'1.182',added:'No new features.',removed:'The “Resizer (beta)” label.',fixed:'Renamed the resizing tool to Image Edit in the sidebar, page heading, breadcrumb, and app footer. Existing resizing and adjustment features remain unchanged.',tone:'green'},

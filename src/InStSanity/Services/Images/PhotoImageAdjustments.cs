@@ -6,6 +6,7 @@ public sealed record PhotoImageAdjustments
 	public double Exposure { get; init; }
 	public double Brightness { get; init; }
 	public double Contrast { get; init; }
+	public double Gamma { get; init; }
 	public double Highlights { get; init; }
 	public double Shadows { get; init; }
 	public double Temperature { get; init; }
@@ -17,6 +18,8 @@ public sealed record PhotoImageAdjustments
 	public double Texture { get; init; }
 	public double Blur { get; init; }
 	public double Denoise { get; init; }
+	public double Sepia { get; init; }
+	public double Invert { get; init; }
 	public double Grain { get; init; }
 	public double GrainSize { get; init; } = 35;
 	public bool MonochromeGrain { get; init; }
@@ -24,9 +27,10 @@ public sealed record PhotoImageAdjustments
 	public double Vignette { get; init; }
 
 	public bool HasEdits =>
-		Exposure != 0 || Brightness != 0 || Contrast != 0 || Highlights != 0 || Shadows != 0 ||
+		Exposure != 0 || Brightness != 0 || Contrast != 0 || Gamma != 0 || Highlights != 0 || Shadows != 0 ||
 		Temperature != 0 || Tint != 0 || Saturation != 0 || Vibrance != 0 || Sharpness != 0 ||
-		Clarity != 0 || Texture != 0 || Blur != 0 || Denoise != 0 || Grain != 0 || Fade != 0 || Vignette != 0;
+		Clarity != 0 || Texture != 0 || Blur != 0 || Denoise != 0 || Sepia != 0 || Invert != 0 ||
+		Grain != 0 || Fade != 0 || Vignette != 0;
 }
 
 /// <summary>CPU-only BGRA pixel effects used by the local Windows photo-resize pipeline.</summary>
@@ -53,6 +57,10 @@ internal static class PhotoImageAdjustmentProcessor
 		}
 
 		ApplyToneAndColor(pixels, width, height, settings);
+		if (settings.Sepia > 0 || settings.Invert > 0)
+		{
+			ApplyCreativeEffects(pixels, settings.Sepia, settings.Invert);
+		}
 
 		if (settings.Sharpness > 0)
 		{
@@ -84,7 +92,7 @@ internal static class PhotoImageAdjustmentProcessor
 
 	static void ApplyToneAndColor(byte[] pixels, int width, int height, PhotoImageAdjustments settings)
 	{
-		if (settings.Exposure == 0 && settings.Brightness == 0 && settings.Contrast == 0 &&
+		if (settings.Exposure == 0 && settings.Brightness == 0 && settings.Contrast == 0 && settings.Gamma == 0 &&
 			settings.Highlights == 0 && settings.Shadows == 0 && settings.Temperature == 0 &&
 			settings.Tint == 0 && settings.Saturation == 0 && settings.Vibrance == 0)
 		{
@@ -94,6 +102,7 @@ internal static class PhotoImageAdjustmentProcessor
 		var exposure = Math.Pow(2, settings.Exposure / 50.0);
 		var brightness = settings.Brightness / 100.0 * 0.35;
 		var contrast = 1 + settings.Contrast / 100.0;
+		var gammaExponent = Math.Pow(2, -settings.Gamma / 100.0 * 1.2);
 		var shadows = settings.Shadows / 100.0 * 0.34;
 		var highlights = settings.Highlights / 100.0 * 0.34;
 		var temperature = settings.Temperature / 100.0 * 0.18;
@@ -127,6 +136,13 @@ internal static class PhotoImageAdjustmentProcessor
 				green += tonalShift;
 				blue += tonalShift;
 
+				if (settings.Gamma != 0)
+				{
+					red = Math.Pow(Math.Clamp(red, 0, 1), gammaExponent);
+					green = Math.Pow(Math.Clamp(green, 0, 1), gammaExponent);
+					blue = Math.Pow(Math.Clamp(blue, 0, 1), gammaExponent);
+				}
+
 				red += temperature + tint;
 				green -= tint * 1.45;
 				blue -= temperature - tint;
@@ -144,6 +160,43 @@ internal static class PhotoImageAdjustmentProcessor
 				pixels[index + 1] = ToByte(green);
 				pixels[index + 2] = ToByte(red);
 			}
+		}
+	}
+
+	static void ApplyCreativeEffects(byte[] pixels, double sepiaAmount, double invertAmount)
+	{
+		var sepia = Math.Clamp(sepiaAmount / 100.0, 0, 1);
+		var invert = Math.Clamp(invertAmount / 100.0, 0, 1);
+		for (var index = 0; index < pixels.Length; index += 4)
+		{
+			if (pixels[index + 3] == 0)
+			{
+				continue;
+			}
+
+			var blue = pixels[index] / 255.0;
+			var green = pixels[index + 1] / 255.0;
+			var red = pixels[index + 2] / 255.0;
+			if (sepia > 0)
+			{
+				var sepiaRed = Math.Clamp(red * 0.393 + green * 0.769 + blue * 0.189, 0, 1);
+				var sepiaGreen = Math.Clamp(red * 0.349 + green * 0.686 + blue * 0.168, 0, 1);
+				var sepiaBlue = Math.Clamp(red * 0.272 + green * 0.534 + blue * 0.131, 0, 1);
+				red = red * (1 - sepia) + sepiaRed * sepia;
+				green = green * (1 - sepia) + sepiaGreen * sepia;
+				blue = blue * (1 - sepia) + sepiaBlue * sepia;
+			}
+
+			if (invert > 0)
+			{
+				red = red * (1 - invert) + (1 - red) * invert;
+				green = green * (1 - invert) + (1 - green) * invert;
+				blue = blue * (1 - invert) + (1 - blue) * invert;
+			}
+
+			pixels[index] = ToByte(blue);
+			pixels[index + 1] = ToByte(green);
+			pixels[index + 2] = ToByte(red);
 		}
 	}
 
