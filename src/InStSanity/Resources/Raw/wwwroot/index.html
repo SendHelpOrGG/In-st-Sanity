@@ -213,6 +213,8 @@ body .post-count{background:var(--t-count-bg);border:1px solid var(--t-count-bor
 .download-status-hidden .download-history-mark{display:none!important}
 body .active-outline-control.active{color:var(--t-accent,#5eead4);border-color:var(--t-accent,#5eead4)}
 body[data-theme="v3"] .icon-filter-btn.active-outline-control.active{color:var(--t-nav-act-ink,#090a0c)}
+/* Theme 15 active icon toggles use the same light ink as the All Posts label; includes the Resizer upscaler. */
+body[data-theme="v15"] .icon-filter-btn.active-outline-control.active{color:var(--t-nav-act-ink,#d6e2f5)}
 
 body .status{background:var(--t-card-bg);border-color:var(--t-accent);color:var(--t-ink)}
 body .opacity-slider{accent-color:var(--t-accent)}
@@ -6340,8 +6342,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.172';
+const APP_VERSION='1.173';
 const VERSION_HISTORY=[
+  {version:'1.173',added:'No new features.',removed:'Low-contrast active icon-only controls in Theme 15 and the rotating sticker frame in trident loading scenes.',fixed:'Active icon-only controls—including the Resizer upscaler—now match Theme 15’s All Posts text color. The trident loading scene no longer rotates the sticker frame in any theme.',tone:'green'},
   {version:'1.172',added:'No new features.',removed:'The post-detail close button floating at the far top-right of the header.',fixed:'The close button now sits directly above the Open folder button, aligned to it; mobile layout remains preserved.',tone:'green'},
   {version:'1.171',added:'No new features.',removed:'The post-detail close button sitting alongside the media toolbar.',fixed:'The close button now occupies the row above the media actions on desktop, with mobile layout preserved.',tone:'green'},
   {version:'1.170',added:'Source-label and download-history controls in Save via URL.',removed:'The missing source-label and download-history visibility controls on URL-tab posts.',fixed:'Save via URL now exposes source labels, download-history marks, and video visibility in the same order as Saved Posts JSON, using the same shared preferences.',tone:'green'},
@@ -8406,12 +8409,11 @@ function stickerParts(u,o={}){
       <ellipse id="shock${u}" cx="${CX}" cy="${CY+70}" rx="19.5" ry="5.8" fill="none" stroke="${T().accent}" stroke-width="4.5" opacity="0"/>
       <rect id="flash${u}" width="${W}" height="${H}" fill="${T().accent}" opacity="0"/></svg>`+CAP;
     const q=i=>sp.querySelector('#'+i+u);
-    const E={ring:q('ring'),ringWrap:q('ringWrap'),face:q('face'),weapon:q('weapon'),tri:q('tri'),
+    const E={ringWrap:q('ringWrap'),face:q('face'),weapon:q('weapon'),tri:q('tri'),
              shock:q('shock'),flash:q('flash'),burst:q('burst'),rg:RUNE_D.map((_,i)=>q('rg'+i)),rh:RUNE_D.map((_,i)=>q('rh'+i))};
     return {T:T1,update(t){
       const intro=ease.back(win(t,0,.55));
       E.ringWrap.style.opacity=intro.toFixed(3);
-      E.ring.setAttribute('transform', TH.id==='v14' ? `rotate(0 80 80)` : `rotate(${(t*26).toFixed(2)} 80 80)`);
       E.ringWrap.setAttribute('transform',`translate(${CX},${CY}) scale(${(0.559*(0.72+0.28*intro)).toFixed(3)}) translate(-80,-80)`);
       const lit=RUNE_T.filter(x=>t>x+0.25).length;
       E.rg.forEach((el,i)=>{const on=win(t,RUNE_T[i],RUNE_T[i]+0.4);
