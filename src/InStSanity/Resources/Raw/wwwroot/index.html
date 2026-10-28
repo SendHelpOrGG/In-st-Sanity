@@ -634,11 +634,13 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-zoom-label{min-width:38px;color:var(--t-ink,#f1f5f9);font-size:9px;text-align:center;font-variant-numeric:tabular-nums}
 .photo-preview-toggle{padding:5px 8px;font-size:10px}
 .photo-preview-tools button:disabled{opacity:.4;cursor:not-allowed}
-.photo-preview-canvas-wrap{position:relative;display:grid;place-items:center;width:100%;height:min(82vh,900px);min-height:min(480px,82vh);max-height:min(82vh,900px);overflow:hidden;margin-inline:auto;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:contain;touch-action:none;cursor:zoom-in}
+.photo-preview-canvas-wrap{position:relative;display:grid;place-items:center;width:100%;height:min(82vh,900px);min-height:min(480px,82vh);max-height:min(82vh,900px);overflow:hidden;margin-inline:auto;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:contain;touch-action:auto;cursor:default}
 .photo-preview-canvas-wrap.has-image{min-height:0}
-.photo-preview-canvas-wrap.is-zoomed{cursor:grab}
-.photo-preview-canvas-wrap.is-zoomed:active{cursor:grabbing}
-.photo-preview-canvas-wrap canvas{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;flex:0 0 auto;transform-origin:center center;transition:transform .08s linear;user-select:none;-webkit-user-drag:none;touch-action:none}
+.photo-preview-canvas-wrap.is-zoomed{cursor:default}
+.photo-preview-canvas-wrap.is-zoomed:active{cursor:default}
+.photo-preview-canvas-wrap canvas{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;flex:0 0 auto;transform-origin:center center;transition:transform .08s linear;user-select:none;-webkit-user-drag:none;touch-action:none;cursor:zoom-in}
+.photo-preview-canvas-wrap.is-zoomed canvas{cursor:grab}
+.photo-preview-canvas-wrap.is-zoomed canvas:active{cursor:grabbing}
 .photo-preview-canvas-wrap canvas[hidden]{display:none!important}
 .photo-preview-panel>.hint{margin:8px 0 0;font-size:10px}
 .photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0;max-height:min(82vh,900px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 6px 5px 0;scrollbar-width:thin;scrollbar-color:var(--t-accent,#38bdf8) transparent;-webkit-overflow-scrolling:touch}
@@ -4077,6 +4079,18 @@ function syncPhotoResizePreviewViewport(){
   canvas.style.width=`${imageWidth}px`;canvas.style.height=`${imageHeight}px`;
   wrap.style.width=`${imageWidth+chromeWidth}px`;wrap.style.height=`${imageHeight+chromeHeight}px`;
   wrap.classList.add('has-image');
+  if(photoResizePreviewZoom>1.01){clampPhotoResizePreviewPan();canvas.style.transform=`translate(${photoResizePreviewPanX}px, ${photoResizePreviewPanY}px) scale(${photoResizePreviewZoom})`}
+}
+function clampPhotoResizePreviewPan(){
+  const canvas=document.getElementById('photoResizePreviewCanvas');
+  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
+  if(!canvas||!wrap)return;
+  const width=canvas.offsetWidth||Number.parseFloat(canvas.style.width)||canvas.width;
+  const height=canvas.offsetHeight||Number.parseFloat(canvas.style.height)||canvas.height;
+  const maxX=Math.max(0,(width*photoResizePreviewZoom-wrap.clientWidth)/2);
+  const maxY=Math.max(0,(height*photoResizePreviewZoom-wrap.clientHeight)/2);
+  photoResizePreviewPanX=Math.max(-maxX,Math.min(maxX,photoResizePreviewPanX));
+  photoResizePreviewPanY=Math.max(-maxY,Math.min(maxY,photoResizePreviewPanY));
 }
 function syncPhotoResizePreviewZoomControls(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
@@ -4105,6 +4119,7 @@ function applyPhotoResizePreviewZoom(){
     photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
     canvas.style.transform='';wrap.classList.remove('is-zoomed');
   }else{
+    clampPhotoResizePreviewPan();
     canvas.style.transform=`translate(${photoResizePreviewPanX}px, ${photoResizePreviewPanY}px) scale(${photoResizePreviewZoom})`;
     wrap.classList.add('is-zoomed');
   }
@@ -4127,7 +4142,7 @@ function resetPhotoResizePreviewZoom(){
 function handlePhotoResizePreviewWheel(event){
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const canvas=document.getElementById('photoResizePreviewCanvas');
-  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||!wrap.contains(event.target))return;
+  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||event.target!==canvas)return;
   event.preventDefault();event.stopPropagation();
   let next=Math.max(1,Math.min(4.5,photoResizePreviewZoom*(event.deltaY<0?1.12:.88)));
   if(next<1.06)next=1;
@@ -4137,7 +4152,8 @@ function handlePhotoResizePreviewWheel(event){
 }
 function handlePhotoResizePreviewPointerDown(event){
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
-  if(!wrap||!wrap.contains(event.target)||photoResizePreviewZoom<=1.01||event.button!==0)return;
+  const canvas=document.getElementById('photoResizePreviewCanvas');
+  if(!wrap||!canvas||canvas.hidden||event.target!==canvas||photoResizePreviewZoom<=1.01||event.button!==0)return;
   photoResizePreviewDragging=true;photoResizePreviewDragPointerId=event.pointerId;
   photoResizePreviewDragStartX=event.clientX;photoResizePreviewDragStartY=event.clientY;
   photoResizePreviewDragOriginX=photoResizePreviewPanX;photoResizePreviewDragOriginY=photoResizePreviewPanY;
@@ -4161,7 +4177,7 @@ function initPhotoResizePreviewZoom(){
   wrap._photoResizeZoomBound=true;
   wrap.addEventListener('wheel',handlePhotoResizePreviewWheel,{passive:false});
   wrap.addEventListener('pointerdown',handlePhotoResizePreviewPointerDown);
-  wrap.addEventListener('dblclick',event=>{event.preventDefault();resetPhotoResizePreviewZoom()});
+  wrap.addEventListener('dblclick',event=>{const canvas=document.getElementById('photoResizePreviewCanvas');if(!canvas||canvas.hidden||event.target!==canvas)return;event.preventDefault();resetPhotoResizePreviewZoom()});
   window.addEventListener('pointermove',handlePhotoResizePreviewPointerMove);
   window.addEventListener('pointerup',handlePhotoResizePreviewPointerUp);
   window.addEventListener('pointercancel',handlePhotoResizePreviewPointerUp);
@@ -6984,8 +7000,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.188';
+const APP_VERSION='1.189';
 const VERSION_HISTORY=[
+  {version:'1.189',added:'Photo-bounded Image Edit preview zoom and panning.',removed:'Zoom gestures on the checkerboard and free panning beyond the image edges.',fixed:'Kept the photo covering the preview while zoomed and allowed drag, wheel, and double-click gestures only on the photo itself.',tone:'green'},
   {version:'1.188',added:'Aligned the bottom edges of the Image Edit preview and scrollable adjustment panels.',removed:'The small height mismatch between the desktop preview and controls.',fixed:'Stretched the side-by-side panels to a shared row height without changing narrow-layout scrolling.',tone:'green'},
   {version:'1.187',added:'An independently scrollable Image Edit adjustment-control panel on desktop.',removed:'The unscrollable full-height slider stack.',fixed:'Kept adjustment controls within the visible viewport while preserving normal page scrolling on narrow layouts.',tone:'green'},
   {version:'1.186',added:'A finer grain-size range and an image-matched preview viewport that makes better use of available screen space.',removed:'The two-column adjustment sliders.',fixed:'Expanded the preview area, fit the preview viewport to each photo aspect ratio, and stacked each adjustment control in its own row.',tone:'red'},
