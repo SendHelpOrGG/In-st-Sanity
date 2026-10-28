@@ -641,7 +641,8 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-canvas-wrap canvas{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;flex:0 0 auto;transform-origin:center center;transition:transform .08s linear;user-select:none;-webkit-user-drag:none;touch-action:none}
 .photo-preview-canvas-wrap canvas[hidden]{display:none!important}
 .photo-preview-panel>.hint{margin:8px 0 0;font-size:10px}
-.photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+.photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0;max-height:min(82vh,900px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 6px 5px 0;scrollbar-width:thin;scrollbar-color:var(--t-accent,#38bdf8) transparent;-webkit-overflow-scrolling:touch}
+.photo-adjustment-groups:focus-visible{outline:2px solid var(--t-accent,#38bdf8);outline-offset:2px}
 .photo-adjustment-group{min-width:0;padding:14px;border:1px solid var(--t-line,rgba(255,255,255,.12));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.2))}
 .photo-adjustment-group h3{margin:0 0 12px;color:var(--t-ink,#f1f5f9);font-size:12px;font-weight:700}
 .photo-adjustment-control-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:13px}
@@ -660,7 +661,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
 .photo-adjustment-footer .hint{margin:0}
 .photo-adjustment-reset{flex:0 0 auto}
-@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{height:min(74vh,700px);min-height:min(360px,74vh);max-height:min(74vh,700px)}}
+@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{height:min(74vh,700px);min-height:min(360px,74vh);max-height:min(74vh,700px)}.photo-adjustment-groups{max-height:none;overflow:visible;padding:0}}
 @media(max-width:760px){.resizer-adjustments-card .settings-card-head{align-items:flex-start;flex-direction:column}.photo-adjustment-actions{align-self:flex-end}}
 @media(max-width:600px){.photo-adjustment-footer{align-items:flex-start;flex-direction:column}.photo-adjustment-reset{align-self:flex-end}}
 </style>
@@ -936,7 +937,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
               <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Scroll to zoom; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
               <p class="hint">Scroll to zoom, drag to pan when zoomed, or double-click to fit the preview.</p>
             </div>
-            <div class="photo-adjustment-groups">
+            <div class="photo-adjustment-groups" role="region" aria-label="Image adjustment controls" tabindex="0">
               <div class="photo-adjustment-group">
                 <h3>Tone &amp; color</h3>
                 <div class="photo-adjustment-control-grid">
@@ -6983,8 +6984,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.186';
+const APP_VERSION='1.187';
 const VERSION_HISTORY=[
+  {version:'1.187',added:'An independently scrollable Image Edit adjustment-control panel on desktop.',removed:'The unscrollable full-height slider stack.',fixed:'Kept adjustment controls within the visible viewport while preserving normal page scrolling on narrow layouts.',tone:'green'},
   {version:'1.186',added:'A finer grain-size range and an image-matched preview viewport that makes better use of available screen space.',removed:'The two-column adjustment sliders.',fixed:'Expanded the preview area, fit the preview viewport to each photo aspect ratio, and stacked each adjustment control in its own row.',tone:'red'},
   {version:'1.185',added:'Gamma control and a Creative effects panel with Sepia and Invert sliders.',removed:'Ctrl-only preview zoom and the labeled Open folder action in the adjustments header.',fixed:'Matched Saved Posts full-size zoom with wheel zoom, pointer-drag panning, and double-click fit; restored the folder action as a 37px icon-only button.',tone:'red'},
   {version:'1.184',added:'A wider image-picker panel and an always-visible row of square photo-thumbnail placeholders before images are chosen.',removed:'The narrow sticky picker and detached adjustment-panel placement.',fixed:'Restored the chooser/configuration two-column row, aligned Image adjustments across the row beneath it, and kept the preview beside its controls on desktop.',tone:'green'},
