@@ -634,7 +634,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-zoom-label{min-width:38px;color:var(--t-ink,#f1f5f9);font-size:9px;text-align:center;font-variant-numeric:tabular-nums}
 .photo-preview-toggle{padding:5px 8px;font-size:10px}
 .photo-preview-tools button:disabled{opacity:.4;cursor:not-allowed}
-.photo-preview-canvas-wrap{position:relative;display:grid;place-items:center;width:100%;height:min(82vh,900px);min-height:min(480px,82vh);max-height:min(82vh,900px);overflow:hidden;margin-inline:auto;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:contain;touch-action:auto;cursor:default}
+.photo-preview-canvas-wrap{position:relative;display:grid;place-items:center;width:100%;height:min(82vh,900px);min-height:min(480px,82vh);max-height:min(82vh,900px);overflow:hidden;overflow:clip;margin-inline:auto;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:auto;touch-action:auto;cursor:default}
 .photo-preview-canvas-wrap.has-image{min-height:0}
 .photo-preview-canvas-wrap.is-zoomed{cursor:default}
 .photo-preview-canvas-wrap.is-zoomed:active{cursor:default}
@@ -936,8 +936,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
           <div class="photo-editor-layout">
             <div class="photo-preview-panel">
               <div class="photo-preview-heading"><strong id="photoResizePreviewTitle">Live preview</strong><div class="photo-preview-tools"><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomOut" onclick="changePhotoResizePreviewZoom(-0.25)" aria-label="Zoom out" title="Zoom out" disabled>−</button><output class="photo-preview-zoom-label" id="photoResizePreviewZoomLabel">Fit</output><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomIn" onclick="changePhotoResizePreviewZoom(0.25)" aria-label="Zoom in" title="Zoom in" disabled>+</button><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomFit" onclick="resetPhotoResizePreviewZoom()" aria-label="Fit preview" title="Fit preview" disabled>↔</button><button type="button" class="outline photo-preview-toggle" id="photoResizePreviewToggle" onclick="togglePhotoResizePreviewMode()" aria-pressed="false" disabled>Show original</button></div></div>
-              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Ctrl+scroll to zoom; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
-              <p class="hint">Ctrl+scroll to zoom, drag to pan when zoomed, or double-click to fit the preview.</p>
+              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Ctrl+scroll to zoom; ordinary scroll moves the page; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
+              <p class="hint">Ctrl+scroll to zoom, scroll normally to move the page, drag to pan when zoomed, or double-click to fit.</p>
             </div>
             <div class="photo-adjustment-groups" role="region" aria-label="Image adjustment controls" tabindex="0">
               <div class="photo-adjustment-group">
@@ -7008,8 +7008,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.191';
+const APP_VERSION='1.192';
 const VERSION_HISTORY=[
+  {version:'1.192',added:'Normal page scrolling works while the pointer is over the Image Edit preview.',removed:'Scroll-chain containment around the preview.',fixed:'Let unmodified wheel input reach the page while Ctrl+scroll continues to zoom the photo.',tone:'green'},
   {version:'1.191',added:'Ctrl+scroll zoom for the Image Edit photo preview.',removed:'Unmodified wheel zoom over the preview photo.',fixed:'Reserved ordinary wheel scrolling for page navigation and kept Ctrl+scroll focused on preview zoom.',tone:'green'},
   {version:'1.190',added:'Reliable double-click Fit for the photo preview.',removed:'A strict canvas-target check that could ignore double-clicks after pointer capture.',fixed:'Recognized gestures by their visible photo coordinates while still ignoring the surrounding checkerboard.',tone:'green'},
   {version:'1.189',added:'Photo-bounded Image Edit preview zoom and panning.',removed:'Zoom gestures on the checkerboard and free panning beyond the image edges.',fixed:'Kept the photo covering the preview while zoomed and allowed drag, wheel, and double-click gestures only on the photo itself.',tone:'green'},
