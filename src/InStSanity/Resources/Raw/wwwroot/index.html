@@ -626,7 +626,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-download-btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 .photo-adjustment-summary{display:inline-flex;align-items:center;margin-left:8px;padding:3px 8px;border:1px solid var(--t-line,rgba(255,255,255,.16));border-radius:999px;color:var(--t-muted,#94a3b8);font-size:10px;font-weight:600;vertical-align:middle}
 .photo-adjustment-summary.is-active{color:var(--t-accent,#38bdf8);border-color:color-mix(in srgb,var(--t-accent,#38bdf8) 45%,transparent);background:color-mix(in srgb,var(--t-accent,#38bdf8) 10%,transparent)}
-.photo-editor-layout{display:grid;grid-template-columns:minmax(320px,.95fr) minmax(0,1.05fr);gap:16px;align-items:start}
+.photo-editor-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:16px;align-items:start}
 .photo-preview-panel{min-width:0;padding:12px;border:1px solid var(--t-line,rgba(255,255,255,.2));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.34))}
 .photo-preview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:9px;font-size:11px;color:var(--t-ink,#f1f5f9)}.photo-preview-heading strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .photo-preview-tools{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
@@ -634,7 +634,8 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-zoom-label{min-width:38px;color:var(--t-ink,#f1f5f9);font-size:9px;text-align:center;font-variant-numeric:tabular-nums}
 .photo-preview-toggle{padding:5px 8px;font-size:10px}
 .photo-preview-tools button:disabled{opacity:.4;cursor:not-allowed}
-.photo-preview-canvas-wrap{position:relative;display:grid;place-items:center;height:min(72vh,760px);min-height:min(420px,72vh);max-height:min(72vh,760px);overflow:hidden;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:contain;touch-action:none;cursor:zoom-in}
+.photo-preview-canvas-wrap{position:relative;display:grid;place-items:center;width:100%;height:min(82vh,900px);min-height:min(480px,82vh);max-height:min(82vh,900px);overflow:hidden;margin-inline:auto;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:contain;touch-action:none;cursor:zoom-in}
+.photo-preview-canvas-wrap.has-image{min-height:0}
 .photo-preview-canvas-wrap.is-zoomed{cursor:grab}
 .photo-preview-canvas-wrap.is-zoomed:active{cursor:grabbing}
 .photo-preview-canvas-wrap canvas{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;flex:0 0 auto;transform-origin:center center;transition:transform .08s linear;user-select:none;-webkit-user-drag:none;touch-action:none}
@@ -643,7 +644,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
 .photo-adjustment-group{min-width:0;padding:14px;border:1px solid var(--t-line,rgba(255,255,255,.12));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.2))}
 .photo-adjustment-group h3{margin:0 0 12px;color:var(--t-ink,#f1f5f9);font-size:12px;font-weight:700}
-.photo-adjustment-control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 14px}
+.photo-adjustment-control-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:13px}
 .photo-adjustment-control{min-width:0}
 .photo-adjustment-control label{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:3px;color:var(--t-muted,#94a3b8);font-size:10px}
 .photo-adjustment-control label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -659,9 +660,9 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
 .photo-adjustment-footer .hint{margin:0}
 .photo-adjustment-reset{flex:0 0 auto}
-@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{height:min(68vh,560px);min-height:min(320px,68vh);max-height:min(68vh,560px)}}
+@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{height:min(74vh,700px);min-height:min(360px,74vh);max-height:min(74vh,700px)}}
 @media(max-width:760px){.resizer-adjustments-card .settings-card-head{align-items:flex-start;flex-direction:column}.photo-adjustment-actions{align-self:flex-end}}
-@media(max-width:600px){.photo-adjustment-control-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.photo-adjustment-footer{align-items:flex-start;flex-direction:column}.photo-adjustment-reset{align-self:flex-end}}
+@media(max-width:600px){.photo-adjustment-footer{align-items:flex-start;flex-direction:column}.photo-adjustment-reset{align-self:flex-end}}
 </style>
 <style id="lsBootStyle">
 #lsBoot{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;min-width:100vw;min-height:100vh;min-height:100dvh;z-index:400;overflow:hidden;background:#0a0f18;contain:layout size;transform:none;will-change:auto}
@@ -4025,6 +4026,7 @@ function refreshPhotoResizePreview(){
       photoResizePreviewImageData=context.getImageData(0,0,targetWidth,targetHeight);
       canvas.hidden=false;message.hidden=true;
       if(toggle)toggle.disabled=false;
+      syncPhotoResizePreviewViewport();
       schedulePhotoResizePreviewRender();
       applyPhotoResizePreviewZoom();
     }catch(_){
@@ -4048,6 +4050,33 @@ function loadPhotoResizePreviewWithImage(file,token,installPreview){
     image.src=url;
   }catch(_){const message=document.getElementById('photoResizePreviewMessage');if(message){message.hidden=false;message.textContent='Preview is unavailable for this image format.'}}
 }
+function resetPhotoResizePreviewViewport(){
+  const canvas=document.getElementById('photoResizePreviewCanvas');
+  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
+  if(canvas){canvas.style.width='';canvas.style.height=''}
+  if(wrap){wrap.style.width='';wrap.style.height='';wrap.classList.remove('has-image')}
+}
+function syncPhotoResizePreviewViewport(){
+  const canvas=document.getElementById('photoResizePreviewCanvas');
+  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
+  const panel=wrap?.parentElement;
+  if(!canvas||!wrap||!panel)return;
+  if(canvas.hidden||!canvas.width||!canvas.height||!photoResizePreviewImageData){resetPhotoResizePreviewViewport();return}
+  const panelStyle=window.getComputedStyle(panel),wrapStyle=window.getComputedStyle(wrap);
+  const px=value=>Number.parseFloat(value)||0;
+  const maxOuterWidth=panel.clientWidth-px(panelStyle.paddingLeft)-px(panelStyle.paddingRight);
+  if(maxOuterWidth<=0)return;
+  const compact=window.innerWidth<=850;
+  const maxOuterHeight=Math.min(window.innerHeight*(compact?0.74:0.82),compact?700:900);
+  const chromeWidth=px(wrapStyle.paddingLeft)+px(wrapStyle.paddingRight)+px(wrapStyle.borderLeftWidth)+px(wrapStyle.borderRightWidth);
+  const chromeHeight=px(wrapStyle.paddingTop)+px(wrapStyle.paddingBottom)+px(wrapStyle.borderTopWidth)+px(wrapStyle.borderBottomWidth);
+  const imageMaxWidth=Math.max(1,maxOuterWidth-chromeWidth),imageMaxHeight=Math.max(1,maxOuterHeight-chromeHeight);
+  const scale=Math.min(2,imageMaxWidth/canvas.width,imageMaxHeight/canvas.height);
+  const imageWidth=Math.max(1,canvas.width*scale),imageHeight=Math.max(1,canvas.height*scale);
+  canvas.style.width=`${imageWidth}px`;canvas.style.height=`${imageHeight}px`;
+  wrap.style.width=`${imageWidth+chromeWidth}px`;wrap.style.height=`${imageHeight+chromeHeight}px`;
+  wrap.classList.add('has-image');
+}
 function syncPhotoResizePreviewZoomControls(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
   const available=Boolean(canvas&&!canvas.hidden&&photoResizePreviewImageData);
@@ -4067,9 +4096,10 @@ function applyPhotoResizePreviewZoom(){
   if(canvas.hidden||!canvas.width||!canvas.height||!photoResizePreviewImageData){
     photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
     photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
-    canvas.style.transform='';wrap.classList.remove('is-zoomed');
+    canvas.style.transform='';wrap.classList.remove('is-zoomed');resetPhotoResizePreviewViewport();
     syncPhotoResizePreviewZoomControls();return;
   }
+  if(!wrap.classList.contains('has-image'))syncPhotoResizePreviewViewport();
   if(photoResizePreviewZoom<=1.01){
     photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
     canvas.style.transform='';wrap.classList.remove('is-zoomed');
@@ -4134,6 +4164,9 @@ function initPhotoResizePreviewZoom(){
   window.addEventListener('pointermove',handlePhotoResizePreviewPointerMove);
   window.addEventListener('pointerup',handlePhotoResizePreviewPointerUp);
   window.addEventListener('pointercancel',handlePhotoResizePreviewPointerUp);
+  window.addEventListener('resize',syncPhotoResizePreviewViewport,{passive:true});
+  if(typeof ResizeObserver==='function'&&wrap.parentElement){wrap._photoResizeViewportObserver=new ResizeObserver(syncPhotoResizePreviewViewport);wrap._photoResizeViewportObserver.observe(wrap.parentElement)}
+  syncPhotoResizePreviewViewport();
 }
 
 function togglePhotoResizePreviewMode(){if(!photoResizePreviewImageData)return;photoResizePreviewOriginal=!photoResizePreviewOriginal;const toggle=document.getElementById('photoResizePreviewToggle');if(toggle){toggle.textContent=photoResizePreviewOriginal?'Show edited':'Show original';toggle.setAttribute('aria-pressed',String(photoResizePreviewOriginal))}schedulePhotoResizePreviewRender()}
@@ -4222,16 +4255,16 @@ function photoPreviewHashNoise(x,y,seed,channel){
   return value/4294967295*2-1;
 }
 function photoPreviewGrainNoise(x,y,cell,seed,channel){
-  const cellX=Math.floor(x/cell),cellY=Math.floor(y/cell),fx=(x%cell)/cell,fy=(y%cell)/cell,topLeft=photoPreviewHashNoise(cellX,cellY,seed,channel),topRight=photoPreviewHashNoise(cellX+1,cellY,seed,channel),bottomLeft=photoPreviewHashNoise(cellX,cellY+1,seed,channel),bottomRight=photoPreviewHashNoise(cellX+1,cellY+1,seed,channel),top=topLeft+(topRight-topLeft)*fx,bottom=bottomLeft+(bottomRight-bottomLeft)*fx;
+  const scaledX=x/cell,scaledY=y/cell,cellX=Math.floor(scaledX),cellY=Math.floor(scaledY),fx=scaledX-cellX,fy=scaledY-cellY,topLeft=photoPreviewHashNoise(cellX,cellY,seed,channel),topRight=photoPreviewHashNoise(cellX+1,cellY,seed,channel),bottomLeft=photoPreviewHashNoise(cellX,cellY+1,seed,channel),bottomRight=photoPreviewHashNoise(cellX+1,cellY+1,seed,channel),top=topLeft+(topRight-topLeft)*fx,bottom=bottomLeft+(bottomRight-bottomLeft)*fx;
   return top+(bottom-top)*fy;
 }
 function photoPreviewSeed(data){let seed=2166136261,step=Math.max(1,Math.floor(data.length/2048));for(let i=0;i<data.length;i+=step)seed=Math.imul(seed^data[i],16777619)>>>0;return seed||1}
 function photoPreviewSmoothStep(edge0,edge1,value){const t=Math.max(0,Math.min(1,(value-edge0)/(edge1-edge0)));return t*t*(3-2*t)}
 function photoPreviewFinishing(pixels,width,height,settings,seedData){
-  const fade=settings.fade/100,vignette=settings.vignette/100,grainAmount=settings.grain/100*31,grainCell=1+Math.round(Math.pow(settings.grainSize/100,2)*11),seed=photoPreviewSeed(seedData),halfWidth=Math.max(1,width/2),halfHeight=Math.max(1,height/2);
+  const fade=settings.fade/100,vignette=settings.vignette/100,grainAmount=settings.grain/100*31,grainCell=.25+Math.pow(settings.grainSize/100,2)*11.75,grainScale=Math.min(1,grainCell),seed=photoPreviewSeed(seedData),halfWidth=Math.max(1,width/2),halfHeight=Math.max(1,height/2);
   for(let y=0;y<height;y++){const normalizedY=(y+.5-halfHeight)/halfHeight;for(let x=0;x<width;x++){
     const i=(y*width+x)*4;if(pixels[i+3]===0)continue;const normalizedX=(x+.5-halfWidth)/halfWidth,radius=Math.sqrt(normalizedX*normalizedX+normalizedY*normalizedY),vignetteMask=photoPreviewSmoothStep(.42,1.12,radius),vignetteFactor=1-vignette*vignetteMask*.72,fadeFactor=1-fade*.18,fadeLift=fade*.18*255,noiseBlue=photoPreviewGrainNoise(x,y,grainCell,seed,0),noiseGreen=settings.monochromeGrain?noiseBlue:photoPreviewGrainNoise(x,y,grainCell,seed,1),noiseRed=settings.monochromeGrain?noiseBlue:photoPreviewGrainNoise(x,y,grainCell,seed,2);
-    pixels[i]=(pixels[i]*vignetteFactor*fadeFactor+fadeLift+noiseBlue*grainAmount);pixels[i+1]=(pixels[i+1]*vignetteFactor*fadeFactor+fadeLift+noiseGreen*grainAmount);pixels[i+2]=(pixels[i+2]*vignetteFactor*fadeFactor+fadeLift+noiseRed*grainAmount);
+    pixels[i]=(pixels[i]*vignetteFactor*fadeFactor+fadeLift+noiseBlue*grainAmount*grainScale);pixels[i+1]=(pixels[i+1]*vignetteFactor*fadeFactor+fadeLift+noiseGreen*grainAmount*grainScale);pixels[i+2]=(pixels[i+2]*vignetteFactor*fadeFactor+fadeLift+noiseRed*grainAmount*grainScale);
   }}
 }
 function applyPhotoResizePreviewAdjustments(pixels,width,height,settings,seedData){
@@ -6950,8 +6983,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.185';
+const APP_VERSION='1.186';
 const VERSION_HISTORY=[
+  {version:'1.186',added:'A finer grain-size range and an image-matched preview viewport that makes better use of available screen space.',removed:'The two-column adjustment sliders.',fixed:'Expanded the preview area, fit the preview viewport to each photo aspect ratio, and stacked each adjustment control in its own row.',tone:'red'},
   {version:'1.185',added:'Gamma control and a Creative effects panel with Sepia and Invert sliders.',removed:'Ctrl-only preview zoom and the labeled Open folder action in the adjustments header.',fixed:'Matched Saved Posts full-size zoom with wheel zoom, pointer-drag panning, and double-click fit; restored the folder action as a 37px icon-only button.',tone:'red'},
   {version:'1.184',added:'A wider image-picker panel and an always-visible row of square photo-thumbnail placeholders before images are chosen.',removed:'The narrow sticky picker and detached adjustment-panel placement.',fixed:'Restored the chooser/configuration two-column row, aligned Image adjustments across the row beneath it, and kept the preview beside its controls on desktop.',tone:'green'},
   {version:'1.183',added:'Square photo thumbnails with current-photo preview selection, preview zoom controls, and an editor Download action.',removed:'Visible photo filenames in the image picker and the side-by-side adjustment-group layout.',fixed:'Renamed Image Edit to Image Edit (beta), kept Convert/Open folder controls visible, made the three adjustment groups vertical, routed Download to the current preview or all checked photos according to batch mode, and added right-click slider reset.',tone:'green'},

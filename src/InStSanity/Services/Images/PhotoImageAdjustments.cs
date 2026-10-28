@@ -346,7 +346,8 @@ internal static class PhotoImageAdjustmentProcessor
 		var vignette = settings.Vignette / 100.0;
 		var grainAmount = settings.Grain / 100.0 * 31;
 		var hasGrain = settings.Grain > 0;
-		var grainCell = 1 + (int)Math.Round(Math.Pow(settings.GrainSize / 100.0, 2) * 11);
+		var grainCell = 0.25 + Math.Pow(settings.GrainSize / 100.0, 2) * 11.75;
+		var grainScale = Math.Min(1, grainCell);
 		var seed = CreateSeed(seedBytes);
 		var halfWidth = Math.Max(1, width / 2.0);
 		var halfHeight = Math.Max(1, height / 2.0);
@@ -372,19 +373,21 @@ internal static class PhotoImageAdjustmentProcessor
 				var noiseGreen = !hasGrain || settings.MonochromeGrain ? noiseBlue : GrainNoise(x, y, grainCell, seed, 1);
 				var noiseRed = !hasGrain || settings.MonochromeGrain ? noiseBlue : GrainNoise(x, y, grainCell, seed, 2);
 
-				pixels[index] = ToByte((pixels[index] * vignetteFactor * fadeFactor + fadeLift + noiseBlue * grainAmount) / 255.0);
-				pixels[index + 1] = ToByte((pixels[index + 1] * vignetteFactor * fadeFactor + fadeLift + noiseGreen * grainAmount) / 255.0);
-				pixels[index + 2] = ToByte((pixels[index + 2] * vignetteFactor * fadeFactor + fadeLift + noiseRed * grainAmount) / 255.0);
+				pixels[index] = ToByte((pixels[index] * vignetteFactor * fadeFactor + fadeLift + noiseBlue * grainAmount * grainScale) / 255.0);
+				pixels[index + 1] = ToByte((pixels[index + 1] * vignetteFactor * fadeFactor + fadeLift + noiseGreen * grainAmount * grainScale) / 255.0);
+				pixels[index + 2] = ToByte((pixels[index + 2] * vignetteFactor * fadeFactor + fadeLift + noiseRed * grainAmount * grainScale) / 255.0);
 			}
 		}
 	}
 
-	static double GrainNoise(int x, int y, int cell, uint seed, uint channel)
+	static double GrainNoise(int x, int y, double cell, uint seed, uint channel)
 	{
-		var cellX = x / cell;
-		var cellY = y / cell;
-		var fx = (x % cell) / (double)cell;
-		var fy = (y % cell) / (double)cell;
+		var scaledX = x / cell;
+		var scaledY = y / cell;
+		var cellX = (int)Math.Floor(scaledX);
+		var cellY = (int)Math.Floor(scaledY);
+		var fx = scaledX - cellX;
+		var fy = scaledY - cellY;
 		var topLeft = HashNoise(cellX, cellY, seed, channel);
 		var topRight = HashNoise(cellX + 1, cellY, seed, channel);
 		var bottomLeft = HashNoise(cellX, cellY + 1, seed, channel);
