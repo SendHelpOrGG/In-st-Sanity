@@ -165,7 +165,7 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			!TryReadNumber(element, "blur", 0, 100, 0, out var blur) ||
 			!TryReadNumber(element, "denoise", 0, 100, 0, out var denoise) ||
 			!TryReadNumber(element, "grain", 0, 100, 0, out var grain) ||
-			!TryReadNumber(element, "grainSize", 1, 100, 35, out var grainSize) ||
+			!TryReadNumber(element, "grainSize", 0, 100, 35, out var grainSize) ||
 			!TryReadNumber(element, "fade", 0, 100, 0, out var fade) ||
 			!TryReadNumber(element, "vignette", 0, 100, 0, out var vignette))
 		{
