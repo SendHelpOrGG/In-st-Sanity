@@ -6342,8 +6342,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.173';
+const APP_VERSION='1.174';
 const VERSION_HISTORY=[
+  {version:'1.174',added:'No new features.',removed:'Theme-specific gradients and opacity being lost from loading-screen stickers.',fixed:'Loading-screen stickers now keep the full original theme SVG gradients and opacity stops, matching the side-panel artwork across themes.',tone:'green'},
   {version:'1.173',added:'No new features.',removed:'Low-contrast active icon-only controls in Theme 15 and the rotating sticker frame in trident loading scenes.',fixed:'Active icon-only controls—including the Resizer upscaler—now match Theme 15’s All Posts text color. The trident loading scene no longer rotates the sticker frame in any theme.',tone:'green'},
   {version:'1.172',added:'No new features.',removed:'The post-detail close button floating at the far top-right of the header.',fixed:'The close button now sits directly above the Open folder button, aligned to it; mobile layout remains preserved.',tone:'green'},
   {version:'1.171',added:'No new features.',removed:'The post-detail close button sitting alongside the media toolbar.',fixed:'The close button now occupies the row above the media actions on desktop, with mobile layout preserved.',tone:'green'},
@@ -7945,28 +7946,19 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
     }
     return '';
   }
-  /* Some themes stroke the horns / grin / frame with url(#gradient). Those ids are fragile
-     inside the boot overlay, so every paint is flattened to a solid colour taken from that
-     same gradient (themes 1 and 2 lost their mouth and horns otherwise). */
-  function lsFlatten(html, defs){
-    var map={};
-    var gre=/<(?:linear|radial)Gradient[^>]*\bid="([^"]+)"[\s\S]*?<\/(?:linear|radial)Gradient>/g, g;
-    while((g=gre.exec(defs||''))!==null){
-      var stops=[], sre=/stop-color="([^"]+)"/g, st;
-      while((st=sre.exec(g[0]))!==null) stops.push(st[1]);
-      if(stops.length) map[g[1]]=stops[Math.min(stops.length-1,Math.floor(stops.length/2))];
-    }
-    return html.replace(/url\(#([^)]+)\)/g, function(all,id){ return map[id]||all; });
-  }
+  /* Keep the original sticker SVG paint definitions intact. Flattening gradient
+     URLs to one stop colour discarded both the themed blends and their alpha stops.
+     `stickerParts()` substitutes a unique uid into every extracted part so references
+     remain valid for each loading-scene sticker instance. */
   function lsPartsFor(id){
     var tpl='';
-    try{ tpl=(THEME_STICKER_SVGS[id]||THEME_STICKER_SVGS.default||'').replace(/\{uid\}/g,'ls'); }catch(_){ tpl=''; }
+    try{ tpl=THEME_STICKER_SVGS[id]||THEME_STICKER_SVGS.default||''; }catch(_){ tpl=''; }
     var inner=tpl.replace(/^\s*<svg[^>]*>/,'').replace(/<\/svg>\s*$/,'');
     var m=inner.match(/<defs>[\s\S]*?<\/defs>/), d=m?m[0]:'';
     return { defs:d,
-             frame:lsFlatten(lsGrab(inner,'imp-outer-frame'), d),
-             decor:lsFlatten(lsGrab(inner,'imp-decor'), d),
-             face: lsFlatten(lsGrab(inner,'imp-face-group'), d) };
+             frame:lsGrab(inner,'imp-outer-frame'),
+             decor:lsGrab(inner,'imp-decor'),
+             face:lsGrab(inner,'imp-face-group') };
   }
   TH.parts = lsPartsFor(TH.id);
   if(!TH.parts.face) TH.parts = lsPartsFor('default');
@@ -8050,7 +8042,8 @@ applyLsSoundSettings(false);   /* must run after LS_SOUND exists, or the stored 
 
 function stickerParts(u,o={}){
     const th=T();
-    let face=th.face;
+    const withUid=part=>(part||'').replace(/\{uid\}/g,u);
+    let face=withUid(th.face);
     const eyeK=o.eyeK||1, glow=o.glow, shift=o.eyeShift||0, mouth=o.mouth, fangs=o.fangs, horn=o.hornRot||0;
     face=face.replace(/<g class="imp-eyes-blink"[^>]*>([\s\S]*?)<\/g>/,(m,inner)=>{
       const nin=inner.replace(/r="([\d.]+)"/g,(mm,r)=>`r="${(parseFloat(r)*eyeK).toFixed(2)}"`);
@@ -8061,7 +8054,7 @@ function stickerParts(u,o={}){
     if(mouth) face=face.replace(/(<g class="imp-grin">\s*<path d=")[^"]*(")/,`$1${mouth}$2`);
     if(fangs) face=face.replace(/(<g class="imp-grin">[\s\S]*?)(<\/g>)/,`$1${fangs}$2`);
     if(horn)  face=face.replace('<g class="imp-horns">',`<g class="imp-horns" transform="rotate(${horn.toFixed(2)} 80 72)">`);
-    return { defs:(th.defs||'').replace(/\{uid\}/g,u), frame:th.frame, decor:th.decor, face };
+    return { defs:withUid(th.defs), frame:withUid(th.frame), decor:withUid(th.decor), face };
   }
   function sticker(u,o={}){
     const p=stickerParts(u,o);
