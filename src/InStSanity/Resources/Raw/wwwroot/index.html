@@ -599,15 +599,10 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 
 </style>
 <style id="photoAdjustmentsStyles">
-.resizer-grid{grid-template-columns:minmax(240px,.42fr) minmax(0,1.58fr);align-items:start}
-.resizer-picker-card{grid-column:1;grid-row:1 / span 2;position:sticky;top:12px;align-self:start;z-index:6}
-.resizer-config-card{grid-column:2;grid-row:1}
-.resizer-adjustments-card{grid-column:2;grid-row:2;container-type:inline-size}
-.resizer-picker-card .resizer-upload-actions{justify-content:flex-end;margin-top:13px}
-.resizer-picker-card .resizer-files-panel{margin-top:14px}
-.resizer-file-list{display:flex;flex-flow:row nowrap;align-items:flex-start;gap:9px;min-height:98px;max-height:none;overflow-x:auto;overflow-y:hidden;padding:8px;scrollbar-width:thin;scroll-snap-type:x proximity}
-.resizer-photo-tile{position:relative;flex:0 0 76px;width:76px;height:76px;scroll-snap-align:start}
-.resizer-photo-thumb{display:grid;place-items:center;width:76px;height:76px;padding:0;overflow:hidden;border:1px solid var(--t-line,rgba(255,255,255,.18));border-radius:9px;background:var(--t-input-bg,rgba(15,23,42,.45));cursor:pointer;transition:border-color .14s,box-shadow .14s,transform .14s}
+.resizer-adjustments-card{grid-column:1/-1}
+.resizer-file-list{display:flex;flex-flow:row nowrap;align-items:flex-start;gap:9px;min-height:102px;max-height:none;overflow-x:auto;overflow-y:hidden;padding:8px;scrollbar-width:thin;scroll-snap-type:x proximity}
+.resizer-photo-tile{position:relative;flex:0 0 84px;width:84px;height:84px;scroll-snap-align:start}
+.resizer-photo-thumb{display:grid;place-items:center;width:84px;height:84px;padding:0;overflow:hidden;border:1px solid var(--t-line,rgba(255,255,255,.18));border-radius:9px;background:var(--t-input-bg,rgba(15,23,42,.45));cursor:pointer;transition:border-color .14s,box-shadow .14s,transform .14s}
 .resizer-photo-thumb:hover{transform:translateY(-1px);border-color:var(--t-accent,#38bdf8)}
 .resizer-photo-thumb[aria-pressed="true"]{border:2px solid var(--t-accent,#38bdf8);box-shadow:0 0 0 2px color-mix(in srgb,var(--t-accent,#38bdf8) 24%,transparent)}
 .resizer-photo-thumb img{display:block;width:100%;height:100%;object-fit:cover}
@@ -617,6 +612,9 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .resizer-photo-thumb-status{position:absolute;right:4px;bottom:4px;z-index:2;display:grid;place-items:center;min-width:16px;height:16px;padding:0 3px;border-radius:999px;background:rgba(15,23,42,.82);color:#6ee7b7;font-size:10px;font-weight:800}
 .resizer-photo-thumb-status.is-error{color:#fca5a5}
 .resizer-photo-thumb-status:empty{display:none}
+.resizer-photo-empty-tile{display:grid;place-items:center;flex:0 0 84px;width:84px;height:84px;border:1px dashed var(--t-line,rgba(255,255,255,.2));border-radius:9px;background:var(--t-input-bg,rgba(15,23,42,.22));color:var(--t-muted,#94a3b8)}
+.resizer-photo-empty-tile svg{display:block;width:32px;height:32px;opacity:.62}
+.resizer-photo-empty-note{align-self:center;min-width:160px;color:var(--t-muted,#94a3b8);font-size:10px}
 .resizer-adjustments-card .settings-card-head{display:flex;align-items:center;justify-content:space-between;gap:18px}
 .photo-adjustments-heading-copy{min-width:0}
 .photo-adjustment-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
@@ -658,9 +656,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
 .photo-adjustment-footer .hint{margin:0}
 .photo-adjustment-reset{flex:0 0 auto}
-@media(max-width:980px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-picker-card,.resizer-config-card,.resizer-adjustments-card{grid-column:1;grid-row:auto}.resizer-picker-card{position:static;max-height:none}}
-@container (max-width:760px){.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{min-height:380px;max-height:min(72vh,760px)}}
-@media(max-width:850px){.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{min-height:320px;max-height:min(68vh,560px)}}
+@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{min-height:320px;max-height:min(68vh,560px)}}
 @media(max-width:760px){.resizer-adjustments-card .settings-card-head{align-items:flex-start;flex-direction:column}.photo-adjustment-actions{align-self:flex-end}}
 @media(max-width:600px){.photo-adjustment-control-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.photo-adjustment-footer{align-items:flex-start;flex-direction:column}.photo-adjustment-reset{align-self:flex-end}}
 </style>
@@ -895,14 +891,14 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
     <div class="heading-row"><div><h1>Image Edit (beta)</h1><p>Choose photos, adjust the current preview, then convert the selection or download the preview.</p></div></div>
     <div class="resizer-grid">
       <section class="settings-card resizer-card resizer-picker-card">
-        <div class="settings-card-head"><h2>1. Choose image</h2><p>Click a thumbnail to preview it; check photos to include them in batch actions.</p></div>
+        <div class="settings-card-head"><h2>1. Choose image</h2><p>Choose photos to fill the thumbnail strip. Click one to preview it; check photos for batch actions.</p></div>
         <div class="setting-body">
           <div class="resizer-pick-row"><button type="button" class="primary" id="resizerChooseImagesBtn" onclick="chooseResizerImages()">Choose images…</button><button type="button" class="primary" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button></div>
           <input id="resizerImagesInput" type="file" accept="image/*" multiple hidden onchange="handleResizerImagesPicked(event)">
-          <div class="resizer-files-panel" id="resizerFilePanel" hidden>
-            <div class="resizer-files-toolbar"><span id="resizerAvailableCount">No images found</span><div><button type="button" class="outline" id="resizerSelectAllBtn" onclick="selectAllResizerFiles(true)">Select all</button><button type="button" class="outline" id="resizerClearSelectionBtn" onclick="selectAllResizerFiles(false)">Clear</button></div></div>
-            <div class="resizer-file-list" id="resizerFileList" role="group" aria-label="Photo thumbnails; check to include in batch actions"></div>
-            <div class="hint" style="margin-top:7px">You can adjust the selection during a run; changes apply to the next conversion.</div>
+          <div class="resizer-files-panel" id="resizerFilePanel">
+            <div class="resizer-files-toolbar"><span id="resizerAvailableCount">Choose photos to begin</span><div><button type="button" class="outline" id="resizerSelectAllBtn" onclick="selectAllResizerFiles(true)">Select all</button><button type="button" class="outline" id="resizerClearSelectionBtn" onclick="selectAllResizerFiles(false)">Clear</button></div></div>
+            <div class="resizer-file-list" id="resizerFileList" role="group" aria-label="Photo thumbnails; check to include in batch actions"><span class="resizer-photo-empty-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 4.2-4.2L12 15.5l2-2 5 4"/></svg></span><span class="resizer-photo-empty-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 4.2-4.2L12 15.5l2-2 5 4"/></svg></span><span class="resizer-photo-empty-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 4.2-4.2L12 15.5l2-2 5 4"/></svg></span><span class="resizer-photo-empty-note">Your square photo thumbnails will appear here.</span></div>
+            <div class="hint" style="margin-top:7px">Check the photos you want included in a batch Download.</div>
           </div>
           <div class="resizer-upload-actions"><button type="button" class="primary" id="resizerStartBtn" onclick="startPhotoResizing()" disabled>Convert</button><button type="button" class="icon-btn resizer-open-output-folder-btn" id="resizerOpenOutputFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open resized images folder in File Explorer" aria-label="Open resized images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button></div>
         </div>
@@ -4204,11 +4200,15 @@ function selectPhotoResizePreview(index){
   photoResizeCurrentFileId=item.id;
   syncPhotoResizeControls();
 }
+function getPhotoResizeEmptyThumbnailMarkup(){
+  const tile='<span class="resizer-photo-empty-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 4.2-4.2L12 15.5l2-2 5 4"/></svg></span>';
+  return tile.repeat(3)+'<span class="resizer-photo-empty-note">Your square photo thumbnails will appear here.</span>';
+}
 function renderPhotoResizeFileList(){
   const list=document.getElementById('resizerFileList');
   if(!list)return;
   const previousScrollLeft=list.scrollLeft;
-  list.innerHTML=photoResizeQueue.map((item,index)=>{
+  const thumbnailMarkup=photoResizeQueue.map((item,index)=>{
     const checked=item.selected?' checked':'';
     const image=item.thumbnailUrl?`<img src="${escapeHtml(item.thumbnailUrl)}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`:'';
     const placeholder=`<span class="resizer-photo-thumb-placeholder"${item.thumbnailUrl?' hidden':''} aria-hidden="true">Photo ${index+1}</span>`;
@@ -4217,13 +4217,14 @@ function renderPhotoResizeFileList(){
     const statusClass=item.error?' is-error':'';
     return`<div class="resizer-photo-tile"><input class="resizer-photo-select" type="checkbox"${checked} aria-label="Include photo ${index+1} in batch" onchange="setPhotoResizeSelected(${index},this.checked)"><button type="button" class="resizer-photo-thumb" aria-pressed="${current}" aria-label="Preview photo ${index+1}" title="Preview photo ${index+1}" onclick="selectPhotoResizePreview(${index})">${image}${placeholder}</button><span class="resizer-photo-thumb-status${statusClass}" aria-hidden="true">${status}</span></div>`
   }).join('');
-  list.scrollLeft=previousScrollLeft;
+  list.innerHTML=thumbnailMarkup||getPhotoResizeEmptyThumbnailMarkup();
+  list.scrollLeft=thumbnailMarkup?previousScrollLeft:0;
   const available=document.getElementById('resizerAvailableCount');
   if(available){
     const queued=photoResizeQueue.length;
     const selected=photoResizeQueue.filter(item=>item.selected).length;
     const selectionText=`${selected} selected`;
-    available.textContent=photoResizeAvailableCount>queued
+    available.textContent=queued===0?'Choose photos to begin':photoResizeAvailableCount>queued
       ?`${queued} photos listed · first ${RESIZER_MAX_FILES} of ${photoResizeAvailableCount} supported · ${selectionText}`
       :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
   }
@@ -4268,7 +4269,7 @@ function syncPhotoResizeControls({renderFiles=true,refreshPreview=true}={}){
   const reset=document.getElementById('resizerResetBtn');
   if(reset)reset.disabled=busy||(!photoResizeSelectionLabel&&!photoResizeQueue.length&&!photoResizeUploadedCount&&!photoResizeCompleted);
   const panel=document.getElementById('resizerFilePanel');
-  if(panel)panel.hidden=!photoResizeSelectionLabel&&!photoResizeQueue.length;
+  if(panel)panel.hidden=false;
   if(renderFiles)renderPhotoResizeFileList();
   if(refreshPreview)refreshPhotoResizePreview();
 }
@@ -6875,9 +6876,10 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.183';
+const APP_VERSION='1.184';
 const VERSION_HISTORY=[
-  {version:'1.183',added:'Square photo thumbnails with current-photo preview selection, preview zoom controls, a fixed image-picker panel, and an editor Download action.',removed:'Visible photo filenames in the image picker and the side-by-side adjustment-group layout.',fixed:'Renamed Image Edit to Image Edit (beta), kept Convert/Open folder controls visible, made the three adjustment groups vertical, routed Download to the current preview or all checked photos according to batch mode, and added right-click slider reset.',tone:'green'},
+  {version:'1.184',added:'A wider image-picker panel and an always-visible row of square photo-thumbnail placeholders before images are chosen.',removed:'The narrow sticky picker and detached adjustment-panel placement.',fixed:'Restored the chooser/configuration two-column row, aligned Image adjustments across the row beneath it, and kept the preview beside its controls on desktop.',tone:'green'},
+  {version:'1.183',added:'Square photo thumbnails with current-photo preview selection, preview zoom controls, and an editor Download action.',removed:'Visible photo filenames in the image picker and the side-by-side adjustment-group layout.',fixed:'Renamed Image Edit to Image Edit (beta), kept Convert/Open folder controls visible, made the three adjustment groups vertical, routed Download to the current preview or all checked photos according to batch mode, and added right-click slider reset.',tone:'green'},
   {version:'1.182',added:'No new features.',removed:'The “Resizer (beta)” label.',fixed:'Renamed the resizing tool to Image Edit in the sidebar, page heading, breadcrumb, and app footer. Existing resizing and adjustment features remain unchanged.',tone:'green'},
   {version:'1.181',added:'No new features.',removed:'No removals.',fixed:'Kept the Resizer photo preview in its own left-hand panel beside the adjustment controls on the right. The layout only stacks on narrow screens.',tone:'green'},
   {version:'1.180',added:'Live preview and basic photo adjustments in Resizer: exposure, brightness, contrast, highlights, shadows, temperature, tint, saturation, vibrance, sharpness, clarity, texture, grain with size and monochrome options, blur, denoise, fade, and vignette.',removed:'No removals.',fixed:'Reset and batch-apply controls now create adjusted copies with an _Edited suffix without overwriting originals. Existing resize, upscale, output-folder, duplicate-handling, and repeat-conversion behavior remains available.',tone:'green'},
