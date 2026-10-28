@@ -1126,7 +1126,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
             <div class="settings-card-head-inner">
           <div class="settings-card-head-text">
-          <h2>Interface sounds</h2>
+          <h2>UI sounds</h2>
           <p>Choose the button-click sound, turn it off, or adjust its loudness.</p>
           </div>
           <span class="settings-card-chevron" aria-hidden="true">▾</span>
@@ -6414,8 +6414,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.178';
+const APP_VERSION='1.179';
 const VERSION_HISTORY=[
+  {version:'1.179',added:'No new features.',removed:'The “Interface sounds” heading in Sound settings.',fixed:'Renamed the heading to “UI sounds”.',tone:'green'},
   {version:'1.178',added:'Ten selectable interface click sounds with remembered preference and an instant sample preview.',removed:'The single synthesized button-click sound.',fixed:'Choose from Snap, Soft tick, Crisp click, Double, Round pop, Warm knock, Thin tick, Firm click, Bright tick, or Dull tap in Sound settings; selection is saved and follows the existing click-sound toggle and volume.',tone:'green'},
   {version:'1.177',added:'No new features.',removed:'Open Browser in My Account opening the general browser page instead of your profile.',fixed:'Open Browser now uses the same account-aware destination as the top account button, taking signed-in users to their Instagram profile and signed-out users to Instagram login.',tone:'green'},
   {version:'1.176',added:'No new features.',removed:'The one-conversion-only lockout in the Photo Resizer.',fixed:'Convert becomes available again after each completed run. Repeating a run starts a fresh upload session for the selected images.',tone:'green'},
