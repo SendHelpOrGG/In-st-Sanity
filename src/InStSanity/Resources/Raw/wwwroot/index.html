@@ -1278,9 +1278,9 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             <option value="dull-tap">Dull tap</option>
           </select>
           <p class="hint" id="uiClickSoundHint">Choosing a sound previews it, using the current click-sound switch and volume.</p>
-          <label class="field-label opacity-label" for="uiClickVolume">Click loudness <strong id="uiClickVolumeValue">100%</strong></label>
-          <input class="opacity-slider" id="uiClickVolume" type="range" min="0" max="100" value="100" oninput="setUiClickVolume(this.value)">
-          <p class="hint">100% is the level the click was designed at. Drop it to 0% to silence button clicks while leaving them switched on.</p>
+          <label class="field-label opacity-label" for="uiClickVolume">Click loudness <strong id="uiClickVolumeValue">10%</strong></label>
+          <input class="opacity-slider" id="uiClickVolume" type="range" min="0" max="100" value="10" oninput="setUiClickVolume(this.value)">
+          <p class="hint">Default is 10%; 100% is the level the click was designed at. Set it to 0% to silence button clicks while leaving them switched on.</p>
           </div>
           </div>
         </div>
@@ -1409,7 +1409,7 @@ const UI_CLICK_SOUND_SOURCES={
   'dull-tap':'/sounds/click-dull-tap.wav'
 };
 var uiClickEnabled = true;
-var uiClickVolumePercent = 100;
+var uiClickVolumePercent = 10;
 var uiClickSoundId = 'snap';
 var uiClickAudioPlayers = Object.create(null);
 function loadUiClickSettings(){
@@ -7021,8 +7021,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.193';
+const APP_VERSION='1.194';
 const VERSION_HISTORY=[
+  {version:'1.194',added:'A gentler 10% default for interface click loudness.',removed:'The 100% first-run click loudness.',fixed:'Set the initial slider, label, preview, and playback default to 10% while preserving any saved user volume.',tone:'green'},
   {version:'1.193',added:'A scrollable adjustments panel sized to the current preview panel.',removed:'The fixed viewport-based control-panel height.',fixed:'Kept the scroll area aligned with the preview as its image size or viewport changes.',tone:'green'},
   {version:'1.192',added:'Normal page scrolling works while the pointer is over the Image Edit preview.',removed:'Scroll-chain containment around the preview.',fixed:'Let unmodified wheel input reach the page while Ctrl+scroll continues to zoom the photo.',tone:'green'},
   {version:'1.191',added:'Ctrl+scroll zoom for the Image Edit photo preview.',removed:'Unmodified wheel zoom over the preview photo.',fixed:'Reserved ordinary wheel scrolling for page navigation and kept Ctrl+scroll focused on preview zoom.',tone:'green'},
