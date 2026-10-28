@@ -643,7 +643,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-canvas-wrap.is-zoomed canvas:active{cursor:grabbing}
 .photo-preview-canvas-wrap canvas[hidden]{display:none!important}
 .photo-preview-panel>.hint{margin:8px 0 0;font-size:10px}
-.photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0;max-height:min(82vh,900px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 6px 5px 0;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--t-accent,#38bdf8) transparent;-webkit-overflow-scrolling:touch}
+.photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0;max-height:min(82vh,900px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 6px 0 0;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--t-accent,#38bdf8) transparent;-webkit-overflow-scrolling:touch}
 .photo-adjustment-groups:focus-visible{outline:2px solid var(--t-accent,#38bdf8);outline-offset:2px}
 .photo-adjustment-group{min-width:0;padding:14px;border:1px solid var(--t-line,rgba(255,255,255,.12));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.2))}
 .photo-adjustment-group h3{margin:0 0 12px;color:var(--t-ink,#f1f5f9);font-size:12px;font-weight:700}
@@ -7021,8 +7021,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.194';
+const APP_VERSION='1.195';
 const VERSION_HISTORY=[
+  {version:'1.195',added:'No new features.',removed:'The extra bottom inset beneath the last Image Edit adjustment group.',fixed:'Removed the scroll area’s 5px bottom padding so its final control card aligns with the preview panel when scrolled fully down.',tone:'green'},
   {version:'1.194',added:'A gentler 10% default for interface click loudness.',removed:'The 100% first-run click loudness.',fixed:'Set the initial slider, label, preview, and playback default to 10% while preserving any saved user volume.',tone:'green'},
   {version:'1.193',added:'A scrollable adjustments panel sized to the current preview panel.',removed:'The fixed viewport-based control-panel height.',fixed:'Kept the scroll area aligned with the preview as its image size or viewport changes.',tone:'green'},
   {version:'1.192',added:'Normal page scrolling works while the pointer is over the Image Edit preview.',removed:'Scroll-chain containment around the preview.',fixed:'Let unmodified wheel input reach the page while Ctrl+scroll continues to zoom the photo.',tone:'green'},
