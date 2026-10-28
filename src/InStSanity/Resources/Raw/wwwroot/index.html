@@ -626,7 +626,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-download-btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 .photo-adjustment-summary{display:inline-flex;align-items:center;margin-left:8px;padding:3px 8px;border:1px solid var(--t-line,rgba(255,255,255,.16));border-radius:999px;color:var(--t-muted,#94a3b8);font-size:10px;font-weight:600;vertical-align:middle}
 .photo-adjustment-summary.is-active{color:var(--t-accent,#38bdf8);border-color:color-mix(in srgb,var(--t-accent,#38bdf8) 45%,transparent);background:color-mix(in srgb,var(--t-accent,#38bdf8) 10%,transparent)}
-.photo-editor-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:16px;align-items:start}
+.photo-editor-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:16px;align-items:stretch}
 .photo-preview-panel{min-width:0;padding:12px;border:1px solid var(--t-line,rgba(255,255,255,.2));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.34))}
 .photo-preview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:9px;font-size:11px;color:var(--t-ink,#f1f5f9)}.photo-preview-heading strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .photo-preview-tools{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
@@ -6984,8 +6984,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.187';
+const APP_VERSION='1.188';
 const VERSION_HISTORY=[
+  {version:'1.188',added:'Aligned the bottom edges of the Image Edit preview and scrollable adjustment panels.',removed:'The small height mismatch between the desktop preview and controls.',fixed:'Stretched the side-by-side panels to a shared row height without changing narrow-layout scrolling.',tone:'green'},
   {version:'1.187',added:'An independently scrollable Image Edit adjustment-control panel on desktop.',removed:'The unscrollable full-height slider stack.',fixed:'Kept adjustment controls within the visible viewport while preserving normal page scrolling on narrow layouts.',tone:'green'},
   {version:'1.186',added:'A finer grain-size range and an image-matched preview viewport that makes better use of available screen space.',removed:'The two-column adjustment sliders.',fixed:'Expanded the preview area, fit the preview viewport to each photo aspect ratio, and stacked each adjustment control in its own row.',tone:'red'},
   {version:'1.185',added:'Gamma control and a Creative effects panel with Sepia and Invert sliders.',removed:'Ctrl-only preview zoom and the labeled Open folder action in the adjustments header.',fixed:'Matched Saved Posts full-size zoom with wheel zoom, pointer-drag panning, and double-click fit; restored the folder action as a 37px icon-only button.',tone:'red'},
