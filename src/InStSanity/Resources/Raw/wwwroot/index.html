@@ -954,7 +954,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                 <h3>One-click looks</h3>
                 <div class="photo-adjustment-look-grid" role="group" aria-label="Apply a photo look">
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="noir" aria-pressed="false" onclick="applyPhotoResizeLook('noir')">Noir</button>
-                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="vintage" aria-pressed="false" title="Warm golden highlights, muted teal-olive shadows, faded film, and fine grain" onclick="applyPhotoResizeLook('vintage')">Vintage</button>
+                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="vintage" aria-pressed="false" title="Teal-green shadows, golden highlights, richer color, and fine film grain" onclick="applyPhotoResizeLook('vintage')">Vintage</button>
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="dreamy" aria-pressed="false" onclick="applyPhotoResizeLook('dreamy')">Dreamy</button>
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="cyberpunk" aria-pressed="false" onclick="applyPhotoResizeLook('cyberpunk')">Cyberpunk</button>
                 </div>
@@ -3920,7 +3920,7 @@ const PHOTO_ADJUSTMENT_COLOR_KEYS=new Set(['duotoneShadowColor','duotoneHighligh
 const PHOTO_ADJUSTMENT_META_KEYS=new Set(['grainSize','monochromeGrain','halftoneSize','duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
 const PHOTO_RESIZE_LOOKS=Object.freeze({
   noir:{label:'Noir',values:{saturation:-100,contrast:24,highlights:6,shadows:-8,clarity:12,grain:20,grainSize:28,monochromeGrain:true,vignette:20}},
-  vintage:{label:'Vintage',values:{brightness:3,contrast:-8,highlights:-10,shadows:8,temperature:10,saturation:-8,sepia:8,duotone:34,duotoneShadowColor:'#334A42',duotoneHighlightColor:'#F6D39B',grain:14,grainSize:34,monochromeGrain:true,fade:20,vignette:15}},
+  vintage:{label:'Vintage',values:{brightness:2,contrast:6,highlights:-14,shadows:4,temperature:5,saturation:10,vibrance:12,duotone:48,duotoneShadowColor:'#214E56',duotoneHighlightColor:'#F2C36D',grain:10,grainSize:32,monochromeGrain:true,fade:18,vignette:18}},
   dreamy:{label:'Dreamy',values:{brightness:8,highlights:12,contrast:-8,saturation:10,clarity:-28,blur:8,fade:10,temperature:6}},
   cyberpunk:{label:'Cyberpunk',values:{contrast:18,saturation:22,vibrance:20,temperature:-18,tint:20,duotone:35,duotoneShadowColor:'#101838',duotoneHighlightColor:'#FF4CBA',grain:4,vignette:12}}
 });
@@ -7166,8 +7166,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.198';
+const APP_VERSION='1.199';
 const VERSION_HISTORY=[
+  {version:'1.199',added:'A more pronounced split-tone Vintage look with teal-green shadows, golden highlights, richer color, and fine film grain.',removed:'The weak, sepia-first Vintage treatment.',fixed:'Make the reference-inspired color grade clearly visible while retaining look-strength control and restoring saved Vintage selections from the updated preset.',tone:'green'},
   {version:'1.198',added:'A reference-inspired Vintage treatment with warm highlights, muted teal-olive shadows, faded film, and grain.',removed:'The flat, sepia-heavy Vintage treatment.',fixed:'Balanced split toning and color retention, and refresh the selected look from its saved strength after the update.',tone:'green'},
   {version:'1.197',added:'An adjustable strength slider for the one-click photo looks.',removed:'The overly tinted Vintage preset.',fixed:'Blend each look between neutral and full strength, remember the selected look and strength, and use a softer, warmer, faded-film Vintage treatment.',tone:'green'},
   {version:'1.196',added:'Posterize, mosaic, duotone, halftone, and colorize effects plus Noir, Vintage, Dreamy, and Cyberpunk one-click looks.',removed:'No removals.',fixed:'Kept every new effect live in the preview and conversion pipeline, with saved color choices and adjustable strength or pattern size.',tone:'green'},
