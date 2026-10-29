@@ -34,17 +34,18 @@ internal static class WebViewBootstrapper
 	/// <summary>Routes links opened by the app UI to the user's system browser.</summary>
 	public static void Attach(WebView webView) => Attach(webView, isInstagramBrowser: false);
 
-	/// <summary>Keeps Instagram/Meta popups inside the native Instagram browser.</summary>
-	public static void AttachInstagramBrowser(WebView webView) => Attach(webView, isInstagramBrowser: true);
+	/// <summary>Keeps Instagram/Meta popups inside the native Instagram browser and installs its media-queue bridge.</summary>
+	public static void AttachInstagramBrowser(WebView webView, Action<string, string> onOverlayMessage) =>
+		Attach(webView, isInstagramBrowser: true, onOverlayMessage);
 
-	static void Attach(WebView webView, bool isInstagramBrowser)
+	static void Attach(WebView webView, bool isInstagramBrowser, Action<string, string>? onOverlayMessage = null)
 	{
 		// The handler (and with it CoreWebView2) appears after the page is first laid out.
-		webView.HandlerChanged += (_, _) => TryHook(webView, isInstagramBrowser);
-		TryHook(webView, isInstagramBrowser);
+		webView.HandlerChanged += (_, _) => TryHook(webView, isInstagramBrowser, onOverlayMessage);
+		TryHook(webView, isInstagramBrowser, onOverlayMessage);
 	}
 
-	static void TryHook(WebView webView, bool isInstagramBrowser)
+	static void TryHook(WebView webView, bool isInstagramBrowser, Action<string, string>? onOverlayMessage)
 	{
 		if (webView.Handler?.PlatformView is not Microsoft.UI.Xaml.Controls.WebView2 platformView)
 		{
@@ -60,7 +61,7 @@ internal static class WebViewBootstrapper
 
 		if (platformView.CoreWebView2 is not null)
 		{
-			Configure(platformView.CoreWebView2, isInstagramBrowser);
+			Configure(platformView.CoreWebView2, isInstagramBrowser, onOverlayMessage);
 		}
 		else
 		{
@@ -68,7 +69,7 @@ internal static class WebViewBootstrapper
 			{
 				if (sender.CoreWebView2 is not null)
 				{
-					Configure(sender.CoreWebView2, isInstagramBrowser);
+					Configure(sender.CoreWebView2, isInstagramBrowser, onOverlayMessage);
 				}
 			};
 		}
@@ -337,8 +338,45 @@ internal static class WebViewBootstrapper
 		return candidate;
 	}
 
-	static void Configure(CoreWebView2 core, bool isInstagramBrowser)
+	static async Task InstallInstagramOverlayScriptAsync(CoreWebView2 core)
 	{
+		try
+		{
+			await core.AddScriptToExecuteOnDocumentCreatedAsync(InstagramMediaOverlayScript.Source).ConfigureAwait(false);
+		}
+		catch
+		{
+			// The browser may be shutting down while WebView2 initializes.
+		}
+
+		await InstallInstagramOverlayForCurrentDocumentAsync(core).ConfigureAwait(false);
+	}
+
+	static async Task InstallInstagramOverlayForCurrentDocumentAsync(CoreWebView2 core)
+	{
+		try
+		{
+			await core.ExecuteScriptAsync("window.__instSanityMediaOverlayInstall?.()").ConfigureAwait(false);
+		}
+		catch
+		{
+			// Navigation may have replaced the document between the completion event and injection.
+		}
+	}
+
+	static void Configure(CoreWebView2 core, bool isInstagramBrowser, Action<string, string>? onOverlayMessage)
+	{
+		if (isInstagramBrowser && onOverlayMessage is not null)
+		{
+			core.Settings.IsWebMessageEnabled = true;
+			core.WebMessageReceived += (_, args) =>
+			{
+				try { onOverlayMessage(args.Source, args.WebMessageAsJson); } catch { }
+			};
+			core.NavigationCompleted += (_, _) => _ = InstallInstagramOverlayForCurrentDocumentAsync(core);
+			_ = InstallInstagramOverlayScriptAsync(core);
+		}
+
 		core.DownloadStarting += (_sender, args) =>
 		{
 			if (!isInstagramBrowser && IsVideoDownload(args))

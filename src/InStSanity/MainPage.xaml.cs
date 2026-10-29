@@ -1,5 +1,7 @@
+using System.Text.Json;
 using InStSanity.Platforms.Windows;
 using InStSanity.Services.Browser;
+using InStSanity.Services.Downloads;
 using InStSanity.Services.Instagram;
 using InStSanity.ViewModels;
 using Microsoft.Maui.ApplicationModel;
@@ -9,12 +11,16 @@ namespace InStSanity;
 public partial class MainPage : ContentPage
 {
 	const string InstagramHomeUrl = "https://www.instagram.com/";
+	static readonly JsonSerializerOptions QueueJsonOptions = new(JsonSerializerDefaults.Web);
 
 	readonly InstagramBrowserWindowService _browserWindow;
+	readonly BrowserMediaQueueService _browserMediaQueue;
 	readonly InstagramHttp _instagramHttp;
 	readonly InstagramResolver _instagramResolver;
 	WebView? _instagramBrowserView;
 	string? _currentInstagramUrl;
+	string _cachedBrowserOverlayThemeJson = "null";
+	DateTime _browserOverlayThemeCachedAtUtc = DateTime.MinValue;
 
 	// Last confirmed identity: the page probe can miss it on pages without the profile
 	// markup and the account API can be unavailable, so keep the name instead of flapping.
@@ -25,12 +31,18 @@ public partial class MainPage : ContentPage
 	string _knownAccountFullName = string.Empty;
 	string _knownAccountPic = string.Empty;
 
-	public MainPage(MainPageViewModel viewModel, InstagramBrowserWindowService browserWindow, InstagramHttp instagramHttp, InstagramResolver instagramResolver)
+	public MainPage(
+		MainPageViewModel viewModel,
+		InstagramBrowserWindowService browserWindow,
+		BrowserMediaQueueService browserMediaQueue,
+		InstagramHttp instagramHttp,
+		InstagramResolver instagramResolver)
 	{
 		InitializeComponent();
 
 		BindingContext = viewModel;
 		_browserWindow = browserWindow;
+		_browserMediaQueue = browserMediaQueue;
 		_instagramHttp = instagramHttp;
 		_instagramResolver = instagramResolver;
 		browserWindow.OpenRequested += OnInstagramBrowserOpenRequested;
@@ -40,6 +52,8 @@ public partial class MainPage : ContentPage
 		browserWindow.CookieSyncHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(SyncInstagramCookiesAsync);
 		browserWindow.SessionRefreshHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(RefreshInstagramAccountAsync);
 		browserWindow.LogoutHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(LogoutInstagramAsync);
+		browserMediaQueue.StateChanged += OnBrowserMediaQueueStateChanged;
+		browserMediaQueue.ItemCompleted += OnBrowserQueueItemCompleted;
 
 		// Links opened by the app UI belong in the system browser (Windows only; the
 		// guard keeps the platform-specific intent explicit).
@@ -130,6 +144,7 @@ public partial class MainPage : ContentPage
 		}
 
 		UpdateBrowserState();
+		_ = SyncBrowserQueueToPageAsync(refreshTheme: true);
 	}
 
 	void OnInstagramBrowserNavigateRequested(object? sender, string url)
@@ -144,6 +159,7 @@ public partial class MainPage : ContentPage
 		InstagramBrowserOverlay.IsVisible = true;
 		NavigateInstagramBrowser(uri);
 		UpdateBrowserState();
+		_ = SyncBrowserQueueToPageAsync(refreshTheme: true);
 	}
 
 	void OnInstagramBrowserCommandRequested(object? sender, string command)
@@ -176,6 +192,7 @@ public partial class MainPage : ContentPage
 				EnsureInstagramBrowserView();
 				InstagramBrowserOverlay.IsVisible = true;
 				UpdateBrowserState();
+				_ = SyncBrowserQueueToPageAsync(refreshTheme: true);
 				break;
 
 			case "hide":
@@ -215,7 +232,7 @@ public partial class MainPage : ContentPage
 		_instagramBrowserView = browserView;
 
 #if WINDOWS
-		WebViewBootstrapper.AttachInstagramBrowser(browserView);
+		WebViewBootstrapper.AttachInstagramBrowser(browserView, OnBrowserOverlayMessage);
 		// Instagram navigates with history.pushState, which never raises Navigated;
 		// without this the address bar would freeze on the URL the browser opened with.
 		_ = WebViewBootstrapper.TrackSourceChangesAsync(browserView, url =>
@@ -333,6 +350,7 @@ public partial class MainPage : ContentPage
 
 		UpdateBrowserState();
 		_ = RefreshInstagramAccountAsync();
+		_ = SyncBrowserQueueToPageAsync(refreshTheme: true);
 	}
 
 	void UpdateBrowserState()
@@ -343,6 +361,210 @@ public partial class MainPage : ContentPage
 			_instagramBrowserView?.CanGoBack == true,
 			_instagramBrowserView?.CanGoForward == true);
 	}
+
+	void OnBrowserMediaQueueStateChanged(BrowserMediaQueueSnapshot snapshot)
+	{
+		MainThread.BeginInvokeOnMainThread(() => _ = SyncBrowserQueueToPageAsync());
+	}
+
+	void OnBrowserQueueItemCompleted(BrowserQueueItemCompleted completed)
+	{
+		MainThread.BeginInvokeOnMainThread(() => _ = RecordBrowserQueueDownloadHistoryAsync(completed));
+	}
+
+	void OnBrowserOverlayMessage(string source, string message)
+	{
+		MainThread.BeginInvokeOnMainThread(() => ProcessBrowserOverlayMessage(source, message));
+	}
+
+	void ProcessBrowserOverlayMessage(string source, string message)
+	{
+		var command = _browserMediaQueue.HandleOverlayMessage(source, message);
+		switch (command.Action)
+		{
+			case BrowserMediaOverlayAction.Ready:
+				_ = SyncBrowserQueueToPageAsync();
+				break;
+			case BrowserMediaOverlayAction.StartDownload:
+				_ = StartBrowserQueueDownloadAsync();
+				break;
+			case BrowserMediaOverlayAction.Rejected:
+				_ = SyncBrowserQueueToPageAsync(command.Error);
+				break;
+		}
+	}
+
+	async Task StartBrowserQueueDownloadAsync()
+	{
+#if WINDOWS
+		try
+		{
+			var core = await WebViewBootstrapper.WaitForCoreWebView2Async(WebAppView, TimeSpan.FromSeconds(5));
+			if (core is null)
+			{
+				await SyncBrowserQueueToPageAsync("bridge_unavailable");
+				return;
+			}
+			var raw = await WebViewBootstrapper.ExecOnUiAsync(core,
+				"(()=>{try{return JSON.stringify({photoFolder:String(window.getConfiguredDownloadFolder?.()||'~/Pictures/Instagram'),videoFolder:String(window.getConfiguredVideoDownloadFolder?.()||window.getConfiguredDownloadFolder?.()||'~/Pictures/Instagram'),noDuplicates:window.isNoDuplicatesEnabled?.()!==false})}catch(e){return '{}'}})()");
+			var json = WebViewBootstrapper.TryUnwrapScriptJson(raw);
+			using var preferences = JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json);
+			var root = preferences.RootElement;
+			var photoFolder = TryGetPreferenceString(root, "photoFolder") ?? "~/Pictures/Instagram";
+			var videoFolder = TryGetPreferenceString(root, "videoFolder") ?? photoFolder;
+			var noDuplicates = !root.TryGetProperty("noDuplicates", out var duplicateValue) || duplicateValue.ValueKind != JsonValueKind.False;
+			await Task.Run(() => _browserMediaQueue.DownloadAsync(photoFolder, videoFolder, noDuplicates));
+		}
+		catch
+		{
+			// Keep the selected media queued so a later retry can recover from a bridge error.
+			await SyncBrowserQueueToPageAsync("bridge_unavailable");
+		}
+#else
+		await Task.CompletedTask;
+#endif
+	}
+
+	async Task SyncBrowserQueueToPageAsync(string? error = null, bool refreshTheme = false)
+	{
+#if WINDOWS
+		var view = _instagramBrowserView;
+		if (view is null) return;
+		try
+		{
+			var core = await WebViewBootstrapper.WaitForCoreWebView2Async(view, TimeSpan.FromSeconds(2));
+			if (core is null) return;
+			var snapshot = _browserMediaQueue.GetSnapshot();
+			var pageSnapshot = new
+			{
+				items = snapshot.Items.Select(item => new
+				{
+					item.Key,
+					item.Shortcode,
+					item.SlideIndex,
+					item.ContentCount,
+					item.IsVideo,
+					item.ThumbnailUrl,
+					item.Filename,
+					item.Error,
+				}),
+				isDownloading = snapshot.IsDownloading,
+				currentIndex = snapshot.CurrentIndex,
+				total = snapshot.Total,
+				status = snapshot.Status,
+			};
+			var snapshotJson = JsonSerializer.Serialize(pageSnapshot, QueueJsonOptions);
+			var errorJson = JsonSerializer.Serialize(error, QueueJsonOptions);
+			var themeJson = await GetBrowserOverlayThemeJsonAsync(refreshTheme);
+			var script = $"window.__instSanityReceiveQueueState?.({snapshotJson},{errorJson},{themeJson})";
+			await WebViewBootstrapper.ExecOnUiAsync(core, script);
+		}
+		catch
+		{
+			// The WebView can navigate or close while a queue update is being delivered.
+		}
+#endif
+	}
+
+	async Task<string> GetBrowserOverlayThemeJsonAsync(bool forceRefresh = false)
+	{
+#if WINDOWS
+		if (!forceRefresh && DateTime.UtcNow - _browserOverlayThemeCachedAtUtc < TimeSpan.FromSeconds(10))
+		{
+			return _cachedBrowserOverlayThemeJson;
+		}
+		try
+		{
+			var core = await WebViewBootstrapper.WaitForCoreWebView2Async(WebAppView, TimeSpan.FromSeconds(2));
+			if (core is null)
+			{
+				_cachedBrowserOverlayThemeJson = "null";
+				_browserOverlayThemeCachedAtUtc = DateTime.UtcNow;
+				return _cachedBrowserOverlayThemeJson;
+			}
+			var raw = await WebViewBootstrapper.ExecOnUiAsync(core,
+				"(()=>{const s=getComputedStyle(document.body),v=(n,f)=>s.getPropertyValue(n).trim()||f;return JSON.stringify({panel:v('--t-sidebar-bg','rgba(17,24,32,.97)'),border:v('--t-line','#ffffff30'),ink:v('--t-ink','#f8fafc'),muted:v('--t-muted','#9fb1c1'),accent:v('--t-accent','#99f6e4'),accent2:v('--t-accent2','#2dd4bf'),buttonBg:v('--t-btn-bg','linear-gradient(135deg,#99f6e4,#2dd4bf)'),buttonInk:v('--t-btn-ink','#091318')})})()");
+			var json = WebViewBootstrapper.TryUnwrapScriptJson(raw);
+			if (string.IsNullOrWhiteSpace(json))
+			{
+				_cachedBrowserOverlayThemeJson = "null";
+				_browserOverlayThemeCachedAtUtc = DateTime.UtcNow;
+				return _cachedBrowserOverlayThemeJson;
+			}
+			using var document = JsonDocument.Parse(json);
+			_cachedBrowserOverlayThemeJson = document.RootElement.GetRawText();
+			_browserOverlayThemeCachedAtUtc = DateTime.UtcNow;
+			return _cachedBrowserOverlayThemeJson;
+		}
+		catch
+		{
+			_cachedBrowserOverlayThemeJson = "null";
+			_browserOverlayThemeCachedAtUtc = DateTime.UtcNow;
+			return _cachedBrowserOverlayThemeJson;
+		}
+#else
+		return "null";
+#endif
+	}
+
+	async Task RecordBrowserQueueDownloadHistoryAsync(BrowserQueueItemCompleted completed)
+	{
+#if WINDOWS
+		try
+		{
+			var core = await WebViewBootstrapper.WaitForCoreWebView2Async(WebAppView, TimeSpan.FromSeconds(5));
+			if (core is null) return;
+			var item = completed.Item;
+			var result = completed.Result;
+			var historyItem = new
+			{
+				shortcode = item.Shortcode,
+				contentIndex = item.SlideIndex,
+				photoIndex = (int?)null,
+				videoIndex = (int?)null,
+				contentCount = item.ContentCount,
+				filename = result.Filename,
+				browserQueue = true,
+			};
+			var file = new
+			{
+				ok = result.Ok,
+				skipped = result.Skipped,
+				downloadedAtUtc = result.DownloadedAtUtc,
+				filename = result.Filename,
+			};
+			string script;
+			if (item.IsVideo)
+			{
+				var videoRecord = new
+				{
+					shortcode = item.Shortcode,
+					contentIndex = item.SlideIndex,
+					videoIndex = (int?)null,
+					contentCount = item.ContentCount,
+					downloadedAtUtc = result.DownloadedAtUtc,
+					filename = result.Filename,
+					browserQueue = true,
+				};
+				script = $"window.__recordVideoDownloadHistory?.({JsonSerializer.Serialize(videoRecord, QueueJsonOptions)})";
+			}
+			else
+			{
+				script = $"window.__recordPhotoDownloadHistory?.({JsonSerializer.Serialize(historyItem, QueueJsonOptions)},{JsonSerializer.Serialize(file, QueueJsonOptions)})";
+			}
+			await WebViewBootstrapper.ExecOnUiAsync(core, script);
+		}
+		catch
+		{
+			// Saving a history mark is best-effort and never changes the download result.
+		}
+#endif
+	}
+
+	static string? TryGetPreferenceString(JsonElement root, string name) =>
+		root.ValueKind == JsonValueKind.Object && root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+			? value.GetString()
+			: null;
 
 	async Task<bool> RefreshInstagramAccountAsync()
 	{
@@ -442,6 +664,11 @@ public partial class MainPage : ContentPage
 		var previousAccount = _browserWindow.GetState();
 		var identityChanged = previousAccount.LoggedIn != loggedIn ||
 			(loggedIn && !string.Equals(previousAccount.Username, username, StringComparison.OrdinalIgnoreCase));
+		if (previousAccount.LoggedIn &&
+			(!loggedIn || !string.Equals(previousAccount.Username, username, StringComparison.OrdinalIgnoreCase)))
+		{
+			_browserMediaQueue.ResetForLogout();
+		}
 		if (identityChanged)
 		{
 			_instagramResolver.ClearCache();
@@ -520,6 +747,7 @@ public partial class MainPage : ContentPage
 			return false;
 		}
 
+		_browserMediaQueue.ResetForLogout();
 		await WebViewBootstrapper.ClearInstagramSessionAsync(_instagramBrowserView);
 		_knownAccountUsername = string.Empty;
 		_knownAccountFullName = string.Empty;

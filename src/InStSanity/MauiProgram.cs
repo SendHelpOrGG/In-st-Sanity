@@ -1,6 +1,7 @@
 using InStSanity.Platforms.Windows;
 using InStSanity.Services.Api;
 using InStSanity.Services.Browser;
+using InStSanity.Services.Downloads;
 using InStSanity.Services.Images;
 using InStSanity.Services.Instagram;
 using InStSanity.Services.WebHost;
@@ -92,6 +93,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<InstagramResolver>();
 		builder.Services.AddSingleton<MediaCache>();
 		builder.Services.AddSingleton<InstagramBrowserWindowService>();
+		builder.Services.AddSingleton<SelectedMediaDownloadService>();
+		builder.Services.AddSingleton<BrowserMediaQueueService>();
 		builder.Services.AddSingleton<IFolderPickerService, WindowsFolderPickerService>();
 		builder.Services.AddSingleton<IDownloadFolderOpener, WindowsDownloadFolderOpener>();
 		builder.Services.AddSingleton<PhotoResizeService>();
