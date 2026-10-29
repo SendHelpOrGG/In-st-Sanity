@@ -648,6 +648,14 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-group{min-width:0;padding:14px;border:1px solid var(--t-line,rgba(255,255,255,.12));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.2))}
 .photo-adjustment-group h3{margin:0 0 12px;color:var(--t-ink,#f1f5f9);font-size:12px;font-weight:700}
 .photo-adjustment-control-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:13px}
+.photo-adjustment-look-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.photo-adjustment-look-button{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:34px;padding:7px 8px;text-align:center}
+.photo-adjustment-look-button[aria-pressed="true"]{border-color:var(--t-accent,#38bdf8);color:var(--t-ink,#f1f5f9);background:color-mix(in srgb,var(--t-accent,#38bdf8) 18%,var(--t-input-bg,rgba(15,23,42,.45)));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--t-accent,#38bdf8) 24%,transparent)}
+.photo-adjustment-look-hint{margin:8px 0 0;font-size:9px;line-height:1.45}
+.photo-adjustment-color-control{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;min-height:30px;color:var(--t-muted,#94a3b8);font-size:10px}
+.photo-adjustment-color-control label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.photo-adjustment-color-control input[type=color]{flex:0 0 40px;width:40px;height:27px;padding:2px;border:1px solid var(--t-line,rgba(255,255,255,.18));border-radius:7px;background:var(--t-input-bg,rgba(15,23,42,.45));cursor:pointer}
+.photo-adjustment-color-control output{flex:0 0 auto;color:var(--t-ink,#f1f5f9);font-size:9px;font-variant-numeric:tabular-nums}
 .photo-adjustment-control{min-width:0}
 .photo-adjustment-control label{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:3px;color:var(--t-muted,#94a3b8);font-size:10px}
 .photo-adjustment-control label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -941,6 +949,16 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             </div>
             <div class="photo-adjustment-groups" id="photoAdjustmentGroups" role="region" aria-label="Image adjustment controls" tabindex="0">
               <div class="photo-adjustment-group">
+                <h3>One-click looks</h3>
+                <div class="photo-adjustment-look-grid" role="group" aria-label="Apply a photo look">
+                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="noir" aria-pressed="false" onclick="applyPhotoResizeLook('noir')">Noir</button>
+                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="vintage" aria-pressed="false" onclick="applyPhotoResizeLook('vintage')">Vintage</button>
+                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="dreamy" aria-pressed="false" onclick="applyPhotoResizeLook('dreamy')">Dreamy</button>
+                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="cyberpunk" aria-pressed="false" onclick="applyPhotoResizeLook('cyberpunk')">Cyberpunk</button>
+                </div>
+                <p class="hint photo-adjustment-look-hint">A look replaces the current adjustments; change any control to customize it.</p>
+              </div>
+              <div class="photo-adjustment-group">
                 <h3>Tone &amp; color</h3>
                 <div class="photo-adjustment-control-grid">
                   <div class="photo-adjustment-control"><label for="photoAdjExposure"><span>Exposure</span><output id="photoAdjValueExposure">0.0 EV</output></label><input id="photoAdjExposure" type="range" min="-100" max="100" step="1" data-adjustment="exposure" oninput="updatePhotoResizeAdjustment('exposure',this.value)"></div>
@@ -970,6 +988,15 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                 <div class="photo-adjustment-control-grid">
                   <div class="photo-adjustment-control"><label for="photoAdjSepia"><span>Sepia</span><output id="photoAdjValueSepia">0%</output></label><input id="photoAdjSepia" type="range" min="0" max="100" step="1" data-adjustment="sepia" oninput="updatePhotoResizeAdjustment('sepia',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjInvert"><span>Invert</span><output id="photoAdjValueInvert">0%</output></label><input id="photoAdjInvert" type="range" min="0" max="100" step="1" data-adjustment="invert" oninput="updatePhotoResizeAdjustment('invert',this.value)"></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjPosterize"><span>Posterize</span><output id="photoAdjValuePosterize">0%</output></label><input id="photoAdjPosterize" type="range" min="0" max="100" step="1" data-adjustment="posterize" oninput="updatePhotoResizeAdjustment('posterize',this.value)"></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjPixelate"><span>Mosaic size</span><output id="photoAdjValuePixelate">0%</output></label><input id="photoAdjPixelate" type="range" min="0" max="100" step="1" data-adjustment="pixelate" oninput="updatePhotoResizeAdjustment('pixelate',this.value)"></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjDuotone"><span>Duotone</span><output id="photoAdjValueDuotone">0%</output></label><input id="photoAdjDuotone" type="range" min="0" max="100" step="1" data-adjustment="duotone" oninput="updatePhotoResizeAdjustment('duotone',this.value)"></div>
+                  <div class="photo-adjustment-color-control"><label for="photoAdjDuotoneShadowColor">Shadow color</label><input id="photoAdjDuotoneShadowColor" type="color" data-adjustment="duotoneShadowColor" aria-label="Duotone shadow color" oninput="updatePhotoResizeAdjustment('duotoneShadowColor',this.value)"><output id="photoAdjValueDuotoneShadowColor">#1B1B3A</output></div>
+                  <div class="photo-adjustment-color-control"><label for="photoAdjDuotoneHighlightColor">Highlight color</label><input id="photoAdjDuotoneHighlightColor" type="color" data-adjustment="duotoneHighlightColor" aria-label="Duotone highlight color" oninput="updatePhotoResizeAdjustment('duotoneHighlightColor',this.value)"><output id="photoAdjValueDuotoneHighlightColor">#FFD166</output></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjHalftone"><span>Halftone</span><output id="photoAdjValueHalftone">0%</output></label><input id="photoAdjHalftone" type="range" min="0" max="100" step="1" data-adjustment="halftone" oninput="updatePhotoResizeAdjustment('halftone',this.value)"></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjHalftoneSize"><span>Dot size</span><output id="photoAdjValueHalftoneSize">12 px</output></label><input id="photoAdjHalftoneSize" type="range" min="4" max="40" step="1" data-adjustment="halftoneSize" oninput="updatePhotoResizeAdjustment('halftoneSize',this.value)"></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjColorize"><span>Colorize</span><output id="photoAdjValueColorize">0%</output></label><input id="photoAdjColorize" type="range" min="0" max="100" step="1" data-adjustment="colorize" oninput="updatePhotoResizeAdjustment('colorize',this.value)"></div>
+                  <div class="photo-adjustment-color-control"><label for="photoAdjColorizeColor">Tint color</label><input id="photoAdjColorizeColor" type="color" data-adjustment="colorizeColor" aria-label="Colorize tint color" oninput="updatePhotoResizeAdjustment('colorizeColor',this.value)"><output id="photoAdjValueColorizeColor">#D94F70</output></div>
                 </div>
               </div>
               <div class="photo-adjustment-group">
@@ -3883,9 +3910,18 @@ const RESIZER_MAX_FILES=500;
 const RESIZER_MAX_FILE_BYTES=50*1024*1024;
 const RESIZER_ADJUSTMENTS_KEY='stillSane.photoResizeAdjustmentsV1';
 const RESIZER_ADJUST_BATCH_KEY='stillSane.photoResizeApplyToBatchV1';
-const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,gamma:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,sepia:0,invert:0,grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0});
-const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],gamma:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],sepia:[0,100],invert:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100]});
+const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,gamma:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,sepia:0,invert:0,posterize:0,pixelate:0,duotone:0,duotoneShadowColor:'#1B1B3A',duotoneHighlightColor:'#FFD166',halftone:0,halftoneSize:12,colorize:0,colorizeColor:'#D94F70',grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0});
+const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],gamma:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],sepia:[0,100],invert:[0,100],posterize:[0,100],pixelate:[0,100],duotone:[0,100],halftone:[0,100],halftoneSize:[4,40],colorize:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100]});
+const PHOTO_ADJUSTMENT_COLOR_KEYS=new Set(['duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
+const PHOTO_ADJUSTMENT_META_KEYS=new Set(['grainSize','monochromeGrain','halftoneSize','duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
+const PHOTO_RESIZE_LOOKS=Object.freeze({
+  noir:{label:'Noir',values:{saturation:-100,contrast:24,highlights:6,shadows:-8,clarity:12,grain:20,grainSize:28,monochromeGrain:true,vignette:20}},
+  vintage:{label:'Vintage',values:{temperature:8,saturation:-12,contrast:6,sepia:36,duotone:18,duotoneShadowColor:'#3B241E',duotoneHighlightColor:'#F7D7A3',grain:15,grainSize:38,monochromeGrain:true,fade:18,vignette:24}},
+  dreamy:{label:'Dreamy',values:{brightness:8,highlights:12,contrast:-8,saturation:10,clarity:-28,blur:8,fade:10,temperature:6}},
+  cyberpunk:{label:'Cyberpunk',values:{contrast:18,saturation:22,vibrance:20,temperature:-18,tint:20,duotone:35,duotoneShadowColor:'#101838',duotoneHighlightColor:'#FF4CBA',grain:4,vignette:12}}
+});
 let photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS};
+let photoResizeActiveLook='';
 let photoResizeApplyToBatch=true;
 let photoResizePreviewFileId='';
 let photoResizeCurrentFileId='';
@@ -3909,9 +3945,10 @@ let photoResizeAvailableCount=0;
 let photoResizeUpscaleEnabled=true;
 function makePhotoResizeGuid(){try{if(window.crypto?.randomUUID)return window.crypto.randomUUID()}catch(_){}return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)})}
 function photoAdjustmentSuffix(name){return name.charAt(0).toUpperCase()+name.slice(1)}
-function hasPhotoResizeAdjustmentEdits(settings=photoResizeAdjustments){return Object.keys(PHOTO_ADJUSTMENT_DEFAULTS).some(name=>{if(['grainSize','monochromeGrain'].includes(name))return false;const value=Number(settings?.[name]);return Number.isFinite(value)&&value!==0})}
+function isPhotoAdjustmentHexColor(value){return typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)}
+function hasPhotoResizeAdjustmentEdits(settings=photoResizeAdjustments){return Object.keys(PHOTO_ADJUSTMENT_DEFAULTS).some(name=>{if(PHOTO_ADJUSTMENT_META_KEYS.has(name))return false;const value=settings?.[name];return typeof value==='boolean'?value:Boolean(Number.isFinite(Number(value))&&Number(value)!==0)})}
 function getPhotoResizeAdjustmentPayload(){return{...photoResizeAdjustments}}
-function formatPhotoResizeAdjustmentValue(name,value){if(name==='exposure')return`${(Number(value)/50).toFixed(1)} EV`;if(name==='gamma')return`${Math.pow(2,(Number(value)||0)/100*1.2).toFixed(2)}×`;return`${Math.round(Number(value)||0)}%`}
+function formatPhotoResizeAdjustmentValue(name,value){if(PHOTO_ADJUSTMENT_COLOR_KEYS.has(name))return String(value||'').toUpperCase();if(name==='exposure')return`${(Number(value)/50).toFixed(1)} EV`;if(name==='gamma')return`${Math.pow(2,(Number(value)||0)/100*1.2).toFixed(2)}×`;if(name==='halftoneSize')return`${Math.round(Number(value)||12)} px`;return`${Math.round(Number(value)||0)}%`}
 function syncPhotoResizeAdjustmentControls(){
   document.querySelectorAll('[data-adjustment]').forEach(input=>{
     const name=input.dataset.adjustment;
@@ -3921,12 +3958,12 @@ function syncPhotoResizeAdjustmentControls(){
     const output=document.getElementById('photoAdjValue'+photoAdjustmentSuffix(name));
     if(output)output.textContent=formatPhotoResizeAdjustmentValue(name,photoResizeAdjustments[name]);
   });
+  document.querySelectorAll('[data-photo-look]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.photoLook===photoResizeActiveLook)));
   const batch=document.getElementById('photoAdjustmentBatch');
   if(batch)batch.checked=photoResizeApplyToBatch;
   const summary=document.getElementById('photoAdjustmentSummary');
   if(summary){
-    const active=Object.keys(PHOTO_ADJUSTMENT_DEFAULTS).filter(name=>!['grainSize','monochromeGrain'].includes(name)&&Number(photoResizeAdjustments[name])!==0).length;
-    const count=active;
+    const count=Object.keys(PHOTO_ADJUSTMENT_DEFAULTS).filter(name=>!PHOTO_ADJUSTMENT_META_KEYS.has(name)&&((typeof photoResizeAdjustments[name]==='boolean'&&photoResizeAdjustments[name])||Number(photoResizeAdjustments[name])!==0)).length;
     summary.textContent=count?`${count} effect${count===1?'':'s'} active`:'No changes';
     summary.classList.toggle('is-active',count>0);
   }
@@ -3940,10 +3977,12 @@ function loadPhotoResizeAdjustments(){
         const value=Number(saved[name]);
         if(Number.isFinite(value))next[name]=Math.round(Math.max(range[0],Math.min(range[1],value)));
       }
+      for(const name of PHOTO_ADJUSTMENT_COLOR_KEYS)if(isPhotoAdjustmentHexColor(saved[name]))next[name]=saved[name].toUpperCase();
       if(typeof saved.monochromeGrain==='boolean')next.monochromeGrain=saved.monochromeGrain;
     }
   }catch(_){}
   photoResizeAdjustments=next;
+  photoResizeActiveLook='';
   syncPhotoResizeAdjustmentControls();
 }
 function persistPhotoResizeAdjustments(){try{localStorage.setItem(RESIZER_ADJUSTMENTS_KEY,JSON.stringify(photoResizeAdjustments))}catch(_){}}
@@ -3952,19 +3991,34 @@ function updatePhotoResizeBatchPreference(enabled){photoResizeApplyToBatch=Boole
 function updatePhotoResizeAdjustment(name,rawValue){
   if(!Object.prototype.hasOwnProperty.call(PHOTO_ADJUSTMENT_DEFAULTS,name))return;
   if(name==='monochromeGrain')photoResizeAdjustments[name]=Boolean(rawValue);
-  else{
+  else if(PHOTO_ADJUSTMENT_COLOR_KEYS.has(name)){
+    if(!isPhotoAdjustmentHexColor(rawValue))return;
+    photoResizeAdjustments[name]=rawValue.toUpperCase();
+  }else{
     const range=PHOTO_ADJUSTMENT_RANGES[name];
     const number=Number(rawValue);
     if(!range||!Number.isFinite(number))return;
     photoResizeAdjustments[name]=Math.round(Math.max(range[0],Math.min(range[1],number)));
   }
+  photoResizeActiveLook='';
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
 }
+function applyPhotoResizeLook(name){
+  if(photoResizeBusy)return;
+  const look=PHOTO_RESIZE_LOOKS[name];
+  if(!look)return;
+  photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS,...look.values};
+  photoResizeActiveLook=name;
+  syncPhotoResizeAdjustmentControls();
+  persistPhotoResizeAdjustments();
+  schedulePhotoResizePreviewRender();
+  setPhotoResizeStatus(`${look.label} look applied. Adjust a control to customize it.`);
+}
 function resetPhotoResizeAdjustmentSlider(name){
   if(!Object.prototype.hasOwnProperty.call(PHOTO_ADJUSTMENT_RANGES,name))return;
-  updatePhotoResizeAdjustment(name,0);
+  updatePhotoResizeAdjustment(name,PHOTO_ADJUSTMENT_DEFAULTS[name]);
 }
 document.addEventListener('contextmenu',event=>{
   const slider=event.target?.closest?.('input[type="range"][data-adjustment]');
@@ -3974,6 +4028,7 @@ document.addEventListener('contextmenu',event=>{
 });
 function resetPhotoResizeAdjustments(){
   photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS};
+  photoResizeActiveLook='';
   photoResizeApplyToBatch=true;
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
@@ -4273,9 +4328,15 @@ function photoPreviewTone(pixels,width,height,settings){
     pixels[i]=blue*255;pixels[i+1]=green*255;pixels[i+2]=red*255;
   }
 }
+function photoPreviewHexColor(value,fallback){
+  const match=/^#?([0-9a-f]{6})$/i.exec(String(value||''));
+  const hex=(match?match[1]:fallback.slice(1));
+  return[parseInt(hex.slice(0,2),16)/255,parseInt(hex.slice(2,4),16)/255,parseInt(hex.slice(4,6),16)/255];
+}
 function photoPreviewCreativeEffects(pixels,width,height,settings){
-  const sepia=settings.sepia/100,invert=settings.invert/100;
-  if(sepia<=0&&invert<=0)return;
+  const sepia=settings.sepia/100,invert=settings.invert/100,colorize=settings.colorize/100,duotone=settings.duotone/100;
+  if(sepia<=0&&invert<=0&&colorize<=0&&duotone<=0)return;
+  const tintColor=photoPreviewHexColor(settings.colorizeColor,'#D94F70'),shadowColor=photoPreviewHexColor(settings.duotoneShadowColor,'#1B1B3A'),highlightColor=photoPreviewHexColor(settings.duotoneHighlightColor,'#FFD166');
   for(let i=0;i<pixels.length;i+=4){
     if(pixels[i+3]===0)continue;
     let blue=pixels[i]/255,green=pixels[i+1]/255,red=pixels[i+2]/255;
@@ -4284,6 +4345,8 @@ function photoPreviewCreativeEffects(pixels,width,height,settings){
       red=red*(1-sepia)+sepiaRed*sepia;green=green*(1-sepia)+sepiaGreen*sepia;blue=blue*(1-sepia)+sepiaBlue*sepia;
     }
     if(invert>0){red=red*(1-invert)+(1-red)*invert;green=green*(1-invert)+(1-green)*invert;blue=blue*(1-invert)+(1-blue)*invert}
+    if(colorize>0){const luminance=photoPreviewLuminance(red,green,blue);red=red*(1-colorize)+luminance*tintColor[0]*colorize;green=green*(1-colorize)+luminance*tintColor[1]*colorize;blue=blue*(1-colorize)+luminance*tintColor[2]*colorize}
+    if(duotone>0){const luminance=Math.max(0,Math.min(1,photoPreviewLuminance(red,green,blue))),toneRed=shadowColor[0]+(highlightColor[0]-shadowColor[0])*luminance,toneGreen=shadowColor[1]+(highlightColor[1]-shadowColor[1])*luminance,toneBlue=shadowColor[2]+(highlightColor[2]-shadowColor[2])*luminance;red=red*(1-duotone)+toneRed*duotone;green=green*(1-duotone)+toneGreen*duotone;blue=blue*(1-duotone)+toneBlue*duotone}
     pixels[i]=blue*255;pixels[i+1]=green*255;pixels[i+2]=red*255;
   }
 }
@@ -4305,15 +4368,44 @@ function photoPreviewFinishing(pixels,width,height,settings,seedData){
     pixels[i]=(pixels[i]*vignetteFactor*fadeFactor+fadeLift+noiseBlue*grainAmount*grainScale);pixels[i+1]=(pixels[i+1]*vignetteFactor*fadeFactor+fadeLift+noiseGreen*grainAmount*grainScale);pixels[i+2]=(pixels[i+2]*vignetteFactor*fadeFactor+fadeLift+noiseRed*grainAmount*grainScale);
   }}
 }
+function photoPreviewPosterize(pixels,amount){
+  const strength=Math.max(0,Math.min(1,amount/100));if(strength<=0)return;
+  const levels=Math.max(2,32-Math.round(strength*30)),step=255/(levels-1);
+  for(let i=0;i<pixels.length;i+=4){if(pixels[i+3]===0)continue;for(let channel=0;channel<3;channel++)pixels[i+channel]=Math.round(Math.round(pixels[i+channel]/step)*step)}
+}
+function photoPreviewHalftone(pixels,width,height,amount,requestedCellSize){
+  const strength=Math.max(0,Math.min(1,amount/100)),cellSize=Math.max(4,Math.min(40,Math.round(requestedCellSize)));if(strength<=0)return;
+  for(let top=0;top<height;top+=cellSize){const bottom=Math.min(height,top+cellSize);for(let left=0;left<width;left+=cellSize){
+    const right=Math.min(width,left+cellSize);let blueTotal=0,greenTotal=0,redTotal=0,luminanceTotal=0,count=0;
+    for(let y=top;y<bottom;y++)for(let x=left;x<right;x++){const i=(y*width+x)*4;if(pixels[i+3]===0)continue;const blue=pixels[i]/255,green=pixels[i+1]/255,red=pixels[i+2]/255;blueTotal+=pixels[i];greenTotal+=pixels[i+1];redTotal+=pixels[i+2];luminanceTotal+=photoPreviewLuminance(red,green,blue);count++}
+    if(!count)continue;
+    const averageBlue=blueTotal/count,averageGreen=greenTotal/count,averageRed=redTotal/count,radius=cellSize*.7071067811865476*Math.sqrt(1-luminanceTotal/count),centerX=(left+right-1)/2,centerY=(top+bottom-1)/2,radiusSquared=radius*radius;
+    for(let y=top;y<bottom;y++)for(let x=left;x<right;x++){const i=(y*width+x)*4;if(pixels[i+3]===0)continue;const dx=x-centerX,dy=y-centerY,insideDot=dx*dx+dy*dy<=radiusSquared,targetBlue=insideDot?averageBlue:255,targetGreen=insideDot?averageGreen:255,targetRed=insideDot?averageRed:255;pixels[i]=Math.round(pixels[i]*(1-strength)+targetBlue*strength);pixels[i+1]=Math.round(pixels[i+1]*(1-strength)+targetGreen*strength);pixels[i+2]=Math.round(pixels[i+2]*(1-strength)+targetRed*strength)}
+  }}
+}
+function photoPreviewPixelate(pixels,width,height,amount){
+  const strength=Math.max(0,Math.min(1,amount/100));if(strength<=0)return;
+  const maximumCellSize=Math.max(2,Math.min(96,Math.round(Math.min(width,height)*.12))),cellSize=2+Math.round((maximumCellSize-2)*strength);
+  for(let top=0;top<height;top+=cellSize){const bottom=Math.min(height,top+cellSize);for(let left=0;left<width;left+=cellSize){
+    const right=Math.min(width,left+cellSize);let blueTotal=0,greenTotal=0,redTotal=0,count=0;
+    for(let y=top;y<bottom;y++)for(let x=left;x<right;x++){const i=(y*width+x)*4;if(pixels[i+3]===0)continue;blueTotal+=pixels[i];greenTotal+=pixels[i+1];redTotal+=pixels[i+2];count++}
+    if(!count)continue;
+    const averageBlue=Math.round(blueTotal/count),averageGreen=Math.round(greenTotal/count),averageRed=Math.round(redTotal/count);
+    for(let y=top;y<bottom;y++)for(let x=left;x<right;x++){const i=(y*width+x)*4;if(pixels[i+3]===0)continue;pixels[i]=averageBlue;pixels[i+1]=averageGreen;pixels[i+2]=averageRed}
+  }}
+}
 function applyPhotoResizePreviewAdjustments(pixels,width,height,settings,seedData){
   if(settings.denoise>0)photoPreviewDenoise(pixels,width,height,settings.denoise);
   photoPreviewTone(pixels,width,height,settings);
-  if(settings.sepia>0||settings.invert>0)photoPreviewCreativeEffects(pixels,width,height,settings);
+  if(settings.sepia>0||settings.invert>0||settings.colorize>0||settings.duotone>0)photoPreviewCreativeEffects(pixels,width,height,settings);
   if(settings.sharpness>0)photoPreviewUnsharp(pixels,width,height,1,settings.sharpness/100*1.8,false);
   if(settings.clarity!==0)photoPreviewUnsharp(pixels,width,height,Math.max(2,Math.min(10,Math.floor(Math.min(width,height)/100))),settings.clarity/100*1.15,true);
   if(settings.texture!==0)photoPreviewUnsharp(pixels,width,height,2,settings.texture/100*1.35,false);
   if(settings.blur>0)photoPreviewBlur(pixels,width,height,1+Math.round(settings.blur/100*11),settings.blur/100);
   if(settings.fade>0||settings.vignette>0||settings.grain>0)photoPreviewFinishing(pixels,width,height,settings,seedData);
+  if(settings.posterize>0)photoPreviewPosterize(pixels,settings.posterize);
+  if(settings.halftone>0)photoPreviewHalftone(pixels,width,height,settings.halftone,settings.halftoneSize);
+  if(settings.pixelate>0)photoPreviewPixelate(pixels,width,height,settings.pixelate);
 }
 function loadPhotoResizerSettings(){const output=document.getElementById('resizerOutputFolder');const maxSide=document.getElementById('resizerMaxSide');if(output){try{const saved=localStorage.getItem(RESIZER_OUTPUT_FOLDER_KEY);if(saved&&saved.trim())output.value=saved.trim()}catch(_){}}if(maxSide){let saved=2048;try{const raw=Number(localStorage.getItem(RESIZER_MAX_SIDE_KEY));if(Number.isInteger(raw)&&raw>=64&&raw<=16384)saved=raw}catch(_){}maxSide.value=String(saved)}try{photoResizeUpscaleEnabled=localStorage.getItem(RESIZER_UPSCALE_KEY)!=='0'}catch(_){photoResizeUpscaleEnabled=true}renderPhotoResizeUpscaleToggle();syncResizerNoDuplicatesButton();loadPhotoResizeAdjustments();loadPhotoResizeBatchPreference();initPhotoResizePreviewZoom()}
 function persistPhotoResizerOutputFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(RESIZER_OUTPUT_FOLDER_KEY,path.trim())}catch(_){}}
@@ -4382,6 +4474,7 @@ function updatePhotoResizeThumbnailStatus(item){
 }
 function syncPhotoResizeControls({renderFiles=true,refreshPreview=true}={}){
   const busy=photoResizeBusy;
+  document.querySelectorAll('[data-photo-look]').forEach(button=>button.disabled=busy);
   const upscaleToggle=document.getElementById('resizerUpscaleToggleBtn');
   if(upscaleToggle)upscaleToggle.disabled=busy;
   const choose=document.getElementById('resizerChooseImagesBtn');
@@ -7021,8 +7114,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.195';
+const APP_VERSION='1.196';
 const VERSION_HISTORY=[
+  {version:'1.196',added:'Posterize, mosaic, duotone, halftone, and colorize effects plus Noir, Vintage, Dreamy, and Cyberpunk one-click looks.',removed:'No removals.',fixed:'Kept every new effect live in the preview and conversion pipeline, with saved color choices and adjustable strength or pattern size.',tone:'green'},
   {version:'1.195',added:'No new features.',removed:'The extra bottom inset beneath the last Image Edit adjustment group.',fixed:'Removed the scroll area’s 5px bottom padding so its final control card aligns with the preview panel when scrolled fully down.',tone:'green'},
   {version:'1.194',added:'A gentler 10% default for interface click loudness.',removed:'The 100% first-run click loudness.',fixed:'Set the initial slider, label, preview, and playback default to 10% while preserving any saved user volume.',tone:'green'},
   {version:'1.193',added:'A scrollable adjustments panel sized to the current preview panel.',removed:'The fixed viewport-based control-panel height.',fixed:'Kept the scroll area aligned with the preview as its image size or viewport changes.',tone:'green'},

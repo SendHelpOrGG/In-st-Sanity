@@ -20,6 +20,15 @@ public sealed record PhotoImageAdjustments
 	public double Denoise { get; init; }
 	public double Sepia { get; init; }
 	public double Invert { get; init; }
+	public double Posterize { get; init; }
+	public double Pixelate { get; init; }
+	public double Duotone { get; init; }
+	public string DuotoneShadowColor { get; init; } = "#1B1B3A";
+	public string DuotoneHighlightColor { get; init; } = "#FFD166";
+	public double Halftone { get; init; }
+	public double HalftoneSize { get; init; } = 12;
+	public double Colorize { get; init; }
+	public string ColorizeColor { get; init; } = "#D94F70";
 	public double Grain { get; init; }
 	public double GrainSize { get; init; } = 35;
 	public bool MonochromeGrain { get; init; }
@@ -30,6 +39,7 @@ public sealed record PhotoImageAdjustments
 		Exposure != 0 || Brightness != 0 || Contrast != 0 || Gamma != 0 || Highlights != 0 || Shadows != 0 ||
 		Temperature != 0 || Tint != 0 || Saturation != 0 || Vibrance != 0 || Sharpness != 0 ||
 		Clarity != 0 || Texture != 0 || Blur != 0 || Denoise != 0 || Sepia != 0 || Invert != 0 ||
+		Posterize != 0 || Pixelate != 0 || Duotone != 0 || Halftone != 0 || Colorize != 0 ||
 		Grain != 0 || Fade != 0 || Vignette != 0;
 }
 
@@ -57,9 +67,9 @@ internal static class PhotoImageAdjustmentProcessor
 		}
 
 		ApplyToneAndColor(pixels, width, height, settings);
-		if (settings.Sepia > 0 || settings.Invert > 0)
+		if (settings.Sepia > 0 || settings.Invert > 0 || settings.Colorize > 0 || settings.Duotone > 0)
 		{
-			ApplyCreativeEffects(pixels, settings.Sepia, settings.Invert);
+			ApplyCreativeEffects(pixels, settings);
 		}
 
 		if (settings.Sharpness > 0)
@@ -87,6 +97,21 @@ internal static class PhotoImageAdjustmentProcessor
 		if (settings.Fade > 0 || settings.Vignette > 0 || settings.Grain > 0)
 		{
 			ApplyFinishingEffects(pixels, width, height, settings, seedBytes);
+		}
+
+		if (settings.Posterize > 0)
+		{
+			ApplyPosterize(pixels, settings.Posterize);
+		}
+
+		if (settings.Halftone > 0)
+		{
+			ApplyHalftone(pixels, width, height, settings.Halftone, settings.HalftoneSize);
+		}
+
+		if (settings.Pixelate > 0)
+		{
+			ApplyPixelate(pixels, width, height, settings.Pixelate);
 		}
 	}
 
@@ -163,10 +188,16 @@ internal static class PhotoImageAdjustmentProcessor
 		}
 	}
 
-	static void ApplyCreativeEffects(byte[] pixels, double sepiaAmount, double invertAmount)
+	static void ApplyCreativeEffects(byte[] pixels, PhotoImageAdjustments settings)
 	{
-		var sepia = Math.Clamp(sepiaAmount / 100.0, 0, 1);
-		var invert = Math.Clamp(invertAmount / 100.0, 0, 1);
+		var sepia = Math.Clamp(settings.Sepia / 100.0, 0, 1);
+		var invert = Math.Clamp(settings.Invert / 100.0, 0, 1);
+		var colorize = Math.Clamp(settings.Colorize / 100.0, 0, 1);
+		var duotone = Math.Clamp(settings.Duotone / 100.0, 0, 1);
+		var tintColor = ParseHexColor(settings.ColorizeColor, "#D94F70");
+		var shadowColor = ParseHexColor(settings.DuotoneShadowColor, "#1B1B3A");
+		var highlightColor = ParseHexColor(settings.DuotoneHighlightColor, "#FFD166");
+
 		for (var index = 0; index < pixels.Length; index += 4)
 		{
 			if (pixels[index + 3] == 0)
@@ -194,9 +225,225 @@ internal static class PhotoImageAdjustmentProcessor
 				blue = blue * (1 - invert) + (1 - blue) * invert;
 			}
 
+			if (colorize > 0)
+			{
+				var luminance = Luminance(red, green, blue);
+				red = red * (1 - colorize) + luminance * tintColor.Red * colorize;
+				green = green * (1 - colorize) + luminance * tintColor.Green * colorize;
+				blue = blue * (1 - colorize) + luminance * tintColor.Blue * colorize;
+			}
+
+			if (duotone > 0)
+			{
+				var luminance = Math.Clamp(Luminance(red, green, blue), 0, 1);
+				var toneRed = shadowColor.Red + (highlightColor.Red - shadowColor.Red) * luminance;
+				var toneGreen = shadowColor.Green + (highlightColor.Green - shadowColor.Green) * luminance;
+				var toneBlue = shadowColor.Blue + (highlightColor.Blue - shadowColor.Blue) * luminance;
+				red = red * (1 - duotone) + toneRed * duotone;
+				green = green * (1 - duotone) + toneGreen * duotone;
+				blue = blue * (1 - duotone) + toneBlue * duotone;
+			}
+
 			pixels[index] = ToByte(blue);
 			pixels[index + 1] = ToByte(green);
 			pixels[index + 2] = ToByte(red);
+		}
+	}
+
+	static (double Red, double Green, double Blue) ParseHexColor(string? value, string fallback)
+	{
+		var color = IsHexColor(value) ? value! : fallback;
+		return (
+			Convert.ToInt32(color.Substring(1, 2), 16) / 255.0,
+			Convert.ToInt32(color.Substring(3, 2), 16) / 255.0,
+			Convert.ToInt32(color.Substring(5, 2), 16) / 255.0);
+	}
+
+	static bool IsHexColor(string? value)
+	{
+		if (value is null || value.Length != 7 || value[0] != '#')
+		{
+			return false;
+		}
+
+		for (var index = 1; index < value.Length; index++)
+		{
+			var character = value[index];
+			if (!(character is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F'))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	static void ApplyPosterize(byte[] pixels, double amount)
+	{
+		var strength = Math.Clamp(amount / 100.0, 0, 1);
+		if (strength <= 0)
+		{
+			return;
+		}
+
+		var levels = Math.Max(2, 32 - (int)Math.Round(strength * 30, MidpointRounding.AwayFromZero));
+		var step = 255.0 / (levels - 1);
+		for (var index = 0; index < pixels.Length; index += 4)
+		{
+			if (pixels[index + 3] == 0)
+			{
+				continue;
+			}
+
+			for (var channel = 0; channel < 3; channel++)
+			{
+				pixels[index + channel] = (byte)Math.Clamp(
+					Math.Round(Math.Round(pixels[index + channel] / step, MidpointRounding.AwayFromZero) * step, MidpointRounding.AwayFromZero),
+					0,
+					255);
+			}
+		}
+	}
+
+	static void ApplyHalftone(byte[] pixels, int width, int height, double amount, double requestedCellSize)
+	{
+		var strength = Math.Clamp(amount / 100.0, 0, 1);
+		var cellSize = Math.Clamp((int)Math.Round(requestedCellSize, MidpointRounding.AwayFromZero), 4, 40);
+		if (strength <= 0)
+		{
+			return;
+		}
+
+		for (var top = 0; top < height; top += cellSize)
+		{
+			var bottom = Math.Min(height, top + cellSize);
+			for (var left = 0; left < width; left += cellSize)
+			{
+				var right = Math.Min(width, left + cellSize);
+				var blueTotal = 0.0;
+				var greenTotal = 0.0;
+				var redTotal = 0.0;
+				var luminanceTotal = 0.0;
+				var count = 0;
+				for (var y = top; y < bottom; y++)
+				{
+					for (var x = left; x < right; x++)
+					{
+						var index = (y * width + x) * 4;
+						if (pixels[index + 3] == 0)
+						{
+							continue;
+						}
+
+						var blue = pixels[index];
+						var green = pixels[index + 1];
+						var red = pixels[index + 2];
+						blueTotal += blue;
+						greenTotal += green;
+						redTotal += red;
+						luminanceTotal += Luminance(red / 255.0, green / 255.0, blue / 255.0);
+						count++;
+					}
+				}
+
+				if (count == 0)
+				{
+					continue;
+				}
+
+				var averageBlue = blueTotal / count;
+				var averageGreen = greenTotal / count;
+				var averageRed = redTotal / count;
+				var radius = cellSize * 0.7071067811865476 * Math.Sqrt(1 - luminanceTotal / count);
+				var centerX = (left + right - 1) / 2.0;
+				var centerY = (top + bottom - 1) / 2.0;
+				var radiusSquared = radius * radius;
+				for (var y = top; y < bottom; y++)
+				{
+					for (var x = left; x < right; x++)
+					{
+						var index = (y * width + x) * 4;
+						if (pixels[index + 3] == 0)
+						{
+							continue;
+						}
+
+						var offsetX = x - centerX;
+						var offsetY = y - centerY;
+						var insideDot = offsetX * offsetX + offsetY * offsetY <= radiusSquared;
+						var targetBlue = insideDot ? averageBlue : 255;
+						var targetGreen = insideDot ? averageGreen : 255;
+						var targetRed = insideDot ? averageRed : 255;
+						pixels[index] = (byte)Math.Clamp(Math.Round(pixels[index] * (1 - strength) + targetBlue * strength, MidpointRounding.AwayFromZero), 0, 255);
+						pixels[index + 1] = (byte)Math.Clamp(Math.Round(pixels[index + 1] * (1 - strength) + targetGreen * strength, MidpointRounding.AwayFromZero), 0, 255);
+						pixels[index + 2] = (byte)Math.Clamp(Math.Round(pixels[index + 2] * (1 - strength) + targetRed * strength, MidpointRounding.AwayFromZero), 0, 255);
+					}
+				}
+			}
+		}
+	}
+
+	static void ApplyPixelate(byte[] pixels, int width, int height, double amount)
+	{
+		var strength = Math.Clamp(amount / 100.0, 0, 1);
+		if (strength <= 0)
+		{
+			return;
+		}
+
+		var maximumCellSize = Math.Clamp((int)Math.Round(Math.Min(width, height) * 0.12, MidpointRounding.AwayFromZero), 2, 96);
+		var cellSize = 2 + (int)Math.Round((maximumCellSize - 2) * strength);
+		for (var top = 0; top < height; top += cellSize)
+		{
+			var bottom = Math.Min(height, top + cellSize);
+			for (var left = 0; left < width; left += cellSize)
+			{
+				var right = Math.Min(width, left + cellSize);
+				var blueTotal = 0;
+				var greenTotal = 0;
+				var redTotal = 0;
+				var count = 0;
+				for (var y = top; y < bottom; y++)
+				{
+					for (var x = left; x < right; x++)
+					{
+						var index = (y * width + x) * 4;
+						if (pixels[index + 3] == 0)
+						{
+							continue;
+						}
+
+						blueTotal += pixels[index];
+						greenTotal += pixels[index + 1];
+						redTotal += pixels[index + 2];
+						count++;
+					}
+				}
+
+				if (count == 0)
+				{
+					continue;
+				}
+
+				var averageBlue = blueTotal / (double)count;
+				var averageGreen = greenTotal / (double)count;
+				var averageRed = redTotal / (double)count;
+				for (var y = top; y < bottom; y++)
+				{
+					for (var x = left; x < right; x++)
+					{
+						var index = (y * width + x) * 4;
+						if (pixels[index + 3] == 0)
+						{
+							continue;
+						}
+
+						pixels[index] = (byte)Math.Clamp(Math.Round(averageBlue, MidpointRounding.AwayFromZero), 0, 255);
+						pixels[index + 1] = (byte)Math.Clamp(Math.Round(averageGreen, MidpointRounding.AwayFromZero), 0, 255);
+						pixels[index + 2] = (byte)Math.Clamp(Math.Round(averageRed, MidpointRounding.AwayFromZero), 0, 255);
+					}
+				}
+			}
 		}
 	}
 

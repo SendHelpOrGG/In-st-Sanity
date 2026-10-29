@@ -167,10 +167,23 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			!TryReadNumber(element, "denoise", 0, 100, 0, out var denoise) ||
 			!TryReadNumber(element, "sepia", 0, 100, 0, out var sepia) ||
 			!TryReadNumber(element, "invert", 0, 100, 0, out var invert) ||
+			!TryReadNumber(element, "posterize", 0, 100, 0, out var posterize) ||
+			!TryReadNumber(element, "pixelate", 0, 100, 0, out var pixelate) ||
+			!TryReadNumber(element, "duotone", 0, 100, 0, out var duotone) ||
+			!TryReadNumber(element, "halftone", 0, 100, 0, out var halftone) ||
+			!TryReadNumber(element, "halftoneSize", 4, 40, 12, out var halftoneSize) ||
+			!TryReadNumber(element, "colorize", 0, 100, 0, out var colorize) ||
 			!TryReadNumber(element, "grain", 0, 100, 0, out var grain) ||
 			!TryReadNumber(element, "grainSize", 0, 100, 35, out var grainSize) ||
 			!TryReadNumber(element, "fade", 0, 100, 0, out var fade) ||
 			!TryReadNumber(element, "vignette", 0, 100, 0, out var vignette))
+		{
+			return false;
+		}
+
+		if (!TryReadColor(element, "duotoneShadowColor", "#1B1B3A", out var duotoneShadowColor) ||
+			!TryReadColor(element, "duotoneHighlightColor", "#FFD166", out var duotoneHighlightColor) ||
+			!TryReadColor(element, "colorizeColor", "#D94F70", out var colorizeColor))
 		{
 			return false;
 		}
@@ -207,6 +220,15 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			Denoise = denoise,
 			Sepia = sepia,
 			Invert = invert,
+			Posterize = posterize,
+			Pixelate = pixelate,
+			Duotone = duotone,
+			DuotoneShadowColor = duotoneShadowColor,
+			DuotoneHighlightColor = duotoneHighlightColor,
+			Halftone = halftone,
+			HalftoneSize = halftoneSize,
+			Colorize = colorize,
+			ColorizeColor = colorizeColor,
 			Grain = grain,
 			GrainSize = grainSize,
 			MonochromeGrain = monochromeGrain,
@@ -231,6 +253,42 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 		}
 
 		result = parsed;
+		return true;
+	}
+
+	static bool TryReadColor(JsonElement element, string name, string defaultValue, out string result)
+	{
+		result = defaultValue;
+		if (!TryGetProperty(element, name, out var value))
+		{
+			return true;
+		}
+
+		if (value.ValueKind != JsonValueKind.String || !IsHexColor(value.GetString()))
+		{
+			return false;
+		}
+
+		result = value.GetString()!.ToUpperInvariant();
+		return true;
+	}
+
+	static bool IsHexColor(string? value)
+	{
+		if (value is null || value.Length != 7 || value[0] != '#')
+		{
+			return false;
+		}
+
+		for (var index = 1; index < value.Length; index++)
+		{
+			var character = value[index];
+			if (!(character is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F'))
+			{
+				return false;
+			}
+		}
+
 		return true;
 	}
 
