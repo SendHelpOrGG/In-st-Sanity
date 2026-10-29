@@ -651,6 +651,8 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-look-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .photo-adjustment-look-button{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:34px;padding:7px 8px;text-align:center}
 .photo-adjustment-look-button[aria-pressed="true"]{border-color:var(--t-accent,#38bdf8);color:var(--t-ink,#f1f5f9);background:color-mix(in srgb,var(--t-accent,#38bdf8) 18%,var(--t-input-bg,rgba(15,23,42,.45)));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--t-accent,#38bdf8) 24%,transparent)}
+.photo-adjustment-look-strength{margin-top:12px}
+.photo-adjustment-look-strength input:disabled{opacity:.42;cursor:not-allowed}
 .photo-adjustment-look-hint{margin:8px 0 0;font-size:9px;line-height:1.45}
 .photo-adjustment-color-control{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;min-height:30px;color:var(--t-muted,#94a3b8);font-size:10px}
 .photo-adjustment-color-control label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -956,7 +958,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="dreamy" aria-pressed="false" onclick="applyPhotoResizeLook('dreamy')">Dreamy</button>
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="cyberpunk" aria-pressed="false" onclick="applyPhotoResizeLook('cyberpunk')">Cyberpunk</button>
                 </div>
-                <p class="hint photo-adjustment-look-hint">A look replaces the current adjustments; change any control to customize it.</p>
+                <div class="photo-adjustment-control photo-adjustment-look-strength"><label for="photoResizeLookStrength"><span>Look strength</span><output id="photoResizeLookStrengthValue">0%</output></label><input id="photoResizeLookStrength" type="range" min="0" max="100" step="1" value="0" aria-label="Selected look strength" oninput="updatePhotoResizeLookStrength(this.value)" disabled></div>
+                <p class="hint photo-adjustment-look-hint">Choose a look to enable strength. A look replaces current adjustments; editing a control switches to Custom.</p>
               </div>
               <div class="photo-adjustment-group">
                 <h3>Tone &amp; color</h3>
@@ -3909,6 +3912,7 @@ const RESIZER_ALLOWED_EXTENSIONS=new Set(['.jpg','.jpeg','.png','.bmp','.tif','.
 const RESIZER_MAX_FILES=500;
 const RESIZER_MAX_FILE_BYTES=50*1024*1024;
 const RESIZER_ADJUSTMENTS_KEY='stillSane.photoResizeAdjustmentsV1';
+const RESIZER_LOOK_STATE_KEY='stillSane.photoResizeLookV1';
 const RESIZER_ADJUST_BATCH_KEY='stillSane.photoResizeApplyToBatchV1';
 const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,gamma:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,sepia:0,invert:0,posterize:0,pixelate:0,duotone:0,duotoneShadowColor:'#1B1B3A',duotoneHighlightColor:'#FFD166',halftone:0,halftoneSize:12,colorize:0,colorizeColor:'#D94F70',grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0});
 const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],gamma:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],sepia:[0,100],invert:[0,100],posterize:[0,100],pixelate:[0,100],duotone:[0,100],halftone:[0,100],halftoneSize:[4,40],colorize:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100]});
@@ -3916,12 +3920,13 @@ const PHOTO_ADJUSTMENT_COLOR_KEYS=new Set(['duotoneShadowColor','duotoneHighligh
 const PHOTO_ADJUSTMENT_META_KEYS=new Set(['grainSize','monochromeGrain','halftoneSize','duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
 const PHOTO_RESIZE_LOOKS=Object.freeze({
   noir:{label:'Noir',values:{saturation:-100,contrast:24,highlights:6,shadows:-8,clarity:12,grain:20,grainSize:28,monochromeGrain:true,vignette:20}},
-  vintage:{label:'Vintage',values:{temperature:8,saturation:-12,contrast:6,sepia:36,duotone:18,duotoneShadowColor:'#3B241E',duotoneHighlightColor:'#F7D7A3',grain:15,grainSize:38,monochromeGrain:true,fade:18,vignette:24}},
+  vintage:{label:'Vintage',values:{brightness:4,contrast:-12,highlights:-12,shadows:10,temperature:18,tint:2,saturation:-24,sepia:28,grain:18,grainSize:36,monochromeGrain:true,fade:22,vignette:14}},
   dreamy:{label:'Dreamy',values:{brightness:8,highlights:12,contrast:-8,saturation:10,clarity:-28,blur:8,fade:10,temperature:6}},
   cyberpunk:{label:'Cyberpunk',values:{contrast:18,saturation:22,vibrance:20,temperature:-18,tint:20,duotone:35,duotoneShadowColor:'#101838',duotoneHighlightColor:'#FF4CBA',grain:4,vignette:12}}
 });
 let photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS};
 let photoResizeActiveLook='';
+let photoResizeLookStrength=0;
 let photoResizeApplyToBatch=true;
 let photoResizePreviewFileId='';
 let photoResizeCurrentFileId='';
@@ -3959,6 +3964,10 @@ function syncPhotoResizeAdjustmentControls(){
     if(output)output.textContent=formatPhotoResizeAdjustmentValue(name,photoResizeAdjustments[name]);
   });
   document.querySelectorAll('[data-photo-look]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.photoLook===photoResizeActiveLook)));
+  const lookStrength=document.getElementById('photoResizeLookStrength');
+  if(lookStrength){lookStrength.value=String(photoResizeLookStrength);lookStrength.disabled=!photoResizeActiveLook||photoResizeBusy}
+  const lookStrengthValue=document.getElementById('photoResizeLookStrengthValue');
+  if(lookStrengthValue)lookStrengthValue.textContent=`${photoResizeLookStrength}%`;
   const batch=document.getElementById('photoAdjustmentBatch');
   if(batch)batch.checked=photoResizeApplyToBatch;
   const summary=document.getElementById('photoAdjustmentSummary');
@@ -3983,9 +3992,17 @@ function loadPhotoResizeAdjustments(){
   }catch(_){}
   photoResizeAdjustments=next;
   photoResizeActiveLook='';
+  photoResizeLookStrength=0;
+  try{
+    const savedLook=JSON.parse(localStorage.getItem(RESIZER_LOOK_STATE_KEY)||'null');
+    if(savedLook&&typeof savedLook==='object'&&Object.prototype.hasOwnProperty.call(PHOTO_RESIZE_LOOKS,savedLook.name)){
+      const strength=Number(savedLook.strength);
+      if(Number.isFinite(strength)){photoResizeActiveLook=savedLook.name;photoResizeLookStrength=Math.round(Math.max(0,Math.min(100,strength)))}
+    }
+  }catch(_){}
   syncPhotoResizeAdjustmentControls();
 }
-function persistPhotoResizeAdjustments(){try{localStorage.setItem(RESIZER_ADJUSTMENTS_KEY,JSON.stringify(photoResizeAdjustments))}catch(_){}}
+function persistPhotoResizeAdjustments(){try{localStorage.setItem(RESIZER_ADJUSTMENTS_KEY,JSON.stringify(photoResizeAdjustments));localStorage.setItem(RESIZER_LOOK_STATE_KEY,JSON.stringify({name:photoResizeActiveLook,strength:photoResizeLookStrength}))}catch(_){}}
 function loadPhotoResizeBatchPreference(){try{photoResizeApplyToBatch=localStorage.getItem(RESIZER_ADJUST_BATCH_KEY)!=='0'}catch(_){photoResizeApplyToBatch=true}const input=document.getElementById('photoAdjustmentBatch');if(input)input.checked=photoResizeApplyToBatch}
 function updatePhotoResizeBatchPreference(enabled){photoResizeApplyToBatch=Boolean(enabled);try{localStorage.setItem(RESIZER_ADJUST_BATCH_KEY,photoResizeApplyToBatch?'1':'0')}catch(_){}const input=document.getElementById('photoAdjustmentBatch');if(input)input.checked=photoResizeApplyToBatch;syncPhotoResizeControls()}
 function updatePhotoResizeAdjustment(name,rawValue){
@@ -4001,20 +4018,48 @@ function updatePhotoResizeAdjustment(name,rawValue){
     photoResizeAdjustments[name]=Math.round(Math.max(range[0],Math.min(range[1],number)));
   }
   photoResizeActiveLook='';
+  photoResizeLookStrength=0;
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
+}
+function interpolatePhotoAdjustmentColor(startColor,endColor,strength){
+  const channel=offset=>Math.round(parseInt(startColor.slice(offset,offset+2),16)+(parseInt(endColor.slice(offset,offset+2),16)-parseInt(startColor.slice(offset,offset+2),16))*strength).toString(16).padStart(2,'0');
+  return('#'+channel(1)+channel(3)+channel(5)).toUpperCase();
+}
+function getPhotoResizeLookAdjustments(name,strengthPercent){
+  const look=PHOTO_RESIZE_LOOKS[name];
+  if(!look)return{...PHOTO_ADJUSTMENT_DEFAULTS};
+  const strength=Math.max(0,Math.min(100,Number(strengthPercent)||0))/100,next={...PHOTO_ADJUSTMENT_DEFAULTS};
+  for(const [key,target] of Object.entries(look.values)){
+    const neutral=PHOTO_ADJUSTMENT_DEFAULTS[key];
+    if(PHOTO_ADJUSTMENT_COLOR_KEYS.has(key))next[key]=interpolatePhotoAdjustmentColor(neutral,target,strength);
+    else if(typeof target==='boolean')next[key]=strength>0?target:neutral;
+    else if(typeof target==='number')next[key]=Math.round(neutral+(target-neutral)*strength);
+  }
+  return next;
 }
 function applyPhotoResizeLook(name){
   if(photoResizeBusy)return;
   const look=PHOTO_RESIZE_LOOKS[name];
   if(!look)return;
-  photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS,...look.values};
   photoResizeActiveLook=name;
+  photoResizeLookStrength=100;
+  photoResizeAdjustments=getPhotoResizeLookAdjustments(name,photoResizeLookStrength);
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
-  setPhotoResizeStatus(`${look.label} look applied. Adjust a control to customize it.`);
+  setPhotoResizeStatus(`${look.label} look applied. Lower Look strength for a subtler version, or edit a control to make a custom look.`);
+}
+function updatePhotoResizeLookStrength(rawValue){
+  if(photoResizeBusy||!photoResizeActiveLook)return;
+  const strength=Number(rawValue);
+  if(!Number.isFinite(strength))return;
+  photoResizeLookStrength=Math.round(Math.max(0,Math.min(100,strength)));
+  photoResizeAdjustments=getPhotoResizeLookAdjustments(photoResizeActiveLook,photoResizeLookStrength);
+  syncPhotoResizeAdjustmentControls();
+  persistPhotoResizeAdjustments();
+  schedulePhotoResizePreviewRender();
 }
 function resetPhotoResizeAdjustmentSlider(name){
   if(!Object.prototype.hasOwnProperty.call(PHOTO_ADJUSTMENT_RANGES,name))return;
@@ -4029,6 +4074,7 @@ document.addEventListener('contextmenu',event=>{
 function resetPhotoResizeAdjustments(){
   photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS};
   photoResizeActiveLook='';
+  photoResizeLookStrength=0;
   photoResizeApplyToBatch=true;
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
@@ -4475,6 +4521,8 @@ function updatePhotoResizeThumbnailStatus(item){
 function syncPhotoResizeControls({renderFiles=true,refreshPreview=true}={}){
   const busy=photoResizeBusy;
   document.querySelectorAll('[data-photo-look]').forEach(button=>button.disabled=busy);
+  const lookStrength=document.getElementById('photoResizeLookStrength');
+  if(lookStrength)lookStrength.disabled=busy||!photoResizeActiveLook;
   const upscaleToggle=document.getElementById('resizerUpscaleToggleBtn');
   if(upscaleToggle)upscaleToggle.disabled=busy;
   const choose=document.getElementById('resizerChooseImagesBtn');
@@ -7114,8 +7162,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='1.196';
+const APP_VERSION='1.197';
 const VERSION_HISTORY=[
+  {version:'1.197',added:'An adjustable strength slider for the one-click photo looks.',removed:'The overly tinted Vintage preset.',fixed:'Blend each look between neutral and full strength, remember the selected look and strength, and use a softer, warmer, faded-film Vintage treatment.',tone:'green'},
   {version:'1.196',added:'Posterize, mosaic, duotone, halftone, and colorize effects plus Noir, Vintage, Dreamy, and Cyberpunk one-click looks.',removed:'No removals.',fixed:'Kept every new effect live in the preview and conversion pipeline, with saved color choices and adjustable strength or pattern size.',tone:'green'},
   {version:'1.195',added:'No new features.',removed:'The extra bottom inset beneath the last Image Edit adjustment group.',fixed:'Removed the scroll area’s 5px bottom padding so its final control card aligns with the preview panel when scrolled fully down.',tone:'green'},
   {version:'1.194',added:'A gentler 10% default for interface click loudness.',removed:'The 100% first-run click loudness.',fixed:'Set the initial slider, label, preview, and playback default to 10% while preserving any saved user volume.',tone:'green'},
