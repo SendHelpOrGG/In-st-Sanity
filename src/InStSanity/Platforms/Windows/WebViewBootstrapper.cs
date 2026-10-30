@@ -15,7 +15,6 @@ internal static class WebViewBootstrapper
 {
 	static readonly ConditionalWeakTable<object, object> Hooked = new();
 	static readonly SemaphoreSlim BrowserOverlayDiagnosticWriteGate = new(1, 1);
-	const string BrowserOverlayDiagnosticPrefix = "[InStSanity:InstagramOverlay]";
 	const long BrowserOverlayDiagnosticMaxBytes = 2 * 1024 * 1024;
 	sealed record VideoDownloadHistoryContext(string Shortcode, int? ContentIndex, int? VideoIndex, int? ContentCount);
 
@@ -31,6 +30,8 @@ internal static class WebViewBootstrapper
 
 	static void LogInstagramBrowserOverlay(string message)
 	{
+		message = message.Replace('\r', ' ').Replace('\n', ' ');
+		if (message.Length > 3_500) message = message[..3_500] + "…";
 		var line = $"[{DateTimeOffset.Now:O}] [InstagramBrowserOverlay] {message}";
 		System.Diagnostics.Debug.WriteLine(line);
 		_ = AppendInstagramBrowserOverlayLogAsync(line);
@@ -74,6 +75,23 @@ internal static class WebViewBootstrapper
 		catch
 		{
 			return "invalid-json";
+		}
+	}
+
+	static string GetOverlayDebugSummary(string message)
+	{
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			var root = document.RootElement;
+			var eventName = root.TryGetProperty("event", out var eventValue) && eventValue.ValueKind == JsonValueKind.String
+				? eventValue.GetString() ?? "unknown"
+				: "unknown";
+			return $"JS event={eventName} payload={root.GetRawText()}";
+		}
+		catch
+		{
+			return "JS diagnostic payload=invalid-json";
 		}
 	}
 
@@ -437,7 +455,7 @@ internal static class WebViewBootstrapper
 				InstagramMediaOverlayScript.Source;
 			await core.ExecuteScriptAsync(script);
 			var status = await core.ExecuteScriptAsync(
-				"JSON.stringify({installer:typeof window.__instSanityMediaOverlayInstall==='function',installed:window.__instSanityMediaOverlayInstalled===true})");
+				"JSON.stringify({installer:typeof window.__instSanityMediaOverlayInstall==='function',installed:window.__instSanityMediaOverlayInstalled===true,bridgeAvailable:typeof window.chrome?.webview?.postMessage==='function'})");
 			LogInstagramBrowserOverlay($"Current-document overlay evaluation completed sourceHost={GetSourceHost(core.Source)} status={status}");
 		}
 		catch (Exception exception)
@@ -452,20 +470,18 @@ internal static class WebViewBootstrapper
 		{
 			core.Settings.IsWebMessageEnabled = true;
 			LogInstagramBrowserOverlay("WebView2 diagnostic hooks attached; writing to %LOCALAPPDATA%/InStSanity/Logs/instagram-browser-hover.log.");
-			core.ConsoleMessageReceived += (_, args) =>
-			{
-				var message = args.Message ?? string.Empty;
-				if (message.StartsWith(BrowserOverlayDiagnosticPrefix, StringComparison.Ordinal))
-				{
-					LogInstagramBrowserOverlay($"JS level={args.Level} line={args.LineNumber} sourceHost={GetSourceHost(args.Source)} {message}");
-				}
-			};
 			core.WebMessageReceived += (_, args) =>
 			{
 				try
 				{
 					var json = args.WebMessageAsJson;
-					LogInstagramBrowserOverlay($"WebMessageReceived action={GetOverlayMessageAction(json)} sourceHost={GetSourceHost(args.Source)}");
+					var action = GetOverlayMessageAction(json);
+					if (action == "overlay-debug")
+					{
+						LogInstagramBrowserOverlay($"{GetOverlayDebugSummary(json)} sourceHost={GetSourceHost(args.Source)}");
+						return;
+					}
+					LogInstagramBrowserOverlay($"WebMessageReceived action={action} sourceHost={GetSourceHost(args.Source)}");
 					onOverlayMessage(args.Source, json);
 				}
 				catch (Exception exception)
@@ -473,7 +489,7 @@ internal static class WebViewBootstrapper
 					LogInstagramBrowserOverlay($"WebMessageReceived handler failed error={exception.GetType().Name}: {exception.Message}");
 				}
 			};
-			core.NavigationCompleted += (_, args) =>
+			core.NavigationCompleted += (sender, args) =>
 			{
 				LogInstagramBrowserOverlay($"NavigationCompleted success={args.IsSuccess} sourceHost={GetSourceHost(core.Source)}");
 				_ = InstallInstagramOverlayForCurrentDocumentAsync(core);

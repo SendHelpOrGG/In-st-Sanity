@@ -11,7 +11,12 @@ internal static class InstagramMediaOverlayScript
 	  let lastHoverDiagnosticKey = '';
 	  let lastHoverDiagnosticAt = 0;
 	  function debugLog(event, details = {}) {
-	    try { console.info(`${diagnosticPrefix} ${JSON.stringify({ at: new Date().toISOString(), event, ...details })}`); } catch (_) { }
+	    const record = { at: new Date().toISOString(), event, ...details };
+	    try { console.info(`${diagnosticPrefix} ${JSON.stringify(record)}`); } catch (_) { }
+	    try {
+	      const bridge = window.chrome?.webview;
+	      if (typeof bridge?.postMessage === 'function') bridge.postMessage({ v: 1, action: 'overlay-debug', ...record });
+	    } catch (_) { }
 	  }
 	  function routeKind() {
 	    const match = String(location.pathname || '').match(/^\/(p|reels|reel|tv)\//i);

@@ -32,8 +32,8 @@
 
 ### Hover diagnostics
 
-- The injected script writes timestamped lifecycle and hover traces to the WebView console, including whether listeners installed, which media gate rejected a hover, whether the button was positioned/hidden, and whether bridge messages were sent.
-- Windows captures those marked console entries plus native WebView2 hookup, navigation, injection, and bridge events in `%LOCALAPPDATA%\InStSanity\Logs\instagram-browser-hover.log`. The file rotates at 2 MB. It records media host and dimensions but omits signed media URLs and post shortcodes.
+- The injected script writes timestamped lifecycle and hover traces to the WebView console and sends compact `overlay-debug` bridge messages, including listener/install state, media rejection reasons, button visibility, and bridge status.
+- Windows captures those marked diagnostic messages plus native WebView2 hookup, navigation, injection, and queue-bridge events in `%LOCALAPPDATA%\InStSanity\Logs\instagram-browser-hover.log`. The file rotates at 2 MB. It records media host and dimensions but omits signed media URLs and post shortcodes.
 - To share a reproduction, hover the problem image/video, close the app, then attach `instagram-browser-hover.log` from that folder.
 
 ### Queue and downloader
