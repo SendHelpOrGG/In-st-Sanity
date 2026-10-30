@@ -356,7 +356,12 @@ internal static class WebViewBootstrapper
 	{
 		try
 		{
-			await core.ExecuteScriptAsync("window.__instSanityMediaOverlayInstall?.()");
+			// Registration can race the first navigation. Run the idempotent installer
+			// when it exists; otherwise inject the full source into the current document.
+			var script = "if (typeof window.__instSanityMediaOverlayInstall === 'function') " +
+				"window.__instSanityMediaOverlayInstall(); else " +
+				InstagramMediaOverlayScript.Source;
+			await core.ExecuteScriptAsync(script);
 		}
 		catch
 		{

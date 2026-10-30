@@ -372,6 +372,16 @@ internal static class InstagramMediaOverlayScript
 	  }
 	  function install() {
 	    if (window.__instSanityMediaOverlayInstalled) { postMessage('overlay-ready'); return; }
+	    if (!document.documentElement) {
+	      if (!install.waitingForDom) {
+	        install.waitingForDom = true;
+	        document.addEventListener('DOMContentLoaded', () => {
+	          install.waitingForDom = false;
+	          install();
+	        }, { once: true });
+	      }
+	      return;
+	    }
 	    ensureUi();
 	    window.__instSanityMediaOverlayInstalled = true;
 	    window.__instSanityReceiveQueueState = receiveQueueState;

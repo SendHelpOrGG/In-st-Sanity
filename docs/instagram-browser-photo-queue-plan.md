@@ -26,7 +26,7 @@
 
 ### Native WebView bridge
 
-- `Platforms/Windows/WebViewBootstrapper.cs` installs `InstagramMediaOverlayScript` before document creation, re-runs its idempotent installer after navigation, and subscribes to `CoreWebView2.WebMessageReceived` only for the Instagram WebView.
+- `Platforms/Windows/WebViewBootstrapper.cs` registers `InstagramMediaOverlayScript` before document creation and re-runs it after navigation. If script registration races the first navigation, the navigation-completed hook evaluates the full source in the current document. The injected installer waits for the DOM root before building its UI; `CoreWebView2.WebMessageReceived` is subscribed only for the Instagram WebView.
 - The page sends versioned JSON actions: `overlay-ready`, `toggle-media`, `clear-queue`, `start-download`, and `cancel-download`. The host checks the HTTPS Instagram source origin, canonical Instagram post permalink/shortcode (including selections made from feed cards), JSON size/depth, media type/index, queue limit, and HTTPS Instagram/CDN media URLs. Every redirect hop is revalidated before it is followed; the page cannot supply a folder or access a loopback/file URL.
 - `MainPage` reads only the needed Settings-folder/no-duplicate preferences from the app WebView and sends queue snapshots and the current theme palette back to the Instagram document. It records successful Browser downloads through the existing photo/video history writers.
 
