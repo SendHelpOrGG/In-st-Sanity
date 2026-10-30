@@ -452,7 +452,7 @@ internal static class InstagramMediaOverlayScript
 	    activeCandidate = candidate;
 	  }
 
-	  function mediaContainsPoint(media, point, hitStack = null) {
+	  function mediaContainsPoint(media, point, hitStack = null, eventTarget = null) {
 	    if (!(media instanceof Element) || !point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return false;
 	    try {
 	      const rect = media.getBoundingClientRect();
@@ -482,8 +482,9 @@ internal static class InstagramMediaOverlayScript
 	      }
 
 	      const hits = Array.isArray(hitStack) ? hitStack : pointHitStack(point);
-	      const topHit = hits.find(hit => hit instanceof Element);
-	      return !!topHit && (topHit === media || media.contains(topHit));
+	      const hitInMedia = hits.some(hit => hit instanceof Element && (hit === media || media.contains(hit)));
+	      const eventTargetsMedia = eventTarget instanceof Element && (eventTarget === media || media.contains(eventTarget));
+	      return hits.length === 0 || hitInMedia || eventTargetsMedia;
 	    } catch (_) { return false; }
 	  }
 
@@ -510,10 +511,12 @@ internal static class InstagramMediaOverlayScript
 	    let candidate = null;
 	    const hits = pointHitStack(point);
 	    const seen = new Set();
+	    const directMedia = target.closest('img,video');
 	    const tryMedia = possibleMedia => {
 	      if (!possibleMedia || seen.has(possibleMedia) || possibleMedia.closest('#inst-sanity-tray,#inst-sanity-select')) return false;
 	      seen.add(possibleMedia);
-	      if (!mediaContainsPoint(possibleMedia, point, hits)) return false;
+	      const eventTarget = possibleMedia === directMedia ? target : null;
+	      if (!mediaContainsPoint(possibleMedia, point, hits, eventTarget)) return false;
 	      const found = candidateFor(possibleMedia);
 	      if (!found) return false;
 	      media = possibleMedia;
@@ -521,7 +524,6 @@ internal static class InstagramMediaOverlayScript
 	      return true;
 	    };
 
-	    const directMedia = target.closest('img,video');
 	    if (directMedia) tryMedia(directMedia);
 
 	    if (!candidate) {
