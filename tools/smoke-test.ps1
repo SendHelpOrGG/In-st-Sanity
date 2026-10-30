@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.021'',added:') -or
+        -not $document.Content.Contains('version:''2.022'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -427,10 +427,16 @@ try {
     if (-not $document.Content.Contains($expectedVintagePreset)) {
         throw 'The Vintage one-click look must match the supplied Image Edit settings.'
     }
-    $expectedOldPhotoLook = "oldPhoto:{label:'Old Photo',values:{contrast:-8,highlights:-10,shadows:14,temperature:22,tint:8,saturation:-24,sepia:72,grain:44,grainSize:18,monochromeGrain:true,fade:25,vignette:28}}"
-    if (-not $document.Content.Contains('data-photo-look="oldPhoto"') -or
-        -not $document.Content.Contains($expectedOldPhotoLook)) {
-        throw 'The Image Edit tab must provide a one-click Old Photo effect using the existing preview/conversion pipeline.'
+    $oldPhotoTexturePath = Join-Path $PSScriptRoot '..\src\InStSanity\Resources\Raw\wwwroot\old-photo-damage-texture.png'
+    if (-not $document.Content.Contains('id="photoAdjOldPhoto"') -or
+        -not $document.Content.Contains('data-adjustment="oldPhoto"') -or
+        -not $document.Content.Contains('oldPhoto:[0,100]') -or
+        -not $document.Content.Contains('function ensurePhotoOldPhotoTexture()') -or
+        -not $document.Content.Contains('photoPreviewTextureSample(texture,textureMapping,x,y,width,height)') -or
+        -not $document.Content.Contains("savedLook.name==='oldPhoto'") -or
+        $document.Content.Contains('data-photo-look="oldPhoto"') -or
+        -not (Test-Path -LiteralPath $oldPhotoTexturePath)) {
+        throw 'Image Edit must expose Old Photo damage as a separate finishing slider and include its supplied texture asset.'
     }
 
     if (-not $document.Content.Contains('grid-template-columns:244px minmax(0,1fr)')) {
@@ -647,8 +653,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.021</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>90</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.022</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>91</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 
@@ -663,6 +669,7 @@ try {
     $resizeConvertSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\src\InStSanity\Services\Api\ResizeConvertEndpoint.cs') -Raw
     $resizeServiceSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\src\InStSanity\Services\Images\PhotoResizeService.cs') -Raw
     $imageResizerSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\src\InStSanity\Services\Instagram\ImageResizer.cs') -Raw
+    $photoAdjustmentsSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\src\InStSanity\Services\Images\PhotoImageAdjustments.cs') -Raw
     $mauiSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\src\InStSanity\MauiProgram.cs') -Raw
     if (-not $resizeUploadSource.Contains('Route => "/api/resize-upload"') -or
         -not $resizeConvertSource.Contains('Route => "/api/resize-convert"') -or
@@ -678,6 +685,12 @@ try {
         -not $resizeServiceSource.Contains('suffix == 1 ? filename : $"{stem} ({suffix}){extension}"') -or
         -not $imageResizerSource.Contains('largestSide < targetSide && !upscale') -or
         -not $imageResizerSource.Contains('ScaledHeight = targetHeight') -or
+        -not $imageResizerSource.Contains('OldPhotoTextureAssetPath = "wwwroot/old-photo-damage-texture.png"') -or
+        -not $imageResizerSource.Contains('adjustments.OldPhoto > 0') -or
+        -not $imageResizerSource.Contains('GetOldPhotoTextureAsync()') -or
+        -not $photoAdjustmentsSource.Contains('OldPhoto != 0') -or
+        -not $photoAdjustmentsSource.Contains('settings.OldPhoto > 0') -or
+        -not $resizeConvertSource.Contains('TryReadNumber(element, "oldPhoto", 0, 100, 0, out var oldPhoto)') -or
         -not $resizeServiceSource.Contains('~/Pictures/Instagram/Resized') -or
         -not $mauiSource.Contains('AddSingleton<PhotoResizeService>')) {
         throw 'The photo-resizer endpoints, staged upload, non-overwriting output, max-side conversion, and service registration must be present.'

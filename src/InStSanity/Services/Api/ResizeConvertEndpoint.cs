@@ -176,7 +176,8 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			!TryReadNumber(element, "grain", 0, 100, 0, out var grain) ||
 			!TryReadNumber(element, "grainSize", 0, 100, 35, out var grainSize) ||
 			!TryReadNumber(element, "fade", 0, 100, 0, out var fade) ||
-			!TryReadNumber(element, "vignette", 0, 100, 0, out var vignette))
+			!TryReadNumber(element, "vignette", 0, 100, 0, out var vignette) ||
+			!TryReadNumber(element, "oldPhoto", 0, 100, 0, out var oldPhoto))
 		{
 			return false;
 		}
@@ -234,6 +235,7 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			MonochromeGrain = monochromeGrain,
 			Fade = fade,
 			Vignette = vignette,
+			OldPhoto = oldPhoto,
 		};
 		return true;
 	}

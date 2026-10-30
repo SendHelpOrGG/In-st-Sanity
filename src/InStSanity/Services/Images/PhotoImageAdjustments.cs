@@ -34,14 +34,17 @@ public sealed record PhotoImageAdjustments
 	public bool MonochromeGrain { get; init; }
 	public double Fade { get; init; }
 	public double Vignette { get; init; }
+	public double OldPhoto { get; init; }
 
 	public bool HasEdits =>
 		Exposure != 0 || Brightness != 0 || Contrast != 0 || Gamma != 0 || Highlights != 0 || Shadows != 0 ||
 		Temperature != 0 || Tint != 0 || Saturation != 0 || Vibrance != 0 || Sharpness != 0 ||
 		Clarity != 0 || Texture != 0 || Blur != 0 || Denoise != 0 || Sepia != 0 || Invert != 0 ||
 		Posterize != 0 || Pixelate != 0 || Duotone != 0 || Halftone != 0 || Colorize != 0 ||
-		Grain != 0 || Fade != 0 || Vignette != 0;
+		Grain != 0 || Fade != 0 || Vignette != 0 || OldPhoto != 0;
 }
+
+internal sealed record PhotoImageDamageTexture(int Width, int Height, byte[] Luminance);
 
 /// <summary>CPU-only BGRA pixel effects used by the local Windows photo-resize pipeline.</summary>
 internal static class PhotoImageAdjustmentProcessor
@@ -49,7 +52,7 @@ internal static class PhotoImageAdjustmentProcessor
 	// Keeps the worst-case in-memory footprint bounded when optional filter buffers are needed.
 	public const long MaxAdjustedPixelCount = 20_000_000;
 
-	public static void Apply(byte[] pixels, int width, int height, PhotoImageAdjustments settings, byte[] seedBytes)
+	public static void Apply(byte[] pixels, int width, int height, PhotoImageAdjustments settings, byte[] seedBytes, PhotoImageDamageTexture? oldPhotoTexture = null)
 	{
 		if (!settings.HasEdits)
 		{
@@ -94,9 +97,9 @@ internal static class PhotoImageAdjustmentProcessor
 			ApplyBlur(pixels, width, height, radius, settings.Blur / 100.0);
 		}
 
-		if (settings.Fade > 0 || settings.Vignette > 0 || settings.Grain > 0)
+		if (settings.Fade > 0 || settings.Vignette > 0 || settings.Grain > 0 || settings.OldPhoto > 0)
 		{
-			ApplyFinishingEffects(pixels, width, height, settings, seedBytes);
+			ApplyFinishingEffects(pixels, width, height, settings, seedBytes, oldPhotoTexture);
 		}
 
 		if (settings.Posterize > 0)
@@ -587,15 +590,25 @@ internal static class PhotoImageAdjustmentProcessor
 		return output;
 	}
 
-	static void ApplyFinishingEffects(byte[] pixels, int width, int height, PhotoImageAdjustments settings, byte[] seedBytes)
+	static void ApplyFinishingEffects(
+		byte[] pixels,
+		int width,
+		int height,
+		PhotoImageAdjustments settings,
+		byte[] seedBytes,
+		PhotoImageDamageTexture? oldPhotoTexture)
 	{
 		var fade = settings.Fade / 100.0;
 		var vignette = settings.Vignette / 100.0;
+		var oldPhoto = settings.OldPhoto / 100.0;
 		var grainAmount = settings.Grain / 100.0 * 31;
 		var hasGrain = settings.Grain > 0;
 		var grainCell = 0.25 + Math.Pow(settings.GrainSize / 100.0, 2) * 11.75;
 		var grainScale = Math.Min(1, grainCell);
 		var seed = CreateSeed(seedBytes);
+		var textureMapping = oldPhotoTexture is { Width: > 0, Height: > 0 }
+			? CreateTextureMapping(oldPhotoTexture, width, height)
+			: default;
 		var halfWidth = Math.Max(1, width / 2.0);
 		var halfHeight = Math.Max(1, height / 2.0);
 
@@ -619,12 +632,63 @@ internal static class PhotoImageAdjustmentProcessor
 				var noiseBlue = hasGrain ? GrainNoise(x, y, grainCell, seed, 0) : 0;
 				var noiseGreen = !hasGrain || settings.MonochromeGrain ? noiseBlue : GrainNoise(x, y, grainCell, seed, 1);
 				var noiseRed = !hasGrain || settings.MonochromeGrain ? noiseBlue : GrainNoise(x, y, grainCell, seed, 2);
+				var wearDelta = oldPhoto > 0 && oldPhotoTexture is { Width: > 0, Height: > 0 }
+					? (SampleTextureLuminance(oldPhotoTexture, textureMapping, x, y, width, height) - 128) * oldPhoto * 0.62
+					: 0;
 
-				pixels[index] = ToByte((pixels[index] * vignetteFactor * fadeFactor + fadeLift + noiseBlue * grainAmount * grainScale) / 255.0);
-				pixels[index + 1] = ToByte((pixels[index + 1] * vignetteFactor * fadeFactor + fadeLift + noiseGreen * grainAmount * grainScale) / 255.0);
-				pixels[index + 2] = ToByte((pixels[index + 2] * vignetteFactor * fadeFactor + fadeLift + noiseRed * grainAmount * grainScale) / 255.0);
+				pixels[index] = ToByte((pixels[index] * vignetteFactor * fadeFactor + fadeLift + noiseBlue * grainAmount * grainScale + wearDelta) / 255.0);
+				pixels[index + 1] = ToByte((pixels[index + 1] * vignetteFactor * fadeFactor + fadeLift + noiseGreen * grainAmount * grainScale + wearDelta) / 255.0);
+				pixels[index + 2] = ToByte((pixels[index + 2] * vignetteFactor * fadeFactor + fadeLift + noiseRed * grainAmount * grainScale + wearDelta) / 255.0);
 			}
 		}
+	}
+
+	static (double UStart, double USpan, double VStart, double VSpan) CreateTextureMapping(
+		PhotoImageDamageTexture texture,
+		int width,
+		int height)
+	{
+		var imageAspect = width / (double)height;
+		var textureAspect = texture.Width / (double)texture.Height;
+		var uSpan = 1.0;
+		var vSpan = 1.0;
+		if (imageAspect < textureAspect)
+		{
+			uSpan = imageAspect / textureAspect;
+		}
+		else if (imageAspect > textureAspect)
+		{
+			vSpan = textureAspect / imageAspect;
+		}
+
+		return ((1 - uSpan) / 2, uSpan, (1 - vSpan) / 2, vSpan);
+	}
+
+	static double SampleTextureLuminance(
+		PhotoImageDamageTexture texture,
+		(double UStart, double USpan, double VStart, double VSpan) mapping,
+		int x,
+		int y,
+		int width,
+		int height)
+	{
+		var u = mapping.UStart + (x + 0.5) / width * mapping.USpan;
+		var v = mapping.VStart + (y + 0.5) / height * mapping.VSpan;
+		var sampleX = Math.Clamp(u * (texture.Width - 1), 0, texture.Width - 1.0);
+		var sampleY = Math.Clamp(v * (texture.Height - 1), 0, texture.Height - 1.0);
+		var x0 = (int)Math.Floor(sampleX);
+		var y0 = (int)Math.Floor(sampleY);
+		var x1 = Math.Min(texture.Width - 1, x0 + 1);
+		var y1 = Math.Min(texture.Height - 1, y0 + 1);
+		var fx = sampleX - x0;
+		var fy = sampleY - y0;
+		var topLeft = texture.Luminance[y0 * texture.Width + x0];
+		var topRight = texture.Luminance[y0 * texture.Width + x1];
+		var bottomLeft = texture.Luminance[y1 * texture.Width + x0];
+		var bottomRight = texture.Luminance[y1 * texture.Width + x1];
+		var top = topLeft + (topRight - topLeft) * fx;
+		var bottom = bottomLeft + (bottomRight - bottomLeft) * fx;
+		return top + (bottom - top) * fy;
 	}
 
 	static double GrainNoise(int x, int y, double cell, uint seed, uint channel)

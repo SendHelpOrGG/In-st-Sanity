@@ -955,7 +955,6 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                 <div class="photo-adjustment-look-grid" role="group" aria-label="Apply a photo look">
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="noir" aria-pressed="false" onclick="applyPhotoResizeLook('noir')">Noir</button>
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="vintage" aria-pressed="false" title="Cool blue split-tone, deep shadows, and fine film grain" onclick="applyPhotoResizeLook('vintage')">Vintage</button>
-                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="oldPhoto" aria-pressed="false" title="Warm sepia, faded tone, film grain, and vignette" onclick="applyPhotoResizeLook('oldPhoto')">Old Photo</button>
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="dreamy" aria-pressed="false" onclick="applyPhotoResizeLook('dreamy')">Dreamy</button>
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="cyberpunk" aria-pressed="false" onclick="applyPhotoResizeLook('cyberpunk')">Cyberpunk</button>
                 </div>
@@ -1011,7 +1010,9 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                   <label class="photo-adjustment-checkbox" for="photoAdjMonochromeGrain"><input id="photoAdjMonochromeGrain" type="checkbox" data-adjustment="monochromeGrain" onchange="updatePhotoResizeAdjustment('monochromeGrain',this.checked)"><span>Monochrome grain</span></label>
                   <div class="photo-adjustment-control"><label for="photoAdjFade"><span>Fade</span><output id="photoAdjValueFade">0%</output></label><input id="photoAdjFade" type="range" min="0" max="100" step="1" data-adjustment="fade" oninput="updatePhotoResizeAdjustment('fade',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjVignette"><span>Vignette</span><output id="photoAdjValueVignette">0%</output></label><input id="photoAdjVignette" type="range" min="0" max="100" step="1" data-adjustment="vignette" oninput="updatePhotoResizeAdjustment('vignette',this.value)"></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjOldPhoto"><span>Old Photo</span><output id="photoAdjValueOldPhoto">0%</output></label><input id="photoAdjOldPhoto" type="range" min="0" max="100" step="1" data-adjustment="oldPhoto" title="Add dust, scratches, crease marks, and film folds" aria-label="Old Photo damage texture" oninput="updatePhotoResizeAdjustment('oldPhoto',this.value)"></div>
                 </div>
+                <p class="hint photo-adjustment-finishing-hint">Adds dust, scratches, creases, and fold marks as a separate texture layer; combine it with other adjustments.</p>
               </div>
             </div>
           </div>
@@ -1371,7 +1372,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.021; open version history" title="Click to view what changed in each version">v.2.021</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.022; open version history" title="Click to view what changed in each version">v.2.022</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3917,14 +3918,13 @@ const RESIZER_MAX_FILE_BYTES=50*1024*1024;
 const RESIZER_ADJUSTMENTS_KEY='stillSane.photoResizeAdjustmentsV1';
 const RESIZER_LOOK_STATE_KEY='stillSane.photoResizeLookV1';
 const RESIZER_ADJUST_BATCH_KEY='stillSane.photoResizeApplyToBatchV1';
-const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,gamma:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,sepia:0,invert:0,posterize:0,pixelate:0,duotone:0,duotoneShadowColor:'#1B1B3A',duotoneHighlightColor:'#FFD166',halftone:0,halftoneSize:12,colorize:0,colorizeColor:'#D94F70',grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0});
-const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],gamma:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],sepia:[0,100],invert:[0,100],posterize:[0,100],pixelate:[0,100],duotone:[0,100],halftone:[0,100],halftoneSize:[4,40],colorize:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100]});
+const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,gamma:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,sepia:0,invert:0,posterize:0,pixelate:0,duotone:0,duotoneShadowColor:'#1B1B3A',duotoneHighlightColor:'#FFD166',halftone:0,halftoneSize:12,colorize:0,colorizeColor:'#D94F70',grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0,oldPhoto:0});
+const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],gamma:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],sepia:[0,100],invert:[0,100],posterize:[0,100],pixelate:[0,100],duotone:[0,100],halftone:[0,100],halftoneSize:[4,40],colorize:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100],oldPhoto:[0,100]});
 const PHOTO_ADJUSTMENT_COLOR_KEYS=new Set(['duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
 const PHOTO_ADJUSTMENT_META_KEYS=new Set(['grainSize','monochromeGrain','halftoneSize','duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
 const PHOTO_RESIZE_LOOKS=Object.freeze({
   noir:{label:'Noir',values:{saturation:-100,contrast:24,highlights:6,shadows:-8,clarity:12,grain:20,grainSize:28,monochromeGrain:true,vignette:20}},
   vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:-90,temperature:-8,tint:-6,saturation:15,vibrance:-35,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70',grain:100,grainSize:10}},
-  oldPhoto:{label:'Old Photo',values:{contrast:-8,highlights:-10,shadows:14,temperature:22,tint:8,saturation:-24,sepia:72,grain:44,grainSize:18,monochromeGrain:true,fade:25,vignette:28}},
   dreamy:{label:'Dreamy',values:{brightness:8,highlights:12,contrast:-8,saturation:10,clarity:-28,blur:8,fade:10,temperature:6}},
   cyberpunk:{label:'Cyberpunk',values:{contrast:18,saturation:22,vibrance:20,temperature:-18,tint:20,duotone:35,duotoneShadowColor:'#101838',duotoneHighlightColor:'#FF4CBA',grain:4,vignette:12}}
 });
@@ -3939,6 +3939,8 @@ let photoResizePreviewPanX=0,photoResizePreviewPanY=0,photoResizePreviewDragging
 let photoResizePreviewDragStartX=0,photoResizePreviewDragStartY=0,photoResizePreviewDragOriginX=0,photoResizePreviewDragOriginY=0;
 let photoResizePreviewGeneration=0;
 let photoResizePreviewImageData=null;
+let photoOldPhotoTextureData=null;
+let photoOldPhotoTexturePromise=null;
 let photoResizePreviewOriginal=false;
 let photoResizePreviewRenderPending=false;
 let photoResizePreviewObjectUrl='';
@@ -3999,7 +4001,10 @@ function loadPhotoResizeAdjustments(){
   photoResizeLookStrength=0;
   try{
     const savedLook=JSON.parse(localStorage.getItem(RESIZER_LOOK_STATE_KEY)||'null');
-    if(savedLook&&typeof savedLook==='object'&&Object.prototype.hasOwnProperty.call(PHOTO_RESIZE_LOOKS,savedLook.name)){
+    if(savedLook&&typeof savedLook==='object'&&savedLook.name==='oldPhoto'){
+      photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS};
+      persistPhotoResizeAdjustments();
+    }else if(savedLook&&typeof savedLook==='object'&&Object.prototype.hasOwnProperty.call(PHOTO_RESIZE_LOOKS,savedLook.name)){
       const strength=Number(savedLook.strength);
       if(Number.isFinite(strength)){
         photoResizeActiveLook=savedLook.name;
@@ -4321,6 +4326,11 @@ function schedulePhotoResizePreviewRender(){if(photoResizePreviewRenderPending)r
 function renderPhotoResizePreview(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
   if(!canvas||!photoResizePreviewImageData)return;
+  if(photoResizeAdjustments.oldPhoto>0&&!photoOldPhotoTextureData){
+    ensurePhotoOldPhotoTexture().then(texture=>{
+      if(texture&&photoResizeAdjustments.oldPhoto>0&&photoResizePreviewImageData)schedulePhotoResizePreviewRender();
+    });
+  }
   const context=canvas.getContext('2d',{willReadFrequently:true});
   if(!context)return;
   if(photoResizePreviewOriginal){context.putImageData(photoResizePreviewImageData,0,0);applyPhotoResizePreviewZoom();return}
@@ -4415,11 +4425,50 @@ function photoPreviewGrainNoise(x,y,cell,seed,channel){
 }
 function photoPreviewSeed(data){let seed=2166136261,step=Math.max(1,Math.floor(data.length/2048));for(let i=0;i<data.length;i+=step)seed=Math.imul(seed^data[i],16777619)>>>0;return seed||1}
 function photoPreviewSmoothStep(edge0,edge1,value){const t=Math.max(0,Math.min(1,(value-edge0)/(edge1-edge0)));return t*t*(3-2*t)}
+function ensurePhotoOldPhotoTexture(){
+  if(photoOldPhotoTextureData)return Promise.resolve(photoOldPhotoTextureData);
+  if(photoOldPhotoTexturePromise)return photoOldPhotoTexturePromise;
+  photoOldPhotoTexturePromise=new Promise(resolve=>{
+    const image=new Image();
+    image.onload=()=>{
+      try{
+        const width=Math.max(1,image.naturalWidth),height=Math.max(1,image.naturalHeight),canvas=document.createElement('canvas');
+        canvas.width=width;canvas.height=height;
+        const context=canvas.getContext('2d',{willReadFrequently:true});
+        if(!context)throw new Error('texture_canvas_unavailable');
+        context.drawImage(image,0,0,width,height);
+        const source=context.getImageData(0,0,width,height).data,luminance=new Uint8Array(width*height);
+        for(let i=0,pixel=0;i<source.length;i+=4,pixel++)luminance[pixel]=Math.round(source[i]*.2126+source[i+1]*.7152+source[i+2]*.0722);
+        photoOldPhotoTextureData={width,height,luminance};
+        resolve(photoOldPhotoTextureData);
+      }catch(_){resolve(null)}
+    };
+    image.onerror=()=>resolve(null);
+    try{image.src=new URL('old-photo-damage-texture.png',document.baseURI).href}catch(_){resolve(null)}
+  });
+  return photoOldPhotoTexturePromise;
+}
+function photoPreviewTextureMapping(texture,width,height){
+  const imageAspect=width/height,textureAspect=texture.width/texture.height;
+  let uSpan=1,vSpan=1;
+  if(imageAspect<textureAspect)uSpan=imageAspect/textureAspect;
+  else if(imageAspect>textureAspect)vSpan=textureAspect/imageAspect;
+  return{uStart:(1-uSpan)/2,uSpan,vStart:(1-vSpan)/2,vSpan};
+}
+function photoPreviewTextureSample(texture,mapping,x,y,width,height){
+  let u=(x+.5)/width,v=(y+.5)/height;
+  u=mapping.uStart+u*mapping.uSpan;
+  v=mapping.vStart+v*mapping.vSpan;
+  const sampleX=Math.max(0,Math.min(texture.width-1,u*(texture.width-1))),sampleY=Math.max(0,Math.min(texture.height-1,v*(texture.height-1)));
+  const x0=Math.floor(sampleX),y0=Math.floor(sampleY),x1=Math.min(texture.width-1,x0+1),y1=Math.min(texture.height-1,y0+1),fx=sampleX-x0,fy=sampleY-y0;
+  const topLeft=texture.luminance[y0*texture.width+x0],topRight=texture.luminance[y0*texture.width+x1],bottomLeft=texture.luminance[y1*texture.width+x0],bottomRight=texture.luminance[y1*texture.width+x1];
+  return(topLeft+(topRight-topLeft)*fx)*(1-fy)+(bottomLeft+(bottomRight-bottomLeft)*fx)*fy;
+}
 function photoPreviewFinishing(pixels,width,height,settings,seedData){
-  const fade=settings.fade/100,vignette=settings.vignette/100,grainAmount=settings.grain/100*31,grainCell=.25+Math.pow(settings.grainSize/100,2)*11.75,grainScale=Math.min(1,grainCell),seed=photoPreviewSeed(seedData),halfWidth=Math.max(1,width/2),halfHeight=Math.max(1,height/2);
+  const fade=settings.fade/100,vignette=settings.vignette/100,grainAmount=settings.grain/100*31,grainCell=.25+Math.pow(settings.grainSize/100,2)*11.75,grainScale=Math.min(1,grainCell),seed=photoPreviewSeed(seedData),halfWidth=Math.max(1,width/2),halfHeight=Math.max(1,height/2),oldPhoto=settings.oldPhoto/100,texture=oldPhoto>0?photoOldPhotoTextureData:null,textureMapping=texture?photoPreviewTextureMapping(texture,width,height):null;
   for(let y=0;y<height;y++){const normalizedY=(y+.5-halfHeight)/halfHeight;for(let x=0;x<width;x++){
-    const i=(y*width+x)*4;if(pixels[i+3]===0)continue;const normalizedX=(x+.5-halfWidth)/halfWidth,radius=Math.sqrt(normalizedX*normalizedX+normalizedY*normalizedY),vignetteMask=photoPreviewSmoothStep(.42,1.12,radius),vignetteFactor=1-vignette*vignetteMask*.72,fadeFactor=1-fade*.18,fadeLift=fade*.18*255,noiseBlue=photoPreviewGrainNoise(x,y,grainCell,seed,0),noiseGreen=settings.monochromeGrain?noiseBlue:photoPreviewGrainNoise(x,y,grainCell,seed,1),noiseRed=settings.monochromeGrain?noiseBlue:photoPreviewGrainNoise(x,y,grainCell,seed,2);
-    pixels[i]=(pixels[i]*vignetteFactor*fadeFactor+fadeLift+noiseBlue*grainAmount*grainScale);pixels[i+1]=(pixels[i+1]*vignetteFactor*fadeFactor+fadeLift+noiseGreen*grainAmount*grainScale);pixels[i+2]=(pixels[i+2]*vignetteFactor*fadeFactor+fadeLift+noiseRed*grainAmount*grainScale);
+    const i=(y*width+x)*4;if(pixels[i+3]===0)continue;const normalizedX=(x+.5-halfWidth)/halfWidth,radius=Math.sqrt(normalizedX*normalizedX+normalizedY*normalizedY),vignetteMask=photoPreviewSmoothStep(.42,1.12,radius),vignetteFactor=1-vignette*vignetteMask*.72,fadeFactor=1-fade*.18,fadeLift=fade*.18*255,noiseBlue=photoPreviewGrainNoise(x,y,grainCell,seed,0),noiseGreen=settings.monochromeGrain?noiseBlue:photoPreviewGrainNoise(x,y,grainCell,seed,1),noiseRed=settings.monochromeGrain?noiseBlue:photoPreviewGrainNoise(x,y,grainCell,seed,2),wearDelta=texture?(photoPreviewTextureSample(texture,textureMapping,x,y,width,height)-128)*oldPhoto*.62:0;
+    pixels[i]=(pixels[i]*vignetteFactor*fadeFactor+fadeLift+noiseBlue*grainAmount*grainScale+wearDelta);pixels[i+1]=(pixels[i+1]*vignetteFactor*fadeFactor+fadeLift+noiseGreen*grainAmount*grainScale+wearDelta);pixels[i+2]=(pixels[i+2]*vignetteFactor*fadeFactor+fadeLift+noiseRed*grainAmount*grainScale+wearDelta);
   }}
 }
 function photoPreviewPosterize(pixels,amount){
@@ -4456,7 +4505,7 @@ function applyPhotoResizePreviewAdjustments(pixels,width,height,settings,seedDat
   if(settings.clarity!==0)photoPreviewUnsharp(pixels,width,height,Math.max(2,Math.min(10,Math.floor(Math.min(width,height)/100))),settings.clarity/100*1.15,true);
   if(settings.texture!==0)photoPreviewUnsharp(pixels,width,height,2,settings.texture/100*1.35,false);
   if(settings.blur>0)photoPreviewBlur(pixels,width,height,1+Math.round(settings.blur/100*11),settings.blur/100);
-  if(settings.fade>0||settings.vignette>0||settings.grain>0)photoPreviewFinishing(pixels,width,height,settings,seedData);
+  if(settings.fade>0||settings.vignette>0||settings.grain>0||settings.oldPhoto>0)photoPreviewFinishing(pixels,width,height,settings,seedData);
   if(settings.posterize>0)photoPreviewPosterize(pixels,settings.posterize);
   if(settings.halftone>0)photoPreviewHalftone(pixels,width,height,settings.halftone,settings.halftoneSize);
   if(settings.pixelate>0)photoPreviewPixelate(pixels,width,height,settings.pixelate);
@@ -7174,8 +7223,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.021';
+const APP_VERSION='2.022';
 const VERSION_HISTORY=[
+  {version:'2.022',added:'A separate Old Photo finishing-effects slider with adjustable dust, scratch, crease, and fold texture, based on the supplied texture image.',removed:'The one-click Old Photo look.',fixed:'Make Old Photo an independent intensity control in Finishing effects instead of a preset; use the same aspect-matched supplied damage texture in live preview and converted copies so the visible scratches and folds stay aligned with the exported effect.',tone:'yellow'},
   {version:'2.021',added:'An Old Photo one-click Image Edit look, a foldable Browser queue, and an icon-only Open download folder action in that queue.',removed:'The longer “+ Add to queue” selector label.',fixed:'Shorten the selector to “+ Add” and explicitly preserve its 20%-transparent surface; hide the native Browser while Version history is open and restore it on close; update Vintage to shadows -90%, temperature -8%, tint -6%, saturation 15%, vibrance -35%, grain size 10%, and grain 100%.',tone:'yellow'},
   {version:'2.020',added:'Low-volume Browser media-selection diagnostics with rejection reasons and carousel-anchor positioning events; no per-hover trace.',removed:'The queue button relocating to each photo’s geometry while switching slides within one post.',fixed:'Keep the selector at its existing viewport coordinates across same-post slide changes and horizontal-only carousel scrolling; reposition for a different post, vertical scrolling, resize, or route changes. The log now records deduplicated candidate/rejection summaries and selector placement. Live Instagram verification is still needed.',tone:'yellow'},
   {version:'2.019',added:'No new features.',removed:'Feed media inheriting the first post’s scope when layouts omit <article>, and media being skipped when an Instagram wrapper receives the pointer.',fixed:'Resolve each candidate against its nearest permalink-owning post container, include media wrapped by the hit target while retaining media bounds and clipping checks, and recheck after SPA route changes. Live Instagram verification is still needed.',tone:'yellow'},

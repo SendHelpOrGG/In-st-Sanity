@@ -1,4 +1,5 @@
 using InStSanity.Services.Images;
+using Microsoft.Maui.Storage;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 
@@ -11,6 +12,10 @@ namespace InStSanity.Services.Instagram;
 /// </summary>
 internal static class ImageResizer
 {
+	const string OldPhotoTextureAssetPath = "wwwroot/old-photo-damage-texture.png";
+	static readonly object OldPhotoTextureGate = new();
+	static Task<PhotoImageDamageTexture?>? _oldPhotoTextureTask;
+
 	public static async Task<byte[]?> TryResizeAsync(byte[] payload, int targetWidth)
 	{
 		if (payload.Length < 32 || targetWidth < 16)
@@ -137,12 +142,16 @@ internal static class ImageResizer
 					ExifOrientationMode.RespectExifOrientation,
 					ColorManagementMode.DoNotColorManage);
 				var pixels = pixelData.DetachPixelData();
+				var oldPhotoTexture = adjustments.OldPhoto > 0
+					? await GetOldPhotoTextureAsync().ConfigureAwait(false)
+					: null;
 				PhotoImageAdjustmentProcessor.Apply(
 					pixels,
 					checked((int)targetWidth),
 					checked((int)targetHeight),
 					adjustments,
-					payload);
+					payload,
+					oldPhotoTexture);
 
 				encoder.SetPixelData(
 					BitmapPixelFormat.Bgra8,
@@ -181,6 +190,72 @@ internal static class ImageResizer
 		catch
 		{
 			// Conversion failures are reported by the batch service; never write a damaged image.
+			return null;
+		}
+	}
+
+	static Task<PhotoImageDamageTexture?> GetOldPhotoTextureAsync()
+	{
+		lock (OldPhotoTextureGate)
+		{
+			return _oldPhotoTextureTask ??= LoadOldPhotoTextureAsync();
+		}
+	}
+
+	static async Task<PhotoImageDamageTexture?> LoadOldPhotoTextureAsync()
+	{
+		try
+		{
+			using var assetStream = await FileSystem.OpenAppPackageFileAsync(OldPhotoTextureAssetPath).ConfigureAwait(false);
+			using var buffer = new MemoryStream();
+			await assetStream.CopyToAsync(buffer).ConfigureAwait(false);
+			var encoded = buffer.ToArray();
+			using var textureStream = new InMemoryRandomAccessStream();
+			using (var writer = new DataWriter(textureStream.GetOutputStreamAt(0)))
+			{
+				writer.WriteBytes(encoded);
+				await writer.StoreAsync();
+			}
+
+			textureStream.Seek(0);
+			var decoder = await BitmapDecoder.CreateAsync(textureStream);
+			if (decoder.PixelWidth is 0 or > 4096 || decoder.PixelHeight is 0 or > 4096)
+			{
+				return null;
+			}
+
+			var pixelData = await decoder.GetPixelDataAsync(
+				BitmapPixelFormat.Bgra8,
+				BitmapAlphaMode.Straight,
+				new BitmapTransform(),
+				ExifOrientationMode.IgnoreExifOrientation,
+				ColorManagementMode.DoNotColorManage);
+			var bgra = pixelData.DetachPixelData();
+			var width = checked((int)decoder.PixelWidth);
+			var height = checked((int)decoder.PixelHeight);
+			if (bgra.Length != checked(width * height * 4))
+			{
+				return null;
+			}
+
+			var luminance = new byte[checked(width * height)];
+			for (var pixel = 0; pixel < luminance.Length; pixel++)
+			{
+				var index = pixel * 4;
+				var blue = bgra[index];
+				var green = bgra[index + 1];
+				var red = bgra[index + 2];
+				luminance[pixel] = (byte)Math.Clamp(
+					Math.Round(red * 0.2126 + green * 0.7152 + blue * 0.0722),
+					0,
+					255);
+			}
+
+			return new PhotoImageDamageTexture(width, height, luminance);
+		}
+		catch
+		{
+			// The editor remains usable if an optional texture asset cannot be decoded.
 			return null;
 		}
 	}
