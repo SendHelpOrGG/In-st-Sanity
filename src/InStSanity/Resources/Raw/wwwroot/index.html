@@ -1370,7 +1370,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.008; open version history" title="Click to view what changed in each version">v.2.008</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.009; open version history" title="Click to view what changed in each version">v.2.009</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -7168,8 +7168,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.008';
+const APP_VERSION='2.009';
 const VERSION_HISTORY=[
+  {version:'2.009',added:'No new features.',removed:'Browser selection misidentifying a post permalink in the opened-post view.',fixed:'Parse only exact Instagram post/reel URL paths, and use the current canonical post path as fallback; add a privacy-safe permalink/shortcode match flag to click diagnostics.',tone:'green'},
   {version:'2.008',added:'No new features.',removed:'Missing field-level context for rejected Browser selections.',fixed:'Log specific queue-validation rejection codes and a privacy-safe summary of the clicked candidate (host, route type, and field lengths) without logging full URLs or post shortcodes; keep the user-facing toast unchanged.',tone:'green'},
   {version:'2.007',added:'No new features.',removed:'Media hovers being ignored when Instagram targets an enclosing DIV rather than the image/video element.',fixed:'Resolve hovered media from the event target, elementsFromPoint stack, descendant media, or the nearest post scope by pointer coordinates; log the resolution path and target class.',tone:'green'},
   {version:'2.006',added:'No new features.',removed:'Compile errors in the Windows Browser diagnostics path.',fixed:'Send marked overlay diagnostics through the existing WebView message bridge instead of an unsupported console event, and correct the navigation-event fire-and-forget assignment.',tone:'green'},

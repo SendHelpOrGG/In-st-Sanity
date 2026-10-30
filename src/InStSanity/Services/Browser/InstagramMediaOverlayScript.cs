@@ -58,7 +58,7 @@ internal static class InstagramMediaOverlayScript
 	    return;
 	  }
 
-	  const postPattern = /\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?/i;
+	  const postPattern = /^\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;
 	  const state = { items: [], isDownloading: false, currentIndex: 0, total: 0, status: '', theme: {} };
 	  const slideByPost = new Map();
 	  let activeMedia = null;
@@ -150,6 +150,7 @@ internal static class InstagramMediaOverlayScript
 	          candidatePresent: !!activeCandidate,
 	          mediaType: activeCandidate?.mediaType || '',
 	          shortcodeLength: String(activeCandidate?.shortcode || '').length,
+	          postUrlMatchesShortcode: !!activeCandidate && parseShortcode(activeCandidate.postUrl) === activeCandidate.shortcode,
 	          postUrl: safeUrlSummary(activeCandidate?.postUrl),
 	          mediaUrl: safeUrlSummary(activeCandidate?.rawUrl),
 	          slideIndex: activeCandidate?.slideIndex ?? null,
@@ -284,8 +285,13 @@ internal static class InstagramMediaOverlayScript
 	  }
 
 	  function parseShortcode(url) {
-	    const match = String(url || '').match(postPattern);
-	    return match ? match[1] : '';
+	    const value = String(url || '');
+	    if (!value) return '';
+	    try {
+	      const parsed = new URL(value, location.href);
+	      const match = parsed.pathname.match(postPattern);
+	      return match ? match[1] : '';
+	    } catch (_) { return ''; }
 	  }
 
 	  function postRootFor(media) {
