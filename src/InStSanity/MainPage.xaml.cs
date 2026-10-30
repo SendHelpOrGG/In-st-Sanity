@@ -472,6 +472,12 @@ public partial class MainPage : ContentPage
 
 	void ProcessBrowserOverlayMessage(string source, string message)
 	{
+		if (GetOverlayMessageAction(message) == "open-download-folder")
+		{
+			if (IsTrustedInstagramBrowserSource(source)) _ = OpenDownloadFolderFromBrowserAsync();
+			return;
+		}
+
 		var command = _browserMediaQueue.HandleOverlayMessage(source, message);
 		switch (command.Action)
 		{
@@ -484,6 +490,18 @@ public partial class MainPage : ContentPage
 			case BrowserMediaOverlayAction.Rejected:
 				_ = SyncBrowserQueueToPageAsync(command.Error);
 				break;
+		}
+	}
+
+	async Task OpenDownloadFolderFromBrowserAsync()
+	{
+		try
+		{
+			await WebAppView.EvaluateJavaScriptAsync("window.openDownloadFolder?.()");
+		}
+		catch
+		{
+			// The main app WebView can be navigating while the native Browser is open.
 		}
 	}
 

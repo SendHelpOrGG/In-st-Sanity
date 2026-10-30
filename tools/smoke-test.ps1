@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.020'',added:') -or
+        -not $document.Content.Contains('version:''2.021'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -423,9 +423,14 @@ try {
         throw 'Download and Resizer duplicate controls, visible-video selection, shortcode_N and shortcode_vN filenames, and the current release note must be present.'
     }
 
-    $expectedVintagePreset = "vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:20,temperature:-11,tint:0,saturation:26,vibrance:12,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70'}}"
+    $expectedVintagePreset = "vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:-90,temperature:-8,tint:-6,saturation:15,vibrance:-35,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70',grain:100,grainSize:10}}"
     if (-not $document.Content.Contains($expectedVintagePreset)) {
         throw 'The Vintage one-click look must match the supplied Image Edit settings.'
+    }
+    $expectedOldPhotoLook = "oldPhoto:{label:'Old Photo',values:{contrast:-8,highlights:-10,shadows:14,temperature:22,tint:8,saturation:-24,sepia:72,grain:44,grainSize:18,monochromeGrain:true,fade:25,vignette:28}}"
+    if (-not $document.Content.Contains('data-photo-look="oldPhoto"') -or
+        -not $document.Content.Contains($expectedOldPhotoLook)) {
+        throw 'The Image Edit tab must provide a one-click Old Photo effect using the existing preview/conversion pipeline.'
     }
 
     if (-not $document.Content.Contains('grid-template-columns:244px minmax(0,1fr)')) {
@@ -483,6 +488,16 @@ try {
         -not $overlayScriptSource.Contains("postMessage('toggle-media'") -or
         -not $overlayScriptSource.Contains("postMessage('start-download'") -or
         -not $overlayScriptSource.Contains("postMessage('clear-queue'") -or
+        -not $overlayScriptSource.Contains("postMessage('open-download-folder'") -or
+        -not $overlayScriptSource.Contains("selectButton.textContent = isSelected ? '✓ Queued' : '+ Add';") -or
+        $overlayScriptSource.Contains('+ Add to queue') -or
+        -not $overlayScriptSource.Contains('isg-open-folder') -or
+        -not $overlayScriptSource.Contains('isg-collapse') -or
+        -not $overlayScriptSource.Contains('tray.dataset.collapsed') -or
+        -not $overlayScriptSource.Contains('aria-expanded') -or
+        -not $mainPageSource.Contains('open-download-folder') -or
+        -not $mainPageSource.Contains('IsTrustedInstagramBrowserSource(source)') -or
+        -not $mainPageSource.Contains('OpenDownloadFolderFromBrowserAsync') -or
         -not $overlayScriptSource.Contains('queue-toggle-click') -or
         -not $overlayScriptSource.Contains('safeUrlSummary') -or
         -not $overlayScriptSource.Contains('postUrlMatchesShortcode') -or
@@ -561,6 +576,10 @@ try {
         -not $mainPageSource.Contains('RecordBrowserQueueDownloadHistoryAsync')) {
         throw 'The themed Instagram photo/video selection overlay, bounded host queue, shared sequential downloader, folder preferences, and history bridge must be wired.'
     }
+    $downloadFolderGlyph = 'M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z'
+    if (-not $overlayScriptSource.Contains($downloadFolderGlyph) -or -not $document.Content.Contains($downloadFolderGlyph)) {
+        throw 'The Browser queue folder shortcut must reuse the exact existing download-folder icon.'
+    }
     if (-not $overlayScriptSource.Contains('function trustedMediaUrl(value)') -or
         -not $overlayScriptSource.Contains("source[src],source[data-src]") -or
         -not $overlayScriptSource.Contains('function mediaContainsPoint(media, point, hitStack = null, eventTarget = null)') -or
@@ -577,11 +596,28 @@ try {
         -not $overlayScriptSource.Contains('width:min(320px,calc(100vw - 24px))') -or
         -not $overlayScriptSource.Contains('max-height:min(360px,calc(100vh - 24px))') -or
         -not $overlayScriptSource.Contains('opacity:.8;pointer-events:none') -or
+        -not $overlayScriptSource.Contains('opacity:.8!important') -or
+        -not $overlayScriptSource.Contains('background:transparent!important;background-image:none!important') -or
         -not $overlayScriptSource.Contains('backdrop-filter:blur(16px)')) {
         throw 'The Browser overlay must hit-test visible clipped media, keep its button stable across carousel slides, refresh reused feed media, queue and resolve videos, group media, and use translucent blurred surfaces.'
     }
     if (-not $document.Content.Contains('window.updateStickerEyesFromExternalCursor=function')) {
         throw 'Native Instagram browser pointer coordinates must be forwarded to the sidebar sticker eyes.'
+    }
+    $versionHistoryStart = $document.Content.IndexOf('function showVersionHistory()')
+    if ($versionHistoryStart -lt 0) {
+        throw 'Version history browser visibility handlers are missing.'
+    }
+    $versionHistoryEnd = $document.Content.IndexOf('function startAppAfterLoadingScreen()', $versionHistoryStart)
+    if ($versionHistoryEnd -le $versionHistoryStart) {
+        throw 'Version history browser visibility handlers are missing.'
+    }
+    $versionHistorySource = $document.Content.Substring($versionHistoryStart, $versionHistoryEnd - $versionHistoryStart)
+    if (-not $versionHistorySource.Contains("versionHistoryRestoreBrowser=Boolean(browserPage&&browserPage.style.display==='block')") -or
+        -not $versionHistorySource.Contains("sendBrowserView({action:'hide'})") -or
+        -not $versionHistorySource.Contains('reportBrowserRegion()') -or
+        -not $versionHistorySource.Contains("sendBrowserView({action:'show'})")) {
+        throw 'Opening Version history in the Browser tab must hide the native WebView and restore it when closed.'
     }
     if ($overlayScriptSource.Contains("debugLog('hover-check'") -or
         $overlayScriptSource.Contains("debugLog('select-button-positioned'") -or
@@ -611,8 +647,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.020</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>89</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.021</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>90</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 

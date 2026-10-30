@@ -47,6 +47,7 @@ internal static class InstagramMediaOverlayScript
 	  let mutationRefreshTimer = 0;
 	  let selectButton = null;
 	  let tray = null;
+	  let trayCollapsed = false;
 	  let lastPointer = null;
 	  let lastMoveInspectionAt = 0;
 	  let pendingStickerCursor = null;
@@ -54,8 +55,9 @@ internal static class InstagramMediaOverlayScript
 	  let lastStickerCursorSentAt = -Infinity;
 
 	  const css = `
-	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;gap:6px;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:7px 10px;background:transparent;color:var(--isg-button-ink,#091318);font:650 11px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;gap:6px;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:7px 10px;appearance:none;-webkit-appearance:none;background:transparent!important;background-image:none!important;color:var(--isg-button-ink,#091318);font:650 11px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 	    #inst-sanity-select::before,#inst-sanity-tray::before,#inst-sanity-notice::before,.isg-action::before,.isg-item::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--isg-surface,var(--isg-panel,rgba(17,24,32,.97)));opacity:.8;pointer-events:none}
+	    #inst-sanity-select::before{opacity:.8!important}
 	    #inst-sanity-select:hover{filter:brightness(1.08);transform:translateY(-1px)}
 	    #inst-sanity-select[data-selected="true"]{--isg-surface:var(--isg-panel,#151b23);color:var(--isg-ink,#f8fafc);border-color:var(--isg-accent,#99f6e4)}
 	    #inst-sanity-tray{position:fixed;z-index:2147483645;right:12px;bottom:12px;width:min(320px,calc(100vw - 24px));max-height:min(360px,calc(100vh - 24px));display:none;flex-direction:column;overflow:hidden;border:1px solid var(--isg-border,#ffffff30);border-radius:14px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:11px/1.4 "Segoe UI",sans-serif;box-shadow:0 14px 42px #0009;isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
@@ -65,6 +67,11 @@ internal static class InstagramMediaOverlayScript
 	    .isg-title{flex:1;min-width:0;font-size:12px;font-weight:700;letter-spacing:.1px}
 	    .isg-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;border-radius:999px;background:color-mix(in srgb,var(--isg-accent,#2dd4bf) 80%,transparent);color:var(--isg-button-ink,#091318);font-weight:750;font-size:10px}
 	    .isg-actions{display:flex;gap:5px;align-items:center}
+	    .isg-icon-action{display:inline-flex;align-items:center;justify-content:center;flex:0 0 28px;width:28px;height:28px;min-width:28px;padding:0}
+	    .isg-icon-action svg{display:block;width:16px;height:16px}
+	    .isg-collapse svg{transition:transform .15s ease}
+	    #inst-sanity-tray[data-collapsed="true"] .isg-collapse svg{transform:rotate(180deg)}
+	    #inst-sanity-tray[data-collapsed="true"] .isg-items,#inst-sanity-tray[data-collapsed="true"] .isg-footer{display:none}
 	    .isg-action{position:relative;isolation:isolate;border:1px solid var(--isg-border,#ffffff30);border-radius:7px;padding:5px 8px;background:transparent;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:650 10px/1.2 "Segoe UI",sans-serif;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 	    .isg-action:disabled{opacity:.5;cursor:default}
 	    .isg-action-secondary{--isg-surface:var(--isg-panel,#151b23);color:var(--isg-ink,#f8fafc)}
@@ -138,7 +145,7 @@ internal static class InstagramMediaOverlayScript
 	      selectButton = document.createElement('button');
 	      selectButton.id = 'inst-sanity-select';
 	      selectButton.type = 'button';
-	      selectButton.setAttribute('aria-label', 'Add media to In-st-Sanity download queue');
+	      selectButton.setAttribute('aria-label', 'Add media to the download queue');
 	      selectButton.addEventListener('pointerdown', event => event.stopPropagation());
 	      selectButton.addEventListener('click', event => {
 	        event.preventDefault(); event.stopPropagation(); clearTimer();
@@ -163,12 +170,26 @@ internal static class InstagramMediaOverlayScript
 	      tray.id = 'inst-sanity-tray';
 	      tray.setAttribute('role', 'region');
 	      tray.setAttribute('aria-label', 'In-st-Sanity media download queue');
-	      tray.innerHTML = '<div class="isg-head"><div class="isg-title">Download queue</div><span class="isg-count">0</span><div class="isg-actions"><button class="isg-action isg-start" type="button">Save</button><button class="isg-action isg-action-secondary isg-clear" type="button">Clear</button></div></div><div class="isg-items"></div><div class="isg-footer"></div>';
+	      tray.innerHTML = '<div class="isg-head"><div class="isg-title">Download queue</div><span class="isg-count">0</span><div class="isg-actions"><button class="isg-action isg-start" type="button">Save</button><button class="isg-action isg-action-secondary isg-clear" type="button">Clear</button><button class="isg-action isg-action-secondary isg-icon-action isg-open-folder" type="button" title="Open download folder" aria-label="Open download folder"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-collapse" type="button" title="Collapse download queue" aria-label="Collapse download queue" aria-expanded="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div></div><div class="isg-items"></div><div class="isg-footer"></div>';
+	      tray.dataset.collapsed = String(trayCollapsed);
 	      tray.querySelector('.isg-start').addEventListener('click', () => {
 	        if (state.isDownloading) postMessage('cancel-download');
 	        else postMessage('start-download');
 	      });
 	      tray.querySelector('.isg-clear').addEventListener('click', () => postMessage('clear-queue'));
+	      tray.querySelector('.isg-open-folder').addEventListener('click', event => {
+	        event.preventDefault(); event.stopPropagation(); postMessage('open-download-folder');
+	      });
+	      const collapseButton = tray.querySelector('.isg-collapse');
+	      collapseButton.addEventListener('click', event => {
+	        event.preventDefault(); event.stopPropagation();
+	        trayCollapsed = !trayCollapsed;
+	        tray.dataset.collapsed = String(trayCollapsed);
+	        const expanded = !trayCollapsed;
+	        collapseButton.setAttribute('aria-expanded', String(expanded));
+	        collapseButton.setAttribute('aria-label', expanded ? 'Collapse download queue' : 'Expand download queue');
+	        collapseButton.title = expanded ? 'Collapse download queue' : 'Expand download queue';
+	      });
 	      tray.addEventListener('pointerdown', event => event.stopPropagation());
 	      document.documentElement.appendChild(tray);
 	    }
@@ -223,7 +244,7 @@ internal static class InstagramMediaOverlayScript
 	      const key = itemKey(activeCandidate);
 	      const isSelected = selected.has(key);
 	      selectButton.dataset.selected = String(isSelected);
-	      selectButton.textContent = isSelected ? '✓ Queued' : '+ Add to queue';
+	      selectButton.textContent = isSelected ? '✓ Queued' : '+ Add';
 	    }
 
 	    const hasItems = state.items.length > 0;
@@ -517,7 +538,7 @@ internal static class InstagramMediaOverlayScript
 	    const key = itemKey(candidate);
 	    const isSelected = state.items.some(item => itemKey(item) === key);
 	    selectButton.dataset.selected = String(isSelected);
-	    selectButton.textContent = isSelected ? '✓ Queued' : '+ Add to queue';
+	    selectButton.textContent = isSelected ? '✓ Queued' : '+ Add';
 	    activeCandidate = candidate;
 	  }
 

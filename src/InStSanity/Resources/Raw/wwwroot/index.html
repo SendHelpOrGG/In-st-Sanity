@@ -954,7 +954,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                 <h3>One-click looks</h3>
                 <div class="photo-adjustment-look-grid" role="group" aria-label="Apply a photo look">
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="noir" aria-pressed="false" onclick="applyPhotoResizeLook('noir')">Noir</button>
-                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="vintage" aria-pressed="false" title="Cool blue split-tone, balanced contrast, and subtle detail" onclick="applyPhotoResizeLook('vintage')">Vintage</button>
+                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="vintage" aria-pressed="false" title="Cool blue split-tone, deep shadows, and fine film grain" onclick="applyPhotoResizeLook('vintage')">Vintage</button>
+                  <button type="button" class="outline photo-adjustment-look-button" data-photo-look="oldPhoto" aria-pressed="false" title="Warm sepia, faded tone, film grain, and vignette" onclick="applyPhotoResizeLook('oldPhoto')">Old Photo</button>
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="dreamy" aria-pressed="false" onclick="applyPhotoResizeLook('dreamy')">Dreamy</button>
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="cyberpunk" aria-pressed="false" onclick="applyPhotoResizeLook('cyberpunk')">Cyberpunk</button>
                 </div>
@@ -1370,7 +1371,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.020; open version history" title="Click to view what changed in each version">v.2.020</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.021; open version history" title="Click to view what changed in each version">v.2.021</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3922,7 +3923,8 @@ const PHOTO_ADJUSTMENT_COLOR_KEYS=new Set(['duotoneShadowColor','duotoneHighligh
 const PHOTO_ADJUSTMENT_META_KEYS=new Set(['grainSize','monochromeGrain','halftoneSize','duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
 const PHOTO_RESIZE_LOOKS=Object.freeze({
   noir:{label:'Noir',values:{saturation:-100,contrast:24,highlights:6,shadows:-8,clarity:12,grain:20,grainSize:28,monochromeGrain:true,vignette:20}},
-  vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:20,temperature:-11,tint:0,saturation:26,vibrance:12,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70'}},
+  vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:-90,temperature:-8,tint:-6,saturation:15,vibrance:-35,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70',grain:100,grainSize:10}},
+  oldPhoto:{label:'Old Photo',values:{contrast:-8,highlights:-10,shadows:14,temperature:22,tint:8,saturation:-24,sepia:72,grain:44,grainSize:18,monochromeGrain:true,fade:25,vignette:28}},
   dreamy:{label:'Dreamy',values:{brightness:8,highlights:12,contrast:-8,saturation:10,clarity:-28,blur:8,fade:10,temperature:6}},
   cyberpunk:{label:'Cyberpunk',values:{contrast:18,saturation:22,vibrance:20,temperature:-18,tint:20,duotone:35,duotoneShadowColor:'#101838',duotoneHighlightColor:'#FF4CBA',grain:4,vignette:12}}
 });
@@ -7172,8 +7174,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.020';
+const APP_VERSION='2.021';
 const VERSION_HISTORY=[
+  {version:'2.021',added:'An Old Photo one-click Image Edit look, a foldable Browser queue, and an icon-only Open download folder action in that queue.',removed:'The longer “+ Add to queue” selector label.',fixed:'Shorten the selector to “+ Add” and explicitly preserve its 20%-transparent surface; hide the native Browser while Version history is open and restore it on close; update Vintage to shadows -90%, temperature -8%, tint -6%, saturation 15%, vibrance -35%, grain size 10%, and grain 100%.',tone:'yellow'},
   {version:'2.020',added:'Low-volume Browser media-selection diagnostics with rejection reasons and carousel-anchor positioning events; no per-hover trace.',removed:'The queue button relocating to each photo’s geometry while switching slides within one post.',fixed:'Keep the selector at its existing viewport coordinates across same-post slide changes and horizontal-only carousel scrolling; reposition for a different post, vertical scrolling, resize, or route changes. The log now records deduplicated candidate/rejection summaries and selector placement. Live Instagram verification is still needed.',tone:'yellow'},
   {version:'2.019',added:'No new features.',removed:'Feed media inheriting the first post’s scope when layouts omit <article>, and media being skipped when an Instagram wrapper receives the pointer.',fixed:'Resolve each candidate against its nearest permalink-owning post container, include media wrapped by the hit target while retaining media bounds and clipping checks, and recheck after SPA route changes. Live Instagram verification is still needed.',tone:'yellow'},
   {version:'2.018',added:'A native resolver fallback path for Browser-queued videos when the page exposes only a blob or unsupported stream URL; live behavior verification is pending.',removed:'No removals.',fixed:'Reworked selector anchoring for same-post slide changes and candidate identity refresh for reused feed media. Live Instagram verification is still needed before these reported behaviors can be considered confirmed.',tone:'yellow'},
@@ -7412,8 +7415,36 @@ function renderVersionHistory(){
   }
 }
 function handleVersionHistoryKeydown(event){if(event.key==='Escape')closeVersionHistory()}
-function showVersionHistory(){const modal=document.getElementById('versionHistoryModal');if(!modal)return;renderVersionHistory();modal.classList.add('show');modal.setAttribute('aria-hidden','false');document.addEventListener('keydown',handleVersionHistoryKeydown);modal.querySelector('button')?.focus()}
-function closeVersionHistory(){const modal=document.getElementById('versionHistoryModal');if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true')}document.removeEventListener('keydown',handleVersionHistoryKeydown);document.getElementById('appVersionButton')?.focus()}
+let versionHistoryRestoreBrowser=false;
+function showVersionHistory(){
+  const modal=document.getElementById('versionHistoryModal');
+  if(!modal)return;
+  const browserPage=document.getElementById('browserPage');
+  versionHistoryRestoreBrowser=Boolean(browserPage&&browserPage.style.display==='block');
+  if(versionHistoryRestoreBrowser)sendBrowserView({action:'hide'});
+  renderVersionHistory();
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden','false');
+  document.addEventListener('keydown',handleVersionHistoryKeydown);
+  modal.querySelector('button')?.focus();
+}
+function closeVersionHistory(){
+  const modal=document.getElementById('versionHistoryModal');
+  if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true')}
+  document.removeEventListener('keydown',handleVersionHistoryKeydown);
+  document.getElementById('appVersionButton')?.focus();
+  const restoreBrowser=versionHistoryRestoreBrowser;
+  versionHistoryRestoreBrowser=false;
+  if(restoreBrowser){
+    const browserPage=document.getElementById('browserPage');
+    if(browserPage&&browserPage.style.display==='block'){
+      requestAnimationFrame(()=>{
+        reportBrowserRegion();
+        setTimeout(()=>sendBrowserView({action:'show'}),50);
+      });
+    }
+  }
+}
 function startAppAfterLoadingScreen(){
   if(window.__instSanityAppStarted)return;
   window.__instSanityAppStarted=true;
