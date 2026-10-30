@@ -663,6 +663,9 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-control label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .photo-adjustment-control output{flex:0 0 auto;color:var(--t-ink,#f1f5f9);font-variant-numeric:tabular-nums}
 .photo-adjustment-control input[type=range]{display:block;width:100%;height:15px;margin:0;accent-color:var(--t-accent,#38bdf8);cursor:pointer}
+.photo-adjustment-seed-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px}
+.photo-adjustment-seed-row input[type=number]{width:100%;min-width:0;height:29px;box-sizing:border-box;padding:4px 7px;border:1px solid var(--t-line,rgba(255,255,255,.18));border-radius:6px;background:var(--t-input-bg,rgba(15,23,42,.45));color:var(--t-ink,#f1f5f9);font-family:inherit;font-size:10px;line-height:1.2;font-variant-numeric:tabular-nums}
+.photo-adjustment-seed-row button{min-height:29px;padding:4px 8px;font-size:9px}
 .photo-adjustment-checkbox{display:flex;align-items:center;gap:7px;min-height:30px;color:var(--t-muted,#94a3b8);font-size:10px;cursor:pointer}
 .photo-adjustment-checkbox input{accent-color:var(--t-accent,#38bdf8)}
 .photo-adjustment-batch{display:flex;align-items:flex-start;gap:9px;margin-top:14px;padding:11px 12px;border:1px solid var(--t-line,rgba(255,255,255,.12));border-radius:9px;background:var(--t-input-bg,rgba(15,23,42,.18));cursor:pointer}
@@ -1011,8 +1014,9 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                   <div class="photo-adjustment-control"><label for="photoAdjFade"><span>Fade</span><output id="photoAdjValueFade">0%</output></label><input id="photoAdjFade" type="range" min="0" max="100" step="1" data-adjustment="fade" oninput="updatePhotoResizeAdjustment('fade',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjVignette"><span>Vignette</span><output id="photoAdjValueVignette">0%</output></label><input id="photoAdjVignette" type="range" min="0" max="100" step="1" data-adjustment="vignette" oninput="updatePhotoResizeAdjustment('vignette',this.value)"></div>
                   <div class="photo-adjustment-control"><label for="photoAdjOldPhoto"><span>Old Photo</span><output id="photoAdjValueOldPhoto">0%</output></label><input id="photoAdjOldPhoto" type="range" min="0" max="100" step="1" data-adjustment="oldPhoto" title="Add dust, scratches, crease marks, and film folds" aria-label="Old Photo damage texture" oninput="updatePhotoResizeAdjustment('oldPhoto',this.value)"></div>
+                  <div class="photo-adjustment-control"><label for="photoAdjOldPhotoSeed"><span>Texture seed</span></label><div class="photo-adjustment-seed-row"><input id="photoAdjOldPhotoSeed" type="number" min="0" max="2147483647" step="1" inputmode="numeric" data-adjustment="oldPhotoSeed" aria-label="Old Photo texture seed" oninput="updatePhotoResizeAdjustment('oldPhotoSeed',this.value)"><button type="button" class="outline" onclick="randomizeOldPhotoSeed()" aria-label="Choose a new Old Photo texture seed">New seed</button></div></div>
                 </div>
-                <p class="hint photo-adjustment-finishing-hint">Adds dust, scratches, creases, and fold marks as a separate texture layer; combine it with other adjustments.</p>
+                <p class="hint photo-adjustment-finishing-hint">Adds dust, scratches, creases, and fold marks as a separate texture layer. The seed changes only the layout, not its intensity; reuse a seed for repeatable results.</p>
               </div>
             </div>
           </div>
@@ -1372,7 +1376,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.023; open version history" title="Click to view what changed in each version">v.2.023</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.024; open version history" title="Click to view what changed in each version">v.2.024</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3918,10 +3922,10 @@ const RESIZER_MAX_FILE_BYTES=50*1024*1024;
 const RESIZER_ADJUSTMENTS_KEY='stillSane.photoResizeAdjustmentsV1';
 const RESIZER_LOOK_STATE_KEY='stillSane.photoResizeLookV1';
 const RESIZER_ADJUST_BATCH_KEY='stillSane.photoResizeApplyToBatchV1';
-const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,gamma:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,sepia:0,invert:0,posterize:0,pixelate:0,duotone:0,duotoneShadowColor:'#1B1B3A',duotoneHighlightColor:'#FFD166',halftone:0,halftoneSize:12,colorize:0,colorizeColor:'#D94F70',grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0,oldPhoto:0});
-const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],gamma:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],sepia:[0,100],invert:[0,100],posterize:[0,100],pixelate:[0,100],duotone:[0,100],halftone:[0,100],halftoneSize:[4,40],colorize:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100],oldPhoto:[0,100]});
+const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,gamma:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,sepia:0,invert:0,posterize:0,pixelate:0,duotone:0,duotoneShadowColor:'#1B1B3A',duotoneHighlightColor:'#FFD166',halftone:0,halftoneSize:12,colorize:0,colorizeColor:'#D94F70',grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0,oldPhoto:0,oldPhotoSeed:1});
+const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],gamma:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],sepia:[0,100],invert:[0,100],posterize:[0,100],pixelate:[0,100],duotone:[0,100],halftone:[0,100],halftoneSize:[4,40],colorize:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100],oldPhoto:[0,100],oldPhotoSeed:[0,2147483647]});
 const PHOTO_ADJUSTMENT_COLOR_KEYS=new Set(['duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
-const PHOTO_ADJUSTMENT_META_KEYS=new Set(['grainSize','monochromeGrain','halftoneSize','duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
+const PHOTO_ADJUSTMENT_META_KEYS=new Set(['grainSize','monochromeGrain','halftoneSize','duotoneShadowColor','duotoneHighlightColor','colorizeColor','oldPhotoSeed']);
 const PHOTO_RESIZE_LOOKS=Object.freeze({
   noir:{label:'Noir',values:{saturation:-100,contrast:24,highlights:6,shadows:-8,clarity:12,grain:20,grainSize:28,monochromeGrain:true,vignette:20}},
   vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:-90,temperature:-8,tint:-6,saturation:15,vibrance:-35,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70',grain:100,grainSize:10}},
@@ -3959,7 +3963,7 @@ function photoAdjustmentSuffix(name){return name.charAt(0).toUpperCase()+name.sl
 function isPhotoAdjustmentHexColor(value){return typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)}
 function hasPhotoResizeAdjustmentEdits(settings=photoResizeAdjustments){return Object.keys(PHOTO_ADJUSTMENT_DEFAULTS).some(name=>{if(PHOTO_ADJUSTMENT_META_KEYS.has(name))return false;const value=settings?.[name];return typeof value==='boolean'?value:Boolean(Number.isFinite(Number(value))&&Number(value)!==0)})}
 function getPhotoResizeAdjustmentPayload(){return{...photoResizeAdjustments}}
-function formatPhotoResizeAdjustmentValue(name,value){if(PHOTO_ADJUSTMENT_COLOR_KEYS.has(name))return String(value||'').toUpperCase();if(name==='exposure')return`${(Number(value)/50).toFixed(1)} EV`;if(name==='gamma')return`${Math.pow(2,(Number(value)||0)/100*1.2).toFixed(2)}×`;if(name==='halftoneSize')return`${Math.round(Number(value)||12)} px`;return`${Math.round(Number(value)||0)}%`}
+function formatPhotoResizeAdjustmentValue(name,value){if(PHOTO_ADJUSTMENT_COLOR_KEYS.has(name))return String(value||'').toUpperCase();if(name==='exposure')return`${(Number(value)/50).toFixed(1)} EV`;if(name==='gamma')return`${Math.pow(2,(Number(value)||0)/100*1.2).toFixed(2)}×`;if(name==='halftoneSize')return`${Math.round(Number(value)||12)} px`;if(name==='oldPhotoSeed')return String(Math.round(Number(value)||0));return`${Math.round(Number(value)||0)}%`}
 function syncPhotoResizeAdjustmentControls(){
   document.querySelectorAll('[data-adjustment]').forEach(input=>{
     const name=input.dataset.adjustment;
@@ -4035,6 +4039,13 @@ function updatePhotoResizeAdjustment(name,rawValue){
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
+}
+function randomizeOldPhotoSeed(){
+  const current=Number(photoResizeAdjustments.oldPhotoSeed)||0;
+  let nextSeed;
+  try{if(window.crypto?.getRandomValues){const values=new Uint32Array(1);window.crypto.getRandomValues(values);nextSeed=values[0]&0x7fffffff}else nextSeed=Math.floor(Math.random()*2147483648)}catch(_){nextSeed=Math.floor(Math.random()*2147483648)}
+  if(nextSeed===current)nextSeed=(nextSeed+1)%2147483648;
+  updatePhotoResizeAdjustment('oldPhotoSeed',nextSeed);
 }
 function interpolatePhotoAdjustmentColor(startColor,endColor,strength){
   const channel=offset=>Math.round(parseInt(startColor.slice(offset,offset+2),16)+(parseInt(endColor.slice(offset,offset+2),16)-parseInt(startColor.slice(offset,offset+2),16))*strength).toString(16).padStart(2,'0');
@@ -4448,15 +4459,21 @@ function ensurePhotoOldPhotoTexture(){
   });
   return photoOldPhotoTexturePromise;
 }
-function photoPreviewTextureMapping(texture,width,height){
+function photoPreviewTextureMapping(texture,width,height,seed){
   const imageAspect=width/height,textureAspect=texture.width/texture.height;
-  let uSpan=1,vSpan=1;
+  let uSpan=1,vSpan=1,state=Number(seed)>>>0;
+  const nextRandom=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
   if(imageAspect<textureAspect)uSpan=imageAspect/textureAspect;
   else if(imageAspect>textureAspect)vSpan=textureAspect/imageAspect;
-  return{uStart:(1-uSpan)/2,uSpan,vStart:(1-vSpan)/2,vSpan};
+  const zoom=.82+nextRandom()*.18;
+  uSpan*=zoom;vSpan*=zoom;
+  const offsetU=nextRandom(),offsetV=nextRandom(),flipX=nextRandom()<.5,flipY=nextRandom()<.5;
+  return{uStart:(1-uSpan)*offsetU,uSpan,vStart:(1-vSpan)*offsetV,vSpan,flipX,flipY};
 }
 function photoPreviewTextureSample(texture,mapping,x,y,width,height){
   let u=(x+.5)/width,v=(y+.5)/height;
+  if(mapping.flipX)u=1-u;
+  if(mapping.flipY)v=1-v;
   u=mapping.uStart+u*mapping.uSpan;
   v=mapping.vStart+v*mapping.vSpan;
   const sampleX=Math.max(0,Math.min(texture.width-1,u*(texture.width-1))),sampleY=Math.max(0,Math.min(texture.height-1,v*(texture.height-1)));
@@ -4465,7 +4482,7 @@ function photoPreviewTextureSample(texture,mapping,x,y,width,height){
   return(topLeft+(topRight-topLeft)*fx)*(1-fy)+(bottomLeft+(bottomRight-bottomLeft)*fx)*fy;
 }
 function photoPreviewFinishing(pixels,width,height,settings,seedData){
-  const fade=settings.fade/100,vignette=settings.vignette/100,grainAmount=settings.grain/100*31,grainCell=.25+Math.pow(settings.grainSize/100,2)*11.75,grainScale=Math.min(1,grainCell),seed=photoPreviewSeed(seedData),halfWidth=Math.max(1,width/2),halfHeight=Math.max(1,height/2),oldPhoto=settings.oldPhoto/100,texture=oldPhoto>0?photoOldPhotoTextureData:null,textureMapping=texture?photoPreviewTextureMapping(texture,width,height):null;
+  const fade=settings.fade/100,vignette=settings.vignette/100,grainAmount=settings.grain/100*31,grainCell=.25+Math.pow(settings.grainSize/100,2)*11.75,grainScale=Math.min(1,grainCell),seed=photoPreviewSeed(seedData),halfWidth=Math.max(1,width/2),halfHeight=Math.max(1,height/2),oldPhoto=settings.oldPhoto/100,texture=oldPhoto>0?photoOldPhotoTextureData:null,textureMapping=texture?photoPreviewTextureMapping(texture,width,height,settings.oldPhotoSeed):null;
   for(let y=0;y<height;y++){const normalizedY=(y+.5-halfHeight)/halfHeight;for(let x=0;x<width;x++){
     const i=(y*width+x)*4;if(pixels[i+3]===0)continue;const normalizedX=(x+.5-halfWidth)/halfWidth,radius=Math.sqrt(normalizedX*normalizedX+normalizedY*normalizedY),vignetteMask=photoPreviewSmoothStep(.42,1.12,radius),vignetteFactor=1-vignette*vignetteMask*.72,fadeFactor=1-fade*.18,fadeLift=fade*.18*255,noiseBlue=photoPreviewGrainNoise(x,y,grainCell,seed,0),noiseGreen=settings.monochromeGrain?noiseBlue:photoPreviewGrainNoise(x,y,grainCell,seed,1),noiseRed=settings.monochromeGrain?noiseBlue:photoPreviewGrainNoise(x,y,grainCell,seed,2),wearDelta=texture?(photoPreviewTextureSample(texture,textureMapping,x,y,width,height)-128)*oldPhoto*.62:0;
     pixels[i]=(pixels[i]*vignetteFactor*fadeFactor+fadeLift+noiseBlue*grainAmount*grainScale+wearDelta);pixels[i+1]=(pixels[i+1]*vignetteFactor*fadeFactor+fadeLift+noiseGreen*grainAmount*grainScale+wearDelta);pixels[i+2]=(pixels[i+2]*vignetteFactor*fadeFactor+fadeLift+noiseRed*grainAmount*grainScale+wearDelta);
@@ -7223,8 +7240,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.023';
+const APP_VERSION='2.024';
 const VERSION_HISTORY=[
+  {version:'2.024',added:'An editable Old Photo texture seed with a New seed button for repeatable damage-layout variations.',removed:'No removals.',fixed:'Use the same seeded texture crop, offset, and flips in the live preview and converted copies; preserve the seed with the other adjustment settings.',tone:'yellow'},
   {version:'2.023',added:'More reliable Instagram feed and opened-post media discovery using nearby post permalinks.',removed:'The all-or-nothing assumption that post media is always inside an article with a directly nested permalink.',fixed:'Match media to the nearest visible post link in broad feed/modal layouts, tolerate non-interactive wrappers over the actual image while keeping photo bounds and clipping checks, accept username-prefixed post routes, and add privacy-safe hit-test/permalink diagnostics without logging URLs or shortcodes.',tone:'yellow'},
   {version:'2.022',added:'A separate Old Photo finishing-effects slider with adjustable dust, scratch, crease, and fold texture, based on the supplied texture image.',removed:'The one-click Old Photo look.',fixed:'Make Old Photo an independent intensity control in Finishing effects instead of a preset; use the same aspect-matched supplied damage texture in live preview and converted copies so the visible scratches and folds stay aligned with the exported effect.',tone:'yellow'},
   {version:'2.021',added:'An Old Photo one-click Image Edit look, a foldable Browser queue, and an icon-only Open download folder action in that queue.',removed:'The longer “+ Add to queue” selector label.',fixed:'Shorten the selector to “+ Add” and explicitly preserve its 20%-transparent surface; hide the native Browser while Version history is open and restore it on close; update Vintage to shadows -90%, temperature -8%, tint -6%, saturation 15%, vibrance -35%, grain size 10%, and grain 100%.',tone:'yellow'},

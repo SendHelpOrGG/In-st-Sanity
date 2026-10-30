@@ -177,7 +177,9 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			!TryReadNumber(element, "grainSize", 0, 100, 35, out var grainSize) ||
 			!TryReadNumber(element, "fade", 0, 100, 0, out var fade) ||
 			!TryReadNumber(element, "vignette", 0, 100, 0, out var vignette) ||
-			!TryReadNumber(element, "oldPhoto", 0, 100, 0, out var oldPhoto))
+			!TryReadNumber(element, "oldPhoto", 0, 100, 0, out var oldPhoto) ||
+			!TryReadNumber(element, "oldPhotoSeed", 0, int.MaxValue, 1, out var oldPhotoSeed) ||
+			oldPhotoSeed != Math.Truncate(oldPhotoSeed))
 		{
 			return false;
 		}
@@ -236,6 +238,7 @@ public sealed class ResizeConvertEndpoint : IApiEndpoint
 			Fade = fade,
 			Vignette = vignette,
 			OldPhoto = oldPhoto,
+			OldPhotoSeed = (int)oldPhotoSeed,
 		};
 		return true;
 	}

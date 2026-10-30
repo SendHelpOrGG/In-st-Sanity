@@ -35,6 +35,7 @@ public sealed record PhotoImageAdjustments
 	public double Fade { get; init; }
 	public double Vignette { get; init; }
 	public double OldPhoto { get; init; }
+	public int OldPhotoSeed { get; init; } = 1;
 
 	public bool HasEdits =>
 		Exposure != 0 || Brightness != 0 || Contrast != 0 || Gamma != 0 || Highlights != 0 || Shadows != 0 ||
@@ -607,7 +608,7 @@ internal static class PhotoImageAdjustmentProcessor
 		var grainScale = Math.Min(1, grainCell);
 		var seed = CreateSeed(seedBytes);
 		var textureMapping = oldPhotoTexture is { Width: > 0, Height: > 0 }
-			? CreateTextureMapping(oldPhotoTexture, width, height)
+			? CreateTextureMapping(oldPhotoTexture, width, height, settings.OldPhotoSeed)
 			: default;
 		var halfWidth = Math.Max(1, width / 2.0);
 		var halfHeight = Math.Max(1, height / 2.0);
@@ -643,10 +644,11 @@ internal static class PhotoImageAdjustmentProcessor
 		}
 	}
 
-	static (double UStart, double USpan, double VStart, double VSpan) CreateTextureMapping(
+	static (double UStart, double USpan, double VStart, double VSpan, bool FlipX, bool FlipY) CreateTextureMapping(
 		PhotoImageDamageTexture texture,
 		int width,
-		int height)
+		int height,
+		int seedValue)
 	{
 		var imageAspect = width / (double)height;
 		var textureAspect = texture.Width / (double)texture.Height;
@@ -661,19 +663,44 @@ internal static class PhotoImageAdjustmentProcessor
 			vSpan = textureAspect / imageAspect;
 		}
 
-		return ((1 - uSpan) / 2, uSpan, (1 - vSpan) / 2, vSpan);
+		var randomState = (uint)seedValue;
+		var zoom = 0.82 + NextTextureSeedRandom(ref randomState) * 0.18;
+		uSpan *= zoom;
+		vSpan *= zoom;
+		var offsetU = NextTextureSeedRandom(ref randomState);
+		var offsetV = NextTextureSeedRandom(ref randomState);
+		var flipX = NextTextureSeedRandom(ref randomState) < 0.5;
+		var flipY = NextTextureSeedRandom(ref randomState) < 0.5;
+		return ((1 - uSpan) * offsetU, uSpan, (1 - vSpan) * offsetV, vSpan, flipX, flipY);
+	}
+
+	static double NextTextureSeedRandom(ref uint state)
+	{
+		state = unchecked(state * 1_664_525u + 1_013_904_223u);
+		return state / 4_294_967_296.0;
 	}
 
 	static double SampleTextureLuminance(
 		PhotoImageDamageTexture texture,
-		(double UStart, double USpan, double VStart, double VSpan) mapping,
+		(double UStart, double USpan, double VStart, double VSpan, bool FlipX, bool FlipY) mapping,
 		int x,
 		int y,
 		int width,
 		int height)
 	{
-		var u = mapping.UStart + (x + 0.5) / width * mapping.USpan;
-		var v = mapping.VStart + (y + 0.5) / height * mapping.VSpan;
+		var normalizedU = (x + 0.5) / width;
+		var normalizedV = (y + 0.5) / height;
+		if (mapping.FlipX)
+		{
+			normalizedU = 1 - normalizedU;
+		}
+
+		if (mapping.FlipY)
+		{
+			normalizedV = 1 - normalizedV;
+		}
+		var u = mapping.UStart + normalizedU * mapping.USpan;
+		var v = mapping.VStart + normalizedV * mapping.VSpan;
 		var sampleX = Math.Clamp(u * (texture.Width - 1), 0, texture.Width - 1.0);
 		var sampleY = Math.Clamp(v * (texture.Height - 1), 0, texture.Height - 1.0);
 		var x0 = (int)Math.Floor(sampleX);

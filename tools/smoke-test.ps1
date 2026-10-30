@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.023'',added:') -or
+        -not $document.Content.Contains('version:''2.024'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -430,7 +430,13 @@ try {
     $oldPhotoTexturePath = Join-Path $PSScriptRoot '..\src\InStSanity\Resources\Raw\wwwroot\old-photo-damage-texture.png'
     if (-not $document.Content.Contains('id="photoAdjOldPhoto"') -or
         -not $document.Content.Contains('data-adjustment="oldPhoto"') -or
+        -not $document.Content.Contains('id="photoAdjOldPhotoSeed"') -or
+        -not $document.Content.Contains('data-adjustment="oldPhotoSeed"') -or
+        -not $document.Content.Contains('function randomizeOldPhotoSeed()') -or
+        -not $document.Content.Contains("'colorizeColor','oldPhotoSeed']);") -or
         -not $document.Content.Contains('oldPhoto:[0,100]') -or
+        -not $document.Content.Contains('oldPhotoSeed:[0,2147483647]') -or
+        -not $document.Content.Contains('photoPreviewTextureMapping(texture,width,height,settings.oldPhotoSeed)') -or
         -not $document.Content.Contains('function ensurePhotoOldPhotoTexture()') -or
         -not $document.Content.Contains('photoPreviewTextureSample(texture,textureMapping,x,y,width,height)') -or
         -not $document.Content.Contains("savedLook.name==='oldPhoto'") -or
@@ -662,8 +668,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.023</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>92</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.024</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>93</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 
@@ -680,6 +686,17 @@ try {
     $imageResizerSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\src\InStSanity\Services\Instagram\ImageResizer.cs') -Raw
     $photoAdjustmentsSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\src\InStSanity\Services\Images\PhotoImageAdjustments.cs') -Raw
     $mauiSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\src\InStSanity\MauiProgram.cs') -Raw
+    $photoAdjustmentHasEditsStart = $photoAdjustmentsSource.IndexOf('public bool HasEdits =>')
+    $photoAdjustmentHasEditsSource = ''
+    if ($photoAdjustmentHasEditsStart -ge 0) {
+        $photoAdjustmentHasEditsEnd = $photoAdjustmentsSource.IndexOf('internal sealed record PhotoImageDamageTexture', $photoAdjustmentHasEditsStart)
+        if ($photoAdjustmentHasEditsEnd -gt $photoAdjustmentHasEditsStart) {
+            $photoAdjustmentHasEditsSource = $photoAdjustmentsSource.Substring($photoAdjustmentHasEditsStart, $photoAdjustmentHasEditsEnd - $photoAdjustmentHasEditsStart)
+        }
+    }
+    if (-not $photoAdjustmentHasEditsSource -or $photoAdjustmentHasEditsSource.Contains('OldPhotoSeed')) {
+        throw 'Old Photo seed changes must not count as an active image edit.'
+    }
     if (-not $resizeUploadSource.Contains('Route => "/api/resize-upload"') -or
         -not $resizeConvertSource.Contains('Route => "/api/resize-convert"') -or
         -not $resizeServiceSource.Contains('FileMode.CreateNew') -or
@@ -699,7 +716,11 @@ try {
         -not $imageResizerSource.Contains('GetOldPhotoTextureAsync()') -or
         -not $photoAdjustmentsSource.Contains('OldPhoto != 0') -or
         -not $photoAdjustmentsSource.Contains('settings.OldPhoto > 0') -or
+        -not $photoAdjustmentsSource.Contains('OldPhotoSeed { get; init; } = 1') -or
+        -not $photoAdjustmentsSource.Contains('settings.OldPhotoSeed') -or
         -not $resizeConvertSource.Contains('TryReadNumber(element, "oldPhoto", 0, 100, 0, out var oldPhoto)') -or
+        -not $resizeConvertSource.Contains('TryReadNumber(element, "oldPhotoSeed", 0, int.MaxValue, 1, out var oldPhotoSeed)') -or
+        -not $resizeConvertSource.Contains('OldPhotoSeed = (int)oldPhotoSeed') -or
         -not $resizeServiceSource.Contains('~/Pictures/Instagram/Resized') -or
         -not $mauiSource.Contains('AddSingleton<PhotoResizeService>')) {
         throw 'The photo-resizer endpoints, staged upload, non-overwriting output, max-side conversion, and service registration must be present.'
