@@ -481,6 +481,12 @@ internal static class WebViewBootstrapper
 						LogInstagramBrowserOverlay($"{GetOverlayDebugSummary(json)} sourceHost={GetSourceHost(args.Source)}");
 						return;
 					}
+					// Pointer samples are frequent; forward them without per-move log entries.
+					if (action == "cursor-position")
+					{
+						onOverlayMessage(args.Source, json);
+						return;
+					}
 					LogInstagramBrowserOverlay($"WebMessageReceived action={action} sourceHost={GetSourceHost(args.Source)}");
 					onOverlayMessage(args.Source, json);
 				}

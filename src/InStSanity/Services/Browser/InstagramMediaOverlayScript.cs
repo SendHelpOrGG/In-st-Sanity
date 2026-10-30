@@ -36,8 +36,11 @@ internal static class InstagramMediaOverlayScript
 	  let mutationRefreshTimer = 0;
 	  let selectButton = null;
 	  let tray = null;
-	  let lastPointer = null;
-	  let lastMoveInspectionAt = 0;
+  let lastPointer = null;
+  let lastMoveInspectionAt = 0;
+	  let pendingStickerCursor = null;
+	  let stickerCursorFrame = 0;
+	  let lastStickerCursorSentAt = -Infinity;
 
 	  const css = `
 	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;gap:7px;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:8px 12px;background:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:600 12px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px)}
@@ -482,8 +485,25 @@ internal static class InstagramMediaOverlayScript
 	    activateInspectedCandidate(inspection);
 	  }
 
+	  function relayStickerCursorToMainApp(event) {
+	    const bridge = window.chrome?.webview;
+	    if (typeof bridge?.postMessage !== 'function' || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) return;
+	    pendingStickerCursor = { x: event.clientX, y: event.clientY };
+	    if (stickerCursorFrame) return;
+	    stickerCursorFrame = window.requestAnimationFrame(() => {
+	      stickerCursorFrame = 0;
+	      const point = pendingStickerCursor;
+	      pendingStickerCursor = null;
+	      const now = performance.now();
+	      if (!point || now - lastStickerCursorSentAt < 30) return;
+	      lastStickerCursorSentAt = now;
+	      try { bridge.postMessage({ v: 1, action: 'cursor-position', x: point.x, y: point.y }); } catch (_) { }
+	    });
+	  }
+
 	  function onPointerMove(event) {
 	    lastPointer = { x: event.clientX, y: event.clientY };
+	    relayStickerCursorToMainApp(event);
 	    if (event.target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) return;
 	    const now = Date.now();
 	    if (now - lastMoveInspectionAt < 100) return;

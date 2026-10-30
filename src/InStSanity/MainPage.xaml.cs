@@ -19,6 +19,8 @@ public partial class MainPage : ContentPage
 	readonly InstagramResolver _instagramResolver;
 	WebView? _instagramBrowserView;
 	string? _currentInstagramUrl;
+	InstagramBrowserRegion? _instagramBrowserRegion;
+	long _lastStickerCursorForwardedAtMs;
 	string _cachedBrowserOverlayThemeJson = "null";
 	DateTime _browserOverlayThemeCachedAtUtc = DateTime.MinValue;
 
@@ -209,6 +211,7 @@ public partial class MainPage : ContentPage
 	{
 		// Dock the native page over the themed viewport of the Browser tab. The region
 		// arrives in window-relative device-independent pixels, matching MAUI layout.
+		_instagramBrowserRegion = region;
 		InstagramBrowserOverlay.Margin = new Thickness(region.Left, region.Top, 0, 0);
 		InstagramBrowserOverlay.WidthRequest = Math.Max(1, region.Width);
 		InstagramBrowserOverlay.HeightRequest = Math.Max(1, region.Height);
@@ -374,7 +377,97 @@ public partial class MainPage : ContentPage
 
 	void OnBrowserOverlayMessage(string source, string message)
 	{
+		if (GetOverlayMessageAction(message) == "cursor-position")
+		{
+			if (IsTrustedInstagramBrowserSource(source) && TryReadBrowserCursorPosition(message, out var x, out var y))
+			{
+				MainThread.BeginInvokeOnMainThread(() => ForwardBrowserCursorToSticker(x, y));
+			}
+			return;
+		}
+
 		MainThread.BeginInvokeOnMainThread(() => ProcessBrowserOverlayMessage(source, message));
+	}
+
+	static string GetOverlayMessageAction(string message)
+	{
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			return document.RootElement.TryGetProperty("action", out var action) && action.ValueKind == JsonValueKind.String
+				? action.GetString() ?? string.Empty
+				: string.Empty;
+		}
+		catch (JsonException)
+		{
+			return string.Empty;
+		}
+	}
+
+	static bool IsTrustedInstagramBrowserSource(string? source)
+	{
+		if (!Uri.TryCreate(source, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
+			uri.Port != 443 || uri.UserInfo.Length != 0)
+		{
+			return false;
+		}
+
+		var host = uri.IdnHost;
+		return host.Equals("www.instagram.com", StringComparison.OrdinalIgnoreCase) ||
+			host.Equals("instagram.com", StringComparison.OrdinalIgnoreCase);
+	}
+
+	static bool TryReadBrowserCursorPosition(string message, out double x, out double y)
+	{
+		x = 0;
+		y = 0;
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			var root = document.RootElement;
+			return root.ValueKind == JsonValueKind.Object &&
+				root.TryGetProperty("v", out var version) && version.ValueKind == JsonValueKind.Number &&
+				version.TryGetInt32(out var versionNumber) && versionNumber == 1 &&
+				root.TryGetProperty("x", out var xValue) && xValue.ValueKind == JsonValueKind.Number && xValue.TryGetDouble(out x) && double.IsFinite(x) &&
+				root.TryGetProperty("y", out var yValue) && yValue.ValueKind == JsonValueKind.Number && yValue.TryGetDouble(out y) && double.IsFinite(y);
+		}
+		catch (JsonException)
+		{
+			return false;
+		}
+	}
+
+	void ForwardBrowserCursorToSticker(double cursorX, double cursorY)
+	{
+		var region = _instagramBrowserRegion;
+		if (!InstagramBrowserOverlay.IsVisible || region is null ||
+			!double.IsFinite(region.Left) || !double.IsFinite(region.Top) ||
+			!double.IsFinite(region.Width) || !double.IsFinite(region.Height) || region.Width <= 0 || region.Height <= 0 ||
+			cursorX < -2 || cursorY < -2 || cursorX > region.Width + 2 || cursorY > region.Height + 2)
+		{
+			return;
+		}
+
+		var now = Environment.TickCount64;
+		if (now - _lastStickerCursorForwardedAtMs < 30) return;
+		_lastStickerCursorForwardedAtMs = now;
+		var appX = region.Left + Math.Clamp(cursorX, 0, region.Width);
+		var appY = region.Top + Math.Clamp(cursorY, 0, region.Height);
+		_ = UpdateStickerCursorInWebAppAsync(appX, appY);
+	}
+
+	async Task UpdateStickerCursorInWebAppAsync(double x, double y)
+	{
+		try
+		{
+			var coordinates = JsonSerializer.Serialize(new[] { x, y });
+			var script = $"(()=>{{const p={coordinates};window.updateStickerEyesFromExternalCursor?.(p[0],p[1]);return true}})()";
+			await WebAppView.EvaluateJavaScriptAsync(script);
+		}
+		catch
+		{
+			// The main app WebView may be navigating or closing; the next pointer move retries.
+		}
 	}
 
 	void ProcessBrowserOverlayMessage(string source, string message)
