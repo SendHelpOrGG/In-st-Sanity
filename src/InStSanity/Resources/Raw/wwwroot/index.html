@@ -1370,7 +1370,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.012; open version history" title="Click to view what changed in each version">v.2.012</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.013; open version history" title="Click to view what changed in each version">v.2.013</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -7172,8 +7172,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.012';
+const APP_VERSION='2.013';
 const VERSION_HISTORY=[
+  {version:'2.013',added:'No new features.',removed:'A compiler error in the injected Instagram Browser script.',fixed:'Standardized the embedded raw string indentation so the Browser overlay compiles cleanly without changing its cursor relay or queue behavior.',tone:'green'},
   {version:'2.012',added:'No new features.',removed:'The sidebar sticker’s eyes freezing while the native Instagram browser covers the app WebView.',fixed:'Relay throttled, validated pointer coordinates from the Instagram WebView to the app WebView so the sticker keeps tracking across the native overlay without logging cursor movement.',tone:'green'},
   {version:'2.011',added:'No new features.',removed:'Opened-post carousel photos reusing the first slide’s queued state.',fixed:'Key carousel tracking to the canonical open-post route, prefer tracked slide-control clicks over a stale active indicator, and seed next/previous navigation from the active slide.',tone:'green'},
   {version:'2.010',added:'No new features.',removed:'Per-hover media inspection and select-button movement/hide diagnostics.',fixed:'Keep the overlay’s hit-testing and positioning behavior, but emit only lifecycle, click, and queue-state diagnostics instead of a stream of hover logs.',tone:'green'},

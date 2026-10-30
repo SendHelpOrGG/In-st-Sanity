@@ -29,15 +29,15 @@ internal static class InstagramMediaOverlayScript
 
 	  const postPattern = /^\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;
 	  const state = { items: [], isDownloading: false, currentIndex: 0, total: 0, status: '', theme: {} };
-  const slideByPost = new Map();
-  let activeMedia = null;
+	  const slideByPost = new Map();
+	  let activeMedia = null;
 	  let activeCandidate = null;
 	  let hideTimer = 0;
 	  let mutationRefreshTimer = 0;
 	  let selectButton = null;
 	  let tray = null;
-  let lastPointer = null;
-  let lastMoveInspectionAt = 0;
+	  let lastPointer = null;
+	  let lastMoveInspectionAt = 0;
 	  let pendingStickerCursor = null;
 	  let stickerCursorFrame = 0;
 	  let lastStickerCursorSentAt = -Infinity;
