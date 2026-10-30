@@ -100,7 +100,8 @@ internal static class InstagramMediaOverlayScript
 	  function itemKey(item) {
 	    if (typeof item.key === 'string' && item.key) return item.key;
 	    const type = item.mediaType || (item.isVideo ? 'video' : 'photo');
-	    return `${item.shortcode}|${type}|${mediaPathIdentity(item.rawUrl)}`;
+	    const identity = item.rawUrl ? mediaPathIdentity(item.rawUrl) : `slide:${Math.max(0, Number(item.slideIndex) || 0)}`;
+	    return `${item.shortcode}|${type}|${identity}`;
 	  }
 	  function safeText(value, fallback = '') { return String(value ?? fallback).slice(0, 180); }
 	  function safeUrlSummary(value) {
@@ -332,7 +333,7 @@ internal static class InstagramMediaOverlayScript
 	    if (!raw || raw.length > 4096) return '';
 	    try {
 	      const url = new URL(raw, location.href);
-	      if (url.protocol !== 'https:' || url.username || url.password || (url.port && url.port !== '443') || /\.m3u8$/i.test(url.pathname)) return '';
+	      if (url.protocol !== 'https:' || url.username || url.password || (url.port && url.port !== '443') || /\.(?:m3u8|mpd)$/i.test(url.pathname)) return '';
 	      const host = url.hostname.toLowerCase().replace(/\.$/, '');
 	      const allowedHost = host === 'instagram.com' || host.endsWith('.instagram.com') ||
 	        host === 'fbcdn.net' || host.endsWith('.fbcdn.net') ||
@@ -415,7 +416,8 @@ internal static class InstagramMediaOverlayScript
 	      if (!isVideo && /profile|avatar|logo|icon/i.test(media.alt || '')) return null;
 	      if (isVideo && media.closest('#inst-sanity-tray')) return null;
 	      const rawUrl = mediaUrl(media, isVideo);
-	      if (!rawUrl || !/^https:\/\//i.test(rawUrl) || /\.m3u8(?:$|\?)/i.test(rawUrl)) return null;
+	      if (!rawUrl && !isVideo) return null;
+	      if (rawUrl && (!/^https:\/\//i.test(rawUrl) || /\.m3u8(?:$|\?)/i.test(rawUrl))) return null;
 
 	      const root = postRootFor(media);
 	      const shortcode = findPostShortcode(media, root);
@@ -436,14 +438,16 @@ internal static class InstagramMediaOverlayScript
 	    } catch (_) { return null; }
 	  }
 
-	  function positionButton(media, candidate) {
+	  function positionButton(media, candidate, preservePosition = false) {
 	    if (!selectButton || !media || !candidate) return;
-	    const rect = media.getBoundingClientRect();
-	    const width = selectButton.offsetWidth || 134;
-	    const left = Math.max(8, Math.min(innerWidth - width - 8, rect.right - width - 10));
-	    const top = Math.max(8, Math.min(innerHeight - 42, rect.top + 10));
-	    selectButton.style.left = `${left}px`;
-	    selectButton.style.top = `${top}px`;
+	    if (!preservePosition || selectButton.style.display === 'none' || !selectButton.style.left || !selectButton.style.top) {
+	      const rect = media.getBoundingClientRect();
+	      const width = selectButton.offsetWidth || 134;
+	      const left = Math.max(8, Math.min(innerWidth - width - 8, rect.right - width - 10));
+	      const top = Math.max(8, Math.min(innerHeight - 42, rect.top + 10));
+	      selectButton.style.left = `${left}px`;
+	      selectButton.style.top = `${top}px`;
+	    }
 	    selectButton.style.display = 'inline-flex';
 	    const key = itemKey(candidate);
 	    const isSelected = state.items.some(item => itemKey(item) === key);
@@ -553,10 +557,14 @@ internal static class InstagramMediaOverlayScript
 
 	  function activateInspectedCandidate(inspection) {
 	    if (!inspection?.media || !inspection.candidate) return false;
+	    const previous = activeCandidate;
+	    const next = inspection.candidate;
+	    const preservePosition = !!previous && selectButton?.style.display !== 'none' && previous.shortcode === next.shortcode &&
+	      (previous.slideIndex !== next.slideIndex || itemKey(previous) !== itemKey(next));
 	    clearTimer();
 	    activeMedia = inspection.media;
-	    activeCandidate = inspection.candidate;
-	    positionButton(activeMedia, activeCandidate);
+	    activeCandidate = next;
+	    positionButton(activeMedia, activeCandidate, preservePosition);
 	    return true;
 	  }
 
@@ -600,8 +608,10 @@ internal static class InstagramMediaOverlayScript
 	    if (now - lastMoveInspectionAt < 100) return;
 	    lastMoveInspectionAt = now;
 	    const inspection = inspectMediaTarget(event.target, lastPointer);
-	    if (inspection.media && inspection.media !== activeMedia) activateInspectedCandidate(inspection);
-	    else if (!inspection.media && activeMedia && !selectButton?.matches(':hover')) hideSelectSoon();
+	    if (inspection.media && (inspection.media !== activeMedia || !activeCandidate ||
+	        itemKey(inspection.candidate) !== itemKey(activeCandidate) || inspection.candidate.slideIndex !== activeCandidate.slideIndex)) {
+	      activateInspectedCandidate(inspection);
+	    } else if (!inspection.media && activeMedia && !selectButton?.matches(':hover')) hideSelectSoon();
 	  }
 
 	  function onPointerOut(event) {
@@ -619,9 +629,14 @@ internal static class InstagramMediaOverlayScript
 	        refreshMediaUnderPointer();
 	        return;
 	      }
+	      const previous = activeCandidate;
 	      const candidate = candidateFor(activeMedia);
-	      if (candidate) { activeCandidate = candidate; positionButton(activeMedia, candidate); }
-	      else hideSelectSoon();
+	      if (candidate) {
+	        const preservePosition = !!previous && previous.shortcode === candidate.shortcode &&
+	          (previous.slideIndex !== candidate.slideIndex || itemKey(previous) !== itemKey(candidate));
+	        activeCandidate = candidate;
+	        positionButton(activeMedia, candidate, preservePosition);
+	      } else hideSelectSoon();
 	    }
 	  }
 

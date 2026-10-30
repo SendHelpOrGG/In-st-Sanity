@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.017'',added:') -or
+        -not $document.Content.Contains('version:''2.018'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -491,7 +491,12 @@ try {
         -not $overlayScriptSource.Contains('const slideByRoot = new WeakMap();') -or
         -not $overlayScriptSource.Contains('function slideTrackingKey(root, shortcode)') -or
         -not $overlayScriptSource.Contains('function mediaPathIdentity(value)') -or
+        -not $overlayScriptSource.Contains('const identity = item.rawUrl ? mediaPathIdentity(item.rawUrl) : `slide:') -or
         -not $overlayScriptSource.Contains('if (typeof item.key === ''string'' && item.key) return item.key;') -or
+        -not $overlayScriptSource.Contains('function positionButton(media, candidate, preservePosition = false)') -or
+        -not $overlayScriptSource.Contains('positionButton(activeMedia, activeCandidate, preservePosition)') -or
+        -not $overlayScriptSource.Contains('itemKey(inspection.candidate) !== itemKey(activeCandidate)') -or
+        -not $overlayScriptSource.Contains('if (!rawUrl && !isVideo) return null;') -or
         -not $overlayScriptSource.Contains('const root = postRootFor(control);') -or
         -not $overlayScriptSource.Contains('parseShortcode(location.pathname) || findPostShortcode(control, root)') -or
         -not $overlayScriptSource.Contains('const postPattern = /^\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;') -or
@@ -507,7 +512,12 @@ try {
         -not $queueServiceSource.Contains('TryValidateInstagramPostUrl') -or
         -not $queueServiceSource.Contains('var mediaIdentity = Uri.TryCreate(rawUrl') -or
         -not $queueServiceSource.Contains('identityUri.AbsolutePath') -or
+        -not $queueServiceSource.Contains('$"slide:{slideIndex}"') -or
         -not $queueServiceSource.Contains('var key = $"{shortcode}|{type}|{mediaIdentity}";') -or
+        -not $queueServiceSource.Contains('ResolveQueuedVideoUrlAsync') -or
+        -not $queueServiceSource.Contains('IsUnsupportedVideoStream') -or
+        -not $queueServiceSource.Contains('item.SlideIndex >= post.Pictures.Count') -or
+        -not $queueServiceSource.Contains('video_source_unavailable') -or
         -not $queueServiceSource.Contains('IsAllowedBrowserMediaUrl') -or
         -not $queueServiceSource.Contains('ResetForLogout') -or
         -not $queueServiceSource.Contains('DownloadOneAsync') -or
@@ -542,7 +552,7 @@ try {
         -not $overlayScriptSource.Contains('max-height:min(360px,calc(100vh - 24px))') -or
         -not $overlayScriptSource.Contains('opacity:.8;pointer-events:none') -or
         -not $overlayScriptSource.Contains('backdrop-filter:blur(16px)')) {
-        throw 'The Browser overlay must hit-test visible clipped media, resolve trusted alternate video sources, group and compact photos/videos, and use translucent blurred surfaces.'
+        throw 'The Browser overlay must hit-test visible clipped media, keep its button stable across carousel slides, refresh reused feed media, queue and resolve videos, group media, and use translucent blurred surfaces.'
     }
     if (-not $document.Content.Contains('window.updateStickerEyesFromExternalCursor=function')) {
         throw 'Native Instagram browser pointer coordinates must be forwarded to the sidebar sticker eyes.'
@@ -575,8 +585,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.017</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>86</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.018</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>87</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 

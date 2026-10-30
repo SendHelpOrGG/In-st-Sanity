@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using InStSanity.Services.Downloads;
+using InStSanity.Services.Instagram;
 
 namespace InStSanity.Services.Browser;
 
@@ -42,7 +43,7 @@ public sealed record BrowserQueueItemCompleted(
 /// In-memory session queue for images/videos selected in Instagram's native WebView.
 /// Page messages are treated as untrusted and never carry a download folder or credentials.
 /// </summary>
-public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downloads)
+public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downloads, InstagramResolver resolver)
 {
 	public const int MaxItems = 50;
 	const int MaxMessageBytes = 8 * 1024;
@@ -238,25 +239,49 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			}
 			else
 			{
-				var downloadItem = new SelectedMediaDownloadItem(
-					Filename: item.Filename,
-					Shortcode: item.Shortcode,
-					PhotoIndex: null,
-					VideoIndex: null,
-					ContentIndex: item.SlideIndex,
-					IsVideo: item.IsVideo,
-					RawUrl: item.RawUrl,
-					DataUri: null,
-					SvgMarkup: null,
-					IsBrowserQueue: true);
 				try
 				{
-					result = await downloads.DownloadOneAsync(
-						downloadItem,
-						resolvedFolders[item.IsVideo]!,
-						index,
-						noDuplicates,
-						cancellation.Token).ConfigureAwait(false);
+					var rawUrl = item.RawUrl;
+					if (item.IsVideo && string.IsNullOrWhiteSpace(rawUrl))
+					{
+						try
+						{
+							rawUrl = await ResolveQueuedVideoUrlAsync(item, cancellation.Token).ConfigureAwait(false) ?? string.Empty;
+						}
+						catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+						{
+							throw;
+						}
+						catch (Exception)
+						{
+							rawUrl = string.Empty;
+						}
+					}
+
+					if (string.IsNullOrWhiteSpace(rawUrl))
+					{
+						result = new SelectedMediaDownloadFileResult(item.Filename, Ok: false, Error: "video_source_unavailable");
+					}
+					else
+					{
+						var downloadItem = new SelectedMediaDownloadItem(
+							Filename: item.Filename,
+							Shortcode: item.Shortcode,
+							PhotoIndex: null,
+							VideoIndex: null,
+							ContentIndex: item.SlideIndex,
+							IsVideo: item.IsVideo,
+							RawUrl: rawUrl,
+							DataUri: null,
+							SvgMarkup: null,
+							IsBrowserQueue: true);
+						result = await downloads.DownloadOneAsync(
+							downloadItem,
+							resolvedFolders[item.IsVideo]!,
+							index,
+							noDuplicates,
+							cancellation.Token).ConfigureAwait(false);
+					}
 				}
 				catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
 				{
@@ -354,6 +379,30 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		return error.Length == 0;
 	}
 
+	async Task<string?> ResolveQueuedVideoUrlAsync(BrowserQueuedMedia item, CancellationToken cancellationToken)
+	{
+		var postUrl = $"https://www.instagram.com/p/{Uri.EscapeDataString(item.Shortcode)}/";
+		var post = await resolver.ResolveAsync(postUrl, cancellationToken).ConfigureAwait(false);
+		if (post is null || !post.Ok || item.SlideIndex >= post.Pictures.Count) return null;
+
+		var media = post.Pictures[item.SlideIndex];
+		var videoUrl = media.VideoUrl;
+		if (!media.IsVideo || !SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(videoUrl) || IsUnsupportedVideoStream(videoUrl))
+		{
+			return null;
+		}
+
+		return videoUrl;
+	}
+
+	static bool IsUnsupportedVideoStream(string? rawUrl)
+	{
+		if (!Uri.TryCreate(rawUrl, UriKind.Absolute, out var uri)) return false;
+		var extension = Path.GetExtension(uri.AbsolutePath);
+		return extension.Equals(".m3u8", StringComparison.OrdinalIgnoreCase) ||
+			extension.Equals(".mpd", StringComparison.OrdinalIgnoreCase);
+	}
+
 	static bool TryBuildQueueItem(
 		JsonElement root,
 		out BrowserQueuedMedia? item,
@@ -378,17 +427,29 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			return false;
 		}
 		var isVideo = mediaType.Equals("video", StringComparison.OrdinalIgnoreCase);
-		if (!TryReadString(root, "rawUrl", 4096, out var rawUrl) ||
-			!SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(rawUrl))
+		var hasRawUrl = TryReadString(root, "rawUrl", 4096, out var rawUrl);
+		if (!hasRawUrl)
+		{
+			if (!isVideo)
+			{
+				error = "invalid_media_raw_url";
+				return false;
+			}
+			rawUrl = string.Empty;
+		}
+		else if (!SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(rawUrl))
 		{
 			error = "invalid_media_raw_url";
 			return false;
 		}
-		if (Uri.TryCreate(rawUrl, UriKind.Absolute, out var mediaUri) &&
-			Path.GetExtension(mediaUri.AbsolutePath).Equals(".m3u8", StringComparison.OrdinalIgnoreCase))
+		if (IsUnsupportedVideoStream(rawUrl))
 		{
-			error = "invalid_media_stream_url";
-			return false;
+			if (!isVideo)
+			{
+				error = "invalid_media_stream_url";
+				return false;
+			}
+			rawUrl = string.Empty;
 		}
 		if (!TryReadInt(root, "slideIndex", 0, 100, out var slideIndex))
 		{
@@ -407,7 +468,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		var type = isVideo ? "video" : "photo";
 		var mediaIdentity = Uri.TryCreate(rawUrl, UriKind.Absolute, out var identityUri)
 			? identityUri.AbsolutePath
-			: rawUrl;
+			: $"slide:{slideIndex}";
 		var key = $"{shortcode}|{type}|{mediaIdentity}";
 		var extension = isVideo ? ".mp4" : ".jpg";
 		var filename = $"{shortcode}_slide{slideIndex + 1}{extension}";
@@ -504,6 +565,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 	static string FriendlyError(string? error) => error switch
 	{
 		"folder_unavailable" => "Folder unavailable",
+		"video_source_unavailable" => "Video source unavailable",
 		"invalid_media_url" or "redirected_to_untrusted_host" => "Untrusted media URL",
 		"video_too_large" => "Video exceeds the 1 GB limit",
 		"image_too_large" => "Photo exceeds the 50 MB limit",
