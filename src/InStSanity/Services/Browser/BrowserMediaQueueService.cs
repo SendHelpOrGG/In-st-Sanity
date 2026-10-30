@@ -88,7 +88,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			if (root.ValueKind != JsonValueKind.Object ||
 				!TryGetProperty(root, "v", out var versionValue) || versionValue.ValueKind != JsonValueKind.Number ||
 				!versionValue.TryGetInt32(out var version) || version != 1 ||
-				!TryGetString(root, "action", out var action))
+				!TryReadString(root, "action", 32, out var action))
 			{
 				return new(BrowserMediaOverlayAction.Rejected, "invalid_message");
 			}

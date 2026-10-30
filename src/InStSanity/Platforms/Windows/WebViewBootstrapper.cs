@@ -342,7 +342,7 @@ internal static class WebViewBootstrapper
 	{
 		try
 		{
-			await core.AddScriptToExecuteOnDocumentCreatedAsync(InstagramMediaOverlayScript.Source).ConfigureAwait(false);
+			await core.AddScriptToExecuteOnDocumentCreatedAsync(InstagramMediaOverlayScript.Source);
 		}
 		catch
 		{
@@ -356,7 +356,7 @@ internal static class WebViewBootstrapper
 	{
 		try
 		{
-			await core.ExecuteScriptAsync("window.__instSanityMediaOverlayInstall?.()").ConfigureAwait(false);
+			await core.ExecuteScriptAsync("window.__instSanityMediaOverlayInstall?.()");
 		}
 		catch
 		{
