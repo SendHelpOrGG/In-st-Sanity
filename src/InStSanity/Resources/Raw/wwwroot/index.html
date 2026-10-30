@@ -1370,7 +1370,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.002; open version history" title="Click to view what changed in each version">v.2.002</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.003; open version history" title="Click to view what changed in each version">v.2.003</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3922,7 +3922,7 @@ const PHOTO_ADJUSTMENT_COLOR_KEYS=new Set(['duotoneShadowColor','duotoneHighligh
 const PHOTO_ADJUSTMENT_META_KEYS=new Set(['grainSize','monochromeGrain','halftoneSize','duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
 const PHOTO_RESIZE_LOOKS=Object.freeze({
   noir:{label:'Noir',values:{saturation:-100,contrast:24,highlights:6,shadows:-8,clarity:12,grain:20,grainSize:28,monochromeGrain:true,vignette:20}},
-  vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:4,temperature:-11,tint:0,saturation:26,vibrance:12,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70'}},
+  vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:20,temperature:-11,tint:0,saturation:26,vibrance:12,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70'}},
   dreamy:{label:'Dreamy',values:{brightness:8,highlights:12,contrast:-8,saturation:10,clarity:-28,blur:8,fade:10,temperature:6}},
   cyberpunk:{label:'Cyberpunk',values:{contrast:18,saturation:22,vibrance:20,temperature:-18,tint:20,duotone:35,duotoneShadowColor:'#101838',duotoneHighlightColor:'#FF4CBA',grain:4,vignette:12}}
 });
@@ -7168,8 +7168,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.002';
+const APP_VERSION='2.003';
 const VERSION_HISTORY=[
+  {version:'2.003',added:'No new features.',removed:'Vintage’s 4% Shadows setting.',fixed:'Changed only the Vintage Shadows value from 4% to 20%, as requested; all other preset controls stay unchanged.',tone:'green'},
   {version:'2.002',added:'No new features.',removed:'The missing media-select overlay on the first Instagram Browser load when script registration races navigation.',fixed:'The navigation-completed hook now installs the overlay source into the current Instagram document if its installer is not already present, and the injected script waits for the DOM root before creating controls.',tone:'green'},
   {version:'2.001',added:'No new features.',removed:'The previous warm, faded, grainy Vintage grade.',fixed:'Vintage now matches the supplied Image Edit settings, including +0.5 EV, 8% brightness, 22% contrast, 0.83× gamma, -11% temperature, 26% saturation, 12% vibrance, subtle detail/creative effects, and 25% duotone (#1B9FC0 shadows, #72B8F3 highlights). Unspecified finishing effects remain neutral.',tone:'yellow'},
   {version:'2.000',added:'A themed Instagram Browser overlay and session queue for selecting photos and videos across posts, including mixed carousels.',removed:'One-off, photo-only Browser selections.',fixed:'Save queued media sequentially to the Settings folders. Successful items leave the queue, failures remain retryable, and the in-memory queue survives Browser tab switches, hiding, and page reloads until Clear, logout, or app exit.',tone:'red'},
