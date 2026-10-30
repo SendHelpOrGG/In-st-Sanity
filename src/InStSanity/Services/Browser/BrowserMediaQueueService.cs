@@ -360,23 +360,39 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		out string error)
 	{
 		item = null;
-		error = "invalid_media";
-		if (!TryReadString(root, "shortcode", 64, out var shortcode) ||
-			!TryReadString(root, "postUrl", 2048, out var postUrl) ||
-			!TryReadString(root, "mediaType", 8, out var mediaType) ||
-			!TryReadString(root, "rawUrl", 4096, out var rawUrl) ||
-			!TryReadInt(root, "slideIndex", 0, 100, out var slideIndex) ||
-			!TryValidateInstagramPostUrl(postUrl, shortcode))
+		if (!TryReadString(root, "shortcode", 64, out var shortcode))
 		{
+			error = "invalid_media_shortcode";
 			return false;
 		}
-
-		var isVideo = mediaType.Equals("video", StringComparison.OrdinalIgnoreCase);
-		if (!isVideo && !mediaType.Equals("photo", StringComparison.OrdinalIgnoreCase)) return false;
-		if (!SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(rawUrl) ||
-			(Uri.TryCreate(rawUrl, UriKind.Absolute, out var mediaUri) &&
-				Path.GetExtension(mediaUri.AbsolutePath).Equals(".m3u8", StringComparison.OrdinalIgnoreCase)))
+		if (!TryReadString(root, "postUrl", 2048, out var postUrl) || !TryValidateInstagramPostUrl(postUrl, shortcode))
 		{
+			error = "invalid_media_post_url";
+			return false;
+		}
+		if (!TryReadString(root, "mediaType", 8, out var mediaType) ||
+			(!mediaType.Equals("video", StringComparison.OrdinalIgnoreCase) &&
+			 !mediaType.Equals("photo", StringComparison.OrdinalIgnoreCase)))
+		{
+			error = "invalid_media_type";
+			return false;
+		}
+		var isVideo = mediaType.Equals("video", StringComparison.OrdinalIgnoreCase);
+		if (!TryReadString(root, "rawUrl", 4096, out var rawUrl) ||
+			!SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(rawUrl))
+		{
+			error = "invalid_media_raw_url";
+			return false;
+		}
+		if (Uri.TryCreate(rawUrl, UriKind.Absolute, out var mediaUri) &&
+			Path.GetExtension(mediaUri.AbsolutePath).Equals(".m3u8", StringComparison.OrdinalIgnoreCase))
+		{
+			error = "invalid_media_stream_url";
+			return false;
+		}
+		if (!TryReadInt(root, "slideIndex", 0, 100, out var slideIndex))
+		{
+			error = "invalid_media_slide_index";
 			return false;
 		}
 

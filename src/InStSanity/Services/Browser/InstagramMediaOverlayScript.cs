@@ -119,6 +119,14 @@ internal static class InstagramMediaOverlayScript
 
 	  function itemKey(item) { return `${item.shortcode}|${item.mediaType}|${item.slideIndex}`; }
 	  function safeText(value, fallback = '') { return String(value ?? fallback).slice(0, 180); }
+	  function safeUrlSummary(value) {
+	    if (typeof value !== 'string' || !value) return { present: false };
+	    try {
+	      const url = new URL(value, location.href);
+	      const postMatch = url.pathname.match(postPattern);
+	      return { present: true, protocol: url.protocol, host: url.host, route: postMatch ? postMatch[0].split('/')[1] : 'other', shortcodeLength: postMatch?.[1]?.length || 0, length: value.length };
+	    } catch (_) { return { present: true, parseable: false, length: value.length }; }
+	  }
 	  function clearTimer() { if (hideTimer) clearTimeout(hideTimer); hideTimer = 0; }
 
 	  function ensureUi() {
@@ -138,6 +146,14 @@ internal static class InstagramMediaOverlayScript
 	      selectButton.addEventListener('pointerdown', event => event.stopPropagation());
 	      selectButton.addEventListener('click', event => {
 	        event.preventDefault(); event.stopPropagation(); clearTimer();
+	        debugLog('queue-toggle-click', {
+	          candidatePresent: !!activeCandidate,
+	          mediaType: activeCandidate?.mediaType || '',
+	          shortcodeLength: String(activeCandidate?.shortcode || '').length,
+	          postUrl: safeUrlSummary(activeCandidate?.postUrl),
+	          mediaUrl: safeUrlSummary(activeCandidate?.rawUrl),
+	          slideIndex: activeCandidate?.slideIndex ?? null,
+	        });
 	        if (!activeCandidate) return;
 	        postMessage('toggle-media', activeCandidate);
 	      });
@@ -256,6 +272,7 @@ internal static class InstagramMediaOverlayScript
 	  }
 
 	  function errorMessage(code) {
+	    if (String(code).startsWith('invalid_media_')) return 'That media item could not be selected.';
 	    return ({
 	      queue_full: 'The queue is full. Save or clear items before adding more.',
 	      queue_busy: 'Wait for the current queue download to finish.',
