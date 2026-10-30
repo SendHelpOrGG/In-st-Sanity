@@ -42,6 +42,8 @@ internal static class InstagramMediaOverlayScript
 	      route: routeKind(),
 	      targetId,
 	      targetTag: String(target?.tagName || target?.nodeName || 'unknown'),
+	      targetClass: typeof target?.className === 'string' ? target.className.slice(0, 120) : '',
+	      targetRole: String(target?.getAttribute?.('role') || ''),
 	      mediaId,
 	      mediaTag: media ? String(media.tagName || 'unknown') : null,
 	      ...details,
@@ -66,6 +68,7 @@ internal static class InstagramMediaOverlayScript
 	  let selectButton = null;
 	  let tray = null;
 	  let lastPointer = null;
+	  let lastMoveInspectionAt = 0;
 
 	  const css = `
 	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;gap:7px;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:8px 12px;background:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:600 12px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px)}
@@ -396,7 +399,29 @@ internal static class InstagramMediaOverlayScript
 	    activeCandidate = candidate;
 	  }
 
-	  function inspectMediaTarget(target, input = 'unknown') {
+	  function mediaContainsPoint(media, point) {
+	    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return true;
+	    try {
+	      const rect = media.getBoundingClientRect();
+	      return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
+	    } catch (_) { return false; }
+	  }
+
+	  function pointHitStack(point) {
+	    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return [];
+	    try {
+	      if (typeof document.elementsFromPoint === 'function') {
+	        const hits = document.elementsFromPoint(point.x, point.y);
+	        if (hits?.length) return Array.from(hits);
+	      }
+	    } catch (_) { }
+	    try {
+	      const hit = document.elementFromPoint(point.x, point.y);
+	      return hit ? [hit] : [];
+	    } catch (_) { return []; }
+	  }
+
+	  function inspectMediaTarget(target, input = 'unknown', point = null) {
 	    let media = null;
 	    let candidate = null;
 	    const diagnostic = {};
@@ -405,10 +430,67 @@ internal static class InstagramMediaOverlayScript
 	    } else if (target.closest('#inst-sanity-tray,#inst-sanity-select')) {
 	      diagnostic.reason = 'overlay-ui-target';
 	    } else {
-	      media = target.closest('img,video');
-	      if (!media) diagnostic.reason = 'no-img-video-ancestor';
-	      else if (media.closest('#inst-sanity-tray,#inst-sanity-select')) diagnostic.reason = 'media-inside-overlay-ui';
-	      else candidate = candidateFor(media, diagnostic);
+	      const seen = new Set();
+	      let observedMedia = null;
+	      let lastRejected = null;
+	      const tryMedia = (possibleMedia, detectionPath) => {
+	        if (!possibleMedia || seen.has(possibleMedia) || possibleMedia.closest('#inst-sanity-tray,#inst-sanity-select')) return false;
+	        seen.add(possibleMedia);
+	        observedMedia ||= possibleMedia;
+	        const details = {};
+	        const found = candidateFor(possibleMedia, details);
+	        if (!found) { lastRejected ||= { details, detectionPath }; return false; }
+	        media = possibleMedia;
+	        candidate = found;
+	        Object.assign(diagnostic, details, { detectionPath, searchedMediaCount: seen.size });
+	        return true;
+	      };
+
+	      const directMedia = target.closest('img,video');
+	      if (directMedia) tryMedia(directMedia, 'event-target-ancestor');
+
+	      const hits = pointHitStack(point);
+	      diagnostic.hitStackCount = hits.length;
+	      diagnostic.hitStackTags = hits.slice(0, 6).map(hit => String(hit?.tagName || hit?.nodeName || 'unknown'));
+	      if (!candidate) {
+	        for (const hit of hits) {
+	          if (tryMedia(hit?.closest?.('img,video'), 'elements-from-point')) break;
+	        }
+	      }
+
+	      const targetMedia = target.querySelectorAll('img,video');
+	      diagnostic.targetDescendantMediaCount = targetMedia.length;
+	      if (!candidate && targetMedia.length <= 32) {
+	        for (const descendant of targetMedia) {
+	          if (mediaContainsPoint(descendant, point) && tryMedia(descendant, 'event-target-descendant')) break;
+	        }
+	      } else if (targetMedia.length > 32) diagnostic.targetDescendantSearchSkipped = 'too-many-media-elements';
+
+	      const scope = target.closest('article,[role="dialog"],main') ||
+	        hits.map(hit => hit?.closest?.('article,[role="dialog"],main')).find(Boolean) || document.body;
+	      const scopedMedia = scope?.querySelectorAll?.('img,video') || [];
+	      diagnostic.scopeTag = String(scope?.tagName || 'unknown');
+	      diagnostic.scopeClass = typeof scope?.className === 'string' ? scope.className.slice(0, 120) : '';
+	      diagnostic.scopeMediaCount = scopedMedia.length;
+	      if (!candidate && scope !== document.body && scopedMedia.length <= 48) {
+	        for (const scoped of scopedMedia) {
+	          if (mediaContainsPoint(scoped, point) && tryMedia(scoped, 'post-scope-point-match')) break;
+	        }
+	      } else if (scopedMedia.length > 48) diagnostic.scopeSearchSkipped = 'too-many-media-elements';
+
+	      if (!candidate) {
+	        if (lastRejected) Object.assign(diagnostic, lastRejected.details, {
+	          detectionPath: lastRejected.detectionPath,
+	          searchedMediaCount: seen.size,
+	        });
+	        else Object.assign(diagnostic, {
+	          reason: directMedia ? 'no-eligible-media-at-pointer' : 'no-img-video-at-pointer',
+	          detectionPath: 'point-and-post-scope-search',
+	          searchedMediaCount: seen.size,
+	        });
+	        observedMedia ||= directMedia;
+	      }
+	      media ||= observedMedia;
 	    }
 	    logHoverInspection(input, target, media, diagnostic);
 	    return { media: candidate ? media : null, observedMedia: media, candidate, diagnostic };
@@ -447,14 +529,17 @@ internal static class InstagramMediaOverlayScript
 	  function onPointerOver(event) {
 	    lastPointer = { x: event.clientX, y: event.clientY };
 	    if (event.target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) { clearTimer(); return; }
-	    const inspection = inspectMediaTarget(event.target, event.type);
+	    const inspection = inspectMediaTarget(event.target, event.type, lastPointer);
 	    activateInspectedCandidate(inspection, event.type);
 	  }
 
 	  function onPointerMove(event) {
 	    lastPointer = { x: event.clientX, y: event.clientY };
 	    if (event.target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) return;
-	    const inspection = inspectMediaTarget(event.target, event.type);
+	    const now = Date.now();
+	    if (now - lastMoveInspectionAt < 100) return;
+	    lastMoveInspectionAt = now;
+	    const inspection = inspectMediaTarget(event.target, event.type, lastPointer);
 	    if (inspection.media && inspection.media !== activeMedia) activateInspectedCandidate(inspection, event.type);
 	  }
 
@@ -484,7 +569,7 @@ internal static class InstagramMediaOverlayScript
 	    if (!lastPointer) { debugLog('media-refresh-skipped', { input, reason: 'no-pointer-position' }); return; }
 	    const target = document.elementFromPoint(lastPointer.x, lastPointer.y);
 	    if (target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) return;
-	    const inspection = inspectMediaTarget(target, input);
+	    const inspection = inspectMediaTarget(target, input, lastPointer);
 	    if (!activateInspectedCandidate(inspection, input) && activeMedia && !selectButton?.matches(':hover')) {
 	      hideSelectSoon(`no-eligible-media-at-pointer:${input}`);
 	    }
