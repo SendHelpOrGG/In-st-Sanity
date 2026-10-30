@@ -94,6 +94,7 @@ internal static class InstagramMediaOverlayScript
 	    try { return new URL(raw, location.href).pathname || raw; } catch (_) { return raw; }
 	  }
 	  function itemKey(item) {
+	    if (typeof item.key === 'string' && item.key) return item.key;
 	    const type = item.mediaType || (item.isVideo ? 'video' : 'photo');
 	    return `${item.shortcode}|${type}|${mediaPathIdentity(item.rawUrl)}`;
 	  }
