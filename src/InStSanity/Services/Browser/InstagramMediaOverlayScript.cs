@@ -5,7 +5,7 @@ internal static class InstagramMediaOverlayScript
 {
 	internal const string Source = """
 	(() => {
-	  if (window !== window.top || !window.chrome?.webview || window.__instSanityMediaOverlayInstall || !/^https:\/\/(?:www\.)?instagram\.com$/i.test(location.origin)) return;
+	  if (window !== window.top || window.__instSanityMediaOverlayInstall || !/^https:\/\/(?:www\.)?instagram\.com$/i.test(location.origin)) return;
 
 	  const postPattern = /\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?/i;
 	  const state = { items: [], isDownloading: false, currentIndex: 0, total: 0, status: '', theme: {} };
@@ -48,7 +48,18 @@ internal static class InstagramMediaOverlayScript
 	  `;
 
 	  function postMessage(action, payload = {}) {
-	    try { window.chrome.webview.postMessage({ v: 1, action, ...payload }); } catch (_) { }
+	    try {
+	      const bridge = window.chrome?.webview;
+	      if (typeof bridge?.postMessage !== 'function') {
+	        if (action !== 'overlay-ready') showNotice('The In-st-Sanity queue connection is unavailable.');
+	        return false;
+	      }
+	      bridge.postMessage({ v: 1, action, ...payload });
+	      return true;
+	    } catch (_) {
+	      if (action !== 'overlay-ready') showNotice('The In-st-Sanity queue connection is unavailable.');
+	      return false;
+	    }
 	  }
 
 	  function itemKey(item) { return `${item.shortcode}|${item.mediaType}|${item.slideIndex}`; }
@@ -350,6 +361,16 @@ internal static class InstagramMediaOverlayScript
 	    }
 	  }
 
+	  function refreshMediaUnderPointer() {
+	    if (!lastPointer) return;
+	    const target = document.elementFromPoint(lastPointer.x, lastPointer.y);
+	    if (target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) return;
+	    const media = findMedia(target);
+	    if (media) {
+	      clearTimer(); activeMedia = media; activeCandidate = candidateFor(media); positionButton(media, activeCandidate);
+	    } else if (activeMedia && !selectButton?.matches(':hover')) hideSelectSoon();
+	  }
+
 	  function updateCarouselIndex(event) {
 	    const control = event.target?.closest?.('button,[role="button"]');
 	    if (!control) return;
@@ -388,6 +409,15 @@ internal static class InstagramMediaOverlayScript
 	    document.addEventListener('pointerover', onPointerOver, true);
 	    document.addEventListener('pointermove', onPointerMove, { capture: true, passive: true });
 	    document.addEventListener('pointerout', onPointerOut, true);
+	    document.addEventListener('mouseover', onPointerOver, true);
+	    document.addEventListener('mousemove', onPointerMove, { capture: true, passive: true });
+	    document.addEventListener('mouseout', onPointerOut, true);
+	    document.addEventListener('load', event => {
+	      if (event.target?.matches?.('img,video')) refreshMediaUnderPointer();
+	    }, true);
+	    document.addEventListener('loadedmetadata', event => {
+	      if (event.target?.tagName === 'VIDEO') refreshMediaUnderPointer();
+	    }, true);
 	    document.addEventListener('click', updateCarouselIndex, true);
 	    document.addEventListener('scroll', updatePosition, true);
 	    window.addEventListener('resize', updatePosition, { passive: true });
@@ -396,12 +426,7 @@ internal static class InstagramMediaOverlayScript
 	      mutationRefreshTimer = setTimeout(() => {
 	        mutationRefreshTimer = 0;
 	        if (!document.getElementById('inst-sanity-select')) { window.__instSanityMediaOverlayInstalled = false; install(); return; }
-	        if (!lastPointer) return;
-	        const target = document.elementFromPoint(lastPointer.x, lastPointer.y);
-	        if (target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) return;
-	        const media = findMedia(target);
-	        if (media) { clearTimer(); activeMedia = media; activeCandidate = candidateFor(media); positionButton(media, activeCandidate); }
-	        else if (activeMedia && !selectButton?.matches(':hover')) hideSelectSoon();
+	        refreshMediaUnderPointer();
 	      }, 80);
 	    });
 	    observer.observe(document.documentElement, {
