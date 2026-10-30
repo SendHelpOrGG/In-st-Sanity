@@ -1370,7 +1370,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.010; open version history" title="Click to view what changed in each version">v.2.010</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.011; open version history" title="Click to view what changed in each version">v.2.011</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -7168,8 +7168,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.010';
+const APP_VERSION='2.011';
 const VERSION_HISTORY=[
+  {version:'2.011',added:'No new features.',removed:'Opened-post carousel photos reusing the first slide’s queued state.',fixed:'Key carousel tracking to the canonical open-post route, prefer tracked slide-control clicks over a stale active indicator, and seed next/previous navigation from the active slide.',tone:'green'},
   {version:'2.010',added:'No new features.',removed:'Per-hover media inspection and select-button movement/hide diagnostics.',fixed:'Keep the overlay’s hit-testing and positioning behavior, but emit only lifecycle, click, and queue-state diagnostics instead of a stream of hover logs.',tone:'green'},
   {version:'2.009',added:'No new features.',removed:'Browser selection misidentifying a post permalink in the opened-post view.',fixed:'Parse only exact Instagram post/reel URL paths, and use the current canonical post path as fallback; add a privacy-safe permalink/shortcode match flag to click diagnostics.',tone:'green'},
   {version:'2.008',added:'No new features.',removed:'Missing field-level context for rejected Browser selections.',fixed:'Log specific queue-validation rejection codes and a privacy-safe summary of the clicked candidate (host, route type, and field lengths) without logging full URLs or post shortcodes; keep the user-facing toast unchanged.',tone:'green'},

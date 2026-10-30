@@ -29,8 +29,8 @@ internal static class InstagramMediaOverlayScript
 
 	  const postPattern = /^\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;
 	  const state = { items: [], isDownloading: false, currentIndex: 0, total: 0, status: '', theme: {} };
-	  const slideByPost = new Map();
-	  let activeMedia = null;
+  const slideByPost = new Map();
+  let activeMedia = null;
 	  let activeCandidate = null;
 	  let hideTimer = 0;
 	  let mutationRefreshTimer = 0;
@@ -268,6 +268,8 @@ internal static class InstagramMediaOverlayScript
 	  }
 
 	  function findPostShortcode(media, root) {
+	    const pageShortcode = parseShortcode(location.pathname);
+	    if (pageShortcode) return pageShortcode;
 	    const nearby = media.closest('a[href]');
 	    const direct = nearby && parseShortcode(nearby.href);
 	    if (direct) return direct;
@@ -310,17 +312,31 @@ internal static class InstagramMediaOverlayScript
 	    return element.currentSrc || element.src || '';
 	  }
 
-	  function slideInfo(root, shortcode, media) {
+	  function carouselInfo(root) {
 	    const labels = Array.from(root.querySelectorAll('button[aria-label], [role="button"][aria-label]'))
 	      .map(button => ({ button, match: String(button.getAttribute('aria-label') || '').match(/(?:go to|slide)\s*(?:slide\s*)?(\d+)/i) }))
 	      .filter(value => value.match);
 	    const count = labels.reduce((maximum, value) => Math.max(maximum, Number(value.match[1]) || 0), 0) || null;
 	    const active = labels.find(value => { const current = value.button.getAttribute('aria-current'); return (current && current !== 'false') || value.button.getAttribute('aria-pressed') === 'true' || value.button.getAttribute('aria-selected') === 'true' || value.button.dataset.active === 'true'; });
+	    return { count, activeIndex: active ? Math.max(0, Number(active.match[1]) - 1) : null };
+	  }
+
+	  function currentSlideIndex(shortcode, carousel) {
 	    const tracked = slideByPost.get(shortcode);
-	    let index = active ? Number(active.match[1]) - 1 : Number.isInteger(tracked) ? tracked : 0;
+	    if (Number.isInteger(tracked)) return tracked;
+	    return Number.isInteger(carousel.activeIndex) ? carousel.activeIndex : 0;
+	  }
+
+	  function trackSlide(shortcode, index) {
+	    slideByPost.set(shortcode, index);
+	  }
+
+	  function slideInfo(root, shortcode) {
+	    const carousel = carouselInfo(root);
+	    let index = currentSlideIndex(shortcode, carousel);
 	    if (!Number.isFinite(index) || index < 0) index = 0;
-	    if (count) index = Math.min(index, count - 1);
-	    return { slideIndex: index, contentCount: count };
+	    if (carousel.count) index = Math.min(index, carousel.count - 1);
+	    return { slideIndex: index, contentCount: carousel.count };
 	  }
 
 	  function candidateFor(media) {
@@ -342,7 +358,7 @@ internal static class InstagramMediaOverlayScript
 	      if (!shortcode) return null;
 	      const postUrl = findPostPermalink(media, root, shortcode);
 	      if (!postUrl) return null;
-	      const { slideIndex, contentCount } = slideInfo(root, shortcode, media);
+	      const { slideIndex, contentCount } = slideInfo(root, shortcode);
 	      const thumbnailUrl = isVideo ? (media.poster || '') : (media.currentSrc || media.src || '');
 	      return {
 	        shortcode,
@@ -508,13 +524,13 @@ internal static class InstagramMediaOverlayScript
 	    if (!control) return;
 	    const label = String(control.getAttribute('aria-label') || '').toLowerCase();
 	    const root = control.closest('article,[role="dialog"],main') || document.body;
-	    const shortcode = findPostShortcode(control, root) || parseShortcode(location.pathname);
+	    const shortcode = parseShortcode(location.pathname) || findPostShortcode(control, root);
 	    if (!shortcode) return;
 	    const exact = label.match(/(?:go to|slide)\s*(?:slide\s*)?(\d+)/i);
-	    if (exact) { slideByPost.set(shortcode, Math.max(0, Number(exact[1]) - 1)); return; }
-	    const current = Number.isInteger(slideByPost.get(shortcode)) ? slideByPost.get(shortcode) : 0;
-	    if (/next|forward/.test(label)) slideByPost.set(shortcode, Math.min(100, current + 1));
-	    else if (/previous|prev|back/.test(label)) slideByPost.set(shortcode, Math.max(0, current - 1));
+	    if (exact) { trackSlide(shortcode, Math.max(0, Number(exact[1]) - 1)); return; }
+	    const current = currentSlideIndex(shortcode, carouselInfo(root));
+	    if (/next|forward/.test(label)) trackSlide(shortcode, Math.min(100, current + 1));
+	    else if (/previous|prev|back/.test(label)) trackSlide(shortcode, Math.max(0, current - 1));
 	  }
 
 	  function receiveQueueState(snapshot, error, theme) {
