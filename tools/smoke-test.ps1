@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.024'',added:') -or
+        -not $document.Content.Contains('version:''2.025'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -530,6 +530,9 @@ try {
         -not $overlayScriptSource.Contains('const identity = item.rawUrl ? mediaPathIdentity(item.rawUrl) : `slide:') -or
         -not $overlayScriptSource.Contains('if (typeof item.key === ''string'' && item.key) return item.key;') -or
         -not $overlayScriptSource.Contains("function positionButton(media, candidate, forcePosition = false, reason = 'candidate')") -or
+        -not $overlayScriptSource.Contains('min-width:76px;box-sizing:border-box') -or
+        -not $overlayScriptSource.Contains('function measureSelectButtonWidth()') -or
+        -not $overlayScriptSource.Contains('const width = measureSelectButtonWidth();') -or
         -not $overlayScriptSource.Contains('positionButton(activeMedia, activeCandidate, forcePosition, reason)') -or
         -not $overlayScriptSource.Contains("let buttonAnchorShortcode = '';") -or
         -not $overlayScriptSource.Contains('let buttonAnchorSlideIndex = null;') -or
@@ -540,6 +543,9 @@ try {
         -not $overlayScriptSource.Contains("debugLog('selector-positioned'") -or
         -not $overlayScriptSource.Contains('selectorWasVisible') -or
         -not $overlayScriptSource.Contains("function onDocumentScroll(event)") -or
+        -not $overlayScriptSource.Contains("window.addEventListener('scroll', onDocumentScroll, { passive: true })") -or
+        -not $overlayScriptSource.Contains('if (!selectorVisible || !activeMedia || !activeCandidate)') -or
+        -not $overlayScriptSource.Contains('if (!activeMedia || !activeCandidate || !document.contains(activeMedia))') -or
         -not $overlayScriptSource.Contains("debugLog('horizontal-scroll-anchor-held'") -or
         -not $overlayScriptSource.Contains('Math.abs(deltaLeft) > 0.5 && Math.abs(deltaTop) < 0.5') -or
         -not $overlayScriptSource.Contains("debugLog('media-inspection'") -or
@@ -575,6 +581,8 @@ try {
         -not $queueServiceSource.Contains('identityUri.AbsolutePath') -or
         -not $queueServiceSource.Contains('$"slide:{slideIndex}"') -or
         -not $queueServiceSource.Contains('var key = $"{shortcode}|{type}|{mediaIdentity}";') -or
+        -not $queueServiceSource.Contains('SHA256.HashData(Encoding.UTF8.GetBytes(key))') -or
+        -not $queueServiceSource.Contains('_{identitySuffix}{extension}') -or
         -not $queueServiceSource.Contains('ResolveQueuedVideoUrlAsync') -or
         -not $queueServiceSource.Contains('IsUnsupportedVideoStream') -or
         -not $queueServiceSource.Contains('item.SlideIndex >= post.Pictures.Count') -or
@@ -668,8 +676,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.024</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>93</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.025</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>94</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 

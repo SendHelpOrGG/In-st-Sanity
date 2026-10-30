@@ -57,7 +57,7 @@ internal static class InstagramMediaOverlayScript
 	  let lastStickerCursorSentAt = -Infinity;
 
 	  const css = `
-	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;gap:6px;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:7px 10px;appearance:none;-webkit-appearance:none;background:transparent!important;background-image:none!important;color:var(--isg-button-ink,#091318);font:650 11px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;justify-content:center;gap:6px;min-width:76px;box-sizing:border-box;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:7px 10px;appearance:none;-webkit-appearance:none;background:transparent!important;background-image:none!important;color:var(--isg-button-ink,#091318);font:650 11px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 	    #inst-sanity-select::before,#inst-sanity-tray::before,#inst-sanity-notice::before,.isg-action::before,.isg-item::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--isg-surface,var(--isg-panel,rgba(17,24,32,.97)));opacity:.8;pointer-events:none}
 	    #inst-sanity-select::before{opacity:.8!important}
 	    #inst-sanity-select:hover{filter:brightness(1.08);transform:translateY(-1px)}
@@ -591,12 +591,29 @@ internal static class InstagramMediaOverlayScript
 	    }
 	  }
 
+	  function measureSelectButtonWidth() {
+	    if (!selectButton) return 76;
+	    const originalDisplay = selectButton.style.display;
+	    const originalVisibility = selectButton.style.visibility;
+	    const wasDisplayNone = getComputedStyle(selectButton).display === 'none';
+	    if (wasDisplayNone) {
+	      selectButton.style.visibility = 'hidden';
+	      selectButton.style.display = 'inline-flex';
+	    }
+	    const width = selectButton.getBoundingClientRect().width || selectButton.offsetWidth || 76;
+	    if (wasDisplayNone) {
+	      selectButton.style.display = originalDisplay;
+	      selectButton.style.visibility = originalVisibility;
+	    }
+	    return width;
+	  }
+
 	  function positionButton(media, candidate, forcePosition = false, reason = 'candidate') {
 	    if (!selectButton || !media || !candidate) return;
 	    const hasSamePostAnchor = buttonAnchorShortcode === candidate.shortcode && selectButton.style.left && selectButton.style.top;
 	    if (forcePosition || !hasSamePostAnchor) {
 	      const rect = media.getBoundingClientRect();
-	      const width = selectButton.offsetWidth || 134;
+	      const width = measureSelectButtonWidth();
 	      const left = Math.max(8, Math.min(innerWidth - width - 8, rect.right - width - 10));
 	      const top = Math.max(8, Math.min(innerHeight - 42, rect.top + 10));
 	      const anchorChanged = buttonAnchorShortcode !== candidate.shortcode;
@@ -901,18 +918,21 @@ internal static class InstagramMediaOverlayScript
 	  }
 
 	  function updatePosition(reason = 'layout') {
-	    if (activeMedia && activeCandidate && document.contains(activeMedia) && selectButton?.style.display !== 'none') {
-	      if (lastPointer && !selectButton?.matches(':hover') && !mediaContainsPoint(activeMedia, lastPointer)) {
-	        refreshMediaUnderPointer(true, reason);
-	        return;
-	      }
-	      const candidate = candidateFor(activeMedia);
-	      if (candidate) {
-	        activeCandidate = candidate;
-	        rememberScrollPositions(activeMedia);
-	        positionButton(activeMedia, candidate, true, reason);
-	      } else hideSelectSoon();
+	    if (selectButton?.style.display === 'none') return;
+	    if (!activeMedia || !activeCandidate || !document.contains(activeMedia)) {
+	      refreshMediaUnderPointer(true, reason);
+	      return;
 	    }
+	    if (lastPointer && !selectButton?.matches(':hover') && !mediaContainsPoint(activeMedia, lastPointer)) {
+	      refreshMediaUnderPointer(true, reason);
+	      return;
+	    }
+	    const candidate = candidateFor(activeMedia);
+	    if (candidate) {
+	      activeCandidate = candidate;
+	      rememberScrollPositions(activeMedia);
+	      positionButton(activeMedia, candidate, true, reason);
+	    } else hideSelectSoon();
 	  }
 
 	  function onDocumentScroll(event) {
@@ -923,8 +943,9 @@ internal static class InstagramMediaOverlayScript
 	      scrollOffsets.set(target, current);
 	      const deltaLeft = previous ? current.left - previous.left : 0;
 	      const deltaTop = previous ? current.top - previous.top : 0;
-	      if (previous && Math.abs(deltaLeft) > 0.5 && Math.abs(deltaTop) < 0.5) {
-	        if (activeMedia && target.contains(activeMedia) && selectButton?.style.display !== 'none' && !horizontalScrollLogged.has(target)) {
+	      if (previous && Math.abs(deltaLeft) > 0.5 && Math.abs(deltaTop) < 0.5 &&
+	          activeMedia && target.contains(activeMedia) && selectButton?.style.display !== 'none') {
+	        if (!horizontalScrollLogged.has(target)) {
 	          horizontalScrollLogged.add(target);
 	          debugLog('horizontal-scroll-anchor-held', {
 	            containerId: diagnosticRootId(target),
@@ -937,9 +958,14 @@ internal static class InstagramMediaOverlayScript
 	        return;
 	      }
 	    }
-	    if (selectButton?.style.display === 'none') {
+	    const selectorVisible = !!selectButton && selectButton.style.display !== 'none';
+	    if (!selectorVisible) {
 	      buttonAnchorShortcode = '';
 	      buttonAnchorSlideIndex = null;
+	    }
+	    if (!selectorVisible || !activeMedia || !activeCandidate) {
+	      refreshMediaUnderPointer(true, 'scroll');
+	      return;
 	    }
 	    updatePosition('scroll');
 	  }
@@ -1029,6 +1055,7 @@ internal static class InstagramMediaOverlayScript
 	    }, true);
 	    document.addEventListener('click', updateCarouselIndex, true);
 	    document.addEventListener('scroll', onDocumentScroll, true);
+	    window.addEventListener('scroll', onDocumentScroll, { passive: true });
 	    window.addEventListener('resize', () => {
 	      if (selectButton?.style.display === 'none') {
 	        buttonAnchorShortcode = '';

@@ -1376,7 +1376,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.024; open version history" title="Click to view what changed in each version">v.2.024</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.025; open version history" title="Click to view what changed in each version">v.2.025</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -7240,8 +7240,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.024';
+const APP_VERSION='2.025';
 const VERSION_HISTORY=[
+  {version:'2.025',added:'More reliable Browser queue downloads and scroll-aware media selection in the Instagram feed.',removed:'Queue filename collisions when carousel slide tracking lags, plus selector width shifting between “+ Add” and “✓ Queued”.',fixed:'Give each distinct queued media item a stable filename identity, keep both selector labels the same width, and re-scan under the stationary pointer as the feed scrolls.',tone:'yellow'},
   {version:'2.024',added:'An editable Old Photo texture seed with a New seed button for repeatable damage-layout variations.',removed:'No removals.',fixed:'Use the same seeded texture crop, offset, and flips in the live preview and converted copies; preserve the seed with the other adjustment settings.',tone:'yellow'},
   {version:'2.023',added:'More reliable Instagram feed and opened-post media discovery using nearby post permalinks.',removed:'The all-or-nothing assumption that post media is always inside an article with a directly nested permalink.',fixed:'Match media to the nearest visible post link in broad feed/modal layouts, tolerate non-interactive wrappers over the actual image while keeping photo bounds and clipping checks, accept username-prefixed post routes, and add privacy-safe hit-test/permalink diagnostics without logging URLs or shortcodes.',tone:'yellow'},
   {version:'2.022',added:'A separate Old Photo finishing-effects slider with adjustable dust, scratch, crease, and fold texture, based on the supplied texture image.',removed:'The one-click Old Photo look.',fixed:'Make Old Photo an independent intensity control in Finishing effects instead of a preset; use the same aspect-matched supplied damage texture in live preview and converted copies so the visible scratches and folds stay aligned with the exported effect.',tone:'yellow'},

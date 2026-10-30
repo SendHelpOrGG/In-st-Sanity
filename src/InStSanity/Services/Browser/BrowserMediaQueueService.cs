@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using InStSanity.Services.Downloads;
@@ -471,7 +473,10 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			: $"slide:{slideIndex}";
 		var key = $"{shortcode}|{type}|{mediaIdentity}";
 		var extension = isVideo ? ".mp4" : ".jpg";
-		var filename = $"{shortcode}_slide{slideIndex + 1}{extension}";
+		// Slide tracking can lag while Instagram reuses a carousel node. Keep distinct
+		// media on the same shortcode from colliding in the no-duplicates filename check.
+		var identitySuffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))[..8].ToLowerInvariant();
+		var filename = $"{shortcode}_slide{slideIndex + 1}_{identitySuffix}{extension}";
 		item = new BrowserQueuedMedia(key, shortcode, slideIndex, contentCount, isVideo, rawUrl, thumbnailUrl, filename, null);
 		error = string.Empty;
 		return true;
