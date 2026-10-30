@@ -43,32 +43,36 @@ internal static class InstagramMediaOverlayScript
 	  let lastStickerCursorSentAt = -Infinity;
 
 	  const css = `
-	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;gap:7px;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:8px 12px;background:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:600 12px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px)}
+	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;gap:6px;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:7px 10px;background:transparent;color:var(--isg-button-ink,#091318);font:650 11px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+	    #inst-sanity-select::before,#inst-sanity-tray::before,#inst-sanity-notice::before,.isg-action::before,.isg-item::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--isg-surface,var(--isg-panel,rgba(17,24,32,.97)));opacity:.8;pointer-events:none}
 	    #inst-sanity-select:hover{filter:brightness(1.08);transform:translateY(-1px)}
-	    #inst-sanity-select[data-selected="true"]{background:var(--isg-panel,#151b23);color:var(--isg-ink,#f8fafc);border-color:var(--isg-accent,#99f6e4)}
-	    #inst-sanity-tray{position:fixed;z-index:2147483645;right:16px;bottom:16px;width:min(380px,calc(100vw - 32px));max-height:min(440px,calc(100vh - 32px));display:none;flex-direction:column;overflow:hidden;border:1px solid var(--isg-border,#ffffff30);border-radius:16px;background:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:12px/1.45 "Segoe UI",sans-serif;box-shadow:0 14px 42px #0009;backdrop-filter:blur(18px)}
+	    #inst-sanity-select[data-selected="true"]{--isg-surface:var(--isg-panel,#151b23);color:var(--isg-ink,#f8fafc);border-color:var(--isg-accent,#99f6e4)}
+	    #inst-sanity-tray{position:fixed;z-index:2147483645;right:12px;bottom:12px;width:min(320px,calc(100vw - 24px));max-height:min(360px,calc(100vh - 24px));display:none;flex-direction:column;overflow:hidden;border:1px solid var(--isg-border,#ffffff30);border-radius:14px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:11px/1.4 "Segoe UI",sans-serif;box-shadow:0 14px 42px #0009;isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 	    #inst-sanity-tray[data-open="true"]{display:flex}
 	    #inst-sanity-tray *{box-sizing:border-box}
-	    .isg-head{display:flex;align-items:center;gap:10px;padding:13px 14px 11px;border-bottom:1px solid var(--isg-border,#ffffff22)}
-	    .isg-title{flex:1;min-width:0;font-size:13px;font-weight:700;letter-spacing:.15px}
-	    .isg-count{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:23px;padding:0 7px;border-radius:999px;background:var(--isg-accent,#2dd4bf);color:var(--isg-button-ink,#091318);font-weight:750;font-size:11px}
-	    .isg-actions{display:flex;gap:7px;align-items:center}
-	    .isg-action{border:1px solid var(--isg-border,#ffffff30);border-radius:8px;padding:7px 10px;background:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:650 11px/1.2 "Segoe UI",sans-serif;cursor:pointer;white-space:nowrap}
+	    .isg-head{display:flex;align-items:center;gap:8px;padding:8px 10px 7px;border-bottom:1px solid var(--isg-border,#ffffff22)}
+	    .isg-title{flex:1;min-width:0;font-size:12px;font-weight:700;letter-spacing:.1px}
+	    .isg-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;border-radius:999px;background:color-mix(in srgb,var(--isg-accent,#2dd4bf) 80%,transparent);color:var(--isg-button-ink,#091318);font-weight:750;font-size:10px}
+	    .isg-actions{display:flex;gap:5px;align-items:center}
+	    .isg-action{position:relative;isolation:isolate;border:1px solid var(--isg-border,#ffffff30);border-radius:7px;padding:5px 8px;background:transparent;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:650 10px/1.2 "Segoe UI",sans-serif;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 	    .isg-action:disabled{opacity:.5;cursor:default}
-	    .isg-action-secondary{background:transparent;color:var(--isg-ink,#f8fafc)}
-	    .isg-items{display:flex;flex-direction:column;gap:7px;padding:10px 12px;overflow:auto;min-height:0}
-	    .isg-item{display:flex;align-items:center;gap:10px;min-height:54px;padding:7px;border:1px solid var(--isg-border,#ffffff20);border-radius:11px;background:rgba(255,255,255,.035)}
-	    .isg-thumb{width:40px;height:40px;flex:0 0 40px;border-radius:7px;object-fit:cover;background:rgba(255,255,255,.08)}
-	    .isg-thumb-fallback{display:grid;place-items:center;color:var(--isg-accent2,var(--isg-accent,#99f6e4));font-size:10px;font-weight:800;letter-spacing:.3px}
+	    .isg-action-secondary{--isg-surface:var(--isg-panel,#151b23);color:var(--isg-ink,#f8fafc)}
+	    .isg-items{display:flex;flex-direction:column;gap:7px;padding:7px 9px;overflow:auto;min-height:0}
+	    .isg-group{display:flex;flex-direction:column;gap:4px;min-width:0}
+	    .isg-group-heading{padding:0 2px 3px;border-bottom:1px solid var(--isg-border,#ffffff22);color:var(--isg-muted,#9fb1c1);font-size:9px;font-weight:750;letter-spacing:.45px;text-transform:uppercase}
+	    .isg-group-items{display:flex;flex-direction:column;gap:5px}
+	    .isg-item{position:relative;isolation:isolate;display:flex;align-items:center;gap:8px;min-height:44px;padding:5px;border:1px solid var(--isg-border,#ffffff20);border-radius:9px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+	    .isg-thumb{width:34px;height:34px;flex:0 0 34px;border-radius:6px;object-fit:cover;background:rgba(255,255,255,.08)}
+	    .isg-thumb-fallback{display:grid;place-items:center;color:var(--isg-accent2,var(--isg-accent,#99f6e4));font-size:9px;font-weight:800;letter-spacing:.25px}
 	    .isg-info{min-width:0;flex:1}
-	    .isg-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
-	    .isg-meta{margin-top:2px;color:var(--isg-muted,#9fb1c1);font-size:10px}
-	    .isg-error{margin-top:2px;color:#ff9a9a;font-size:10px}
-	    .isg-empty{padding:8px 4px 10px;color:var(--isg-muted,#9fb1c1);font-size:11px}
-	    .isg-footer{padding:8px 14px 12px;color:var(--isg-muted,#9fb1c1);font-size:10px}
-	    #inst-sanity-notice{position:fixed;z-index:2147483647;left:50%;bottom:22px;max-width:min(460px,calc(100vw - 32px));transform:translate(-50%,12px);opacity:0;pointer-events:none;border:1px solid var(--isg-border,#ffffff30);border-radius:10px;padding:9px 13px;background:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:600 11px/1.4 "Segoe UI",sans-serif;box-shadow:0 7px 28px #0008;transition:opacity .18s,transform .18s}
+	    .isg-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:650}
+	    .isg-meta{margin-top:1px;color:var(--isg-muted,#9fb1c1);font-size:9px}
+	    .isg-error{margin-top:1px;color:#ff9a9a;font-size:9px}
+	    .isg-empty{padding:6px 3px 8px;color:var(--isg-muted,#9fb1c1);font-size:10px}
+	    .isg-footer{padding:6px 10px 8px;color:var(--isg-muted,#9fb1c1);font-size:9px}
+	    #inst-sanity-notice{position:fixed;z-index:2147483647;left:50%;bottom:18px;max-width:min(460px,calc(100vw - 32px));transform:translate(-50%,12px);opacity:0;pointer-events:none;border:1px solid var(--isg-border,#ffffff30);border-radius:9px;padding:8px 11px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:600 11px/1.4 "Segoe UI",sans-serif;box-shadow:0 7px 28px #0008;transition:opacity .18s,transform .18s;isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 	    #inst-sanity-notice[data-show="true"]{opacity:1;transform:translate(-50%,0)}
-	    @media(max-width:540px){#inst-sanity-tray{right:8px;bottom:8px;width:calc(100vw - 16px)}#inst-sanity-select{padding:7px 10px;font-size:11px}}
+	    @media(max-width:540px){#inst-sanity-tray{right:8px;bottom:8px;width:min(320px,calc(100vw - 16px));max-height:min(360px,calc(100vh - 16px))}#inst-sanity-select{padding:7px 10px;font-size:11px}}
 	  `;
 
 	  function postMessage(action, payload = {}) {
@@ -228,19 +232,28 @@ internal static class InstagramMediaOverlayScript
 	    } else if (!hasItems) {
 	      const empty = document.createElement('div'); empty.className = 'isg-empty'; empty.textContent = 'Hover over a post photo or video and add it to the queue.'; list.appendChild(empty);
 	    } else {
-	      for (const item of state.items) {
-	        const row = document.createElement('div'); row.className = 'isg-item';
-	        if (item.thumbnailUrl) {
-	          const image = document.createElement('img'); image.className = 'isg-thumb'; image.alt = ''; image.loading = 'lazy'; image.src = item.thumbnailUrl; row.appendChild(image);
-	        } else {
-	          const fallback = document.createElement('div'); fallback.className = 'isg-thumb isg-thumb-fallback'; fallback.textContent = item.isVideo ? 'VIDEO' : 'PHOTO'; row.appendChild(fallback);
+	      const photoItems = state.items.filter(item => item.isVideo !== true);
+	      const videoItems = state.items.filter(item => item.isVideo === true);
+	      for (const [label, items] of [['Photos', photoItems], ['Videos', videoItems]]) {
+	        if (!items.length) continue;
+	        const group = document.createElement('section'); group.className = 'isg-group';
+	        const heading = document.createElement('div'); heading.className = 'isg-group-heading'; heading.textContent = `${label} (${items.length})`;
+	        const rows = document.createElement('div'); rows.className = 'isg-group-items';
+	        for (const item of items) {
+	          const row = document.createElement('div'); row.className = 'isg-item';
+	          if (item.thumbnailUrl) {
+	            const image = document.createElement('img'); image.className = 'isg-thumb'; image.alt = ''; image.loading = 'lazy'; image.src = item.thumbnailUrl; row.appendChild(image);
+	          } else {
+	            const fallback = document.createElement('div'); fallback.className = 'isg-thumb isg-thumb-fallback'; fallback.textContent = item.isVideo ? 'VIDEO' : 'PHOTO'; row.appendChild(fallback);
+	          }
+	          const info = document.createElement('div'); info.className = 'isg-info';
+	          const name = document.createElement('div'); name.className = 'isg-name'; name.textContent = item.filename || `${item.shortcode} · ${item.isVideo ? 'Video' : 'Photo'} ${Number(item.slideIndex) + 1}`;
+	          const meta = document.createElement('div'); meta.className = 'isg-meta'; meta.textContent = `${item.isVideo ? 'Video' : 'Photo'} · ${item.shortcode} · slide ${Number(item.slideIndex) + 1}`;
+	          info.append(name, meta);
+	          if (item.error) { const failure = document.createElement('div'); failure.className = 'isg-error'; failure.textContent = safeText(item.error, 'Download failed'); info.appendChild(failure); }
+	          row.appendChild(info); rows.appendChild(row);
 	        }
-	        const info = document.createElement('div'); info.className = 'isg-info';
-	        const name = document.createElement('div'); name.className = 'isg-name'; name.textContent = item.filename || `${item.shortcode} · ${item.isVideo ? 'Video' : 'Photo'} ${Number(item.slideIndex) + 1}`;
-	        const meta = document.createElement('div'); meta.className = 'isg-meta'; meta.textContent = `${item.isVideo ? 'Video' : 'Photo'} · ${item.shortcode} · slide ${Number(item.slideIndex) + 1}`;
-	        info.append(name, meta);
-	        if (item.error) { const failure = document.createElement('div'); failure.className = 'isg-error'; failure.textContent = safeText(item.error, 'Download failed'); info.appendChild(failure); }
-	        row.appendChild(info); list.appendChild(row);
+	        group.append(heading, rows); list.appendChild(group);
 	      }
 	    }
 	    tray.querySelector('.isg-footer').textContent = state.isDownloading
@@ -314,11 +327,41 @@ internal static class InstagramMediaOverlayScript
 	    return { reason: 'visible', geometry };
 	  }
 
+	  function trustedMediaUrl(value) {
+	    const raw = String(value || '').trim();
+	    if (!raw || raw.length > 4096) return '';
+	    try {
+	      const url = new URL(raw, location.href);
+	      if (url.protocol !== 'https:' || url.username || url.password || (url.port && url.port !== '443') || /\.m3u8$/i.test(url.pathname)) return '';
+	      const host = url.hostname.toLowerCase().replace(/\.$/, '');
+	      const allowedHost = host === 'instagram.com' || host.endsWith('.instagram.com') ||
+	        host === 'fbcdn.net' || host.endsWith('.fbcdn.net') ||
+	        host === 'cdninstagram.com' || host.endsWith('.cdninstagram.com');
+	      return allowedHost ? url.href : '';
+	    } catch (_) { return ''; }
+	  }
+
 	  function mediaUrl(element, isVideo) {
+	    const sources = [];
+	    const addSource = value => { if (typeof value === 'string' && value.trim()) sources.push(value); };
+	    addSource(element.currentSrc);
+	    addSource(element.getAttribute?.('src'));
+	    addSource(element.src);
 	    if (isVideo) {
-	      return element.currentSrc || element.src || element.querySelector('source[src]')?.src || '';
+	      for (const attribute of ['data-video-url', 'data-raw-video', 'data-src']) addSource(element.getAttribute?.(attribute));
+	      let sourceElements = [];
+	      try { sourceElements = Array.from(element.querySelectorAll('source[src],source[data-src]')); } catch (_) { }
+	      for (const source of sourceElements) {
+	        addSource(source.getAttribute?.('src'));
+	        addSource(source.getAttribute?.('data-src'));
+	        addSource(source.src);
+	      }
 	    }
-	    return element.currentSrc || element.src || '';
+	    for (const source of sources) {
+	      const safe = trustedMediaUrl(source);
+	      if (safe) return safe;
+	    }
+	    return '';
 	  }
 
 	  function carouselInfo(root) {
@@ -409,11 +452,38 @@ internal static class InstagramMediaOverlayScript
 	    activeCandidate = candidate;
 	  }
 
-	  function mediaContainsPoint(media, point) {
-	    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return true;
+	  function mediaContainsPoint(media, point, hitStack = null) {
+	    if (!(media instanceof Element) || !point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return false;
 	    try {
 	      const rect = media.getBoundingClientRect();
-	      return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
+	      if (point.x < rect.left || point.x > rect.right || point.y < rect.top || point.y > rect.bottom) return false;
+
+	      let visibleOpacity = 1;
+	      for (let ancestor = media; ancestor; ancestor = ancestor.parentElement) {
+	        const style = getComputedStyle(ancestor);
+	        if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+	        const opacity = Number(style.opacity);
+	        if (Number.isFinite(opacity)) visibleOpacity *= opacity;
+	        if (visibleOpacity <= 0.05) return false;
+
+	        if (ancestor === media) continue;
+	        const clipsX = ['hidden', 'clip', 'scroll', 'auto', 'overlay'].includes(style.overflowX);
+	        const clipsY = ['hidden', 'clip', 'scroll', 'auto', 'overlay'].includes(style.overflowY);
+	        if (!clipsX && !clipsY) continue;
+	        const clipRect = ancestor.getBoundingClientRect();
+	        const scaleX = ancestor.offsetWidth > 0 ? clipRect.width / ancestor.offsetWidth : 1;
+	        const scaleY = ancestor.offsetHeight > 0 ? clipRect.height / ancestor.offsetHeight : 1;
+	        const clipLeft = clipRect.left + (ancestor.clientLeft || 0) * scaleX;
+	        const clipTop = clipRect.top + (ancestor.clientTop || 0) * scaleY;
+	        const clipRight = clipLeft + (ancestor.clientWidth || 0) * scaleX;
+	        const clipBottom = clipTop + (ancestor.clientHeight || 0) * scaleY;
+	        if (clipsX && (point.x < clipLeft || point.x > clipRight)) return false;
+	        if (clipsY && (point.y < clipTop || point.y > clipBottom)) return false;
+	      }
+
+	      const hits = Array.isArray(hitStack) ? hitStack : pointHitStack(point);
+	      const topHit = hits.find(hit => hit instanceof Element);
+	      return !!topHit && (topHit === media || media.contains(topHit));
 	    } catch (_) { return false; }
 	  }
 
@@ -438,10 +508,12 @@ internal static class InstagramMediaOverlayScript
 
 	    let media = null;
 	    let candidate = null;
+	    const hits = pointHitStack(point);
 	    const seen = new Set();
 	    const tryMedia = possibleMedia => {
 	      if (!possibleMedia || seen.has(possibleMedia) || possibleMedia.closest('#inst-sanity-tray,#inst-sanity-select')) return false;
 	      seen.add(possibleMedia);
+	      if (!mediaContainsPoint(possibleMedia, point, hits)) return false;
 	      const found = candidateFor(possibleMedia);
 	      if (!found) return false;
 	      media = possibleMedia;
@@ -452,7 +524,6 @@ internal static class InstagramMediaOverlayScript
 	    const directMedia = target.closest('img,video');
 	    if (directMedia) tryMedia(directMedia);
 
-	    const hits = pointHitStack(point);
 	    if (!candidate) {
 	      for (const hit of hits) {
 	        if (tryMedia(hit?.closest?.('img,video'))) break;
@@ -462,7 +533,7 @@ internal static class InstagramMediaOverlayScript
 	    const targetMedia = target.querySelectorAll('img,video');
 	    if (!candidate && targetMedia.length <= 32) {
 	      for (const descendant of targetMedia) {
-	        if (mediaContainsPoint(descendant, point) && tryMedia(descendant)) break;
+	        if (tryMedia(descendant)) break;
 	      }
 	    }
 
@@ -471,7 +542,7 @@ internal static class InstagramMediaOverlayScript
 	    const scopedMedia = scope?.querySelectorAll?.('img,video') || [];
 	    if (!candidate && scope !== document.body && scopedMedia.length <= 48) {
 	      for (const scoped of scopedMedia) {
-	        if (mediaContainsPoint(scoped, point) && tryMedia(scoped)) break;
+	        if (tryMedia(scoped)) break;
 	      }
 	    }
 
@@ -500,7 +571,7 @@ internal static class InstagramMediaOverlayScript
 	    lastPointer = { x: event.clientX, y: event.clientY };
 	    if (event.target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) { clearTimer(); return; }
 	    const inspection = inspectMediaTarget(event.target, lastPointer);
-	    activateInspectedCandidate(inspection);
+	    if (!activateInspectedCandidate(inspection) && activeMedia && !selectButton?.matches(':hover')) hideSelectSoon();
 	  }
 
 	  function relayStickerCursorToMainApp(event) {
@@ -528,6 +599,7 @@ internal static class InstagramMediaOverlayScript
 	    lastMoveInspectionAt = now;
 	    const inspection = inspectMediaTarget(event.target, lastPointer);
 	    if (inspection.media && inspection.media !== activeMedia) activateInspectedCandidate(inspection);
+	    else if (!inspection.media && activeMedia && !selectButton?.matches(':hover')) hideSelectSoon();
 	  }
 
 	  function onPointerOut(event) {
@@ -541,6 +613,10 @@ internal static class InstagramMediaOverlayScript
 
 	  function updatePosition() {
 	    if (activeMedia && activeCandidate && document.contains(activeMedia) && selectButton?.style.display !== 'none') {
+	      if (lastPointer && !selectButton?.matches(':hover') && !mediaContainsPoint(activeMedia, lastPointer)) {
+	        refreshMediaUnderPointer();
+	        return;
+	      }
 	      const candidate = candidateFor(activeMedia);
 	      if (candidate) { activeCandidate = candidate; positionButton(activeMedia, candidate); }
 	      else hideSelectSoon();
