@@ -29,7 +29,7 @@ internal static class InstagramMediaOverlayScript
 
 	  const postPattern = /^\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;
 	  const state = { items: [], isDownloading: false, currentIndex: 0, total: 0, status: '', theme: {} };
-	  const slideByPost = new Map();
+	  const slideByRoot = new WeakMap();
 	  let activeMedia = null;
 	  let activeCandidate = null;
 	  let hideTimer = 0;
@@ -89,7 +89,14 @@ internal static class InstagramMediaOverlayScript
 	    }
 	  }
 
-	  function itemKey(item) { return `${item.shortcode}|${item.mediaType}|${item.slideIndex}`; }
+	  function mediaPathIdentity(value) {
+	    const raw = String(value || '');
+	    try { return new URL(raw, location.href).pathname || raw; } catch (_) { return raw; }
+	  }
+	  function itemKey(item) {
+	    const type = item.mediaType || (item.isVideo ? 'video' : 'photo');
+	    return `${item.shortcode}|${type}|${mediaPathIdentity(item.rawUrl)}`;
+	  }
 	  function safeText(value, fallback = '') { return String(value ?? fallback).slice(0, 180); }
 	  function safeUrlSummary(value) {
 	    if (typeof value !== 'string' || !value) return { present: false };
@@ -194,9 +201,7 @@ internal static class InstagramMediaOverlayScript
 	    }
 	    if (snapshot?.theme) { state.theme = snapshot.theme; applyTheme(snapshot.theme); }
 
-	    const selected = new Set(state.items.map(item => item.key || itemKey({
-	      shortcode: item.shortcode, mediaType: item.isVideo ? 'video' : 'photo', slideIndex: item.slideIndex
-	    })));
+	    const selected = new Set(state.items.map(itemKey));
 	    if (activeCandidate && selectButton) {
 	      const key = itemKey(activeCandidate);
 	      const isSelected = selected.has(key);
@@ -267,7 +272,7 @@ internal static class InstagramMediaOverlayScript
 	  }
 
 	  function postRootFor(media) {
-	    return media.closest('article') || media.closest('[role="dialog"]') || media.closest('main') || document.body;
+	    return media.closest('[role="dialog"]') || media.closest('article') || media.closest('main') || document.body;
 	  }
 
 	  function findPostShortcode(media, root) {
@@ -324,19 +329,31 @@ internal static class InstagramMediaOverlayScript
 	    return { count, activeIndex: active ? Math.max(0, Number(active.match[1]) - 1) : null };
 	  }
 
-	  function currentSlideIndex(shortcode, carousel) {
-	    const tracked = slideByPost.get(shortcode);
+	  function slideTrackingKey(root, shortcode) {
+	    const view = parseShortcode(location.pathname) === shortcode ? 'opened-route'
+	      : root?.closest?.('[role="dialog"]') ? 'opened-dialog' : 'inline';
+	    return `${view}|${shortcode}`;
+	  }
+
+	  function slideMapFor(root) {
+	    let map = slideByRoot.get(root);
+	    if (!map) { map = new Map(); slideByRoot.set(root, map); }
+	    return map;
+	  }
+
+	  function currentSlideIndex(root, shortcode, carousel) {
+	    const tracked = slideByRoot.get(root)?.get(slideTrackingKey(root, shortcode));
 	    if (Number.isInteger(tracked)) return tracked;
 	    return Number.isInteger(carousel.activeIndex) ? carousel.activeIndex : 0;
 	  }
 
-	  function trackSlide(shortcode, index) {
-	    slideByPost.set(shortcode, index);
+	  function trackSlide(root, shortcode, index) {
+	    slideMapFor(root).set(slideTrackingKey(root, shortcode), index);
 	  }
 
 	  function slideInfo(root, shortcode) {
 	    const carousel = carouselInfo(root);
-	    let index = currentSlideIndex(shortcode, carousel);
+	    let index = currentSlideIndex(root, shortcode, carousel);
 	    if (!Number.isFinite(index) || index < 0) index = 0;
 	    if (carousel.count) index = Math.min(index, carousel.count - 1);
 	    return { slideIndex: index, contentCount: carousel.count };
@@ -385,7 +402,7 @@ internal static class InstagramMediaOverlayScript
 	    selectButton.style.top = `${top}px`;
 	    selectButton.style.display = 'inline-flex';
 	    const key = itemKey(candidate);
-	    const isSelected = state.items.some(item => (item.key || itemKey({ shortcode: item.shortcode, mediaType: item.isVideo ? 'video' : 'photo', slideIndex: item.slideIndex })) === key);
+	    const isSelected = state.items.some(item => itemKey(item) === key);
 	    selectButton.dataset.selected = String(isSelected);
 	    selectButton.textContent = isSelected ? '✓ Queued' : '+ Add to queue';
 	    activeCandidate = candidate;
@@ -543,14 +560,14 @@ internal static class InstagramMediaOverlayScript
 	    const control = event.target?.closest?.('button,[role="button"]');
 	    if (!control) return;
 	    const label = String(control.getAttribute('aria-label') || '').toLowerCase();
-	    const root = control.closest('article,[role="dialog"],main') || document.body;
+	    const root = postRootFor(control);
 	    const shortcode = parseShortcode(location.pathname) || findPostShortcode(control, root);
 	    if (!shortcode) return;
 	    const exact = label.match(/(?:go to|slide)\s*(?:slide\s*)?(\d+)/i);
-	    if (exact) { trackSlide(shortcode, Math.max(0, Number(exact[1]) - 1)); return; }
-	    const current = currentSlideIndex(shortcode, carouselInfo(root));
-	    if (/next|forward/.test(label)) trackSlide(shortcode, Math.min(100, current + 1));
-	    else if (/previous|prev|back/.test(label)) trackSlide(shortcode, Math.max(0, current - 1));
+	    if (exact) { trackSlide(root, shortcode, Math.max(0, Number(exact[1]) - 1)); return; }
+	    const current = currentSlideIndex(root, shortcode, carouselInfo(root));
+	    if (/next|forward/.test(label)) trackSlide(root, shortcode, Math.min(100, current + 1));
+	    else if (/previous|prev|back/.test(label)) trackSlide(root, shortcode, Math.max(0, current - 1));
 	  }
 
 	  function receiveQueueState(snapshot, error, theme) {

@@ -405,7 +405,10 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 
 		int? contentCount = TryReadInt(root, "contentCount", 1, 100, out var count) ? count : null;
 		var type = isVideo ? "video" : "photo";
-		var key = $"{shortcode}|{type}|{slideIndex}";
+		var mediaIdentity = Uri.TryCreate(rawUrl, UriKind.Absolute, out var identityUri)
+			? identityUri.AbsolutePath
+			: rawUrl;
+		var key = $"{shortcode}|{type}|{mediaIdentity}";
 		var extension = isVideo ? ".mp4" : ".jpg";
 		var filename = $"{shortcode}_slide{slideIndex + 1}{extension}";
 		item = new BrowserQueuedMedia(key, shortcode, slideIndex, contentCount, isVideo, rawUrl, thumbnailUrl, filename, null);
