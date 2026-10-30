@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.019'',added:') -or
+        -not $document.Content.Contains('version:''2.020'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -496,15 +496,32 @@ try {
         -not $overlayScriptSource.Contains('postRootFor(directMedia || target)') -or
         -not $overlayScriptSource.Contains('const boundary = dialog || main || document.body;') -or
         -not $overlayScriptSource.Contains('element.closest(''article,[role="article"]'')') -or
-        -not $overlayScriptSource.Contains("window.addEventListener('popstate', () => refreshMediaUnderPointer())") -or
+        -not $overlayScriptSource.Contains("window.addEventListener('popstate', refreshAfterRouteChange)") -or
+        -not $overlayScriptSource.Contains('function refreshAfterRouteChange()') -or
         -not $overlayScriptSource.Contains("debugLog('route-changed'") -or
         -not $overlayScriptSource.Contains('if (!routePollTimer)') -or
         -not $overlayScriptSource.Contains('const identity = item.rawUrl ? mediaPathIdentity(item.rawUrl) : `slide:') -or
         -not $overlayScriptSource.Contains('if (typeof item.key === ''string'' && item.key) return item.key;') -or
-        -not $overlayScriptSource.Contains('function positionButton(media, candidate, preservePosition = false)') -or
-        -not $overlayScriptSource.Contains('positionButton(activeMedia, activeCandidate, preservePosition)') -or
+        -not $overlayScriptSource.Contains("function positionButton(media, candidate, forcePosition = false, reason = 'candidate')") -or
+        -not $overlayScriptSource.Contains('positionButton(activeMedia, activeCandidate, forcePosition, reason)') -or
+        -not $overlayScriptSource.Contains("let buttonAnchorShortcode = '';") -or
+        -not $overlayScriptSource.Contains('let buttonAnchorSlideIndex = null;') -or
+        -not $overlayScriptSource.Contains('const hasSamePostAnchor = buttonAnchorShortcode === candidate.shortcode') -or
+        -not $overlayScriptSource.Contains('const anchorWasAvailable = buttonAnchorShortcode === next.shortcode') -or
+        -not $overlayScriptSource.Contains('const anchorSlideChanged = anchorWasAvailable') -or
+        -not $overlayScriptSource.Contains("debugLog('selector-anchor-preserved'") -or
+        -not $overlayScriptSource.Contains("debugLog('selector-positioned'") -or
+        -not $overlayScriptSource.Contains('selectorWasVisible') -or
+        -not $overlayScriptSource.Contains("function onDocumentScroll(event)") -or
+        -not $overlayScriptSource.Contains("debugLog('horizontal-scroll-anchor-held'") -or
+        -not $overlayScriptSource.Contains('Math.abs(deltaLeft) > 0.5 && Math.abs(deltaTop) < 0.5') -or
+        -not $overlayScriptSource.Contains("debugLog('media-inspection'") -or
+        -not $overlayScriptSource.Contains('const inspectionLogKeys = new WeakMap();') -or
+        -not $overlayScriptSource.Contains('if (!loggedSignatures.has(signature))') -or
+        -not $overlayScriptSource.Contains('candidateRejectReasons') -or
+        -not $overlayScriptSource.Contains("return reject('post-shortcode-missing')") -or
         -not $overlayScriptSource.Contains('itemKey(inspection.candidate) !== itemKey(activeCandidate)') -or
-        -not $overlayScriptSource.Contains('if (!rawUrl && !isVideo) return null;') -or
+        -not $overlayScriptSource.Contains("if (!rawUrl && !isVideo) return reject('photo-source-unavailable');") -or
         -not $overlayScriptSource.Contains('const root = postRootFor(control);') -or
         -not $overlayScriptSource.Contains('parseShortcode(location.pathname) || findPostShortcode(control, root)') -or
         -not $overlayScriptSource.Contains('const postPattern = /^\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;') -or
@@ -552,7 +569,7 @@ try {
         -not $overlayScriptSource.Contains('style.overflowX') -or
         -not $overlayScriptSource.Contains('style.overflowY') -or
         -not $overlayScriptSource.Contains("style.display === 'inline' || style.display === 'contents'") -or
-        -not $overlayScriptSource.Contains('if (!mediaContainsPoint(possibleMedia, point, hits, eventTarget)) return false;') -or
+        -not $overlayScriptSource.Contains('if (!mediaContainsPoint(possibleMedia, point, hits, eventTarget)) { hitTestRejected++; return false; }') -or
         -not $overlayScriptSource.Contains('const photoItems = state.items.filter(item => item.isVideo !== true);') -or
         -not $overlayScriptSource.Contains('const videoItems = state.items.filter(item => item.isVideo === true);') -or
         -not $overlayScriptSource.Contains("[['Photos', photoItems], ['Videos', videoItems]]") -or
@@ -594,8 +611,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.019</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>88</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.020</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>89</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 

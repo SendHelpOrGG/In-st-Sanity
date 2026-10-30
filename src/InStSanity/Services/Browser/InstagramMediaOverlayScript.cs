@@ -32,8 +32,17 @@ internal static class InstagramMediaOverlayScript
 	  const slideByRoot = new WeakMap();
 	  let activeMedia = null;
 	  let activeCandidate = null;
+	  let buttonAnchorShortcode = '';
+	  let buttonAnchorSlideIndex = null;
 	  let lastObservedRoute = location.pathname;
 	  let routePollTimer = 0;
+	  let lastPositionLogAt = 0;
+	  let routeEpoch = 0;
+	  let nextDiagnosticRootId = 1;
+	  const inspectionLogKeys = new WeakMap();
+	  const scrollOffsets = new WeakMap();
+	  const horizontalScrollLogged = new WeakSet();
+	  const diagnosticRootIds = new WeakMap();
 	  let hideTimer = 0;
 	  let mutationRefreshTimer = 0;
 	  let selectButton = null;
@@ -427,26 +436,27 @@ internal static class InstagramMediaOverlayScript
 	    return { slideIndex: index, contentCount: carousel.count };
 	  }
 
-	  function candidateFor(media) {
+	  function candidateFor(media, diagnostics = null) {
+	    const reject = reason => { if (diagnostics) diagnostics.reason = reason; return null; };
 	    try {
-	      if (!media) return null;
+	      if (!media) return reject('missing-media');
 	      const tag = String(media.tagName || '').toUpperCase();
 	      const isVideo = tag === 'VIDEO';
-	      if (!isVideo && tag !== 'IMG') return null;
+	      if (!isVideo && tag !== 'IMG') return reject('not-photo-or-video');
 	      const visibility = mediaVisibility(media);
-	      if (visibility.reason !== 'visible') return null;
-	      if (!isVideo && (media.naturalWidth < 160 || media.naturalHeight < 160)) return null;
-	      if (!isVideo && /profile|avatar|logo|icon/i.test(media.alt || '')) return null;
-	      if (isVideo && media.closest('#inst-sanity-tray')) return null;
+	      if (visibility.reason !== 'visible') return reject(visibility.reason || 'not-visible');
+	      if (!isVideo && (media.naturalWidth < 160 || media.naturalHeight < 160)) return reject('image-too-small');
+	      if (!isVideo && /profile|avatar|logo|icon/i.test(media.alt || '')) return reject('decorative-image');
+	      if (isVideo && media.closest('#inst-sanity-tray')) return reject('queue-video');
 	      const rawUrl = mediaUrl(media, isVideo);
-	      if (!rawUrl && !isVideo) return null;
-	      if (rawUrl && (!/^https:\/\//i.test(rawUrl) || /\.m3u8(?:$|\?)/i.test(rawUrl))) return null;
+	      if (!rawUrl && !isVideo) return reject('photo-source-unavailable');
+	      if (rawUrl && (!/^https:\/\//i.test(rawUrl) || /\.m3u8(?:$|\?)/i.test(rawUrl))) return reject('unsupported-source');
 
 	      const root = postRootFor(media);
 	      const shortcode = findPostShortcode(media, root);
-	      if (!shortcode) return null;
+	      if (!shortcode) return reject('post-shortcode-missing');
 	      const postUrl = findPostPermalink(media, root, shortcode);
-	      if (!postUrl) return null;
+	      if (!postUrl) return reject('post-permalink-missing');
 	      const { slideIndex, contentCount } = slideInfo(root, shortcode);
 	      const thumbnailUrl = isVideo ? (media.poster || '') : (media.currentSrc || media.src || '');
 	      return {
@@ -458,19 +468,51 @@ internal static class InstagramMediaOverlayScript
 	        rawUrl,
 	        thumbnailUrl: /^https:\/\//i.test(thumbnailUrl) ? thumbnailUrl : '',
 	      };
-	    } catch (_) { return null; }
+	    } catch (_) { return reject('candidate-exception'); }
 	  }
 
-	  function positionButton(media, candidate, preservePosition = false) {
+	  function diagnosticRootId(root) {
+	    if (!(root instanceof Element)) return 0;
+	    let id = diagnosticRootIds.get(root);
+	    if (!id) { id = nextDiagnosticRootId++; diagnosticRootIds.set(root, id); }
+	    return id;
+	  }
+
+	  function rememberScrollPositions(element) {
+	    for (let ancestor = element; ancestor instanceof Element; ancestor = ancestor.parentElement) {
+	      scrollOffsets.set(ancestor, { left: Number(ancestor.scrollLeft) || 0, top: Number(ancestor.scrollTop) || 0 });
+	    }
+	  }
+
+	  function positionButton(media, candidate, forcePosition = false, reason = 'candidate') {
 	    if (!selectButton || !media || !candidate) return;
-	    if (!preservePosition || selectButton.style.display === 'none' || !selectButton.style.left || !selectButton.style.top) {
+	    const hasSamePostAnchor = buttonAnchorShortcode === candidate.shortcode && selectButton.style.left && selectButton.style.top;
+	    if (forcePosition || !hasSamePostAnchor) {
 	      const rect = media.getBoundingClientRect();
 	      const width = selectButton.offsetWidth || 134;
 	      const left = Math.max(8, Math.min(innerWidth - width - 8, rect.right - width - 10));
 	      const top = Math.max(8, Math.min(innerHeight - 42, rect.top + 10));
+	      const anchorChanged = buttonAnchorShortcode !== candidate.shortcode;
+	      const positionChanged = selectButton.style.left !== `${left}px` || selectButton.style.top !== `${top}px`;
 	      selectButton.style.left = `${left}px`;
 	      selectButton.style.top = `${top}px`;
+	      buttonAnchorShortcode = candidate.shortcode;
+	      const now = Date.now();
+	      if (anchorChanged || positionChanged) {
+	        if (reason !== 'scroll' || now - lastPositionLogAt >= 900) {
+	          lastPositionLogAt = now;
+	          debugLog('selector-positioned', {
+	            reason,
+	            shortcodeLength: String(candidate.shortcode || '').length,
+	            mediaType: candidate.mediaType,
+	            slideIndex: candidate.slideIndex,
+	            left: Math.round(left),
+	            top: Math.round(top),
+	          });
+	        }
+	      }
 	    }
+	    buttonAnchorSlideIndex = Number.isInteger(candidate.slideIndex) ? candidate.slideIndex : null;
 	    selectButton.style.display = 'inline-flex';
 	    const key = itemKey(candidate);
 	    const isSelected = state.items.some(item => itemKey(item) === key);
@@ -538,14 +580,25 @@ internal static class InstagramMediaOverlayScript
 	    let candidate = null;
 	    const hits = pointHitStack(point);
 	    const seen = new Set();
+	    let mediaChecks = 0;
+	    let hitTestRejected = 0;
+	    let candidateRejected = 0;
+	    const candidateRejectReasons = {};
 	    const directMedia = target.closest('img,video');
 	    const tryMedia = possibleMedia => {
 	      if (!possibleMedia || seen.has(possibleMedia) || possibleMedia.closest('#inst-sanity-tray,#inst-sanity-select')) return false;
 	      seen.add(possibleMedia);
+	      mediaChecks++;
 	      const eventTarget = possibleMedia === directMedia || possibleMedia.contains(target) || target.contains(possibleMedia) ? target : null;
-	      if (!mediaContainsPoint(possibleMedia, point, hits, eventTarget)) return false;
-	      const found = candidateFor(possibleMedia);
-	      if (!found) return false;
+	      if (!mediaContainsPoint(possibleMedia, point, hits, eventTarget)) { hitTestRejected++; return false; }
+	      const candidateDiagnostics = {};
+	      const found = candidateFor(possibleMedia, candidateDiagnostics);
+	      if (!found) {
+	        candidateRejected++;
+	        const rejection = candidateDiagnostics.reason || 'unknown';
+	        candidateRejectReasons[rejection] = (candidateRejectReasons[rejection] || 0) + 1;
+	        return false;
+	      }
 	      media = possibleMedia;
 	      candidate = found;
 	      return true;
@@ -576,19 +629,73 @@ internal static class InstagramMediaOverlayScript
 	      }
 	    }
 
+	    const result = candidate ? 'candidate-found' : mediaChecks === 0 ? 'no-media-found' :
+	      candidateRejected ? 'candidate-rejected' : hitTestRejected ? 'pointer-hit-rejected' : 'no-eligible-media';
+	    const rootId = diagnosticRootId(scope);
+	    const rejectionSignature = Object.keys(candidateRejectReasons).sort().join(',');
+	    const inspectionIdentity = candidate ? itemKey(candidate) : `${result}|${rejectionSignature}`;
+	    const signature = `${routeEpoch}|${rootId}|${inspectionIdentity}`;
+	    let loggedSignatures = scope instanceof Element ? inspectionLogKeys.get(scope) : null;
+	    if (!loggedSignatures) {
+	      loggedSignatures = new Set();
+	      if (scope instanceof Element) inspectionLogKeys.set(scope, loggedSignatures);
+	    }
+	    if (!loggedSignatures.has(signature)) {
+	      if (loggedSignatures.size >= 128) loggedSignatures.clear();
+	      loggedSignatures.add(signature);
+	      debugLog('media-inspection', {
+	        route: routeKind(),
+	        rootId,
+	        rootTag: String(scope?.tagName || 'unknown').toLowerCase(),
+	        rootRole: safeText(scope?.getAttribute?.('role') || ''),
+	        targetTag: String(target.tagName || 'unknown').toLowerCase(),
+	        result,
+	        mediaChecks,
+	        hitTestRejected,
+	        candidateRejected,
+	        candidateRejectReasons,
+	        hitStackCount: hits.length,
+	        targetMediaCount: targetMedia.length,
+	        scopedMediaCount: scopedMedia.length,
+	        candidate: candidate ? {
+	          mediaType: candidate.mediaType,
+	          slideIndex: candidate.slideIndex,
+	          shortcodeLength: String(candidate.shortcode || '').length,
+	          postUrlMatchesShortcode: parseShortcode(candidate.postUrl) === candidate.shortcode,
+	          sourceAvailable: !!candidate.rawUrl,
+	        } : null,
+	      });
+	    }
+
 	    return { media: candidate ? media : null, candidate };
 	  }
 
-	  function activateInspectedCandidate(inspection) {
+	  function activateInspectedCandidate(inspection, forcePosition = false, reason = 'candidate') {
 	    if (!inspection?.media || !inspection.candidate) return false;
 	    const previous = activeCandidate;
 	    const next = inspection.candidate;
-	    const preservePosition = !!previous && selectButton?.style.display !== 'none' && previous.shortcode === next.shortcode &&
-	      (previous.slideIndex !== next.slideIndex || itemKey(previous) !== itemKey(next));
+	    const samePost = !!previous && previous.shortcode === next.shortcode;
+	    const slideChanged = samePost && (previous.slideIndex !== next.slideIndex || itemKey(previous) !== itemKey(next));
+	    const anchorWasAvailable = buttonAnchorShortcode === next.shortcode && !!selectButton?.style.left && !!selectButton?.style.top;
+	    const previousAnchorSlideIndex = buttonAnchorSlideIndex;
+	    const selectorWasVisible = selectButton?.style.display !== 'none';
+	    const anchorSlideChanged = anchorWasAvailable && Number.isInteger(previousAnchorSlideIndex) && previousAnchorSlideIndex !== next.slideIndex;
 	    clearTimer();
 	    activeMedia = inspection.media;
 	    activeCandidate = next;
-	    positionButton(activeMedia, activeCandidate, preservePosition);
+	    rememberScrollPositions(activeMedia);
+	    positionButton(activeMedia, activeCandidate, forcePosition, reason);
+	    if ((slideChanged || anchorSlideChanged) && anchorWasAvailable && !forcePosition) {
+	      debugLog('selector-anchor-preserved', {
+	        mediaType: next.mediaType,
+	        shortcodeLength: String(next.shortcode || '').length,
+	        fromSlideIndex: Number.isInteger(previousAnchorSlideIndex) ? previousAnchorSlideIndex : previous?.slideIndex ?? null,
+	        toSlideIndex: next.slideIndex,
+	        selectorWasVisible,
+	        left: selectButton?.style.left || '',
+	        top: selectButton?.style.top || '',
+	      });
+	    }
 	    return true;
 	  }
 
@@ -647,29 +754,69 @@ internal static class InstagramMediaOverlayScript
 	    }
 	  }
 
-	  function updatePosition() {
+	  function updatePosition(reason = 'layout') {
 	    if (activeMedia && activeCandidate && document.contains(activeMedia) && selectButton?.style.display !== 'none') {
 	      if (lastPointer && !selectButton?.matches(':hover') && !mediaContainsPoint(activeMedia, lastPointer)) {
-	        refreshMediaUnderPointer();
+	        refreshMediaUnderPointer(true, reason);
 	        return;
 	      }
-	      const previous = activeCandidate;
 	      const candidate = candidateFor(activeMedia);
 	      if (candidate) {
-	        const preservePosition = !!previous && previous.shortcode === candidate.shortcode &&
-	          (previous.slideIndex !== candidate.slideIndex || itemKey(previous) !== itemKey(candidate));
 	        activeCandidate = candidate;
-	        positionButton(activeMedia, candidate, preservePosition);
+	        rememberScrollPositions(activeMedia);
+	        positionButton(activeMedia, candidate, true, reason);
 	      } else hideSelectSoon();
 	    }
 	  }
 
-	  function refreshMediaUnderPointer() {
+	  function onDocumentScroll(event) {
+	    const target = event?.target;
+	    if (target instanceof Element) {
+	      const current = { left: Number(target.scrollLeft) || 0, top: Number(target.scrollTop) || 0 };
+	      const previous = scrollOffsets.get(target);
+	      scrollOffsets.set(target, current);
+	      const deltaLeft = previous ? current.left - previous.left : 0;
+	      const deltaTop = previous ? current.top - previous.top : 0;
+	      if (previous && Math.abs(deltaLeft) > 0.5 && Math.abs(deltaTop) < 0.5) {
+	        if (activeMedia && target.contains(activeMedia) && selectButton?.style.display !== 'none' && !horizontalScrollLogged.has(target)) {
+	          horizontalScrollLogged.add(target);
+	          debugLog('horizontal-scroll-anchor-held', {
+	            containerId: diagnosticRootId(target),
+	            containerTag: String(target.tagName || 'unknown').toLowerCase(),
+	            deltaLeft: Math.round(deltaLeft),
+	            shortcodeLength: String(activeCandidate?.shortcode || '').length,
+	            slideIndex: activeCandidate?.slideIndex ?? null,
+	          });
+	        }
+	        return;
+	      }
+	    }
+	    if (selectButton?.style.display === 'none') {
+	      buttonAnchorShortcode = '';
+	      buttonAnchorSlideIndex = null;
+	    }
+	    updatePosition('scroll');
+	  }
+
+	  function refreshAfterRouteChange() {
+	    if (location.pathname !== lastObservedRoute) {
+	      lastObservedRoute = location.pathname;
+	      routeEpoch++;
+	      debugLog('route-changed', { route: routeKind() });
+	    }
+	    if (selectButton?.style.display === 'none') {
+	      buttonAnchorShortcode = '';
+	      buttonAnchorSlideIndex = null;
+	    }
+	    refreshMediaUnderPointer(true, 'route-change');
+	  }
+
+	  function refreshMediaUnderPointer(forcePosition = false, reason = 'refresh') {
 	    if (!lastPointer) return;
 	    const target = document.elementFromPoint(lastPointer.x, lastPointer.y);
 	    if (target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) return;
 	    const inspection = inspectMediaTarget(target, lastPointer);
-	    if (!activateInspectedCandidate(inspection) && activeMedia && !selectButton?.matches(':hover')) {
+	    if (!activateInspectedCandidate(inspection, forcePosition, reason) && activeMedia && !selectButton?.matches(':hover')) {
 	      hideSelectSoon();
 	    }
 	  }
@@ -728,21 +875,25 @@ internal static class InstagramMediaOverlayScript
 	    document.addEventListener('mousemove', onPointerMove, { capture: true, passive: true });
 	    document.addEventListener('mouseout', onPointerOut, true);
 	    document.addEventListener('load', event => {
-	      if (event.target?.matches?.('img,video')) refreshMediaUnderPointer('media-load');
+	      if (event.target?.matches?.('img,video')) refreshMediaUnderPointer(false, 'media-load');
 	    }, true);
 	    document.addEventListener('loadedmetadata', event => {
-	      if (event.target?.tagName === 'VIDEO') refreshMediaUnderPointer('video-metadata');
+	      if (event.target?.tagName === 'VIDEO') refreshMediaUnderPointer(false, 'video-metadata');
 	    }, true);
 	    document.addEventListener('click', updateCarouselIndex, true);
-	    document.addEventListener('scroll', updatePosition, true);
-	    window.addEventListener('resize', updatePosition, { passive: true });
-	    window.addEventListener('popstate', () => refreshMediaUnderPointer());
+	    document.addEventListener('scroll', onDocumentScroll, true);
+	    window.addEventListener('resize', () => {
+	      if (selectButton?.style.display === 'none') {
+	        buttonAnchorShortcode = '';
+	        buttonAnchorSlideIndex = null;
+	      }
+	      updatePosition('resize');
+	    }, { passive: true });
+	    window.addEventListener('popstate', refreshAfterRouteChange);
 	    if (!routePollTimer) {
 	      routePollTimer = window.setInterval(() => {
 	        if (location.pathname === lastObservedRoute) return;
-	        lastObservedRoute = location.pathname;
-	        debugLog('route-changed', { route: routeKind() });
-	        refreshMediaUnderPointer();
+	        refreshAfterRouteChange();
 	      }, 400);
 	    }
 	    const observer = new MutationObserver(() => {
@@ -750,7 +901,7 @@ internal static class InstagramMediaOverlayScript
 	      mutationRefreshTimer = setTimeout(() => {
 	        mutationRefreshTimer = 0;
 	        if (!document.getElementById('inst-sanity-select')) { debugLog('overlay-ui-removed-reinstalling'); window.__instSanityMediaOverlayInstalled = false; install(); return; }
-	        refreshMediaUnderPointer();
+	        refreshMediaUnderPointer(false, 'mutation');
 	      }, 80);
 	    });
 	    observer.observe(document.documentElement, {
