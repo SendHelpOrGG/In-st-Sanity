@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.025'',added:') -or
+        -not $document.Content.Contains('version:''2.026'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -583,6 +583,14 @@ try {
         -not $queueServiceSource.Contains('var key = $"{shortcode}|{type}|{mediaIdentity}";') -or
         -not $queueServiceSource.Contains('SHA256.HashData(Encoding.UTF8.GetBytes(key))') -or
         -not $queueServiceSource.Contains('_{identitySuffix}{extension}') -or
+        -not $queueServiceSource.Contains('_full_{identitySuffix}{extension}') -or
+        -not $queueServiceSource.Contains('ResolveQueuedPhotoUrlAsync') -or
+        -not $queueServiceSource.Contains('FindQueuedPhotoSlide') -or
+        -not $queueServiceSource.Contains('var media = post.Pictures[slideIndex]') -or
+        -not $queueServiceSource.Contains('IsFullSizeResolvedPhoto') -or
+        -not $queueServiceSource.Contains('ResolvedMedia media) => media.HasFullSizeImage') -or
+        -not $queueServiceSource.Contains('photo_full_size_unavailable') -or
+        -not $queueServiceSource.Contains('Always resolve the post''s selected slide') -or
         -not $queueServiceSource.Contains('ResolveQueuedVideoUrlAsync') -or
         -not $queueServiceSource.Contains('IsUnsupportedVideoStream') -or
         -not $queueServiceSource.Contains('item.SlideIndex >= post.Pictures.Count') -or
@@ -676,8 +684,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.025</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>94</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.026</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>95</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 
@@ -952,6 +960,9 @@ try {
         $mediaBuildSource.Contains('media["edge_sidecar_to_children"]?["edges"] is JsonArray edges') -and
         $mediaBuildSource.Contains('if (edge?["node"] is JsonNode slide)') -and
         $mediaBuildSource.Contains('foreach (var slide in slides)') -and
+        $mediaBuildSource.Contains('HasFullSizeImage = HasFullSizeImageCandidate(slide),') -and
+        $resolverSource.Contains('static bool HasFullSizeImageCandidate(JsonNode slide)') -and
+        $resolverSource.Contains('BestCandidate(slide["image_versions2"]?["candidates"]).Length > 0') -and
         $mediaBuildSource.Contains('pictures.Add(new ResolvedMedia'))) {
         throw 'The target media holder must yield its true carousel child list, not only its cover preview.'
     }
@@ -987,7 +998,8 @@ try {
     $openGraphEnd = $resolverSource.IndexOf('static string PickThumbnailImage', $openGraphStart, [System.StringComparison]::Ordinal)
     if ($openGraphEnd -le $openGraphStart) { throw 'The Open Graph parser boundary was not found.' }
     $openGraphSource = $resolverSource.Substring($openGraphStart, $openGraphEnd - $openGraphStart)
-    if (-not $openGraphSource.Contains('FullResolved = false,')) {
+    if (-not $openGraphSource.Contains('FullResolved = false,') -or
+        -not $openGraphSource.Contains('HasFullSizeImage = false,')) {
         throw 'An Open Graph cover must remain a preview, not count as full-resolution media.'
     }
 
@@ -995,6 +1007,7 @@ try {
     $saveFreeSource = Get-Content -LiteralPath $saveFreePath -Raw
     if (-not ($saveFreeSource.Contains('var bestUrl = ExtractJwtUrl(bestToken);') -and
         $saveFreeSource.Contains('bestUrl.Length > 0 ? bestUrl : thumbnailUrl;') -and
+        $saveFreeSource.Contains('HasFullSizeImage = !isVideo && bestUrl.Length > 0 && (options.Count > 0 || download.Success),') -and
         $saveFreeSource.Contains('ImgUrl = imageUrl,') -and
         $saveFreeSource.Contains('RawUrl = imageUrl,'))) {
         throw 'Save-Free full media and the viewer/download raw URL must use its selected best image URL.'

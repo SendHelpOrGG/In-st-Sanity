@@ -26,8 +26,11 @@ public sealed class ResolvedMedia
 	/// <summary>Playable MP4 when the slide is a video; empty otherwise.</summary>
 	public string VideoUrl { get; init; } = string.Empty;
 
-	/// <summary>Where this slide was obtained: "direct" (scontent cdn) or "api" (save-free).</summary>
+	/// <summary>Where this slide was obtained: "direct" (Instagram) or "api" (save-free/Open Graph).</summary>
 	public string Origin { get; init; } = string.Empty;
+
+	/// <summary>True only when the resolver found a non-thumbnail photo candidate suitable for original-size saving.</summary>
+	internal bool HasFullSizeImage { get; init; }
 }
 
 /// <summary>
@@ -741,12 +744,15 @@ public sealed class InstagramResolver
 		{
 			var page = direct[index];
 			var other = fallback[index];
-			var image = page.ImgUrl.Length > 0 ? page.ImgUrl : other.ImgUrl;
+			var usePageImage = page.ImgUrl.Length > 0 &&
+				(page.HasFullSizeImage || !other.HasFullSizeImage || other.ImgUrl.Length == 0);
+			var image = usePageImage ? page.ImgUrl : other.ImgUrl;
+			var hasFullSizeImage = usePageImage ? page.HasFullSizeImage : other.HasFullSizeImage;
 			var video = page.VideoUrl.Length > 0 ? page.VideoUrl : other.VideoUrl;
 			var thumbnail = page.ThumbnailUrl.Length > 0
 				? page.ThumbnailUrl
 				: (other.ThumbnailUrl.Length > 0 ? other.ThumbnailUrl : image);
-			var origin = page.ImgUrl.Length > 0 ? page.Origin : other.Origin;
+			var origin = usePageImage ? page.Origin : other.Origin;
 			// if image came from direct but video from fallback, the slide used both -> keep direct origin (mixed will be at post level)
 			if (other.VideoUrl.Length > 0 && page.VideoUrl.Length == 0 && other.Origin == "api" && page.Origin == "direct" && other.IsVideo)
 				origin = other.Origin; // video supplemented
@@ -759,6 +765,7 @@ public sealed class InstagramResolver
 				IsVideo = page.IsVideo || other.IsVideo,
 				VideoUrl = video,
 				Origin = origin,
+				HasFullSizeImage = hasFullSizeImage,
 			});
 		}
 
@@ -1225,6 +1232,7 @@ public sealed class InstagramResolver
 				IsVideo = isVideo,
 				VideoUrl = videoUrl,
 				Origin = "direct",
+				HasFullSizeImage = HasFullSizeImageCandidate(slide),
 			});
 		}
 
@@ -1357,6 +1365,7 @@ public sealed class InstagramResolver
 				IsVideo = isVideo,
 				VideoUrl = isVideo ? video : string.Empty,
 				Origin = "api",
+				HasFullSizeImage = false,
 			},
 		};
 
@@ -1446,6 +1455,12 @@ public sealed class InstagramResolver
 
 		return bestUrl.Length > 0 ? bestUrl : smallestUrl;
 	}
+
+	static bool HasFullSizeImageCandidate(JsonNode slide) =>
+		!string.IsNullOrWhiteSpace(Text(slide["display_url"])) ||
+		BestCandidate(slide["image_versions2"]?["candidates"]).Length > 0 ||
+		BestCandidate(slide["display_resources"]).Length > 0 ||
+		!string.IsNullOrWhiteSpace(Text(slide["display_uri"]));
 
 	static string PickImage(JsonNode slide)
 	{

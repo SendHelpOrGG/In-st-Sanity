@@ -271,6 +271,7 @@ public sealed class SaveFreeClient
 				IsVideo = isVideo,
 				VideoUrl = isVideo ? bestUrl : string.Empty,
 				Origin = "api",
+				HasFullSizeImage = !isVideo && bestUrl.Length > 0 && (options.Count > 0 || download.Success),
 			});
 		}
 

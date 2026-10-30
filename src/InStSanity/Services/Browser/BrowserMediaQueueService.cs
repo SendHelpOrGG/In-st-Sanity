@@ -227,7 +227,9 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			{
 				if (cancellation.IsCancellationRequested) break;
 				_currentIndex = index + 1;
-				_status = $"Downloading {index + 1} of {batch.Length} · {(item.IsVideo ? "video" : "photo")}";
+				_status = item.IsVideo
+					? $"Downloading {index + 1} of {batch.Length} · video"
+					: $"Resolving full-size photo {index + 1} of {batch.Length}…";
 			}
 			Publish();
 
@@ -259,13 +261,39 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 							rawUrl = string.Empty;
 						}
 					}
+					else if (!item.IsVideo)
+					{
+						// Instagram's visible <img> URL is often a responsive/preview variant.
+						// Always resolve the post's selected slide and download its best image URL.
+						try
+						{
+							rawUrl = await ResolveQueuedPhotoUrlAsync(item, cancellation.Token).ConfigureAwait(false) ?? string.Empty;
+						}
+						catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+						{
+							throw;
+						}
+						catch (Exception)
+						{
+							rawUrl = string.Empty;
+						}
+					}
 
 					if (string.IsNullOrWhiteSpace(rawUrl))
 					{
-						result = new SelectedMediaDownloadFileResult(item.Filename, Ok: false, Error: "video_source_unavailable");
+						result = new SelectedMediaDownloadFileResult(
+							item.Filename,
+							Ok: false,
+							Error: item.IsVideo ? "video_source_unavailable" : "photo_full_size_unavailable");
 					}
 					else
 					{
+						lock (_gate)
+						{
+							_status = $"Downloading {index + 1} of {batch.Length} · {(item.IsVideo ? "video" : "full-size photo")}";
+						}
+						Publish();
+
 						var downloadItem = new SelectedMediaDownloadItem(
 							Filename: item.Filename,
 							Shortcode: item.Shortcode,
@@ -381,6 +409,64 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		return error.Length == 0;
 	}
 
+	async Task<string?> ResolveQueuedPhotoUrlAsync(BrowserQueuedMedia item, CancellationToken cancellationToken)
+	{
+		var postUrl = $"https://www.instagram.com/p/{Uri.EscapeDataString(item.Shortcode)}/";
+		var post = await resolver.ResolveAsync(postUrl, cancellationToken).ConfigureAwait(false);
+		if (post is null || !post.Ok || post.Pictures.Count == 0) return null;
+
+		var slideIndex = FindQueuedPhotoSlide(item, post.Pictures);
+		if (slideIndex < 0) return null;
+
+		var media = post.Pictures[slideIndex];
+		if (media.IsVideo || !IsFullSizeResolvedPhoto(media)) return null;
+
+		var imageUrl = media.ImgUrl;
+		return SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(imageUrl) ? imageUrl : null;
+	}
+
+	static bool IsFullSizeResolvedPhoto(ResolvedMedia media) => media.HasFullSizeImage;
+
+	static int FindQueuedPhotoSlide(BrowserQueuedMedia item, IReadOnlyList<ResolvedMedia> pictures)
+	{
+		var matchingIndices = new List<int>();
+		for (var index = 0; index < pictures.Count; index++)
+		{
+			if (!pictures[index].IsVideo && HasSameMediaPath(item.RawUrl, pictures[index].ImgUrl))
+			{
+				matchingIndices.Add(index);
+			}
+		}
+
+		if (matchingIndices.Count == 1) return matchingIndices[0];
+		if (matchingIndices.Contains(item.SlideIndex)) return item.SlideIndex;
+		if (item.SlideIndex >= 0 && item.SlideIndex < pictures.Count && !pictures[item.SlideIndex].IsVideo)
+		{
+			return item.SlideIndex;
+		}
+
+		var photoIndices = Enumerable.Range(0, pictures.Count).Where(index => !pictures[index].IsVideo).ToArray();
+		return photoIndices.Length == 1 ? photoIndices[0] : -1;
+	}
+
+	static bool HasSameMediaPath(string? firstUrl, string? secondUrl)
+	{
+		if (!Uri.TryCreate(firstUrl, UriKind.Absolute, out var first) ||
+			!Uri.TryCreate(secondUrl, UriKind.Absolute, out var second))
+		{
+			return false;
+		}
+
+		var firstPath = Uri.UnescapeDataString(first.AbsolutePath);
+		var secondPath = Uri.UnescapeDataString(second.AbsolutePath);
+		if (firstPath.Equals(secondPath, StringComparison.OrdinalIgnoreCase)) return true;
+
+		var firstFileName = firstPath[(firstPath.LastIndexOf('/') + 1)..];
+		var secondFileName = secondPath[(secondPath.LastIndexOf('/') + 1)..];
+		return firstFileName.Length > 0 &&
+			firstFileName.Equals(secondFileName, StringComparison.OrdinalIgnoreCase);
+	}
+
 	async Task<string?> ResolveQueuedVideoUrlAsync(BrowserQueuedMedia item, CancellationToken cancellationToken)
 	{
 		var postUrl = $"https://www.instagram.com/p/{Uri.EscapeDataString(item.Shortcode)}/";
@@ -476,7 +562,11 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		// Slide tracking can lag while Instagram reuses a carousel node. Keep distinct
 		// media on the same shortcode from colliding in the no-duplicates filename check.
 		var identitySuffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))[..8].ToLowerInvariant();
-		var filename = $"{shortcode}_slide{slideIndex + 1}_{identitySuffix}{extension}";
+		// Use a new photo filename marker so an already-saved preview-sized image from
+		// older versions does not make the full-size retry look like a duplicate.
+		var filename = isVideo
+			? $"{shortcode}_slide{slideIndex + 1}_{identitySuffix}{extension}"
+			: $"{shortcode}_slide{slideIndex + 1}_full_{identitySuffix}{extension}";
 		item = new BrowserQueuedMedia(key, shortcode, slideIndex, contentCount, isVideo, rawUrl, thumbnailUrl, filename, null);
 		error = string.Empty;
 		return true;
@@ -571,6 +661,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 	{
 		"folder_unavailable" => "Folder unavailable",
 		"video_source_unavailable" => "Video source unavailable",
+		"photo_full_size_unavailable" => "Full-size photo unavailable · check Instagram sign-in and retry",
 		"invalid_media_url" or "redirected_to_untrusted_host" => "Untrusted media URL",
 		"video_too_large" => "Video exceeds the 1 GB limit",
 		"image_too_large" => "Photo exceeds the 50 MB limit",
