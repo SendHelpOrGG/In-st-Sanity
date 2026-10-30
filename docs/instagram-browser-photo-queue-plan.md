@@ -30,11 +30,11 @@
 - The page sends versioned JSON actions: `overlay-ready`, `toggle-media`, `clear-queue`, `start-download`, and `cancel-download`. The host checks the HTTPS Instagram source origin, canonical Instagram post permalink/shortcode (including selections made from feed cards), JSON size/depth, media type/index, queue limit, and HTTPS Instagram/CDN media URLs. The overlay parses only an exact post/reel path, avoiding shortcode matches in query strings or nested paths, and falls back to the current canonical post path when viewing a post directly. Every redirect hop is revalidated before it is followed; the page cannot supply a folder or access a loopback/file URL.
 - `MainPage` reads only the needed Settings-folder/no-duplicate preferences from the app WebView and sends queue snapshots and the current theme palette back to the Instagram document. It records successful Browser downloads through the existing photo/video history writers.
 
-### Hover diagnostics
+### Overlay diagnostics
 
-- The injected script writes timestamped lifecycle and hover traces to the WebView console and sends compact `overlay-debug` bridge messages, including listener/install state, target class, media hit-test path/rejection reasons, button visibility, click-candidate summaries, and host-side queue validation errors. If Instagram targets a wrapper instead of the media element, the resolver also checks the hit-test stack and media descendants under the pointer.
-- Windows captures those marked diagnostic messages plus native WebView2 hookup, navigation, injection, and queue-bridge events in `%LOCALAPPDATA%\InStSanity\Logs\instagram-browser-hover.log`. The file rotates at 2 MB. It records media host and dimensions but omits signed media URLs and post shortcodes.
-- To share a reproduction, hover the problem image/video, close the app, then attach `instagram-browser-hover.log` from that folder.
+- The injected script keeps install/bridge, click-candidate, and queue-result diagnostics, but does not log per-hover media inspections or select-button position/hide events. The click summary omits full media URLs and post shortcodes.
+- Windows captures those marked messages plus native WebView2 hookup, navigation, injection, and queue-bridge events in `%LOCALAPPDATA%\InStSanity\Logs\instagram-browser-hover.log`. The file rotates at 2 MB.
+- To share a selection issue, click the queue button once, close the app, then attach `instagram-browser-hover.log` from that folder.
 
 ### Queue and downloader
 
