@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.018'',added:') -or
+        -not $document.Content.Contains('version:''2.019'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -491,6 +491,14 @@ try {
         -not $overlayScriptSource.Contains('const slideByRoot = new WeakMap();') -or
         -not $overlayScriptSource.Contains('function slideTrackingKey(root, shortcode)') -or
         -not $overlayScriptSource.Contains('function mediaPathIdentity(value)') -or
+        -not $overlayScriptSource.Contains('function hasPostPermalink(element)') -or
+        -not $overlayScriptSource.Contains('for (let ancestor = element.parentElement; ancestor && ancestor !== boundary && ancestor !== document.body; ancestor = ancestor.parentElement)') -or
+        -not $overlayScriptSource.Contains('postRootFor(directMedia || target)') -or
+        -not $overlayScriptSource.Contains('const boundary = dialog || main || document.body;') -or
+        -not $overlayScriptSource.Contains('element.closest(''article,[role="article"]'')') -or
+        -not $overlayScriptSource.Contains("window.addEventListener('popstate', () => refreshMediaUnderPointer())") -or
+        -not $overlayScriptSource.Contains("debugLog('route-changed'") -or
+        -not $overlayScriptSource.Contains('if (!routePollTimer)') -or
         -not $overlayScriptSource.Contains('const identity = item.rawUrl ? mediaPathIdentity(item.rawUrl) : `slide:') -or
         -not $overlayScriptSource.Contains('if (typeof item.key === ''string'' && item.key) return item.key;') -or
         -not $overlayScriptSource.Contains('function positionButton(media, candidate, preservePosition = false)') -or
@@ -540,9 +548,10 @@ try {
         -not $overlayScriptSource.Contains("source[src],source[data-src]") -or
         -not $overlayScriptSource.Contains('function mediaContainsPoint(media, point, hitStack = null, eventTarget = null)') -or
         -not $overlayScriptSource.Contains('const hitInMedia = hits.some(hit => hit instanceof Element && (hit === media || media.contains(hit)));') -or
-        -not $overlayScriptSource.Contains('const eventTargetsMedia = eventTarget instanceof Element && (eventTarget === media || media.contains(eventTarget));') -or
+        -not $overlayScriptSource.Contains('const eventTargetsMedia = eventTarget instanceof Element && (eventTarget === media || media.contains(eventTarget) || eventTarget.contains(media));') -or
         -not $overlayScriptSource.Contains('style.overflowX') -or
         -not $overlayScriptSource.Contains('style.overflowY') -or
+        -not $overlayScriptSource.Contains("style.display === 'inline' || style.display === 'contents'") -or
         -not $overlayScriptSource.Contains('if (!mediaContainsPoint(possibleMedia, point, hits, eventTarget)) return false;') -or
         -not $overlayScriptSource.Contains('const photoItems = state.items.filter(item => item.isVideo !== true);') -or
         -not $overlayScriptSource.Contains('const videoItems = state.items.filter(item => item.isVideo === true);') -or
@@ -585,8 +594,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.018</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>87</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.019</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>88</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 
