@@ -48,7 +48,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 	public const int MaxItems = 50;
 	const int MaxMessageBytes = 8 * 1024;
 	static readonly Regex PostPathRegex = new(
-		"^/(?:p|reel|reels|tv)/(?<shortcode>[A-Za-z0-9_-]{1,64})/?$",
+		"^/(?:[A-Za-z0-9._]{1,30}/)?(?:p|reel|reels|tv)/(?<shortcode>[A-Za-z0-9_-]{1,64})/?$",
 		RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
 	readonly object _gate = new();

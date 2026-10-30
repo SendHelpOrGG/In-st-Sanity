@@ -15,7 +15,7 @@ internal static class InstagramMediaOverlayScript
 	    } catch (_) { }
 	  }
 	  function routeKind() {
-	    const match = String(location.pathname || '').match(/^\/(p|reels|reel|tv)\//i);
+	    const match = String(location.pathname || '').match(/^\/(?:[A-Za-z0-9._]{1,30}\/)?(p|reels|reel|tv)\//i);
 	    return match ? match[1].toLowerCase() : 'feed-or-other';
 	  }
 
@@ -27,7 +27,7 @@ internal static class InstagramMediaOverlayScript
 	    return;
 	  }
 
-	  const postPattern = /^\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;
+	  const postPattern = /^\/(?:[A-Za-z0-9._]{1,30}\/)?(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;
 	  const state = { items: [], isDownloading: false, currentIndex: 0, total: 0, status: '', theme: {} };
 	  const slideByRoot = new WeakMap();
 	  let activeMedia = null;
@@ -40,6 +40,8 @@ internal static class InstagramMediaOverlayScript
 	  let routeEpoch = 0;
 	  let nextDiagnosticRootId = 1;
 	  const inspectionLogKeys = new WeakMap();
+	  let postPermalinkCache = [];
+	  let postPermalinkCacheAt = 0;
 	  const scrollOffsets = new WeakMap();
 	  const horizontalScrollLogged = new WeakSet();
 	  const diagnosticRootIds = new WeakMap();
@@ -343,26 +345,103 @@ internal static class InstagramMediaOverlayScript
 	    return boundary;
 	  }
 
-	  function findPostShortcode(media, root) {
-	    const pageShortcode = parseShortcode(location.pathname);
-	    if (pageShortcode) return pageShortcode;
-	    const nearby = media.closest('a[href]');
-	    const direct = nearby && parseShortcode(nearby.href);
-	    if (direct) return direct;
-	    for (const link of root.querySelectorAll('a[href]')) {
-	      const shortcode = parseShortcode(link.href);
-	      if (shortcode) return shortcode;
+	  // Feed cards may lose their article role. Match a media element to the nearest
+	  // canonical post link by screen geometry instead of taking the first feed link.
+	  function matchingPostPermalinks(root, shortcode = '') {
+	    const links = [];
+	    try {
+	      if (root instanceof Element && root.matches('a[href]')) links.push(root);
+	      links.push(...Array.from(root?.querySelectorAll?.('a[href]') || []));
+	    } catch (_) { }
+	    const seen = new Set();
+	    return links.flatMap(link => {
+	      if (seen.has(link)) return [];
+	      seen.add(link);
+	      const code = parseShortcode(link.href || link.getAttribute?.('href'));
+	      return code && (!shortcode || code === shortcode) ? [{ link, shortcode: code }] : [];
+	    });
+	  }
+
+	  function allDocumentPostPermalinks() {
+	    const now = Date.now();
+	    if (now - postPermalinkCacheAt > 250) {
+	      postPermalinkCache = matchingPostPermalinks(document);
+	      postPermalinkCacheAt = now;
 	    }
-	    return parseShortcode(location.pathname);
+	    return postPermalinkCache;
+	  }
+
+	  function postLinkDistance(media, link) {
+	    try {
+	      const mediaRect = media.getBoundingClientRect();
+	      const linkRect = link.getBoundingClientRect();
+	      if (![mediaRect.left, mediaRect.top, mediaRect.right, mediaRect.bottom, linkRect.left, linkRect.top, linkRect.right, linkRect.bottom].every(Number.isFinite)) return Infinity;
+	      const dx = Math.max(0, mediaRect.left - linkRect.right, linkRect.left - mediaRect.right);
+	      const dy = Math.max(0, mediaRect.top - linkRect.bottom, linkRect.top - mediaRect.bottom);
+	      return Math.hypot(dx, dy);
+	    } catch (_) { return Infinity; }
+	  }
+
+	  function findRelatedPostPermalink(media, root, shortcode = '') {
+	    const localLinks = matchingPostPermalinks(root, shortcode);
+	    const localLinkCount = matchingPostPermalinks(root).length;
+	    const broadRoot = root === document.body || String(root?.tagName || '').toUpperCase() === 'MAIN' || localLinkCount > 12;
+	    let candidates = localLinks;
+	    let scope = 'post-root';
+	    let documentLinkCount = localLinkCount;
+	    if (broadRoot || !candidates.length) {
+	      const allGlobalLinks = allDocumentPostPermalinks();
+	      const globalLinks = shortcode ? allGlobalLinks.filter(entry => entry.shortcode === shortcode) : allGlobalLinks;
+	      documentLinkCount = allGlobalLinks.length;
+	      if (globalLinks.length) {
+	        candidates = globalLinks;
+	        scope = 'document';
+	      }
+	    }
+	    const ranked = candidates
+	      .map(entry => ({ ...entry, distance: postLinkDistance(media, entry.link) }))
+	      .sort((left, right) => left.distance - right.distance);
+	    const best = ranked[0] || null;
+	    const mediaRect = media.getBoundingClientRect();
+	    const maxDistance = Math.max(480, Math.min(800, Math.max(mediaRect.width, mediaRect.height) * 1.1));
+	    const selected = best && ((!broadRoot && localLinks.length > 0) || best.distance <= maxDistance)
+	      ? best
+	      : null;
+	    return {
+	      ...selected,
+	      scope: selected ? scope : 'none',
+	      localLinkCount,
+	      documentLinkCount,
+	      nearestDistance: Number.isFinite(best?.distance) ? Math.round(best.distance) : null,
+	    };
+	  }
+
+	  function resolvePostIdentity(media, root, expectedShortcode = '', diagnostics = null) {
+	    const pageShortcode = parseShortcode(location.pathname);
+	    const nearby = media.closest('a[href]');
+	    const directShortcode = nearby && parseShortcode(nearby.href);
+	    const related = findRelatedPostPermalink(media, root, expectedShortcode || pageShortcode || directShortcode || '');
+	    const shortcode = expectedShortcode || pageShortcode || directShortcode || related.shortcode || '';
+	    const relatedUrl = related.link && related.shortcode === shortcode ? related.link.href : '';
+	    const postUrl = directShortcode === shortcode ? nearby.href : relatedUrl ||
+	      (pageShortcode === shortcode ? location.origin + location.pathname : '');
+	    if (diagnostics) {
+	      Object.assign(diagnostics, {
+	        postIdentitySource: expectedShortcode ? 'expected' : pageShortcode ? 'page-route' : directShortcode ? 'media-link' : related.shortcode ? related.scope : 'none',
+	        postRootPermalinkCount: related.localLinkCount,
+	        documentPermalinkCount: related.documentLinkCount,
+	        nearestPermalinkDistance: related.nearestDistance,
+	      });
+	    }
+	    return { shortcode, postUrl };
+	  }
+
+	  function findPostShortcode(media, root) {
+	    return resolvePostIdentity(media, root).shortcode;
 	  }
 
 	  function findPostPermalink(media, root, shortcode) {
-	    const nearby = media.closest('a[href]');
-	    if (nearby && parseShortcode(nearby.href) === shortcode) return nearby.href;
-	    for (const link of root.querySelectorAll('a[href]')) {
-	      if (parseShortcode(link.href) === shortcode) return link.href;
-	    }
-	    return parseShortcode(location.pathname) === shortcode ? location.origin + location.pathname : '';
+	    return resolvePostIdentity(media, root, shortcode).postUrl;
 	  }
 
 	  function mediaVisibility(element) {
@@ -458,14 +537,20 @@ internal static class InstagramMediaOverlayScript
 	  }
 
 	  function candidateFor(media, diagnostics = null) {
-	    const reject = reason => { if (diagnostics) diagnostics.reason = reason; return null; };
+	    const reject = (reason, details = {}) => { if (diagnostics) Object.assign(diagnostics, details, { reason }); return null; };
 	    try {
 	      if (!media) return reject('missing-media');
 	      const tag = String(media.tagName || '').toUpperCase();
 	      const isVideo = tag === 'VIDEO';
 	      if (!isVideo && tag !== 'IMG') return reject('not-photo-or-video');
 	      const visibility = mediaVisibility(media);
-	      if (visibility.reason !== 'visible') return reject(visibility.reason || 'not-visible');
+	      if (diagnostics) Object.assign(diagnostics, {
+	        geometry: visibility.geometry || null,
+	        intrinsicWidth: isVideo ? Number(media.videoWidth) || 0 : Number(media.naturalWidth) || 0,
+	        intrinsicHeight: isVideo ? Number(media.videoHeight) || 0 : Number(media.naturalHeight) || 0,
+	        decorativeAltMatch: !isVideo && /profile|avatar|logo|icon/i.test(media.alt || ''),
+	      });
+	      if (visibility.reason !== 'visible') return reject(visibility.reason || 'not-visible', visibility);
 	      if (!isVideo && (media.naturalWidth < 160 || media.naturalHeight < 160)) return reject('image-too-small');
 	      if (!isVideo && /profile|avatar|logo|icon/i.test(media.alt || '')) return reject('decorative-image');
 	      if (isVideo && media.closest('#inst-sanity-tray')) return reject('queue-video');
@@ -474,10 +559,11 @@ internal static class InstagramMediaOverlayScript
 	      if (rawUrl && (!/^https:\/\//i.test(rawUrl) || /\.m3u8(?:$|\?)/i.test(rawUrl))) return reject('unsupported-source');
 
 	      const root = postRootFor(media);
-	      const shortcode = findPostShortcode(media, root);
-	      if (!shortcode) return reject('post-shortcode-missing');
-	      const postUrl = findPostPermalink(media, root, shortcode);
-	      if (!postUrl) return reject('post-permalink-missing');
+	      const postIdentity = resolvePostIdentity(media, root, '', diagnostics);
+	      const shortcode = postIdentity.shortcode;
+	      if (!shortcode) return reject('post-shortcode-missing', { geometry: visibility.geometry });
+	      const postUrl = postIdentity.postUrl;
+	      if (!postUrl) return reject('post-permalink-missing', { geometry: visibility.geometry });
 	      const { slideIndex, contentCount } = slideInfo(root, shortcode);
 	      const thumbnailUrl = isVideo ? (media.poster || '') : (media.currentSrc || media.src || '');
 	      return {
@@ -542,19 +628,35 @@ internal static class InstagramMediaOverlayScript
 	    activeCandidate = candidate;
 	  }
 
-	  function mediaContainsPoint(media, point, hitStack = null, eventTarget = null) {
-	    if (!(media instanceof Element) || !point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return false;
+	  // Some non-interactive Instagram spans sit above a photo. Permit only that
+	  // nearby frame hit; media bounds/clips still apply and controls stay excluded.
+	  function isRelatedMediaFrameTarget(media, eventTarget) {
+	    if (!(media instanceof Element) || !(eventTarget instanceof Element) || eventTarget === media) return false;
+	    const control = eventTarget.closest('button,input,select,textarea,[role="button"],[role="menuitem"],[contenteditable="true"]');
+	    if (control && control !== media && !media.contains(control)) return false;
+	    let depth = 0;
+	    for (let ancestor = eventTarget; ancestor && ancestor !== document.body && depth < 7; ancestor = ancestor.parentElement, depth++) {
+	      if (!ancestor.contains(media)) continue;
+	      return (ancestor.querySelectorAll('img,video') || []).length <= 2;
+	    }
+	    return false;
+	  }
+
+	  function mediaContainsPoint(media, point, hitStack = null, eventTarget = null, diagnostics = null) {
+	    const reject = (reason, details = {}) => { if (diagnostics) Object.assign(diagnostics, details, { reason }); return false; };
+	    if (!(media instanceof Element) || !point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return reject('invalid-media-or-point');
 	    try {
 	      const rect = media.getBoundingClientRect();
-	      if (point.x < rect.left || point.x > rect.right || point.y < rect.top || point.y > rect.bottom) return false;
+	      const geometry = { width: Math.round(rect.width), height: Math.round(rect.height), left: Math.round(rect.left), top: Math.round(rect.top), right: Math.round(rect.right), bottom: Math.round(rect.bottom) };
+	      if (point.x < rect.left || point.x > rect.right || point.y < rect.top || point.y > rect.bottom) return reject('outside-media-bounds', { geometry });
 
 	      let visibleOpacity = 1;
 	      for (let ancestor = media; ancestor; ancestor = ancestor.parentElement) {
 	        const style = getComputedStyle(ancestor);
-	        if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+	        if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return reject('hidden-by-ancestor', { geometry });
 	        const opacity = Number(style.opacity);
 	        if (Number.isFinite(opacity)) visibleOpacity *= opacity;
-	        if (visibleOpacity <= 0.05) return false;
+	        if (visibleOpacity <= 0.05) return reject('transparent-ancestor', { geometry });
 
 	        if (ancestor === media || style.display === 'inline' || style.display === 'contents') continue;
 	        const clipsX = ['hidden', 'clip', 'scroll', 'auto', 'overlay'].includes(style.overflowX);
@@ -567,15 +669,24 @@ internal static class InstagramMediaOverlayScript
 	        const clipTop = clipRect.top + (ancestor.clientTop || 0) * scaleY;
 	        const clipRight = clipLeft + (ancestor.clientWidth || 0) * scaleX;
 	        const clipBottom = clipTop + (ancestor.clientHeight || 0) * scaleY;
-	        if (clipsX && (point.x < clipLeft || point.x > clipRight)) return false;
-	        if (clipsY && (point.y < clipTop || point.y > clipBottom)) return false;
+	        if (clipsX && (point.x < clipLeft || point.x > clipRight)) return reject('outside-horizontal-clip', { geometry });
+	        if (clipsY && (point.y < clipTop || point.y > clipBottom)) return reject('outside-vertical-clip', { geometry });
 	      }
 
 	      const hits = Array.isArray(hitStack) ? hitStack : pointHitStack(point);
 	      const hitInMedia = hits.some(hit => hit instanceof Element && (hit === media || media.contains(hit)));
 	      const eventTargetsMedia = eventTarget instanceof Element && (eventTarget === media || media.contains(eventTarget) || eventTarget.contains(media));
-	      return hits.length === 0 || hitInMedia || eventTargetsMedia;
-	    } catch (_) { return false; }
+	      const relatedFrameTarget = isRelatedMediaFrameTarget(media, eventTarget);
+	      if (hits.length === 0 || hitInMedia || eventTargetsMedia || relatedFrameTarget) {
+	        if (diagnostics && relatedFrameTarget && !hitInMedia && !eventTargetsMedia) diagnostics.relatedMediaFrameHit = true;
+	        return true;
+	      }
+	      return reject('hit-stack-miss', {
+	        geometry,
+	        topHitTags: hits.slice(0, 4).map(hit => String(hit?.tagName || 'unknown').toLowerCase()),
+	        eventTargetTag: String(eventTarget?.tagName || 'none').toLowerCase(),
+	      });
+	    } catch (_) { return reject('hit-test-exception'); }
 	  }
 
 	  function pointHitStack(point) {
@@ -604,20 +715,31 @@ internal static class InstagramMediaOverlayScript
 	    let mediaChecks = 0;
 	    let hitTestRejected = 0;
 	    let candidateRejected = 0;
+	    const hitTestRejectReasons = {};
+	    const hitTestRejectExamples = [];
 	    const candidateRejectReasons = {};
+	    const candidateRejectDetails = [];
 	    const directMedia = target.closest('img,video');
 	    const tryMedia = possibleMedia => {
 	      if (!possibleMedia || seen.has(possibleMedia) || possibleMedia.closest('#inst-sanity-tray,#inst-sanity-select')) return false;
 	      seen.add(possibleMedia);
 	      mediaChecks++;
-	      const eventTarget = possibleMedia === directMedia || possibleMedia.contains(target) || target.contains(possibleMedia) ? target : null;
-	      if (!mediaContainsPoint(possibleMedia, point, hits, eventTarget)) { hitTestRejected++; return false; }
+	      const eventTarget = target instanceof Element ? target : null;
+	      const hitDiagnostics = {};
+	      if (!mediaContainsPoint(possibleMedia, point, hits, eventTarget, hitDiagnostics)) {
+	        hitTestRejected++;
+	        const rejection = hitDiagnostics.reason || 'unknown';
+	        hitTestRejectReasons[rejection] = (hitTestRejectReasons[rejection] || 0) + 1;
+	        if (hitTestRejectExamples.length < 3) hitTestRejectExamples.push({ mediaTag: String(possibleMedia.tagName || 'unknown').toLowerCase(), ...hitDiagnostics });
+	        return false;
+	      }
 	      const candidateDiagnostics = {};
 	      const found = candidateFor(possibleMedia, candidateDiagnostics);
 	      if (!found) {
 	        candidateRejected++;
 	        const rejection = candidateDiagnostics.reason || 'unknown';
 	        candidateRejectReasons[rejection] = (candidateRejectReasons[rejection] || 0) + 1;
+	        if (candidateRejectDetails.length < 3) candidateRejectDetails.push({ mediaTag: String(possibleMedia.tagName || 'unknown').toLowerCase(), ...candidateDiagnostics });
 	        return false;
 	      }
 	      media = possibleMedia;
@@ -673,8 +795,11 @@ internal static class InstagramMediaOverlayScript
 	        result,
 	        mediaChecks,
 	        hitTestRejected,
+	        hitTestRejectReasons,
+	        hitTestRejectExamples,
 	        candidateRejected,
 	        candidateRejectReasons,
+	        candidateRejectDetails,
 	        hitStackCount: hits.length,
 	        targetMediaCount: targetMedia.length,
 	        scopedMediaCount: scopedMedia.length,
@@ -822,6 +947,7 @@ internal static class InstagramMediaOverlayScript
 	  function refreshAfterRouteChange() {
 	    if (location.pathname !== lastObservedRoute) {
 	      lastObservedRoute = location.pathname;
+	      postPermalinkCacheAt = 0;
 	      routeEpoch++;
 	      debugLog('route-changed', { route: routeKind() });
 	    }

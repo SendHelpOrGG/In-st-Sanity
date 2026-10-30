@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.022'',added:') -or
+        -not $document.Content.Contains('version:''2.023'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -540,14 +540,23 @@ try {
         -not $overlayScriptSource.Contains('const inspectionLogKeys = new WeakMap();') -or
         -not $overlayScriptSource.Contains('if (!loggedSignatures.has(signature))') -or
         -not $overlayScriptSource.Contains('candidateRejectReasons') -or
-        -not $overlayScriptSource.Contains("return reject('post-shortcode-missing')") -or
+        -not $overlayScriptSource.Contains('candidateRejectDetails') -or
+        -not $overlayScriptSource.Contains('hitTestRejectReasons') -or
+        -not $overlayScriptSource.Contains('hitTestRejectExamples') -or
+        -not $overlayScriptSource.Contains('function isRelatedMediaFrameTarget(media, eventTarget)') -or
+        -not $overlayScriptSource.Contains('relatedMediaFrameHit') -or
+        -not $overlayScriptSource.Contains('function findRelatedPostPermalink(media, root') -or
+        -not $overlayScriptSource.Contains('postRootPermalinkCount') -or
+        -not $overlayScriptSource.Contains('allDocumentPostPermalinks()') -or
+        -not $overlayScriptSource.Contains("return reject('post-shortcode-missing'") -or
         -not $overlayScriptSource.Contains('itemKey(inspection.candidate) !== itemKey(activeCandidate)') -or
         -not $overlayScriptSource.Contains("if (!rawUrl && !isVideo) return reject('photo-source-unavailable');") -or
         -not $overlayScriptSource.Contains('const root = postRootFor(control);') -or
         -not $overlayScriptSource.Contains('parseShortcode(location.pathname) || findPostShortcode(control, root)') -or
-        -not $overlayScriptSource.Contains('const postPattern = /^\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;') -or
+        -not $overlayScriptSource.Contains('const postPattern = /^\/(?:[A-Za-z0-9._]{1,30}\/)?(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;') -or
         -not $overlayScriptSource.Contains('const parsed = new URL(value, location.href);') -or
         -not $queueServiceSource.Contains('invalid_media_post_url') -or
+        -not $queueServiceSource.Contains('(?:[A-Za-z0-9._]{1,30}/)?(?:p|reel|reels|tv)/(?<shortcode>') -or
         -not $queueServiceSource.Contains('invalid_media_raw_url') -or
         -not $queueServiceSource.Contains('invalid_media_slide_index') -or
         -not $overlayScriptSource.Contains('findPostPermalink') -or
@@ -653,8 +662,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.022</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>91</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.023</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>92</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 
