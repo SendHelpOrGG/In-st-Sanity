@@ -14,7 +14,71 @@ namespace InStSanity.Platforms.Windows;
 internal static class WebViewBootstrapper
 {
 	static readonly ConditionalWeakTable<object, object> Hooked = new();
+	static readonly SemaphoreSlim BrowserOverlayDiagnosticWriteGate = new(1, 1);
+	const string BrowserOverlayDiagnosticPrefix = "[InStSanity:InstagramOverlay]";
+	const long BrowserOverlayDiagnosticMaxBytes = 2 * 1024 * 1024;
 	sealed record VideoDownloadHistoryContext(string Shortcode, int? ContentIndex, int? VideoIndex, int? ContentCount);
+
+	static string BrowserOverlayDiagnosticLogPath
+	{
+		get
+		{
+			var localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+			if (string.IsNullOrWhiteSpace(localData)) localData = Path.GetTempPath();
+			return Path.Combine(localData, "InStSanity", "Logs", "instagram-browser-hover.log");
+		}
+	}
+
+	static void LogInstagramBrowserOverlay(string message)
+	{
+		var line = $"[{DateTimeOffset.Now:O}] [InstagramBrowserOverlay] {message}";
+		System.Diagnostics.Debug.WriteLine(line);
+		_ = AppendInstagramBrowserOverlayLogAsync(line);
+	}
+
+	static async Task AppendInstagramBrowserOverlayLogAsync(string line)
+	{
+		await BrowserOverlayDiagnosticWriteGate.WaitAsync().ConfigureAwait(false);
+		try
+		{
+			var path = BrowserOverlayDiagnosticLogPath;
+			var directory = Path.GetDirectoryName(path);
+			if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
+			if (File.Exists(path) && new FileInfo(path).Length + line.Length > BrowserOverlayDiagnosticMaxBytes)
+			{
+				await File.WriteAllTextAsync(path,
+					$"[{DateTimeOffset.Now:O}] [InstagramBrowserOverlay] Previous diagnostics were rotated at 2 MB.{Environment.NewLine}",
+					System.Text.Encoding.UTF8).ConfigureAwait(false);
+			}
+			await File.AppendAllTextAsync(path, line + Environment.NewLine, System.Text.Encoding.UTF8).ConfigureAwait(false);
+		}
+		catch (Exception exception)
+		{
+			System.Diagnostics.Debug.WriteLine($"[InstagramBrowserOverlay] Could not write diagnostics log ({exception.GetType().Name}).");
+		}
+		finally
+		{
+			BrowserOverlayDiagnosticWriteGate.Release();
+		}
+	}
+
+	static string GetOverlayMessageAction(string message)
+	{
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			return document.RootElement.TryGetProperty("action", out var action) && action.ValueKind == JsonValueKind.String
+				? action.GetString() ?? "empty"
+				: "missing";
+		}
+		catch
+		{
+			return "invalid-json";
+		}
+	}
+
+	static string GetSourceHost(string? source) =>
+		Uri.TryCreate(source, UriKind.Absolute, out var uri) ? uri.Host : "unknown";
 
 	// Same-origin call Instagram's own web app makes; the x-ig-app-id header is the
 	// public one every browser session uses. Page scripts cannot see HttpOnly cookies,
@@ -49,11 +113,13 @@ internal static class WebViewBootstrapper
 	{
 		if (webView.Handler?.PlatformView is not Microsoft.UI.Xaml.Controls.WebView2 platformView)
 		{
+			if (isInstagramBrowser) LogInstagramBrowserOverlay("WebView2 handler is not ready; waiting for HandlerChanged.");
 			return;
 		}
 
 		if (Hooked.TryGetValue(platformView, out _))
 		{
+			if (isInstagramBrowser) LogInstagramBrowserOverlay("WebView2 platform view was already hooked; skipping duplicate hookup.");
 			return;
 		}
 
@@ -61,15 +127,22 @@ internal static class WebViewBootstrapper
 
 		if (platformView.CoreWebView2 is not null)
 		{
+			if (isInstagramBrowser) LogInstagramBrowserOverlay("CoreWebView2 already initialized; configuring Instagram browser.");
 			Configure(platformView.CoreWebView2, isInstagramBrowser, onOverlayMessage);
 		}
 		else
 		{
+			if (isInstagramBrowser) LogInstagramBrowserOverlay("CoreWebView2 not initialized; waiting for CoreWebView2Initialized.");
 			platformView.CoreWebView2Initialized += (sender, _) =>
 			{
 				if (sender.CoreWebView2 is not null)
 				{
+					if (isInstagramBrowser) LogInstagramBrowserOverlay("CoreWebView2Initialized fired; configuring Instagram browser.");
 					Configure(sender.CoreWebView2, isInstagramBrowser, onOverlayMessage);
+				}
+				else if (isInstagramBrowser)
+				{
+					LogInstagramBrowserOverlay("CoreWebView2Initialized fired without a CoreWebView2 instance.");
 				}
 			};
 		}
@@ -343,10 +416,11 @@ internal static class WebViewBootstrapper
 		try
 		{
 			await core.AddScriptToExecuteOnDocumentCreatedAsync(InstagramMediaOverlayScript.Source);
+			LogInstagramBrowserOverlay("Document-created overlay script registered.");
 		}
-		catch
+		catch (Exception exception)
 		{
-			// The browser may be shutting down while WebView2 initializes.
+			LogInstagramBrowserOverlay($"Document-created script registration failed error={exception.GetType().Name}: {exception.Message}");
 		}
 
 		await InstallInstagramOverlayForCurrentDocumentAsync(core).ConfigureAwait(false);
@@ -362,10 +436,13 @@ internal static class WebViewBootstrapper
 				"window.__instSanityMediaOverlayInstall(); else " +
 				InstagramMediaOverlayScript.Source;
 			await core.ExecuteScriptAsync(script);
+			var status = await core.ExecuteScriptAsync(
+				"JSON.stringify({installer:typeof window.__instSanityMediaOverlayInstall==='function',installed:window.__instSanityMediaOverlayInstalled===true})");
+			LogInstagramBrowserOverlay($"Current-document overlay evaluation completed sourceHost={GetSourceHost(core.Source)} status={status}");
 		}
-		catch
+		catch (Exception exception)
 		{
-			// Navigation may have replaced the document between the completion event and injection.
+			LogInstagramBrowserOverlay($"Current-document overlay evaluation failed sourceHost={GetSourceHost(core.Source)} error={exception.GetType().Name}: {exception.Message}");
 		}
 	}
 
@@ -374,11 +451,33 @@ internal static class WebViewBootstrapper
 		if (isInstagramBrowser && onOverlayMessage is not null)
 		{
 			core.Settings.IsWebMessageEnabled = true;
+			LogInstagramBrowserOverlay("WebView2 diagnostic hooks attached; writing to %LOCALAPPDATA%/InStSanity/Logs/instagram-browser-hover.log.");
+			core.ConsoleMessageReceived += (_, args) =>
+			{
+				var message = args.Message ?? string.Empty;
+				if (message.StartsWith(BrowserOverlayDiagnosticPrefix, StringComparison.Ordinal))
+				{
+					LogInstagramBrowserOverlay($"JS level={args.Level} line={args.LineNumber} sourceHost={GetSourceHost(args.Source)} {message}");
+				}
+			};
 			core.WebMessageReceived += (_, args) =>
 			{
-				try { onOverlayMessage(args.Source, args.WebMessageAsJson); } catch { }
+				try
+				{
+					var json = args.WebMessageAsJson;
+					LogInstagramBrowserOverlay($"WebMessageReceived action={GetOverlayMessageAction(json)} sourceHost={GetSourceHost(args.Source)}");
+					onOverlayMessage(args.Source, json);
+				}
+				catch (Exception exception)
+				{
+					LogInstagramBrowserOverlay($"WebMessageReceived handler failed error={exception.GetType().Name}: {exception.Message}");
+				}
 			};
-			core.NavigationCompleted += (_, _) => _ = InstallInstagramOverlayForCurrentDocumentAsync(core);
+			core.NavigationCompleted += (_, args) =>
+			{
+				LogInstagramBrowserOverlay($"NavigationCompleted success={args.IsSuccess} sourceHost={GetSourceHost(core.Source)}");
+				_ = InstallInstagramOverlayForCurrentDocumentAsync(core);
+			};
 			_ = InstallInstagramOverlayScriptAsync(core);
 		}
 

@@ -30,6 +30,12 @@
 - The page sends versioned JSON actions: `overlay-ready`, `toggle-media`, `clear-queue`, `start-download`, and `cancel-download`. The host checks the HTTPS Instagram source origin, canonical Instagram post permalink/shortcode (including selections made from feed cards), JSON size/depth, media type/index, queue limit, and HTTPS Instagram/CDN media URLs. Every redirect hop is revalidated before it is followed; the page cannot supply a folder or access a loopback/file URL.
 - `MainPage` reads only the needed Settings-folder/no-duplicate preferences from the app WebView and sends queue snapshots and the current theme palette back to the Instagram document. It records successful Browser downloads through the existing photo/video history writers.
 
+### Hover diagnostics
+
+- The injected script writes timestamped lifecycle and hover traces to the WebView console, including whether listeners installed, which media gate rejected a hover, whether the button was positioned/hidden, and whether bridge messages were sent.
+- Windows captures those marked console entries plus native WebView2 hookup, navigation, injection, and bridge events in `%LOCALAPPDATA%\InStSanity\Logs\instagram-browser-hover.log`. The file rotates at 2 MB. It records media host and dimensions but omits signed media URLs and post shortcodes.
+- To share a reproduction, hover the problem image/video, close the app, then attach `instagram-browser-hover.log` from that folder.
+
 ### Queue and downloader
 
 - `BrowserMediaQueueService` is the in-memory source of truth (maximum 50 selections). It survives navigation and view hiding, snapshots the current order, performs serial downloads, removes successes/skips, retains failures, and resets on logout.
