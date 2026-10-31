@@ -35,7 +35,8 @@ public sealed record BrowserMediaQueueSnapshot(
 	bool IsDownloading,
 	int CurrentIndex,
 	int Total,
-	string Status);
+	string Status,
+	bool HasBeenOpened);
 
 public sealed record BrowserQueueItemCompleted(
 	BrowserQueuedMedia Item,
@@ -60,6 +61,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 	int _currentIndex;
 	int _total;
 	string _status = string.Empty;
+	bool _hasBeenOpened;
 
 	public event Action<BrowserMediaQueueSnapshot>? StateChanged;
 	public event Action<BrowserQueueItemCompleted>? ItemCompleted;
@@ -111,6 +113,17 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 						? new(BrowserMediaOverlayAction.QueueChanged)
 						: new(BrowserMediaOverlayAction.Rejected, error);
 
+				case "remove-media":
+					if (!TryReadString(root, "key", 4200, out var key))
+					{
+						return new(BrowserMediaOverlayAction.Rejected, "invalid_media_key");
+					}
+					if (Remove(key)) return new(BrowserMediaOverlayAction.QueueChanged);
+					lock (_gate)
+					{
+						return new(BrowserMediaOverlayAction.Rejected, _isDownloading ? "queue_busy" : "queue_item_unavailable");
+					}
+
 				case "clear-queue":
 					return Clear() ? new(BrowserMediaOverlayAction.QueueChanged) : new(BrowserMediaOverlayAction.Rejected, "queue_busy");
 
@@ -134,6 +147,21 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		{
 			return new(BrowserMediaOverlayAction.Rejected, "invalid_message");
 		}
+	}
+
+	public bool Remove(string key)
+	{
+		if (string.IsNullOrWhiteSpace(key) || key.Length > 4200) return false;
+		lock (_gate)
+		{
+			if (_isDownloading) return false;
+			var index = _items.FindIndex(item => string.Equals(item.Key, key, StringComparison.Ordinal));
+			if (index < 0) return false;
+			_items.RemoveAt(index);
+			_status = _items.Count == 0 ? string.Empty : "Selection removed";
+		}
+		Publish();
+		return true;
 	}
 
 	public bool Clear()
@@ -163,6 +191,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			_status = string.Empty;
 			_currentIndex = 0;
 			_total = 0;
+			_hasBeenOpened = false;
 		}
 		try { cancellation?.Cancel(); } catch (ObjectDisposedException) { }
 		Publish();
@@ -401,6 +430,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			{
 				_items.Add(item);
 				_status = string.Empty;
+				_hasBeenOpened = true;
 				changed = true;
 			}
 		}
@@ -646,7 +676,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 	}
 
 	BrowserMediaQueueSnapshot SnapshotUnsafe() =>
-		new(_items.Select(item => item with { }).ToArray(), _isDownloading, _currentIndex, _total, _status);
+		new(_items.Select(item => item with { }).ToArray(), _isDownloading, _currentIndex, _total, _status, _hasBeenOpened);
 
 	void Publish()
 	{

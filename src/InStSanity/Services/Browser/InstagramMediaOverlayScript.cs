@@ -28,7 +28,8 @@ internal static class InstagramMediaOverlayScript
 	  }
 
 	  const postPattern = /^\/(?:[A-Za-z0-9._]{1,30}\/)?(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;
-	  const state = { items: [], isDownloading: false, currentIndex: 0, total: 0, status: '', theme: {} };
+	  const state = { items: [], isDownloading: false, currentIndex: 0, total: 0, status: '', theme: {}, hasBeenOpened: false };
+	  let queuePanelEverOpened = false;
 	  const slideByRoot = new WeakMap();
 	  let activeMedia = null;
 	  let activeCandidate = null;
@@ -88,6 +89,9 @@ internal static class InstagramMediaOverlayScript
 	    .isg-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:650}
 	    .isg-meta{margin-top:1px;color:var(--isg-muted,#9fb1c1);font-size:9px}
 	    .isg-error{margin-top:1px;color:#ff9a9a;font-size:9px}
+	    .isg-row-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto;margin-left:auto}
+	    .isg-row-action{flex:0 0 28px!important;width:28px!important;height:28px!important;min-width:28px!important;padding:0!important}
+	    .isg-row-action svg{display:block;width:14px;height:14px}
 	    .isg-empty{padding:6px 3px 8px;color:var(--isg-muted,#9fb1c1);font-size:10px}
 	    .isg-footer{padding:6px 10px 8px;color:var(--isg-muted,#9fb1c1);font-size:9px}
 	    #inst-sanity-notice{position:fixed;z-index:2147483647;left:50%;bottom:18px;max-width:min(460px,calc(100vw - 32px));transform:translate(-50%,12px);opacity:0;pointer-events:none;border:1px solid var(--isg-border,#ffffff30);border-radius:9px;padding:8px 11px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:600 11px/1.4 "Segoe UI",sans-serif;box-shadow:0 7px 28px #0008;transition:opacity .18s,transform .18s;isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
@@ -230,6 +234,17 @@ internal static class InstagramMediaOverlayScript
 	    notice.__hideTimer = setTimeout(() => { notice.dataset.show = 'false'; }, 2600);
 	  }
 
+	  function navigateToQueuedMedia(item) {
+	    const shortcode = String(item?.shortcode || '');
+	    if (!/^[A-Za-z0-9_-]{1,64}$/.test(shortcode)) { showNotice('This queued media link is unavailable.'); return; }
+	    const slideIndex = Math.max(0, Math.min(100, Math.floor(Number(item?.slideIndex) || 0)));
+	    try {
+	      const url = new URL(`/p/${encodeURIComponent(shortcode)}/`, location.origin);
+	      if (slideIndex > 0 || Number(item?.contentCount) > 1) url.searchParams.set('img_index', String(slideIndex + 1));
+	      location.assign(url.href);
+	    } catch (_) { showNotice('This queued media link is unavailable.'); }
+	  }
+
 	  function renderState(snapshot, error) {
 	    ensureUi();
 	    if (snapshot && typeof snapshot === 'object') {
@@ -238,6 +253,7 @@ internal static class InstagramMediaOverlayScript
 	      state.currentIndex = Number(snapshot.currentIndex) || 0;
 	      state.total = Number(snapshot.total) || 0;
 	      state.status = safeText(snapshot.status, '');
+	      state.hasBeenOpened = snapshot.hasBeenOpened === true;
 	    }
 	    if (snapshot?.theme) { state.theme = snapshot.theme; applyTheme(snapshot.theme); }
 
@@ -250,7 +266,8 @@ internal static class InstagramMediaOverlayScript
 	    }
 
 	    const hasItems = state.items.length > 0;
-	    tray.dataset.open = String(hasItems || state.isDownloading);
+	    queuePanelEverOpened = state.hasBeenOpened || hasItems || state.isDownloading;
+	    tray.dataset.open = String(queuePanelEverOpened);
 	    tray.querySelector('.isg-count').textContent = String(state.items.length);
 	    const start = tray.querySelector('.isg-start');
 	    start.textContent = state.isDownloading
@@ -286,7 +303,13 @@ internal static class InstagramMediaOverlayScript
 	          const meta = document.createElement('div'); meta.className = 'isg-meta'; meta.textContent = `${item.isVideo ? 'Video' : 'Photo'} · ${item.shortcode} · slide ${Number(item.slideIndex) + 1}`;
 	          info.append(name, meta);
 	          if (item.error) { const failure = document.createElement('div'); failure.className = 'isg-error'; failure.textContent = safeText(item.error, 'Download failed'); info.appendChild(failure); }
-	          row.appendChild(info); rows.appendChild(row);
+	          const actions = document.createElement('div'); actions.className = 'isg-row-actions';
+	          const openButton = document.createElement('button'); openButton.type = 'button'; openButton.className = 'isg-action isg-action-secondary isg-icon-action isg-row-action'; openButton.title = 'Open this photo or video'; openButton.setAttribute('aria-label', `Open ${item.isVideo ? 'video' : 'photo'} ${Number(item.slideIndex) + 1} from ${safeText(item.shortcode, 'queued post')}`); openButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6M19 5l-9 9"/><path d="M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+	          openButton.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); navigateToQueuedMedia(item); });
+	          const removeButton = document.createElement('button'); removeButton.type = 'button'; removeButton.className = 'isg-action isg-action-secondary isg-icon-action isg-row-action'; removeButton.title = 'Remove this media from the queue'; removeButton.setAttribute('aria-label', `Remove ${item.isVideo ? 'video' : 'photo'} ${Number(item.slideIndex) + 1} of post ${safeText(item.shortcode, 'queued post')} from the queue`); removeButton.disabled = state.isDownloading; removeButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg>';
+	          removeButton.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); if (!state.isDownloading) postMessage('remove-media', { key: item.key }); });
+	          actions.append(openButton, removeButton);
+	          row.append(info, actions); rows.appendChild(row);
 	        }
 	        group.append(heading, rows); list.appendChild(group);
 	      }
@@ -304,6 +327,7 @@ internal static class InstagramMediaOverlayScript
 	      queue_full: 'The queue is full. Save or clear items before adding more.',
 	      queue_busy: 'Wait for the current queue download to finish.',
 	      queue_empty: 'Add at least one photo or video first.',
+	      queue_item_unavailable: 'That item is no longer in the queue.',
 	      invalid_media: 'That media item could not be selected.',
 	      untrusted_source: 'Media selection is only available on Instagram pages.',
 	      bridge_unavailable: 'Could not reach the download service. Your selections are still queued.'

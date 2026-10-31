@@ -638,7 +638,18 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-canvas-wrap.has-image{min-height:0}
 .photo-preview-canvas-wrap.is-zoomed{cursor:default}
 .photo-preview-canvas-wrap.is-zoomed:active{cursor:default}
-.photo-preview-canvas-wrap canvas{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;flex:0 0 auto;transform-origin:center center;transition:transform .08s linear;user-select:none;-webkit-user-drag:none;touch-action:none;cursor:zoom-in}
+.photo-preview-canvas-wrap canvas{display:block;grid-area:1/1;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;flex:0 0 auto;transform-origin:center center;transition:transform .08s linear;user-select:none;-webkit-user-drag:none;touch-action:none;cursor:zoom-in}
+#photoResizePreviewOriginalCanvas{z-index:1}
+#photoResizePreviewCanvas{z-index:2;clip-path:none}
+.photo-preview-canvas-wrap.is-comparing #photoResizePreviewCanvas{clip-path:inset(0 0 0 var(--photo-compare-clip,50%))}
+.photo-preview-compare[hidden]{display:none!important}
+.photo-preview-compare{position:absolute;z-index:4;pointer-events:none;overflow:visible}
+.photo-preview-compare-label{position:absolute;top:8px;padding:4px 7px;border:1px solid rgba(255,255,255,.32);border-radius:999px;background:rgba(7,11,15,.72);backdrop-filter:blur(4px);color:#f8fafc;font-size:9px;font-weight:700;line-height:1.2;letter-spacing:.2px;text-shadow:0 1px 2px #000}
+.photo-preview-compare-original{left:8px}
+.photo-preview-compare-edited{right:8px}
+.photo-preview-compare-divider{position:absolute;left:var(--photo-compare-divider-position,50%);top:0;bottom:0;width:2px;background:rgba(255,255,255,.94);box-shadow:0 0 5px rgba(0,0,0,.75);transform:translateX(-50%)}
+.photo-preview-compare-handle{position:absolute;left:50%;top:50%;display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.82);border-radius:50%;background:rgba(8,12,16,.82);box-shadow:0 3px 12px rgba(0,0,0,.55);color:#fff;transform:translate(-50%,-50%)}
+.photo-preview-compare-handle svg{width:20px;height:20px}
 .photo-preview-canvas-wrap.is-zoomed canvas{cursor:grab}
 .photo-preview-canvas-wrap.is-zoomed canvas:active{cursor:grabbing}
 .photo-preview-canvas-wrap canvas[hidden]{display:none!important}
@@ -651,6 +662,12 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-look-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .photo-adjustment-look-button{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:34px;padding:7px 8px;text-align:center}
 .photo-adjustment-look-button[aria-pressed="true"]{border-color:var(--t-accent,#38bdf8);color:var(--t-ink,#f1f5f9);background:color-mix(in srgb,var(--t-accent,#38bdf8) 18%,var(--t-input-bg,rgba(15,23,42,.45)));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--t-accent,#38bdf8) 24%,transparent)}
+.photo-adjustment-look-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.photo-adjustment-look-heading h3{margin:0}
+.photo-adjustment-look-actions{display:flex;align-items:center;gap:5px}
+.photo-look-icon-btn{position:relative;width:29px;min-width:29px;height:29px;min-height:29px;padding:0;display:grid;place-items:center}
+.photo-look-icon-btn svg{display:block;width:15px;height:15px}
+.photo-look-icon-btn:disabled{opacity:.38;cursor:not-allowed}
 .photo-adjustment-look-strength{margin-top:12px}
 .photo-adjustment-look-strength input:disabled{opacity:.42;cursor:not-allowed}
 .photo-adjustment-look-hint{margin:8px 0 0;font-size:9px;line-height:1.45}
@@ -755,7 +772,8 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
   .leaving-overlay.show .leaving-dialog { transform:translateY(0) scale(1); }
   .leaving-dialog h2 { margin:0; font-size:23px; line-height:1.2; letter-spacing:-.45px; }
   .leaving-title-brand { font-size:23px; line-height:1.2; letter-spacing:-.45px; }
-  .leaving-sticker-slot { display:grid; place-items:center; width:177px; height:177px; margin:14px auto 18px; }
+  .leaving-sticker-slot { display:grid; place-items:center; width:177px; height:177px; margin:14px auto 18px; opacity:var(--sticker-opacity,.5); transition:opacity .15s ease; }
+  body.sticker-hidden .leaving-sticker-slot { opacity:0; }
   .leaving-sticker-slot svg { display:block; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 8px 20px rgba(0,0,0,.3)); pointer-events:none; transform-origin:50% 60%; }
   #leavingStickerArt[data-reaction="idle"] svg { animation:leavingSway 4.1s ease-in-out infinite; }
   #leavingStickerArt[data-reaction="sad"] svg { animation:leavingSniffleBody 1.05s ease-in-out infinite; }
@@ -949,12 +967,12 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
           <div class="photo-editor-layout">
             <div class="photo-preview-panel" id="photoResizePreviewPanel">
               <div class="photo-preview-heading"><strong id="photoResizePreviewTitle">Live preview</strong><div class="photo-preview-tools"><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomOut" onclick="changePhotoResizePreviewZoom(-0.25)" aria-label="Zoom out" title="Zoom out" disabled>−</button><output class="photo-preview-zoom-label" id="photoResizePreviewZoomLabel">Fit</output><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomIn" onclick="changePhotoResizePreviewZoom(0.25)" aria-label="Zoom in" title="Zoom in" disabled>+</button><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomFit" onclick="resetPhotoResizePreviewZoom()" aria-label="Fit preview" title="Fit preview" disabled>↔</button><button type="button" class="outline photo-preview-toggle" id="photoResizePreviewToggle" onclick="togglePhotoResizePreviewMode()" aria-pressed="false" disabled>Show original</button></div></div>
-              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Ctrl+scroll to zoom; ordinary scroll moves the page; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
-              <p class="hint">Ctrl+scroll to zoom, scroll normally to move the page, drag to pan when zoomed, or double-click to fit.</p>
+              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Hover over the photo to compare original and edited sides; Ctrl+scroll to zoom; ordinary scroll moves the page; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewOriginalCanvas" hidden aria-label="Original image before adjustments"></canvas><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><div class="photo-preview-compare" id="photoResizePreviewCompare" hidden aria-hidden="true"><span class="photo-preview-compare-label photo-preview-compare-original">Original</span><span class="photo-preview-compare-label photo-preview-compare-edited">Edited</span><span class="photo-preview-compare-divider" id="photoResizePreviewCompareDivider"><span class="photo-preview-compare-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-4 6 4 6M16 6l4 6-4 6"/></svg></span></span></div><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
+              <p class="hint">Hover over the photo to compare original and edited sides. Ctrl+scroll to zoom, scroll normally to move the page, drag to pan when zoomed, or double-click to fit.</p>
             </div>
             <div class="photo-adjustment-groups" id="photoAdjustmentGroups" role="region" aria-label="Image adjustment controls" tabindex="0">
               <div class="photo-adjustment-group">
-                <h3>One-click looks</h3>
+                <div class="photo-adjustment-look-heading"><h3>One-click looks</h3><div class="photo-adjustment-look-actions"><button type="button" class="outline photo-look-icon-btn" id="photoResizeLookUpdateBtn" onclick="updatePhotoResizeLookPreset()" aria-label="Update selected one-click look" title="Save changed slider values to the selected look" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h12l3 3v13H4V4z"/><path d="M8 4v6h8V4M8 20v-7h8v7"/></svg></button><button type="button" class="outline photo-look-icon-btn" id="photoResizeLookResetBtn" onclick="resetPhotoResizeLookPreset()" aria-label="Restore selected look defaults" title="Restore the selected look's original default settings" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
                 <div class="photo-adjustment-look-grid" role="group" aria-label="Apply a photo look">
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="noir" aria-pressed="false" onclick="applyPhotoResizeLook('noir')">Noir</button>
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="vintage" aria-pressed="false" title="Cool blue split-tone, deep shadows, and fine film grain" onclick="applyPhotoResizeLook('vintage')">Vintage</button>
@@ -962,7 +980,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                   <button type="button" class="outline photo-adjustment-look-button" data-photo-look="cyberpunk" aria-pressed="false" onclick="applyPhotoResizeLook('cyberpunk')">Cyberpunk</button>
                 </div>
                 <div class="photo-adjustment-control photo-adjustment-look-strength"><label for="photoResizeLookStrength"><span>Look strength</span><output id="photoResizeLookStrengthValue">0%</output></label><input id="photoResizeLookStrength" type="range" min="0" max="100" step="1" value="0" aria-label="Selected look strength" oninput="updatePhotoResizeLookStrength(this.value)" disabled></div>
-                <p class="hint photo-adjustment-look-hint">Choose a look to enable strength. A look replaces current adjustments; editing a control switches to Custom.</p>
+                <p class="hint photo-adjustment-look-hint">Choose a look to enable strength. Edit controls without losing its strength; use the save icon to update this look for future use or the reset icon to restore its original defaults.</p>
               </div>
               <div class="photo-adjustment-group">
                 <h3>Tone &amp; color</h3>
@@ -1376,7 +1394,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.026; open version history" title="Click to view what changed in each version">v.2.026</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.027; open version history" title="Click to view what changed in each version">v.2.027</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3921,20 +3939,23 @@ const RESIZER_MAX_FILES=500;
 const RESIZER_MAX_FILE_BYTES=50*1024*1024;
 const RESIZER_ADJUSTMENTS_KEY='stillSane.photoResizeAdjustmentsV1';
 const RESIZER_LOOK_STATE_KEY='stillSane.photoResizeLookV1';
+const RESIZER_LOOK_PRESETS_KEY='stillSane.photoResizeLookPresetsV1';
 const RESIZER_ADJUST_BATCH_KEY='stillSane.photoResizeApplyToBatchV1';
 const PHOTO_ADJUSTMENT_DEFAULTS=Object.freeze({exposure:0,brightness:0,contrast:0,gamma:0,highlights:0,shadows:0,temperature:0,tint:0,saturation:0,vibrance:0,sharpness:0,clarity:0,texture:0,blur:0,denoise:0,sepia:0,invert:0,posterize:0,pixelate:0,duotone:0,duotoneShadowColor:'#1B1B3A',duotoneHighlightColor:'#FFD166',halftone:0,halftoneSize:12,colorize:0,colorizeColor:'#D94F70',grain:0,grainSize:35,monochromeGrain:false,fade:0,vignette:0,oldPhoto:0,oldPhotoSeed:1});
 const PHOTO_ADJUSTMENT_RANGES=Object.freeze({exposure:[-100,100],brightness:[-100,100],contrast:[-100,100],gamma:[-100,100],highlights:[-100,100],shadows:[-100,100],temperature:[-100,100],tint:[-100,100],saturation:[-100,100],vibrance:[-100,100],sharpness:[0,100],clarity:[-100,100],texture:[-100,100],blur:[0,100],denoise:[0,100],sepia:[0,100],invert:[0,100],posterize:[0,100],pixelate:[0,100],duotone:[0,100],halftone:[0,100],halftoneSize:[4,40],colorize:[0,100],grain:[0,100],grainSize:[0,100],fade:[0,100],vignette:[0,100],oldPhoto:[0,100],oldPhotoSeed:[0,2147483647]});
 const PHOTO_ADJUSTMENT_COLOR_KEYS=new Set(['duotoneShadowColor','duotoneHighlightColor','colorizeColor']);
 const PHOTO_ADJUSTMENT_META_KEYS=new Set(['grainSize','monochromeGrain','halftoneSize','duotoneShadowColor','duotoneHighlightColor','colorizeColor','oldPhotoSeed']);
-const PHOTO_RESIZE_LOOKS=Object.freeze({
+const PHOTO_RESIZE_LOOK_DEFAULTS=Object.freeze({
   noir:{label:'Noir',values:{saturation:-100,contrast:24,highlights:6,shadows:-8,clarity:12,grain:20,grainSize:28,monochromeGrain:true,vignette:20}},
   vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:-90,temperature:-8,tint:-6,saturation:15,vibrance:-35,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70',grain:100,grainSize:10}},
   dreamy:{label:'Dreamy',values:{brightness:8,highlights:12,contrast:-8,saturation:10,clarity:-28,blur:8,fade:10,temperature:6}},
   cyberpunk:{label:'Cyberpunk',values:{contrast:18,saturation:22,vibrance:20,temperature:-18,tint:20,duotone:35,duotoneShadowColor:'#101838',duotoneHighlightColor:'#FF4CBA',grain:4,vignette:12}}
 });
+let PHOTO_RESIZE_LOOKS=JSON.parse(JSON.stringify(PHOTO_RESIZE_LOOK_DEFAULTS));
 let photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS};
 let photoResizeActiveLook='';
 let photoResizeLookStrength=0;
+let photoResizeLookOverrides={};
 let photoResizeApplyToBatch=true;
 let photoResizePreviewFileId='';
 let photoResizeCurrentFileId='';
@@ -3943,6 +3964,7 @@ let photoResizePreviewPanX=0,photoResizePreviewPanY=0,photoResizePreviewDragging
 let photoResizePreviewDragStartX=0,photoResizePreviewDragStartY=0,photoResizePreviewDragOriginX=0,photoResizePreviewDragOriginY=0;
 let photoResizePreviewGeneration=0;
 let photoResizePreviewImageData=null;
+let photoResizePreviewComparePointer=null;
 let photoOldPhotoTextureData=null;
 let photoOldPhotoTexturePromise=null;
 let photoResizePreviewOriginal=false;
@@ -3961,6 +3983,40 @@ let photoResizeUpscaleEnabled=true;
 function makePhotoResizeGuid(){try{if(window.crypto?.randomUUID)return window.crypto.randomUUID()}catch(_){}return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)})}
 function photoAdjustmentSuffix(name){return name.charAt(0).toUpperCase()+name.slice(1)}
 function isPhotoAdjustmentHexColor(value){return typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)}
+function clonePhotoResizeLookPresets(){return JSON.parse(JSON.stringify(PHOTO_RESIZE_LOOK_DEFAULTS))}
+function loadPhotoResizeLookPresets(){
+  PHOTO_RESIZE_LOOKS=clonePhotoResizeLookPresets();
+  try{
+    const saved=JSON.parse(localStorage.getItem(RESIZER_LOOK_PRESETS_KEY)||'null');
+    if(!saved||typeof saved!=='object'||Array.isArray(saved))return;
+    for(const [name,entry] of Object.entries(saved)){
+      if(!Object.prototype.hasOwnProperty.call(PHOTO_RESIZE_LOOKS,name)||!entry||typeof entry!=='object'||Array.isArray(entry))continue;
+      const values=entry.values;
+      if(!values||typeof values!=='object'||Array.isArray(values))continue;
+      const target=PHOTO_RESIZE_LOOKS[name].values;
+      for(const [key,value] of Object.entries(values)){
+        if(!Object.prototype.hasOwnProperty.call(target,key)||key==='oldPhoto'||key==='oldPhotoSeed')continue;
+        if(PHOTO_ADJUSTMENT_COLOR_KEYS.has(key)){if(isPhotoAdjustmentHexColor(value))target[key]=value.toUpperCase();continue}
+        if(typeof target[key]==='boolean'){if(typeof value==='boolean')target[key]=value;continue}
+        const range=PHOTO_ADJUSTMENT_RANGES[key],number=Number(value);
+        if(range&&Number.isFinite(number))target[key]=Math.round(Math.max(range[0],Math.min(range[1],number)));
+      }
+    }
+  }catch(_){}
+}
+function persistPhotoResizeLookPresets(){try{localStorage.setItem(RESIZER_LOOK_PRESETS_KEY,JSON.stringify(PHOTO_RESIZE_LOOKS))}catch(_){}}
+function sanitizePhotoResizeLookOverrides(source){
+  const next={};
+  if(!source||typeof source!=='object'||Array.isArray(source))return next;
+  for(const [name,value] of Object.entries(source)){
+    if(!Object.prototype.hasOwnProperty.call(PHOTO_ADJUSTMENT_DEFAULTS,name))continue;
+    if(PHOTO_ADJUSTMENT_COLOR_KEYS.has(name)){if(isPhotoAdjustmentHexColor(value))next[name]=value.toUpperCase();continue}
+    if(typeof PHOTO_ADJUSTMENT_DEFAULTS[name]==='boolean'){if(typeof value==='boolean')next[name]=value;continue}
+    const range=PHOTO_ADJUSTMENT_RANGES[name],number=Number(value);
+    if(range&&Number.isFinite(number))next[name]=Math.round(Math.max(range[0],Math.min(range[1],number)));
+  }
+  return next;
+}
 function hasPhotoResizeAdjustmentEdits(settings=photoResizeAdjustments){return Object.keys(PHOTO_ADJUSTMENT_DEFAULTS).some(name=>{if(PHOTO_ADJUSTMENT_META_KEYS.has(name))return false;const value=settings?.[name];return typeof value==='boolean'?value:Boolean(Number.isFinite(Number(value))&&Number(value)!==0)})}
 function getPhotoResizeAdjustmentPayload(){return{...photoResizeAdjustments}}
 function formatPhotoResizeAdjustmentValue(name,value){if(PHOTO_ADJUSTMENT_COLOR_KEYS.has(name))return String(value||'').toUpperCase();if(name==='exposure')return`${(Number(value)/50).toFixed(1)} EV`;if(name==='gamma')return`${Math.pow(2,(Number(value)||0)/100*1.2).toFixed(2)}×`;if(name==='halftoneSize')return`${Math.round(Number(value)||12)} px`;if(name==='oldPhotoSeed')return String(Math.round(Number(value)||0));return`${Math.round(Number(value)||0)}%`}
@@ -3978,6 +4034,10 @@ function syncPhotoResizeAdjustmentControls(){
   if(lookStrength){lookStrength.value=String(photoResizeLookStrength);lookStrength.disabled=!photoResizeActiveLook||photoResizeBusy}
   const lookStrengthValue=document.getElementById('photoResizeLookStrengthValue');
   if(lookStrengthValue)lookStrengthValue.textContent=`${photoResizeLookStrength}%`;
+  const lookUpdate=document.getElementById('photoResizeLookUpdateBtn');
+  if(lookUpdate)lookUpdate.disabled=!photoResizeActiveLook||photoResizeBusy;
+  const lookReset=document.getElementById('photoResizeLookResetBtn');
+  if(lookReset)lookReset.disabled=!photoResizeActiveLook||photoResizeBusy;
   const batch=document.getElementById('photoAdjustmentBatch');
   if(batch)batch.checked=photoResizeApplyToBatch;
   const summary=document.getElementById('photoAdjustmentSummary');
@@ -3988,6 +4048,7 @@ function syncPhotoResizeAdjustmentControls(){
   }
 }
 function loadPhotoResizeAdjustments(){
+  loadPhotoResizeLookPresets();
   const next={...PHOTO_ADJUSTMENT_DEFAULTS};
   try{
     const saved=JSON.parse(localStorage.getItem(RESIZER_ADJUSTMENTS_KEY)||'null');
@@ -4003,6 +4064,7 @@ function loadPhotoResizeAdjustments(){
   photoResizeAdjustments=next;
   photoResizeActiveLook='';
   photoResizeLookStrength=0;
+  photoResizeLookOverrides={};
   try{
     const savedLook=JSON.parse(localStorage.getItem(RESIZER_LOOK_STATE_KEY)||'null');
     if(savedLook&&typeof savedLook==='object'&&savedLook.name==='oldPhoto'){
@@ -4013,13 +4075,14 @@ function loadPhotoResizeAdjustments(){
       if(Number.isFinite(strength)){
         photoResizeActiveLook=savedLook.name;
         photoResizeLookStrength=Math.round(Math.max(0,Math.min(100,strength)));
-        photoResizeAdjustments=getPhotoResizeLookAdjustments(photoResizeActiveLook,photoResizeLookStrength);
+        photoResizeLookOverrides=sanitizePhotoResizeLookOverrides(savedLook.overrides);
+        photoResizeAdjustments=getPhotoResizeLookAdjustments(photoResizeActiveLook,photoResizeLookStrength,photoResizeLookOverrides);
       }
     }
   }catch(_){}
   syncPhotoResizeAdjustmentControls();
 }
-function persistPhotoResizeAdjustments(){try{localStorage.setItem(RESIZER_ADJUSTMENTS_KEY,JSON.stringify(photoResizeAdjustments));localStorage.setItem(RESIZER_LOOK_STATE_KEY,JSON.stringify({name:photoResizeActiveLook,strength:photoResizeLookStrength}))}catch(_){}}
+function persistPhotoResizeAdjustments(){try{localStorage.setItem(RESIZER_ADJUSTMENTS_KEY,JSON.stringify(photoResizeAdjustments));localStorage.setItem(RESIZER_LOOK_STATE_KEY,JSON.stringify({name:photoResizeActiveLook,strength:photoResizeLookStrength,overrides:photoResizeLookOverrides}))}catch(_){}}
 function loadPhotoResizeBatchPreference(){try{photoResizeApplyToBatch=localStorage.getItem(RESIZER_ADJUST_BATCH_KEY)!=='0'}catch(_){photoResizeApplyToBatch=true}const input=document.getElementById('photoAdjustmentBatch');if(input)input.checked=photoResizeApplyToBatch}
 function updatePhotoResizeBatchPreference(enabled){photoResizeApplyToBatch=Boolean(enabled);try{localStorage.setItem(RESIZER_ADJUST_BATCH_KEY,photoResizeApplyToBatch?'1':'0')}catch(_){}const input=document.getElementById('photoAdjustmentBatch');if(input)input.checked=photoResizeApplyToBatch;syncPhotoResizeControls()}
 function updatePhotoResizeAdjustment(name,rawValue){
@@ -4034,8 +4097,7 @@ function updatePhotoResizeAdjustment(name,rawValue){
     if(!range||!Number.isFinite(number))return;
     photoResizeAdjustments[name]=Math.round(Math.max(range[0],Math.min(range[1],number)));
   }
-  photoResizeActiveLook='';
-  photoResizeLookStrength=0;
+  if(photoResizeActiveLook)photoResizeLookOverrides[name]=photoResizeAdjustments[name];
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
@@ -4051,16 +4113,19 @@ function interpolatePhotoAdjustmentColor(startColor,endColor,strength){
   const channel=offset=>Math.round(parseInt(startColor.slice(offset,offset+2),16)+(parseInt(endColor.slice(offset,offset+2),16)-parseInt(startColor.slice(offset,offset+2),16))*strength).toString(16).padStart(2,'0');
   return('#'+channel(1)+channel(3)+channel(5)).toUpperCase();
 }
-function getPhotoResizeLookAdjustments(name,strengthPercent){
+function getPhotoResizeLookAdjustments(name,strengthPercent,overrides={}){
   const look=PHOTO_RESIZE_LOOKS[name];
   if(!look)return{...PHOTO_ADJUSTMENT_DEFAULTS};
   const strength=Math.max(0,Math.min(100,Number(strengthPercent)||0))/100,next={...PHOTO_ADJUSTMENT_DEFAULTS};
+  next.oldPhoto=photoResizeAdjustments.oldPhoto??PHOTO_ADJUSTMENT_DEFAULTS.oldPhoto;
+  next.oldPhotoSeed=photoResizeAdjustments.oldPhotoSeed??PHOTO_ADJUSTMENT_DEFAULTS.oldPhotoSeed;
   for(const [key,target] of Object.entries(look.values)){
     const neutral=PHOTO_ADJUSTMENT_DEFAULTS[key];
     if(PHOTO_ADJUSTMENT_COLOR_KEYS.has(key))next[key]=interpolatePhotoAdjustmentColor(neutral,target,strength);
     else if(typeof target==='boolean')next[key]=strength>0?target:neutral;
     else if(typeof target==='number')next[key]=Math.round(neutral+(target-neutral)*strength);
   }
+  for(const [key,value] of Object.entries(overrides||{}))if(Object.prototype.hasOwnProperty.call(next,key))next[key]=value;
   return next;
 }
 function applyPhotoResizeLook(name){
@@ -4069,18 +4134,49 @@ function applyPhotoResizeLook(name){
   if(!look)return;
   photoResizeActiveLook=name;
   photoResizeLookStrength=100;
-  photoResizeAdjustments=getPhotoResizeLookAdjustments(name,photoResizeLookStrength);
+  photoResizeLookOverrides={oldPhoto:photoResizeAdjustments.oldPhoto,oldPhotoSeed:photoResizeAdjustments.oldPhotoSeed};
+  photoResizeAdjustments=getPhotoResizeLookAdjustments(name,photoResizeLookStrength,photoResizeLookOverrides);
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
-  setPhotoResizeStatus(`${look.label} look applied. Lower Look strength for a subtler version, or edit a control to make a custom look.`);
+  setPhotoResizeStatus(`${look.label} look applied. Change its strength or individual sliders; save or reset this look with the icons above.`);
+}
+function updatePhotoResizeLookPreset(){
+  if(photoResizeBusy||!photoResizeActiveLook)return;
+  const name=photoResizeActiveLook,look=PHOTO_RESIZE_LOOKS[name];
+  if(!look)return;
+  const values={};
+  for(const key of Object.keys(PHOTO_ADJUSTMENT_DEFAULTS))if(key!=='oldPhoto'&&key!=='oldPhotoSeed')values[key]=photoResizeAdjustments[key];
+  PHOTO_RESIZE_LOOKS[name]={label:look.label,values};
+  photoResizeLookStrength=100;
+  photoResizeLookOverrides={oldPhoto:photoResizeAdjustments.oldPhoto,oldPhotoSeed:photoResizeAdjustments.oldPhotoSeed};
+  photoResizeAdjustments=getPhotoResizeLookAdjustments(name,photoResizeLookStrength,photoResizeLookOverrides);
+  persistPhotoResizeLookPresets();
+  syncPhotoResizeAdjustmentControls();
+  persistPhotoResizeAdjustments();
+  schedulePhotoResizePreviewRender();
+  setPhotoResizeStatus(`${look.label} look updated and saved for future use.`);
+}
+function resetPhotoResizeLookPreset(){
+  if(photoResizeBusy||!photoResizeActiveLook)return;
+  const name=photoResizeActiveLook,defaultLook=PHOTO_RESIZE_LOOK_DEFAULTS[name];
+  if(!defaultLook)return;
+  PHOTO_RESIZE_LOOKS[name]=JSON.parse(JSON.stringify(defaultLook));
+  photoResizeLookStrength=100;
+  photoResizeLookOverrides={oldPhoto:photoResizeAdjustments.oldPhoto,oldPhotoSeed:photoResizeAdjustments.oldPhotoSeed};
+  photoResizeAdjustments=getPhotoResizeLookAdjustments(name,photoResizeLookStrength,photoResizeLookOverrides);
+  persistPhotoResizeLookPresets();
+  syncPhotoResizeAdjustmentControls();
+  persistPhotoResizeAdjustments();
+  schedulePhotoResizePreviewRender();
+  setPhotoResizeStatus(`${defaultLook.label} look restored to its original defaults.`);
 }
 function updatePhotoResizeLookStrength(rawValue){
   if(photoResizeBusy||!photoResizeActiveLook)return;
   const strength=Number(rawValue);
   if(!Number.isFinite(strength))return;
   photoResizeLookStrength=Math.round(Math.max(0,Math.min(100,strength)));
-  photoResizeAdjustments=getPhotoResizeLookAdjustments(photoResizeActiveLook,photoResizeLookStrength);
+  photoResizeAdjustments=getPhotoResizeLookAdjustments(photoResizeActiveLook,photoResizeLookStrength,photoResizeLookOverrides);
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
@@ -4099,6 +4195,7 @@ function resetPhotoResizeAdjustments(){
   photoResizeAdjustments={...PHOTO_ADJUSTMENT_DEFAULTS};
   photoResizeActiveLook='';
   photoResizeLookStrength=0;
+  photoResizeLookOverrides={};
   photoResizeApplyToBatch=true;
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
@@ -4113,13 +4210,14 @@ function getCurrentPhotoResizePreviewItem(){
 function refreshPhotoResizePreview(){
   const item=getCurrentPhotoResizePreviewItem();
   const canvas=document.getElementById('photoResizePreviewCanvas');
+  const original=document.getElementById('photoResizePreviewOriginalCanvas');
   const message=document.getElementById('photoResizePreviewMessage');
   const title=document.getElementById('photoResizePreviewTitle');
   const toggle=document.getElementById('photoResizePreviewToggle');
   if(!canvas||!message)return;
   if(!item){
     if(photoResizePreviewFileId||photoResizePreviewImageData){photoResizePreviewGeneration++;photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;revokePhotoResizePreviewUrl()}
-    canvas.hidden=true;message.hidden=false;message.textContent='Select a photo thumbnail to preview adjustments.';
+    canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Select a photo thumbnail to preview adjustments.';
     if(title)title.textContent='Live preview';
     if(toggle){toggle.disabled=true;toggle.textContent='Show original';toggle.setAttribute('aria-pressed','false')}
     applyPhotoResizePreviewZoom();
@@ -4133,7 +4231,7 @@ function refreshPhotoResizePreview(){
   photoResizePreviewOriginal=false;
   photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
   photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
-  canvas.hidden=true;message.hidden=false;message.textContent='Loading preview…';
+  canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Loading preview…';
   const itemNumber=photoResizeQueue.indexOf(item)+1;
   if(title)title.textContent=`Photo ${itemNumber} of ${photoResizeQueue.length}`;
   if(toggle){toggle.disabled=true;toggle.textContent='Show original';toggle.setAttribute('aria-pressed','false')}
@@ -4147,6 +4245,7 @@ function refreshPhotoResizePreview(){
       const targetWidth=Math.max(1,Math.round(width*scale));
       const targetHeight=Math.max(1,Math.round(height*scale));
       canvas.width=targetWidth;canvas.height=targetHeight;
+      if(original){original.width=targetWidth;original.height=targetHeight;original.hidden=true}
       const context=canvas.getContext('2d',{willReadFrequently:true});
       if(!context)throw new Error('Canvas is unavailable');
       context.clearRect(0,0,targetWidth,targetHeight);
@@ -4158,7 +4257,7 @@ function refreshPhotoResizePreview(){
       schedulePhotoResizePreviewRender();
       applyPhotoResizePreviewZoom();
     }catch(_){
-      canvas.hidden=true;message.hidden=false;message.textContent='Preview is unavailable for this image format.';
+      canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Preview is unavailable for this image format.';
       if(toggle)toggle.disabled=true;
       applyPhotoResizePreviewZoom();
     }finally{try{closeSource?.()}catch(_){}}
@@ -4174,9 +4273,9 @@ function loadPhotoResizePreviewWithImage(file,token,installPreview){
     const releaseUrl=()=>{try{URL.revokeObjectURL(url)}catch(_){}if(photoResizePreviewObjectUrl===url)photoResizePreviewObjectUrl=''};
     const image=new Image();
     image.onload=()=>{if(token!==photoResizePreviewGeneration){releaseUrl();return}installPreview(image,image.naturalWidth,image.naturalHeight,releaseUrl)};
-    image.onerror=()=>{if(token===photoResizePreviewGeneration){const message=document.getElementById('photoResizePreviewMessage');if(message){message.hidden=false;message.textContent='Preview is unavailable for this image format.'}const toggle=document.getElementById('photoResizePreviewToggle');if(toggle)toggle.disabled=true}releaseUrl()};
+    image.onerror=()=>{if(token===photoResizePreviewGeneration){const message=document.getElementById('photoResizePreviewMessage');if(message){message.hidden=false;message.textContent='Preview is unavailable for this image format.'}const original=document.getElementById('photoResizePreviewOriginalCanvas');if(original)original.hidden=true;hidePhotoResizePreviewCompare();const toggle=document.getElementById('photoResizePreviewToggle');if(toggle)toggle.disabled=true}releaseUrl()};
     image.src=url;
-  }catch(_){const message=document.getElementById('photoResizePreviewMessage');if(message){message.hidden=false;message.textContent='Preview is unavailable for this image format.'}}
+  }catch(_){const message=document.getElementById('photoResizePreviewMessage');if(message){message.hidden=false;message.textContent='Preview is unavailable for this image format.'}const original=document.getElementById('photoResizePreviewOriginalCanvas');if(original)original.hidden=true;hidePhotoResizePreviewCompare()}
 }
 function syncPhotoAdjustmentGroupsHeight(){
   const groups=document.getElementById('photoAdjustmentGroups');
@@ -4189,18 +4288,68 @@ function syncPhotoAdjustmentGroupsHeight(){
   if(groups.style.height!==value)groups.style.height=value;
   if(groups.style.maxHeight!==value)groups.style.maxHeight=value;
 }
+function hidePhotoResizePreviewCompare(clearPointer=true){
+  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
+  const original=document.getElementById('photoResizePreviewOriginalCanvas');
+  const compare=document.getElementById('photoResizePreviewCompare');
+  if(clearPointer)photoResizePreviewComparePointer=null;
+  wrap?.classList.remove('is-comparing');
+  wrap?.style.removeProperty('--photo-compare-clip');
+  if(original)original.hidden=true;
+  if(compare){compare.hidden=true;compare.setAttribute('aria-hidden','true')}
+}
+function positionPhotoResizePreviewCompare(){
+  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
+  const canvas=document.getElementById('photoResizePreviewCanvas');
+  const original=document.getElementById('photoResizePreviewOriginalCanvas');
+  const compare=document.getElementById('photoResizePreviewCompare');
+  if(!photoResizePreviewComparePointer||!wrap||!canvas||!original||!compare||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal){hidePhotoResizePreviewCompare(false);return}
+  const photo=canvas.getBoundingClientRect(),viewport=wrap.getBoundingClientRect();
+  const left=Math.max(photo.left,viewport.left+(wrap.clientLeft||0));
+  const top=Math.max(photo.top,viewport.top+(wrap.clientTop||0));
+  const right=Math.min(photo.right,viewport.left+(wrap.clientLeft||0)+wrap.clientWidth);
+  const bottom=Math.min(photo.bottom,viewport.top+(wrap.clientTop||0)+wrap.clientHeight);
+  const pointer=photoResizePreviewComparePointer;
+  if(right<=left||bottom<=top||pointer.x<left||pointer.x>right||pointer.y<top||pointer.y>bottom){hidePhotoResizePreviewCompare(false);return}
+  const clipPosition=Math.max(0,Math.min(100,(pointer.x-photo.left)/Math.max(1,photo.width)*100));
+  const dividerPosition=Math.max(0,Math.min(100,(pointer.x-left)/Math.max(1,right-left)*100));
+  original.hidden=false;
+  compare.hidden=false;
+  compare.setAttribute('aria-hidden','false');
+  compare.style.left=`${left-(viewport.left+(wrap.clientLeft||0))}px`;
+  compare.style.top=`${top-(viewport.top+(wrap.clientTop||0))}px`;
+  compare.style.width=`${right-left}px`;
+  compare.style.height=`${bottom-top}px`;
+  compare.style.setProperty('--photo-compare-divider-position',`${dividerPosition}%`);
+  wrap.style.setProperty('--photo-compare-clip',`${clipPosition}%`);
+  wrap.classList.add('is-comparing');
+}
+function handlePhotoResizePreviewCompareMove(event){
+  if(event.pointerType==='touch'){hidePhotoResizePreviewCompare();return}
+  const wrap=document.getElementById('photoResizePreviewCanvasWrap');
+  const canvas=document.getElementById('photoResizePreviewCanvas');
+  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap)){
+    hidePhotoResizePreviewCompare();return;
+  }
+  photoResizePreviewComparePointer={x:event.clientX,y:event.clientY};
+  positionPhotoResizePreviewCompare();
+}
 function resetPhotoResizePreviewViewport(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
+  const original=document.getElementById('photoResizePreviewOriginalCanvas');
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
-  if(canvas){canvas.style.width='';canvas.style.height=''}
+  if(canvas){canvas.style.width='';canvas.style.height='';canvas.style.transform=''}
+  if(original){original.style.width='';original.style.height='';original.style.transform=''}
   if(wrap){wrap.style.width='';wrap.style.height='';wrap.classList.remove('has-image')}
+  hidePhotoResizePreviewCompare();
   syncPhotoAdjustmentGroupsHeight();
 }
 function syncPhotoResizePreviewViewport(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
+  const original=document.getElementById('photoResizePreviewOriginalCanvas');
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const panel=wrap?.parentElement;
-  if(!canvas||!wrap||!panel)return;
+  if(!canvas||!original||!wrap||!panel)return;
   if(canvas.hidden||!canvas.width||!canvas.height||!photoResizePreviewImageData){resetPhotoResizePreviewViewport();return}
   const panelStyle=window.getComputedStyle(panel),wrapStyle=window.getComputedStyle(wrap);
   const px=value=>Number.parseFloat(value)||0;
@@ -4214,10 +4363,12 @@ function syncPhotoResizePreviewViewport(){
   const scale=Math.min(2,imageMaxWidth/canvas.width,imageMaxHeight/canvas.height);
   const imageWidth=Math.max(1,canvas.width*scale),imageHeight=Math.max(1,canvas.height*scale);
   canvas.style.width=`${imageWidth}px`;canvas.style.height=`${imageHeight}px`;
+  original.style.width=`${imageWidth}px`;original.style.height=`${imageHeight}px`;
   wrap.style.width=`${imageWidth+chromeWidth}px`;wrap.style.height=`${imageHeight+chromeHeight}px`;
   wrap.classList.add('has-image');
-  if(photoResizePreviewZoom>1.01){clampPhotoResizePreviewPan();canvas.style.transform=`translate(${photoResizePreviewPanX}px, ${photoResizePreviewPanY}px) scale(${photoResizePreviewZoom})`}
+  if(photoResizePreviewZoom>1.01){clampPhotoResizePreviewPan();const transform=`translate(${photoResizePreviewPanX}px, ${photoResizePreviewPanY}px) scale(${photoResizePreviewZoom})`;canvas.style.transform=transform;original.style.transform=transform}else{canvas.style.transform='';original.style.transform=''}
   syncPhotoAdjustmentGroupsHeight();
+  positionPhotoResizePreviewCompare();
 }
 function clampPhotoResizePreviewPan(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
@@ -4252,8 +4403,9 @@ function syncPhotoResizePreviewZoomControls(){
 }
 function applyPhotoResizePreviewZoom(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
+  const original=document.getElementById('photoResizePreviewOriginalCanvas');
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
-  if(!canvas||!wrap){syncPhotoResizePreviewZoomControls();return}
+  if(!canvas||!original||!wrap){syncPhotoResizePreviewZoomControls();return}
   if(canvas.hidden||!canvas.width||!canvas.height||!photoResizePreviewImageData){
     photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
     photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
@@ -4263,12 +4415,14 @@ function applyPhotoResizePreviewZoom(){
   if(!wrap.classList.contains('has-image'))syncPhotoResizePreviewViewport();
   if(photoResizePreviewZoom<=1.01){
     photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
-    canvas.style.transform='';wrap.classList.remove('is-zoomed');
+    canvas.style.transform='';original.style.transform='';wrap.classList.remove('is-zoomed');
   }else{
     clampPhotoResizePreviewPan();
-    canvas.style.transform=`translate(${photoResizePreviewPanX}px, ${photoResizePreviewPanY}px) scale(${photoResizePreviewZoom})`;
+    const transform=`translate(${photoResizePreviewPanX}px, ${photoResizePreviewPanY}px) scale(${photoResizePreviewZoom})`;
+    canvas.style.transform=transform;original.style.transform=transform;
     wrap.classList.add('is-zoomed');
   }
+  positionPhotoResizePreviewCompare();
   syncPhotoResizePreviewZoomControls();
 }
 function changePhotoResizePreviewZoom(direction){
@@ -4322,6 +4476,8 @@ function initPhotoResizePreviewZoom(){
   if(!wrap||wrap._photoResizeZoomBound)return;
   wrap._photoResizeZoomBound=true;
   wrap.addEventListener('wheel',handlePhotoResizePreviewWheel,{passive:false});
+  wrap.addEventListener('pointermove',handlePhotoResizePreviewCompareMove);
+  wrap.addEventListener('pointerleave',()=>hidePhotoResizePreviewCompare());
   wrap.addEventListener('pointerdown',handlePhotoResizePreviewPointerDown);
   wrap.addEventListener('dblclick',event=>{const canvas=document.getElementById('photoResizePreviewCanvas');if(!canvas||canvas.hidden||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap))return;event.preventDefault();resetPhotoResizePreviewZoom()});
   window.addEventListener('pointermove',handlePhotoResizePreviewPointerMove);
@@ -4332,20 +4488,23 @@ function initPhotoResizePreviewZoom(){
   syncPhotoResizePreviewViewport();
 }
 
-function togglePhotoResizePreviewMode(){if(!photoResizePreviewImageData)return;photoResizePreviewOriginal=!photoResizePreviewOriginal;const toggle=document.getElementById('photoResizePreviewToggle');if(toggle){toggle.textContent=photoResizePreviewOriginal?'Show edited':'Show original';toggle.setAttribute('aria-pressed',String(photoResizePreviewOriginal))}schedulePhotoResizePreviewRender()}
+function togglePhotoResizePreviewMode(){if(!photoResizePreviewImageData)return;photoResizePreviewOriginal=!photoResizePreviewOriginal;const toggle=document.getElementById('photoResizePreviewToggle');if(toggle){toggle.textContent=photoResizePreviewOriginal?'Show edited':'Show original';toggle.setAttribute('aria-pressed',String(photoResizePreviewOriginal))}if(photoResizePreviewOriginal)hidePhotoResizePreviewCompare();schedulePhotoResizePreviewRender()}
 function schedulePhotoResizePreviewRender(){if(photoResizePreviewRenderPending)return;photoResizePreviewRenderPending=true;requestAnimationFrame(()=>{photoResizePreviewRenderPending=false;renderPhotoResizePreview()})}
 function renderPhotoResizePreview(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
-  if(!canvas||!photoResizePreviewImageData)return;
+  const originalCanvas=document.getElementById('photoResizePreviewOriginalCanvas');
+  if(!canvas||!originalCanvas||!photoResizePreviewImageData)return;
   if(photoResizeAdjustments.oldPhoto>0&&!photoOldPhotoTextureData){
     ensurePhotoOldPhotoTexture().then(texture=>{
       if(texture&&photoResizeAdjustments.oldPhoto>0&&photoResizePreviewImageData)schedulePhotoResizePreviewRender();
     });
   }
   const context=canvas.getContext('2d',{willReadFrequently:true});
+  const originalContext=originalCanvas.getContext('2d',{willReadFrequently:true});
   if(!context)return;
-  if(photoResizePreviewOriginal){context.putImageData(photoResizePreviewImageData,0,0);applyPhotoResizePreviewZoom();return}
   const {width,height,data:original}=photoResizePreviewImageData;
+  if(originalContext)originalContext.putImageData(photoResizePreviewImageData,0,0);
+  if(photoResizePreviewOriginal){context.putImageData(photoResizePreviewImageData,0,0);hidePhotoResizePreviewCompare();applyPhotoResizePreviewZoom();return}
   const pixels=new Uint8ClampedArray(original);
   if(hasPhotoResizeAdjustmentEdits(photoResizeAdjustments))applyPhotoResizePreviewAdjustments(pixels,width,height,photoResizeAdjustments,original);
   context.putImageData(new ImageData(pixels,width,height),0,0);
@@ -7240,8 +7399,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.026';
+const APP_VERSION='2.027';
 const VERSION_HISTORY=[
+  {version:'2.027',added:'Hover-driven before/after comparison, editable persistent one-click looks, and icon-only Browser queue actions.',removed:'The Browser queue disappearing after its first completed download.',fixed:'Keep the original/edited divider responsive to pointer position without changing Fit, zoom, pan, or ordinary scrolling; preserve look strength while manually editing, save or restore presets for future sessions, keep the queue visible after items finish, add per-item open/remove actions, and apply Sticker opacity to the leaving prompt. Full-size photo queue resolution is unchanged.',tone:'yellow'},
   {version:'2.026',added:'Full-size photo downloads in the Browser queue.',removed:'Saving the smaller responsive image currently displayed by Instagram.',fixed:'Resolve each queued photo’s post and slide through InstagramResolver, download its best validated ImgUrl, and keep older preview-sized files from suppressing a full-size retry. If the full-size source cannot be resolved, the photo remains queued with an actionable sign-in/retry message.',tone:'yellow'},
   {version:'2.025',added:'More reliable Browser queue downloads and scroll-aware media selection in the Instagram feed.',removed:'Queue filename collisions when carousel slide tracking lags, plus selector width shifting between “+ Add” and “✓ Queued”.',fixed:'Give each distinct queued media item a stable filename identity, keep both selector labels the same width, and re-scan under the stationary pointer as the feed scrolls.',tone:'yellow'},
   {version:'2.024',added:'An editable Old Photo texture seed with a New seed button for repeatable damage-layout variations.',removed:'No removals.',fixed:'Use the same seeded texture crop, offset, and flips in the live preview and converted copies; preserve the seed with the other adjustment settings.',tone:'yellow'},

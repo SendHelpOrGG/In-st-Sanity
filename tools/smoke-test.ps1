@@ -414,7 +414,7 @@ try {
         -not $document.Content.Contains('video-select-control') -or
         -not $document.Content.Contains('function toggleVideoTileSelection') -or
         -not $document.Content.Contains('items:batch,noDuplicates') -or
-        -not $document.Content.Contains('version:''2.026'',added:') -or
+        -not $document.Content.Contains('version:''2.027'',added:') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_${photoOrd+1}${ext}`') -or
         -not $downloadBuilderSource.Contains('filename:`${sc}_v${videoOrd+1}.mp4`') -or
         -not $downloadBuilderSource.Contains('if(!hideVideos&&selectedVideoIndices.has(videoOrd))') -or
@@ -426,6 +426,22 @@ try {
     $expectedVintagePreset = "vintage:{label:'Vintage',values:{exposure:25,brightness:8,contrast:22,gamma:-23,highlights:-14,shadows:-90,temperature:-8,tint:-6,saturation:15,vibrance:-35,sharpness:4,clarity:0,texture:6,blur:0,denoise:0,sepia:0,invert:2,posterize:4,pixelate:0,duotone:25,duotoneShadowColor:'#1B9FC0',duotoneHighlightColor:'#72B8F3',halftone:0,halftoneSize:4,colorize:0,colorizeColor:'#D94F70',grain:100,grainSize:10}}"
     if (-not $document.Content.Contains($expectedVintagePreset)) {
         throw 'The Vintage one-click look must match the supplied Image Edit settings.'
+    }
+    if (-not $document.Content.Contains('id="photoResizePreviewOriginalCanvas"') -or
+        -not $document.Content.Contains('id="photoResizePreviewCompare"') -or
+        -not $document.Content.Contains('function handlePhotoResizePreviewCompareMove(event)') -or
+        -not $document.Content.Contains('function positionPhotoResizePreviewCompare()') -or
+        -not $document.Content.Contains('clip-path:inset(0 0 0 var(--photo-compare-clip,50%))') -or
+        -not $document.Content.Contains('photoResizeLookOverrides[name]=photoResizeAdjustments[name]') -or
+        -not $document.Content.Contains('function updatePhotoResizeLookPreset()') -or
+        -not $document.Content.Contains('function resetPhotoResizeLookPreset()') -or
+        -not $document.Content.Contains('stillSane.photoResizeLookPresetsV1') -or
+        -not $document.Content.Contains('id="photoResizeLookUpdateBtn"') -or
+        -not $document.Content.Contains('aria-label="Update selected one-click look"') -or
+        -not $document.Content.Contains('id="photoResizeLookResetBtn"') -or
+        -not $document.Content.Contains('aria-label="Restore selected look defaults"') -or
+        -not $document.Content.Contains('.leaving-sticker-slot { display:grid; place-items:center; width:177px; height:177px; margin:14px auto 18px; opacity:var(--sticker-opacity,.5)')) {
+        throw 'Image Edit must preserve the interactive before/after preview and strength, persist editable look presets with icon-only actions, and apply Sticker opacity to the leaving prompt.'
     }
     $oldPhotoTexturePath = Join-Path $PSScriptRoot '..\src\InStSanity\Resources\Raw\wwwroot\old-photo-damage-texture.png'
     if (-not $document.Content.Contains('id="photoAdjOldPhoto"') -or
@@ -500,6 +516,11 @@ try {
         -not $overlayScriptSource.Contains("postMessage('toggle-media'") -or
         -not $overlayScriptSource.Contains("postMessage('start-download'") -or
         -not $overlayScriptSource.Contains("postMessage('clear-queue'") -or
+        -not $overlayScriptSource.Contains("postMessage('remove-media'") -or
+        -not $overlayScriptSource.Contains('queuePanelEverOpened') -or
+        -not $overlayScriptSource.Contains('function navigateToQueuedMedia(item)') -or
+        -not $overlayScriptSource.Contains("openButton.setAttribute('aria-label'") -or
+        -not $overlayScriptSource.Contains("removeButton.setAttribute('aria-label'") -or
         -not $overlayScriptSource.Contains("postMessage('open-download-folder'") -or
         -not $overlayScriptSource.Contains("selectButton.textContent = isSelected ? '✓ Queued' : '+ Add';") -or
         $overlayScriptSource.Contains('+ Add to queue') -or
@@ -597,6 +618,9 @@ try {
         -not $queueServiceSource.Contains('video_source_unavailable') -or
         -not $queueServiceSource.Contains('IsAllowedBrowserMediaUrl') -or
         -not $queueServiceSource.Contains('ResetForLogout') -or
+        -not $queueServiceSource.Contains('public bool Remove(string key)') -or
+        -not $queueServiceSource.Contains('bool HasBeenOpened);') -or
+        -not $mainPageSource.Contains('hasBeenOpened = snapshot.HasBeenOpened') -or
         -not $queueServiceSource.Contains('DownloadOneAsync') -or
         -not $selectedDownloadServiceSource.Contains('DownloadBatchAsync') -or
         -not $selectedDownloadServiceSource.Contains('DownloadOneAsync') -or
@@ -684,8 +708,8 @@ try {
 
     $projectPath = Join-Path $PSScriptRoot '..\src\InStSanity\InStSanity.csproj'
     $projectSource = Get-Content -LiteralPath $projectPath -Raw
-    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.026</ApplicationDisplayVersion>') -or
-        -not $projectSource.Contains('<ApplicationVersion>95</ApplicationVersion>')) {
+    if (-not $projectSource.Contains('<ApplicationDisplayVersion>2.027</ApplicationDisplayVersion>') -or
+        -not $projectSource.Contains('<ApplicationVersion>96</ApplicationVersion>')) {
         throw 'The display version and integer application version code must be bumped for this release.'
     }
 

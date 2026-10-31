@@ -563,6 +563,7 @@ public partial class MainPage : ContentPage
 				currentIndex = snapshot.CurrentIndex,
 				total = snapshot.Total,
 				status = snapshot.Status,
+				hasBeenOpened = snapshot.HasBeenOpened,
 			};
 			var snapshotJson = JsonSerializer.Serialize(pageSnapshot, QueueJsonOptions);
 			var errorJson = JsonSerializer.Serialize(error, QueueJsonOptions);
