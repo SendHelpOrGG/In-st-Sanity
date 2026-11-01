@@ -15,7 +15,7 @@ public sealed class InstagramBrowserWindowService
 	/// <summary>Raised on the UI thread to navigate the browser to a policy-approved URL.</summary>
 	public event EventHandler<string>? NavigateRequested;
 
-	/// <summary>Raised on the UI thread with a command: "back", "forward", "reload", "show", "hide", or "logout".</summary>
+	/// <summary>Raised on the UI thread with a command: "back", "forward", "reload", "show", "hide", "logout", "media-overlay-on", or "media-overlay-off".</summary>
 	public event EventHandler<string>? CommandRequested;
 
 	/// <summary>Raised on the UI thread to dock the browser over the themed viewport rectangle.</summary>
@@ -30,6 +30,19 @@ public sealed class InstagramBrowserWindowService
 	public bool RequestNavigate(string url) => Raise(NavigateRequested, url);
 
 	public bool RequestCommand(string command) => Raise(CommandRequested, command);
+
+	public bool RequestMediaOverlayEnabled(bool enabled)
+	{
+		var commandRequested = CommandRequested;
+		if (commandRequested is null) return false;
+
+		lock (_stateLock)
+		{
+			_state = _state with { MediaOverlayEnabled = enabled };
+		}
+
+		return Raise(commandRequested, enabled ? "media-overlay-on" : "media-overlay-off");
+	}
 
 	public bool RequestRegion(InstagramBrowserRegion region) => Raise(RegionRequested, region);
 

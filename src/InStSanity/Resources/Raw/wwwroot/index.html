@@ -232,6 +232,7 @@ body:not([data-theme]) .sidebar,body:not([data-theme]) .post-modal,body:not([dat
 .browser-save-btn:hover{background:linear-gradient(105deg,rgba(204,251,241,.18),rgba(45,212,191,.12));border-color:rgba(204,251,241,.38);color:#99f6e4}
 .browser-save-btn:active{transform:translateY(-50%) scale(.96)}
 .browser-save-btn svg{width:14px;height:14px;display:block}
+.browser-overlay-toggle svg{width:17px;height:17px}
 .browser-viewport{position:relative;width:100%;height:clamp(320px,calc(100vh - 180px),1400px);border:1px solid var(--t-line);border-radius:14px;background:var(--t-card-bg);overflow:hidden}
 .browser-viewport-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--t-muted);font-size:11px;pointer-events:none}
 .top-account-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid var(--t-line)}
@@ -924,6 +925,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <input class="text-input browser-address" id="browserAddressInput" type="text" spellcheck="false" autocomplete="off" placeholder="https://www.instagram.com/ or @username" onkeydown="if(event.key==='Enter'){event.preventDefault();browserGo()}">
         <button class="browser-save-btn" id="browserSaveBtn" type="button" onclick="browserSaveViaUrl()" title="Save this post via URL" aria-label="Save this post via URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/><path d="M12 8v8"/><path d="M8.5 12l3.5 3.5 3.5-3.5"/></svg></button>
       </div>
+      <button class="icon-btn browser-nav-btn browser-overlay-toggle active-outline-control active" id="browserOverlayToggleBtn" type="button" onclick="toggleBrowserMediaOverlay()" title="Disable media selection overlay" aria-label="Disable media selection overlay" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
     </div>
     <div class="browser-viewport" id="browserViewport"><div class="browser-viewport-placeholder">Instagram opens here in the Windows desktop app.</div></div>
   </section>
@@ -1396,7 +1398,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.029; open version history" title="Click to view what changed in each version">v.2.029</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.030; open version history" title="Click to view what changed in each version">v.2.030</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5079,6 +5081,7 @@ function restartApp(){
 async function openInstagramBrowser(targetUrl=''){
   const url=String(targetUrl||'').trim();
   showPage('browser');
+  await sendBrowserMediaOverlayEnabled(browserMediaOverlayEnabled);
   for(const endpoint of getApiUrls('/api/open-instagram-browser')){
     const data=await fetchEndpointJson(endpoint,10000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
     if(data?.ok){reportBrowserRegion();loadBrowserState();loadInstagramSession();return true}
@@ -5152,6 +5155,35 @@ async function logOutInstagram(){
   return false;
 }
 function sendBrowserView(payload){for(const endpoint of getApiUrls('/api/browser-view')){fetchEndpointJson(endpoint,4000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(){}).catch(function(){})}}
+const BROWSER_MEDIA_OVERLAY_STORAGE_KEY='stillSane.browserMediaOverlayEnabledV1';
+function readBrowserMediaOverlayEnabled(){try{return localStorage.getItem(BROWSER_MEDIA_OVERLAY_STORAGE_KEY)!=='false'}catch(_){return true}}
+let browserMediaOverlayEnabled=readBrowserMediaOverlayEnabled();
+function syncBrowserMediaOverlayToggle(){
+  const button=document.getElementById('browserOverlayToggleBtn');
+  if(!button)return;
+  const action=browserMediaOverlayEnabled?'Disable':'Enable';
+  const label=`${action} media selection overlay`;
+  button.classList.toggle('active',browserMediaOverlayEnabled);
+  button.setAttribute('aria-pressed',String(browserMediaOverlayEnabled));
+  button.setAttribute('aria-label',label);
+  button.title=label;
+  button.innerHTML=browserMediaOverlayEnabled?SOURCE_EYE_ICON:SOURCE_EYE_OFF_ICON;
+}
+async function sendBrowserMediaOverlayEnabled(enabled){
+  const body=JSON.stringify({action:'media-overlay',enabled:Boolean(enabled)});
+  for(const endpoint of getApiUrls('/api/browser-view')){
+    const data=await fetchEndpointJson(endpoint,4000,{method:'POST',headers:{'Content-Type':'application/json'},body});
+    if(data?.ok)return true;
+  }
+  return false;
+}
+function toggleBrowserMediaOverlay(){
+  browserMediaOverlayEnabled=!browserMediaOverlayEnabled;
+  syncBrowserMediaOverlayToggle();
+  try{localStorage.setItem(BROWSER_MEDIA_OVERLAY_STORAGE_KEY,String(browserMediaOverlayEnabled))}catch(_){}
+  sendBrowserMediaOverlayEnabled(browserMediaOverlayEnabled).then(ok=>{if(!ok)toast('The media selection overlay could not be updated. Reopen Browser to retry.')});
+}
+syncBrowserMediaOverlayToggle();
 var browserRegionTimer=null;
 function reportBrowserRegion(){
   const page=document.getElementById('browserPage');
@@ -7415,8 +7447,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.029';
+const APP_VERSION='2.030';
 const VERSION_HISTORY=[
+  {version:'2.030',added:'An icon-only Browser control to enable or disable the Instagram media-selection overlay.',removed:'No removals.',fixed:'Place the toggle after the address bar, keep the selector hidden when disabled, preserve queue and download behavior, and remember the preference between app sessions.',tone:'green'},
   {version:'2.029',added:'An icon-only toggle for the before-and-after preview slider.',removed:'The redundant Fit preview toolbar button and text-only Show original action.',fixed:'Place comparison before the zoom controls, let users enable or disable its hover divider, and make Show original icon-only with dynamic accessible labels. The comparison toggle defaults on to preserve existing preview behavior.',tone:'green'},
   {version:'2.028',added:'No new features.',removed:'Instagram WebView2 startup competing with the loading-screen animation.',fixed:'Restore the cached account without creating the browser; defer the Instagram WebView, initial session refresh, and polling until the loading animation finishes.',tone:'green'},
   {version:'2.027',added:'Hover-driven before/after comparison, editable persistent one-click looks, and icon-only Browser queue actions.',removed:'The Browser queue disappearing after its first completed download.',fixed:'Keep the original/edited divider responsive to pointer position without changing Fit, zoom, pan, or ordinary scrolling; preserve look strength while manually editing, save or restore presets for future sessions, keep the queue visible after items finish, add per-item open/remove actions, and apply Sticker opacity to the leaving prompt. Full-size photo queue resolution is unchanged.',tone:'yellow'},

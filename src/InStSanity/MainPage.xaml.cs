@@ -168,6 +168,11 @@ public partial class MainPage : ContentPage
 				CloseInstagramBrowser();
 				break;
 
+			case "media-overlay-on":
+			case "media-overlay-off":
+				_ = SyncBrowserQueueToPageAsync();
+				break;
+
 			case "logout":
 				_ = LogoutInstagramAsync();
 				break;
@@ -531,6 +536,7 @@ public partial class MainPage : ContentPage
 				total = snapshot.Total,
 				status = snapshot.Status,
 				hasBeenOpened = snapshot.HasBeenOpened,
+				mediaOverlayEnabled = _browserWindow.GetState().MediaOverlayEnabled,
 			};
 			var snapshotJson = JsonSerializer.Serialize(pageSnapshot, QueueJsonOptions);
 			var errorJson = JsonSerializer.Serialize(error, QueueJsonOptions);
