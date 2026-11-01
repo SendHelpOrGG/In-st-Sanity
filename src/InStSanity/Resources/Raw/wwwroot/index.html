@@ -1406,7 +1406,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.032; open version history" title="Click to view what changed in each version">v.2.032</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.033; open version history" title="Click to view what changed in each version">v.2.033</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -4311,19 +4311,24 @@ function hidePhotoResizePreviewCompare(clearPointer=true){
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const original=document.getElementById('photoResizePreviewOriginalCanvas');
   const compare=document.getElementById('photoResizePreviewCompare');
-  if(clearPointer)photoResizePreviewComparePointer=null;
+  if(clearPointer){photoResizePreviewComparePointer=null;photoResizePreviewCompareFrozen=false}
   wrap?.classList.remove('is-comparing');
   wrap?.style.removeProperty('--photo-compare-clip');
   if(original)original.hidden=true;
   if(compare){compare.hidden=true;compare.setAttribute('aria-hidden','true')}
+}
+function freezePhotoResizePreviewCompare(){
+  photoResizePreviewComparePointer=null;
+  photoResizePreviewCompareFrozen=Boolean(photoResizePreviewCompareEnabled&&photoResizePreviewCompareHasPosition&&!photoResizePreviewOriginal);
+  if(photoResizePreviewCompareFrozen)positionPhotoResizePreviewCompare();
+  else hidePhotoResizePreviewCompare(false);
 }
 function positionPhotoResizePreviewCompare(){
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const canvas=document.getElementById('photoResizePreviewCanvas');
   const original=document.getElementById('photoResizePreviewOriginalCanvas');
   const compare=document.getElementById('photoResizePreviewCompare');
-  const frozen=!photoResizePreviewCompareEnabled&&photoResizePreviewCompareFrozen;
-  if(!wrap||!canvas||!original||!compare||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal||(!photoResizePreviewCompareEnabled&&!frozen)){
+  if(!wrap||!canvas||!original||!compare||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal||!photoResizePreviewCompareEnabled){
     hidePhotoResizePreviewCompare(false);return;
   }
   const photo=canvas.getBoundingClientRect(),viewport=wrap.getBoundingClientRect();
@@ -4333,11 +4338,18 @@ function positionPhotoResizePreviewCompare(){
   const bottom=Math.min(photo.bottom,viewport.top+(wrap.clientTop||0)+wrap.clientHeight);
   if(right<=left||bottom<=top){hidePhotoResizePreviewCompare(false);return}
   let splitPosition=Math.max(0,Math.min(1,photoResizePreviewComparePosition));
-  if(photoResizePreviewCompareEnabled){
-    const pointer=photoResizePreviewComparePointer;
-    if(!pointer||pointer.x<left||pointer.x>right||pointer.y<top||pointer.y>bottom){hidePhotoResizePreviewCompare(false);return}
+  const pointer=photoResizePreviewComparePointer;
+  if(pointer&&pointer.x>=left&&pointer.x<=right&&pointer.y>=top&&pointer.y<=bottom){
     splitPosition=Math.max(0,Math.min(1,(pointer.x-photo.left)/Math.max(1,photo.width)));
-    photoResizePreviewComparePosition=splitPosition;photoResizePreviewCompareHasPosition=true;
+    photoResizePreviewComparePosition=splitPosition;
+    photoResizePreviewCompareHasPosition=true;
+    photoResizePreviewCompareFrozen=false;
+  }else if(pointer){
+    photoResizePreviewComparePointer=null;
+    photoResizePreviewCompareFrozen=photoResizePreviewCompareHasPosition;
+    if(!photoResizePreviewCompareFrozen){hidePhotoResizePreviewCompare(false);return}
+  }else if(!photoResizePreviewCompareFrozen||!photoResizePreviewCompareHasPosition){
+    hidePhotoResizePreviewCompare(false);return;
   }
   const splitX=photo.left+photo.width*splitPosition;
   const clipPosition=splitPosition*100;
@@ -4356,12 +4368,16 @@ function positionPhotoResizePreviewCompare(){
 function handlePhotoResizePreviewCompareMove(event){
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const canvas=document.getElementById('photoResizePreviewCanvas');
-  if(event.pointerType==='touch'){if(photoResizePreviewCompareEnabled)hidePhotoResizePreviewCompare();return}
   if(!photoResizePreviewCompareEnabled)return;
-  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap)){
+  if(event.pointerType==='touch'){freezePhotoResizePreviewCompare();return}
+  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal){
     hidePhotoResizePreviewCompare();return;
   }
+  if(!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap)){
+    freezePhotoResizePreviewCompare();return;
+  }
   photoResizePreviewComparePointer={x:event.clientX,y:event.clientY};
+  photoResizePreviewCompareFrozen=false;
   positionPhotoResizePreviewCompare();
 }
 function resetPhotoResizePreviewViewport(){
@@ -4509,7 +4525,7 @@ function initPhotoResizePreviewZoom(){
   wrap._photoResizeZoomBound=true;
   wrap.addEventListener('wheel',handlePhotoResizePreviewWheel,{passive:false});
   wrap.addEventListener('pointermove',handlePhotoResizePreviewCompareMove);
-  wrap.addEventListener('pointerleave',()=>{if(photoResizePreviewCompareEnabled)hidePhotoResizePreviewCompare()});
+  wrap.addEventListener('pointerleave',()=>freezePhotoResizePreviewCompare());
   wrap.addEventListener('pointerdown',handlePhotoResizePreviewPointerDown);
   wrap.addEventListener('dblclick',event=>{const canvas=document.getElementById('photoResizePreviewCanvas');if(!canvas||canvas.hidden||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap))return;event.preventDefault();resetPhotoResizePreviewZoom()});
   window.addEventListener('pointermove',handlePhotoResizePreviewPointerMove);
@@ -4523,15 +4539,9 @@ function initPhotoResizePreviewZoom(){
 function togglePhotoResizePreviewCompare(){
   if(!photoResizePreviewImageData)return;
   photoResizePreviewCompareEnabled=!photoResizePreviewCompareEnabled;
-  if(photoResizePreviewCompareEnabled){
-    photoResizePreviewCompareFrozen=false;
-    hidePhotoResizePreviewCompare();
-  }else{
-    photoResizePreviewCompareFrozen=photoResizePreviewCompareHasPosition;
-    photoResizePreviewComparePointer=null;
-    if(photoResizePreviewCompareFrozen)positionPhotoResizePreviewCompare();
-    else hidePhotoResizePreviewCompare(false);
-  }
+  photoResizePreviewComparePointer=null;
+  photoResizePreviewCompareFrozen=false;
+  hidePhotoResizePreviewCompare(false);
   syncPhotoResizePreviewZoomControls();
 }
 function togglePhotoResizePreviewMode(){
@@ -7521,9 +7531,10 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.032';
+const APP_VERSION='2.033';
 const VERSION_HISTORY=[
-  {version:'2.032',added:'A separate horizontal raw-photo preview strip in Image Edit.',removed:'The before/after split reverting when comparison is disabled, preview controls with ambiguous toggle state, and the adjustment reset action separated from the folder actions.',fixed:'Freeze the comparison at its last divider position when disabled; indicate toggle states with the main-page active-outline system; match Image Edit icon controls to the 37px folder button; keep no-edit conversions working even when Windows lacks a decoder; align preview colors with saved output; rename the panels and move Reset adjustments after Open folder.',tone:'yellow'},
+  {version:'2.033',added:'The before/after slider now freezes at its last position when the pointer leaves the preview.',removed:'The slider disappearing on pointerleave and turning comparison off changing the preview image state.',fixed:'While enabled, keep the split visible in its last position after pointerleave and resume tracking when the pointer returns. When disabled, hide the slider and leave full-image original/edited selection to the Show/hide original button.',tone:'green'},
+  {version:'2.032',added:'A separate horizontal raw-photo preview strip in Image Edit.',removed:'Preview controls with ambiguous toggle state and the adjustment reset action separated from the folder actions.',fixed:'Indicate toggle states with the main-page active-outline system; match Image Edit icon controls to the 37px folder button; keep no-edit conversions working even when Windows lacks a decoder; align preview colors with saved output; rename the panels and move Reset adjustments after Open folder.',tone:'yellow'},
   {version:'2.031',added:'No new features.',removed:'The Browser queue panel remaining visible with the media overlay switched off.',fixed:'The Browser toggle now hides and restores both the hover selector and queue panel without clearing queued media or interrupting downloads.',tone:'green'},
   {version:'2.030',added:'An icon-only Browser control to enable or disable the Instagram media-selection overlay.',removed:'No removals.',fixed:'Place the toggle after the address bar, keep the selector hidden when disabled, preserve queue and download behavior, and remember the preference between app sessions.',tone:'green'},
   {version:'2.029',added:'An icon-only toggle for the before-and-after preview slider.',removed:'The redundant Fit preview toolbar button and text-only Show original action.',fixed:'Place comparison before the zoom controls, let users enable or disable its hover divider, and make Show original icon-only with dynamic accessible labels. The comparison toggle defaults on to preserve existing preview behavior.',tone:'green'},
