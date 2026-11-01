@@ -108,8 +108,8 @@ internal static class ImageResizer
 			}
 			catch when (!adjustments.HasEdits)
 			{
-				// Resizing needs dimensions, but a no-adjustment conversion can still preserve
-				// an otherwise supported source file when Windows has no decoder for its codec.
+				// If decoder metadata cannot be read, preserve the original bytes instead of
+				// failing a no-edit copy. Decoded inputs use the shared pixel pipeline below.
 				return new ImageResizeResult(payload, originalExtension, WasResized: false, WasEdited: false);
 			}
 
@@ -138,21 +138,23 @@ internal static class ImageResizer
 				isPng ? BitmapEncoder.PngEncoderId : BitmapEncoder.JpegEncoderId,
 				outStream);
 
+			if (adjustments.HasEdits && (long)targetWidth * targetHeight > PhotoImageAdjustmentProcessor.MaxAdjustedPixelCount)
+			{
+				throw new PhotoImageTooLargeException();
+			}
+
+			// Use the same BGRA pixel pipeline for normal resizing and adjustment exports.
+			// The SoftwareBitmap convenience path can fail for inputs that the adjusted
+			// GetPixelDataAsync path handles successfully.
+			var pixelData = await decoder.GetPixelDataAsync(
+				BitmapPixelFormat.Bgra8,
+				BitmapAlphaMode.Straight,
+				transform,
+				ExifOrientationMode.RespectExifOrientation,
+				ColorManagementMode.DoNotColorManage);
+			var pixels = pixelData.DetachPixelData();
 			if (adjustments.HasEdits)
 			{
-				var pixelCount = (long)targetWidth * targetHeight;
-				if (pixelCount > PhotoImageAdjustmentProcessor.MaxAdjustedPixelCount)
-				{
-					throw new PhotoImageTooLargeException();
-				}
-
-				var pixelData = await decoder.GetPixelDataAsync(
-					BitmapPixelFormat.Bgra8,
-					BitmapAlphaMode.Straight,
-					transform,
-					ExifOrientationMode.RespectExifOrientation,
-					ColorManagementMode.DoNotColorManage);
-				var pixels = pixelData.DetachPixelData();
 				var oldPhotoTexture = adjustments.OldPhoto > 0
 					? await GetOldPhotoTextureAsync().ConfigureAwait(false)
 					: null;
@@ -163,26 +165,16 @@ internal static class ImageResizer
 					adjustments,
 					payload,
 					oldPhotoTexture);
+			}
 
-				encoder.SetPixelData(
-					BitmapPixelFormat.Bgra8,
-					isPng ? BitmapAlphaMode.Straight : BitmapAlphaMode.Ignore,
-					targetWidth,
-					targetHeight,
-					Math.Max(1, decoder.DpiX),
-					Math.Max(1, decoder.DpiY),
-					pixels);
-			}
-			else
-			{
-				using var software = await decoder.GetSoftwareBitmapAsync(
-					BitmapPixelFormat.Bgra8,
-					BitmapAlphaMode.Premultiplied,
-					transform,
-					ExifOrientationMode.RespectExifOrientation,
-					ColorManagementMode.DoNotColorManage);
-				encoder.SetSoftwareBitmap(software);
-			}
+			encoder.SetPixelData(
+				BitmapPixelFormat.Bgra8,
+				isPng ? BitmapAlphaMode.Straight : BitmapAlphaMode.Ignore,
+				targetWidth,
+				targetHeight,
+				Math.Max(1, decoder.DpiX),
+				Math.Max(1, decoder.DpiY),
+				pixels);
 
 			await encoder.FlushAsync();
 			outStream.Seek(0);

@@ -618,7 +618,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .resizer-photo-empty-note{align-self:center;min-width:160px;color:var(--t-muted,#94a3b8);font-size:10px}
 .resizer-adjustments-card .settings-card-head{display:flex;align-items:center;justify-content:space-between;gap:18px}
 .photo-adjustments-heading-copy{min-width:0}
-.photo-adjustment-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
+.photo-adjustment-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto;flex-wrap:wrap}
 .photo-adjustment-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
 .photo-adjustment-actions svg{width:15px;height:15px;flex:0 0 auto}
 .photo-adjustment-open-folder-btn,.photo-adjustment-reset{position:relative!important;display:grid!important;place-items:center!important;width:37px!important;min-width:37px!important;max-width:37px!important;height:37px!important;min-height:37px!important;max-height:37px!important;flex:0 0 37px!important;box-sizing:border-box!important;padding:0!important}
@@ -696,6 +696,27 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
 .photo-adjustment-footer .hint{margin:0}
 .photo-adjustment-reset{flex:0 0 auto}
+/* Change resolution and Edit share the same compact, horizontal thumbnail picker geometry and scroll behavior. */
+.resizer-files-toolbar{flex-wrap:wrap}
+.resizer-files-toolbar>div{flex-wrap:wrap}
+.resizer-photo-picker-row{display:flex;align-items:center;gap:7px;min-width:0}
+.resizer-file-list,.photo-adjustment-photo-strip{display:flex;flex-flow:row nowrap;align-items:center;flex:1 1 auto;gap:6px;min-width:0;height:45px;min-height:45px;max-height:none;overflow-x:auto;overflow-y:hidden;padding:4px;border:1px solid var(--t-input-border,rgba(255,255,255,.18));border-radius:9px;background:var(--t-input-bg,rgba(11,15,20,.55));box-sizing:border-box;scrollbar-width:thin;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+.resizer-photo-tile{position:relative;flex:0 0 37px;width:37px;height:37px;scroll-snap-align:start}
+.resizer-photo-thumb{position:relative;display:grid;place-items:center;width:37px;height:37px;min-width:37px;padding:0;overflow:hidden;border:1px solid var(--t-line,rgba(255,255,255,.18));border-radius:8px;background:var(--t-input-bg,rgba(15,23,42,.45));cursor:pointer;scroll-snap-align:start;transition:border-color .14s,box-shadow .14s,transform .14s}
+.resizer-photo-thumb:hover{transform:translateY(-1px);border-color:var(--t-accent,#38bdf8)}
+.resizer-photo-thumb[aria-pressed="true"]{border:2px solid var(--t-accent,#38bdf8);box-shadow:0 0 0 2px color-mix(in srgb,var(--t-accent,#38bdf8) 24%,transparent)}
+.resizer-photo-thumb img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover}
+.resizer-photo-thumb-placeholder{position:absolute;inset:0;display:grid;place-items:center;width:100%;height:100%;padding:2px;box-sizing:border-box;color:var(--t-muted,#94a3b8);font-size:8px;line-height:1.1;text-align:center}
+.resizer-photo-thumb-placeholder[hidden]{display:none}
+.resizer-photo-select{position:absolute;top:2px;left:2px;z-index:2;width:14px;height:14px;margin:0;accent-color:var(--t-accent,#38bdf8);cursor:pointer}
+.resizer-photo-thumb-status{position:absolute;right:1px;bottom:1px;z-index:2;display:grid;place-items:center;min-width:13px;height:13px;padding:0 2px;border-radius:999px;background:rgba(15,23,42,.88);color:#6ee7b7;font-size:9px;font-weight:800}
+.resizer-photo-thumb-status.is-error{color:#fca5a5}
+.resizer-photo-thumb-status:empty{display:none}
+.resizer-photo-empty-note{flex:0 1 auto;min-width:0;max-width:100%;overflow:hidden;color:var(--t-muted,#94a3b8);font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.photo-adjustment-files-panel{margin-top:0}
+.photo-adjustment-photo-picker{min-width:0;margin:0}
+.photo-edit-output-folder{max-width:560px;margin:12px 0 16px}
+.photo-edit-output-folder .field-label{display:block;margin-bottom:6px}
 @media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{height:min(74vh,700px);min-height:min(360px,74vh);max-height:min(74vh,700px)}.photo-adjustment-groups{max-height:none;overflow:visible;padding:0}}
 @media(max-width:760px){.resizer-adjustments-card .settings-card-head{align-items:flex-start;flex-direction:column}.photo-adjustment-actions{align-self:flex-end}}
 @media(max-width:600px){.photo-adjustment-footer{align-items:flex-start;flex-direction:column}}
@@ -930,17 +951,21 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
     <div class="browser-viewport" id="browserViewport"><div class="browser-viewport-placeholder">Instagram opens here in the Windows desktop app.</div></div>
   </section>
   <section class="content resizer-page" id="resizerPage" style="display:none">
-    <div class="heading-row"><div><h1>Image Edit (beta)</h1><p>Choose photos, adjust the current preview, then convert the selection or download the preview.</p></div></div>
+    <div class="heading-row"><div><h1>Image Edit (beta)</h1><p>Choose images independently in Change resolution and Edit. Convert preserves originals; Edit applies its own adjustments to the selected photos.</p></div></div>
     <div class="resizer-grid">
       <section class="settings-card resizer-card resizer-picker-card">
-        <div class="settings-card-head"><h2>Change resolution</h2><p>Choose photos to fill the thumbnail strip. Click one to preview it; check photos for batch actions.</p></div>
+        <div class="settings-card-head"><h2>Change resolution</h2><p>Choose images for Convert. Click or check a thumbnail to toggle it in this panel’s selection.</p></div>
         <div class="setting-body">
           <div class="resizer-pick-row"><button type="button" class="primary" id="resizerChooseImagesBtn" onclick="chooseResizerImages()">Choose images…</button><button type="button" class="primary" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button></div>
           <input id="resizerImagesInput" type="file" accept="image/*" multiple hidden onchange="handleResizerImagesPicked(event)">
           <div class="resizer-files-panel" id="resizerFilePanel">
             <div class="resizer-files-toolbar"><span id="resizerAvailableCount">Choose photos to begin</span><div><button type="button" class="outline" id="resizerSelectAllBtn" onclick="selectAllResizerFiles(true)">Select all</button><button type="button" class="outline" id="resizerClearSelectionBtn" onclick="selectAllResizerFiles(false)">Clear</button></div></div>
-            <div class="resizer-file-list" id="resizerFileList" role="group" aria-label="Photo thumbnails; check to include in batch actions"><span class="resizer-photo-empty-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 4.2-4.2L12 15.5l2-2 5 4"/></svg></span><span class="resizer-photo-empty-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 4.2-4.2L12 15.5l2-2 5 4"/></svg></span><span class="resizer-photo-empty-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 4.2-4.2L12 15.5l2-2 5 4"/></svg></span><span class="resizer-photo-empty-note">Your square photo thumbnails will appear here.</span></div>
-            <div class="hint" style="margin-top:7px">Check the photos you want included in a batch Download.</div>
+            <div class="resizer-photo-picker-row">
+              <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="resizerPhotoScrollLeftBtn" onclick="scrollResizerPhotos(-1)" disabled title="Scroll photos left" aria-label="Scroll photos left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+              <div class="resizer-file-list" id="resizerFileList" role="group" aria-label="Photo thumbnails; check to include in Convert" onscroll="syncResizerPhotoScrollButtons()" onwheel="scrollResizerPhotosByWheel(event)"><span class="resizer-photo-empty-note">Choose images to start converting.</span></div>
+              <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="resizerPhotoScrollRightBtn" onclick="scrollResizerPhotos(1)" disabled title="Scroll photos right" aria-label="Scroll photos right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+            </div>
+            <div class="hint" style="margin-top:7px">Choose photos here for Convert. This queue is separate from Edit.</div>
           </div>
           <div class="resizer-upload-actions"><button type="button" class="primary" id="resizerStartBtn" onclick="startPhotoResizing()" disabled>Convert</button><button type="button" class="icon-btn resizer-open-output-folder-btn" id="resizerOpenOutputFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open resized images folder in File Explorer" aria-label="Open resized images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button></div>
         </div>
@@ -966,15 +991,24 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         </div>
       </section>
       <section class="settings-card resizer-card resizer-adjustments-card" aria-labelledby="photoAdjustmentsHeading">
-        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">Edit <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Adjusted copies get an _Edited filename suffix; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoResizing('editor-download')" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open edited images folder in File Explorer" aria-label="Open edited images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button><button type="button" class="icon-btn photo-adjustment-reset" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()" title="Reset adjustments" aria-label="Reset adjustments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
+        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">Edit <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Edit applies adjustments independently of Change resolution settings and saves separate copies; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><button type="button" class="primary" id="photoEditChooseImagesBtn" onclick="choosePhotoEditImages()">Choose images…</button><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoEditDownload()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoEditOutputFolder()" title="Open edited images folder in File Explorer" aria-label="Open edited images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button><button type="button" class="icon-btn photo-adjustment-reset" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()" title="Reset adjustments" aria-label="Reset adjustments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
         <div class="setting-body">
-          <div class="photo-adjustment-photo-picker">
-            <span class="photo-adjustment-photo-label">Preview photo</span>
-            <div class="photo-adjustment-photo-picker-row">
-              <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="photoAdjustmentPhotoScrollLeftBtn" onclick="scrollPhotoAdjustmentPhotos(-1)" disabled title="Scroll preview photos left" aria-label="Scroll preview photos left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
-              <div class="photo-adjustment-photo-strip" id="photoAdjustmentPhotoStrip" role="group" aria-label="Choose an original photo to preview and edit" onscroll="syncPhotoAdjustmentPhotoScrollButtons()" onwheel="scrollPhotoAdjustmentPhotosByWheel(event)"></div>
-              <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="photoAdjustmentPhotoScrollRightBtn" onclick="scrollPhotoAdjustmentPhotos(1)" disabled title="Scroll preview photos right" aria-label="Scroll preview photos right"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+          <input id="photoEditImagesInput" type="file" accept="image/*" multiple hidden onchange="handlePhotoEditImagesPicked(event)">
+          <div class="resizer-files-panel photo-adjustment-files-panel" id="photoEditFilePanel">
+            <div class="resizer-files-toolbar"><span id="photoEditAvailableCount">Choose images to begin</span><div><button type="button" class="outline" id="photoEditSelectAllBtn" onclick="selectAllPhotoEditFiles(true)" disabled>Select all</button><button type="button" class="outline" id="photoEditClearSelectionBtn" onclick="selectAllPhotoEditFiles(false)" disabled>Clear</button><button type="button" class="outline" id="photoEditClearImagesBtn" onclick="resetPhotoEditQueue()" disabled>Clear images</button></div></div>
+            <div class="photo-adjustment-photo-picker">
+              <span class="photo-adjustment-photo-label">Preview photo</span>
+              <div class="resizer-photo-picker-row">
+                <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="photoAdjustmentPhotoScrollLeftBtn" onclick="scrollPhotoAdjustmentPhotos(-1)" disabled title="Scroll preview photos left" aria-label="Scroll preview photos left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+                <div class="resizer-file-list photo-adjustment-photo-strip" id="photoAdjustmentPhotoStrip" role="group" aria-label="Edit photos; choose a preview and check images to include in Download" onscroll="syncPhotoAdjustmentPhotoScrollButtons()" onwheel="scrollPhotoAdjustmentPhotosByWheel(event)"><span class="resizer-photo-empty-note">Choose images to preview and edit.</span></div>
+                <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="photoAdjustmentPhotoScrollRightBtn" onclick="scrollPhotoAdjustmentPhotos(1)" disabled title="Scroll preview photos right" aria-label="Scroll preview photos right"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+              </div>
+              <div class="hint" style="margin-top:7px">This Edit selection is independent of Change resolution. Check photos for a batch download; when batch mode is off, Download uses only the previewed photo.</div>
             </div>
+          </div>
+          <div class="photo-edit-output-folder">
+            <label class="field-label" for="photoEditOutputFolder">Save edited images to</label>
+            <div class="folder-row"><input class="text-input" id="photoEditOutputFolder" value="~/Pictures/Instagram/Edited" readonly><button type="button" class="outline" id="photoEditBrowseFolderBtn" onclick="choosePhotoEditOutputFolder()">Browse…</button></div>
           </div>
           <div class="photo-editor-layout">
             <div class="photo-preview-panel" id="photoResizePreviewPanel">
@@ -1051,6 +1085,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             </div>
           </div>
           <label class="photo-adjustment-batch" for="photoAdjustmentBatch"><input type="checkbox" id="photoAdjustmentBatch" checked onchange="updatePhotoResizeBatchPreference(this.checked)"><span><strong>Apply adjustments to all selected images</strong><small>When off, Download applies the adjustments only to the photo currently shown in the preview.</small></span></label>
+          <div class="resizer-state" id="photoEditStatus" role="status" aria-live="polite" hidden></div>
+          <div class="resizer-results" id="photoEditResults" aria-live="polite"></div>
           <div class="photo-adjustment-footer"><span class="hint">Reset restores neutral effects and the batch-on default. Settings persist on this device.</span></div>
         </div>
       </section>
@@ -1406,7 +1442,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.033; open version history" title="Click to view what changed in each version">v.2.033</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.034; open version history" title="Click to view what changed in each version">v.2.034</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3944,6 +3980,8 @@ function toggleSeparateVideoFolder(){setUiPref('separateVideoFolder',!isSeparate
 async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);scheduleDownloadHistorySync(true);toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
 async function chooseVideoFolder(){const input=document.getElementById('videoFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistVideoFolder(data.path);scheduleDownloadHistorySync(true);toast('Video download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
 const RESIZER_OUTPUT_FOLDER_KEY='stillSane.photoResizerOutputFolderV1';
+const PHOTO_EDIT_OUTPUT_FOLDER_KEY='stillSane.photoEditOutputFolderV1';
+const PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER='~/Pictures/Instagram/Edited';
 const RESIZER_MAX_SIDE_KEY='stillSane.photoResizerMaxSideV1';
 const RESIZER_UPSCALE_KEY='stillSane.photoResizerUpscaleV1';
 const RESIZER_ALLOWED_EXTENSIONS=new Set(['.jpg','.jpeg','.png','.bmp','.tif','.tiff','.webp','.heic','.heif','.avif','.jxl']);
@@ -3970,7 +4008,7 @@ let photoResizeLookStrength=0;
 let photoResizeLookOverrides={};
 let photoResizeApplyToBatch=true;
 let photoResizePreviewFileId='';
-let photoResizeCurrentFileId='';
+let photoEditCurrentFileId='';
 let photoResizePreviewZoom=1;
 let photoResizePreviewPanX=0,photoResizePreviewPanY=0,photoResizePreviewDragging=false,photoResizePreviewDragPointerId=null;
 let photoResizePreviewDragStartX=0,photoResizePreviewDragStartY=0,photoResizePreviewDragOriginX=0,photoResizePreviewDragOriginY=0;
@@ -3995,6 +4033,16 @@ let photoResizeCompleted=false;
 let photoResizeSelectionChangedDuringRun=false;
 let photoResizeSelectionLabel='';
 let photoResizeAvailableCount=0;
+let photoEditQueue=[];
+let photoEditSessionId='';
+let photoEditUploadedCount=0;
+let photoEditBusy=false;
+let photoEditConverting=false;
+let photoEditCompleted=false;
+let photoEditSelectionChangedDuringRun=false;
+let photoEditSelectionLabel='';
+let photoEditAvailableCount=0;
+let photoEditTargetSignature='';
 let photoResizeUpscaleEnabled=true;
 function makePhotoResizeGuid(){try{if(window.crypto?.randomUUID)return window.crypto.randomUUID()}catch(_){}return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)})}
 function photoAdjustmentSuffix(name){return name.charAt(0).toUpperCase()+name.slice(1)}
@@ -4040,22 +4088,23 @@ function syncPhotoResizeAdjustmentControls(){
   document.querySelectorAll('[data-adjustment]').forEach(input=>{
     const name=input.dataset.adjustment;
     if(!Object.prototype.hasOwnProperty.call(PHOTO_ADJUSTMENT_DEFAULTS,name))return;
+    input.disabled=photoEditBusy;
     if(name==='monochromeGrain'){input.checked=Boolean(photoResizeAdjustments[name]);return}
     input.value=String(photoResizeAdjustments[name]);
     const output=document.getElementById('photoAdjValue'+photoAdjustmentSuffix(name));
     if(output)output.textContent=formatPhotoResizeAdjustmentValue(name,photoResizeAdjustments[name]);
   });
-  document.querySelectorAll('[data-photo-look]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.photoLook===photoResizeActiveLook)));
+  document.querySelectorAll('[data-photo-look]').forEach(button=>{button.setAttribute('aria-pressed',String(button.dataset.photoLook===photoResizeActiveLook));button.disabled=photoEditBusy});
   const lookStrength=document.getElementById('photoResizeLookStrength');
-  if(lookStrength){lookStrength.value=String(photoResizeLookStrength);lookStrength.disabled=!photoResizeActiveLook||photoResizeBusy}
+  if(lookStrength){lookStrength.value=String(photoResizeLookStrength);lookStrength.disabled=!photoResizeActiveLook||photoEditBusy}
   const lookStrengthValue=document.getElementById('photoResizeLookStrengthValue');
   if(lookStrengthValue)lookStrengthValue.textContent=`${photoResizeLookStrength}%`;
   const lookUpdate=document.getElementById('photoResizeLookUpdateBtn');
-  if(lookUpdate)lookUpdate.disabled=!photoResizeActiveLook||photoResizeBusy;
+  if(lookUpdate)lookUpdate.disabled=!photoResizeActiveLook||photoEditBusy;
   const lookReset=document.getElementById('photoResizeLookResetBtn');
-  if(lookReset)lookReset.disabled=!photoResizeActiveLook||photoResizeBusy;
+  if(lookReset)lookReset.disabled=!photoResizeActiveLook||photoEditBusy;
   const batch=document.getElementById('photoAdjustmentBatch');
-  if(batch)batch.checked=photoResizeApplyToBatch;
+  if(batch){batch.checked=photoResizeApplyToBatch;batch.disabled=photoEditBusy;}
   const summary=document.getElementById('photoAdjustmentSummary');
   if(summary){
     const count=Object.keys(PHOTO_ADJUSTMENT_DEFAULTS).filter(name=>!PHOTO_ADJUSTMENT_META_KEYS.has(name)&&((typeof photoResizeAdjustments[name]==='boolean'&&photoResizeAdjustments[name])||Number(photoResizeAdjustments[name])!==0)).length;
@@ -4100,7 +4149,7 @@ function loadPhotoResizeAdjustments(){
 }
 function persistPhotoResizeAdjustments(){try{localStorage.setItem(RESIZER_ADJUSTMENTS_KEY,JSON.stringify(photoResizeAdjustments));localStorage.setItem(RESIZER_LOOK_STATE_KEY,JSON.stringify({name:photoResizeActiveLook,strength:photoResizeLookStrength,overrides:photoResizeLookOverrides}))}catch(_){}}
 function loadPhotoResizeBatchPreference(){try{photoResizeApplyToBatch=localStorage.getItem(RESIZER_ADJUST_BATCH_KEY)!=='0'}catch(_){photoResizeApplyToBatch=true}const input=document.getElementById('photoAdjustmentBatch');if(input)input.checked=photoResizeApplyToBatch}
-function updatePhotoResizeBatchPreference(enabled){photoResizeApplyToBatch=Boolean(enabled);try{localStorage.setItem(RESIZER_ADJUST_BATCH_KEY,photoResizeApplyToBatch?'1':'0')}catch(_){}const input=document.getElementById('photoAdjustmentBatch');if(input)input.checked=photoResizeApplyToBatch;syncPhotoResizeControls()}
+function updatePhotoResizeBatchPreference(enabled){photoResizeApplyToBatch=Boolean(enabled);try{localStorage.setItem(RESIZER_ADJUST_BATCH_KEY,photoResizeApplyToBatch?'1':'0')}catch(_){}const input=document.getElementById('photoAdjustmentBatch');if(input)input.checked=photoResizeApplyToBatch;syncPhotoEditControls()}
 function updatePhotoResizeAdjustment(name,rawValue){
   if(!Object.prototype.hasOwnProperty.call(PHOTO_ADJUSTMENT_DEFAULTS,name))return;
   if(name==='monochromeGrain')photoResizeAdjustments[name]=Boolean(rawValue);
@@ -4145,7 +4194,7 @@ function getPhotoResizeLookAdjustments(name,strengthPercent,overrides={}){
   return next;
 }
 function applyPhotoResizeLook(name){
-  if(photoResizeBusy)return;
+  if(photoEditBusy)return;
   const look=PHOTO_RESIZE_LOOKS[name];
   if(!look)return;
   photoResizeActiveLook=name;
@@ -4155,10 +4204,10 @@ function applyPhotoResizeLook(name){
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
-  setPhotoResizeStatus(`${look.label} look applied. Change its strength or individual sliders; save or reset this look with the icons above.`);
+  setPhotoEditStatus(`${look.label} look applied. Change its strength or individual sliders; save or reset this look with the icons above.`);
 }
 function updatePhotoResizeLookPreset(){
-  if(photoResizeBusy||!photoResizeActiveLook)return;
+  if(photoEditBusy||!photoResizeActiveLook)return;
   const name=photoResizeActiveLook,look=PHOTO_RESIZE_LOOKS[name];
   if(!look)return;
   const values={};
@@ -4171,10 +4220,10 @@ function updatePhotoResizeLookPreset(){
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
-  setPhotoResizeStatus(`${look.label} look updated and saved for future use.`);
+  setPhotoEditStatus(`${look.label} look updated and saved for future use.`);
 }
 function resetPhotoResizeLookPreset(){
-  if(photoResizeBusy||!photoResizeActiveLook)return;
+  if(photoEditBusy||!photoResizeActiveLook)return;
   const name=photoResizeActiveLook,defaultLook=PHOTO_RESIZE_LOOK_DEFAULTS[name];
   if(!defaultLook)return;
   PHOTO_RESIZE_LOOKS[name]=JSON.parse(JSON.stringify(defaultLook));
@@ -4185,10 +4234,10 @@ function resetPhotoResizeLookPreset(){
   syncPhotoResizeAdjustmentControls();
   persistPhotoResizeAdjustments();
   schedulePhotoResizePreviewRender();
-  setPhotoResizeStatus(`${defaultLook.label} look restored to its original defaults.`);
+  setPhotoEditStatus(`${defaultLook.label} look restored to its original defaults.`);
 }
 function updatePhotoResizeLookStrength(rawValue){
-  if(photoResizeBusy||!photoResizeActiveLook)return;
+  if(photoEditBusy||!photoResizeActiveLook)return;
   const strength=Number(rawValue);
   if(!Number.isFinite(strength))return;
   photoResizeLookStrength=Math.round(Math.max(0,Math.min(100,strength)));
@@ -4217,11 +4266,11 @@ function resetPhotoResizeAdjustments(){
   persistPhotoResizeAdjustments();
   updatePhotoResizeBatchPreference(true);
   schedulePhotoResizePreviewRender();
-  setPhotoResizeStatus('Image adjustments reset to their default values.');
+  setPhotoEditStatus('Image adjustments reset to their default values.');
 }
 function revokePhotoResizePreviewUrl(){if(photoResizePreviewObjectUrl){try{URL.revokeObjectURL(photoResizePreviewObjectUrl)}catch(_){}photoResizePreviewObjectUrl=''}}
 function getCurrentPhotoResizePreviewItem(){
-  return photoResizeQueue.find(entry=>entry.id===photoResizeCurrentFileId)||photoResizeQueue.find(entry=>entry.selected)||photoResizeQueue[0]||null;
+  return photoEditQueue.find(entry=>entry.id===photoEditCurrentFileId)||photoEditQueue.find(entry=>entry.selected)||photoEditQueue[0]||null;
 }
 function refreshPhotoResizePreview(){
   const item=getCurrentPhotoResizePreviewItem();
@@ -4232,7 +4281,8 @@ function refreshPhotoResizePreview(){
   const toggle=document.getElementById('photoResizePreviewToggle');
   if(!canvas||!message)return;
   if(!item){
-    if(photoResizePreviewFileId||photoResizePreviewImageData){photoResizePreviewGeneration++;photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;revokePhotoResizePreviewUrl()}
+    if(photoResizePreviewFileId||photoResizePreviewImageData){photoResizePreviewGeneration++;photoResizePreviewFileId='';photoResizePreviewImageData=null;revokePhotoResizePreviewUrl()}
+    photoEditCurrentFileId='';
     photoResizePreviewOriginal=false;
     photoResizePreviewComparePointer=null;photoResizePreviewComparePosition=0.5;photoResizePreviewCompareHasPosition=false;photoResizePreviewCompareFrozen=false;
     canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Select a photo thumbnail to preview adjustments.';
@@ -4241,7 +4291,7 @@ function refreshPhotoResizePreview(){
     applyPhotoResizePreviewZoom();
     return;
   }
-  photoResizeCurrentFileId=item.id;
+  photoEditCurrentFileId=item.id;
   if(item.id===photoResizePreviewFileId){applyPhotoResizePreviewZoom();return}
   photoResizePreviewFileId=item.id;
   const token=++photoResizePreviewGeneration;
@@ -4251,8 +4301,8 @@ function refreshPhotoResizePreview(){
   photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
   photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
   canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Loading preview…';
-  const itemNumber=photoResizeQueue.indexOf(item)+1;
-  if(title)title.textContent=`Photo ${itemNumber} of ${photoResizeQueue.length}`;
+  const itemNumber=photoEditQueue.indexOf(item)+1;
+  if(title)title.textContent=`Photo ${itemNumber} of ${photoEditQueue.length}`;
   if(toggle){toggle.disabled=true;toggle.setAttribute('aria-pressed','false')}
   applyPhotoResizePreviewZoom();
   revokePhotoResizePreviewUrl();
@@ -4752,18 +4802,31 @@ function applyPhotoResizePreviewAdjustments(pixels,width,height,settings,seedDat
   if(settings.halftone>0)photoPreviewHalftone(pixels,width,height,settings.halftone,settings.halftoneSize);
   if(settings.pixelate>0)photoPreviewPixelate(pixels,width,height,settings.pixelate);
 }
-function loadPhotoResizerSettings(){const output=document.getElementById('resizerOutputFolder');const maxSide=document.getElementById('resizerMaxSide');if(output){try{const saved=localStorage.getItem(RESIZER_OUTPUT_FOLDER_KEY);if(saved&&saved.trim())output.value=saved.trim()}catch(_){}}if(maxSide){let saved=2048;try{const raw=Number(localStorage.getItem(RESIZER_MAX_SIDE_KEY));if(Number.isInteger(raw)&&raw>=64&&raw<=16384)saved=raw}catch(_){}maxSide.value=String(saved)}try{photoResizeUpscaleEnabled=localStorage.getItem(RESIZER_UPSCALE_KEY)!=='0'}catch(_){photoResizeUpscaleEnabled=true}renderPhotoResizeUpscaleToggle();syncResizerNoDuplicatesButton();loadPhotoResizeAdjustments();loadPhotoResizeBatchPreference();initPhotoResizePreviewZoom()}
+function loadPhotoResizerSettings(){const output=document.getElementById('resizerOutputFolder');const editOutput=document.getElementById('photoEditOutputFolder');const maxSide=document.getElementById('resizerMaxSide');if(output){try{const saved=localStorage.getItem(RESIZER_OUTPUT_FOLDER_KEY);if(saved&&saved.trim())output.value=saved.trim()}catch(_){}}if(editOutput){try{const saved=localStorage.getItem(PHOTO_EDIT_OUTPUT_FOLDER_KEY);editOutput.value=saved&&saved.trim()?saved.trim():PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER}catch(_){editOutput.value=PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER}}if(maxSide){let saved=2048;try{const raw=Number(localStorage.getItem(RESIZER_MAX_SIDE_KEY));if(Number.isInteger(raw)&&raw>=64&&raw<=16384)saved=raw}catch(_){}maxSide.value=String(saved)}try{photoResizeUpscaleEnabled=localStorage.getItem(RESIZER_UPSCALE_KEY)!=='0'}catch(_){photoResizeUpscaleEnabled=true}renderPhotoResizeUpscaleToggle();syncResizerNoDuplicatesButton();loadPhotoResizeAdjustments();loadPhotoResizeBatchPreference();initPhotoResizePreviewZoom();syncPhotoResizeControls();syncPhotoEditControls()}
 function persistPhotoResizerOutputFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(RESIZER_OUTPUT_FOLDER_KEY,path.trim())}catch(_){}}
 function getConfiguredPhotoResizerOutputFolder(){const input=document.getElementById('resizerOutputFolder');const value=String(input?.value||'~/Pictures/Instagram/Resized').trim()||'~/Pictures/Instagram/Resized';persistPhotoResizerOutputFolder(value);return value}
+function persistPhotoEditOutputFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(PHOTO_EDIT_OUTPUT_FOLDER_KEY,path.trim())}catch(_){}}
+function getConfiguredPhotoEditOutputFolder(){const input=document.getElementById('photoEditOutputFolder');const value=String(input?.value||PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER).trim()||PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER;persistPhotoEditOutputFolder(value);return value}
 function renderPhotoResizeUpscaleToggle(){const button=document.getElementById('resizerUpscaleToggleBtn');if(button){button.classList.toggle('active',photoResizeUpscaleEnabled);button.setAttribute('aria-pressed',String(photoResizeUpscaleEnabled));button.title=photoResizeUpscaleEnabled?'Upscaling smaller images: on. Click to turn off.':'Upscaling smaller images: off. Click to turn on.';button.disabled=photoResizeBusy}const hint=document.getElementById('resizerMaxSideHint');if(hint)hint.textContent=photoResizeUpscaleEnabled?'Larger images are reduced proportionally; smaller images are enlarged to this longest-side target.':'Larger images are reduced proportionally; smaller images are copied unchanged.'}
 function togglePhotoResizerUpscale(){if(photoResizeBusy)return;photoResizeUpscaleEnabled=!photoResizeUpscaleEnabled;try{localStorage.setItem(RESIZER_UPSCALE_KEY,photoResizeUpscaleEnabled?'1':'0')}catch(_){}renderPhotoResizeUpscaleToggle();setPhotoResizeStatus(photoResizeUpscaleEnabled?'Smaller images will be enlarged to the target size.':'Smaller images will be copied unchanged.',photoResizeUpscaleEnabled?'success':'')}
 function saveResizerMaxSide(value){const input=document.getElementById('resizerMaxSide');const n=Number(value);if(!Number.isInteger(n)||n<64||n>16384){if(input)input.value='2048';setPhotoResizeStatus('Enter a whole number from 64 to 16,384 pixels.','error');syncPhotoResizeControls();return}try{localStorage.setItem(RESIZER_MAX_SIDE_KEY,String(n))}catch(_){}setPhotoResizeStatus('Maximum longest side set to '+n.toLocaleString()+' pixels.');syncPhotoResizeControls()}
 function stepResizerMaxSide(direction){if(photoResizeBusy)return;const input=document.getElementById('resizerMaxSide');if(!input)return;const current=Number(input.value);const base=Number.isInteger(current)?current:2048;const amount=Number(direction)>=0?50:-50;input.value=String(Math.max(64,Math.min(16384,base+amount)));saveResizerMaxSide(input.value)}
 async function chooseResizerOutputFolder(){const input=document.getElementById('resizerOutputFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistPhotoResizerOutputFolder(data.path);toast('Resized-photo folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
+async function choosePhotoEditOutputFolder(){if(photoEditBusy)return;const input=document.getElementById('photoEditOutputFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistPhotoEditOutputFolder(data.path);toast('Edited-images folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
 function chooseResizerImages(){if(photoResizeBusy)return;const input=document.getElementById('resizerImagesInput');if(!input)return;input.value='';input.click()}
-function photoResizeErrorMessage(code){const messages={invalid_upload:'This file could not be added.',empty_file:'The selected file is empty.',file_too_large:'Each image must be 50 MB or smaller.',unsupported_image_type:'That file type is not supported.',too_many_files:'A maximum of 500 images can be loaded at once.',upload_limit_reached:'The 1 GB staging limit has been reached.',upload_failed:'The image could not be uploaded.',invalid_max_side:'Choose a maximum side from 64 to 16,384 pixels.',no_uploaded_files:'Select at least one image to convert.',output_folder_unavailable:'The resized-photo folder could not be opened. Check its location and permissions.',image_decode_failed:'The image format could not be decoded by Windows.',image_too_large:'This image is too large for safe adjustment processing at that output size. Lower the maximum side or turn off upscaling.',resize_failed:'The image could not be resized or saved.',conversion_failed:'The conversion did not complete. Your uploaded images are still staged.',invalid_request:'The conversion request was invalid.'};return messages[code]||'The request could not be completed.'}
+function choosePhotoEditImages(){if(photoEditBusy)return;const input=document.getElementById('photoEditImagesInput');if(!input)return;input.value='';input.click()}
+function photoResizeErrorMessage(code){const messages={invalid_upload:'This file could not be added.',empty_file:'The selected file is empty.',file_too_large:'Each image must be 50 MB or smaller.',unsupported_image_type:'That file type is not supported.',too_many_files:'A maximum of 500 images can be loaded at once.',upload_limit_reached:'The 1 GB staging limit has been reached.',upload_failed:'The image could not be uploaded.',invalid_max_side:'Choose a maximum side from 64 to 16,384 pixels.',no_uploaded_files:'Select at least one image to convert.',output_folder_unavailable:'The resized-photo folder could not be opened. Check its location and permissions.',image_decode_failed:'Windows could not extract pixels for this conversion; no output was saved.',image_too_large:'This image is too large for safe adjustment processing. Try a smaller image or reduce its dimensions first.',resize_failed:'The image could not be resized or saved.',conversion_failed:'The conversion did not complete. Your uploaded images are still staged.',invalid_request:'The conversion request was invalid.'};return messages[code]||'The request could not be completed.'}
 function setPhotoResizeStatus(message,kind=''){
   const status=document.getElementById('resizerStatus');
+  if(!status)return;
+  const text=String(message||'');
+  status.textContent=text;
+  status.hidden=!text;
+  status.classList.toggle('is-error',kind==='error');
+  status.classList.toggle('is-success',kind==='success');
+}
+function setPhotoEditStatus(message,kind=''){
+  const status=document.getElementById('photoEditStatus');
   if(!status)return;
   const text=String(message||'');
   status.textContent=text;
@@ -4776,31 +4839,41 @@ function revokePhotoResizeThumbnailUrls(items=photoResizeQueue){
   for(const item of items||[]){if(item?.thumbnailUrl){try{URL.revokeObjectURL(item.thumbnailUrl)}catch(_){}item.thumbnailUrl=''}}
 }
 function createPhotoResizeThumbnailUrl(file){try{return URL.createObjectURL(file)}catch(_){return''}}
-function selectPhotoResizePreview(index){
+function togglePhotoResizeSelectedFromThumbnail(index){
   const item=photoResizeQueue[index];
+  if(item)setPhotoResizeSelected(index,!item.selected);
+}
+function selectPhotoEditPreview(index){
+  const item=photoEditQueue[index];
   if(!item)return;
-  photoResizeCurrentFileId=item.id;
-  syncPhotoResizeControls();
+  photoEditCurrentFileId=item.id;
+  syncPhotoEditControls();
 }
-function getPhotoResizeEmptyThumbnailMarkup(){
-  const tile='<span class="resizer-photo-empty-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 4.2-4.2L12 15.5l2-2 5 4"/></svg></span>';
-  return tile.repeat(3)+'<span class="resizer-photo-empty-note">Your square photo thumbnails will appear here.</span>';
-}
-function renderPhotoResizeFileList(){
-  const list=document.getElementById('resizerFileList');
+function renderPhotoFileStrip(queue,listId,{currentId='',selectAction,selectionAction,selectionLabel,emptyText}={}){
+  const list=document.getElementById(listId);
   if(!list)return;
   const previousScrollLeft=list.scrollLeft;
-  const thumbnailMarkup=photoResizeQueue.map((item,index)=>{
+  const markup=(queue||[]).map((item,index)=>{
     const checked=item.selected?' checked':'';
     const image=item.thumbnailUrl?`<img src="${escapeHtml(item.thumbnailUrl)}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`:'';
     const placeholder=`<span class="resizer-photo-thumb-placeholder"${item.thumbnailUrl?' hidden':''} aria-hidden="true">Photo ${index+1}</span>`;
-    const current=item.id===photoResizeCurrentFileId;
+    const pressed=currentId?item.id===currentId:Boolean(item.selected);
     const status=item.error?'!':item.uploaded?'✓':'';
     const statusClass=item.error?' is-error':'';
-    return`<div class="resizer-photo-tile"><input class="resizer-photo-select" type="checkbox"${checked} aria-label="Include photo ${index+1} in batch" onchange="setPhotoResizeSelected(${index},this.checked)"><button type="button" class="resizer-photo-thumb" aria-pressed="${current}" aria-label="Preview photo ${index+1}" title="Preview photo ${index+1}" onclick="selectPhotoResizePreview(${index})">${image}${placeholder}</button><span class="resizer-photo-thumb-status${statusClass}" aria-hidden="true">${status}</span></div>`
+    const buttonLabel=currentId?`Preview and edit photo ${index+1}`:`Toggle photo ${index+1} for Convert`;
+    const buttonTitle=currentId?buttonLabel:`Click to toggle photo ${index+1} for Convert`;
+    return`<div class="resizer-photo-tile" data-photo-order="${item.order}"><input class="resizer-photo-select" type="checkbox"${checked} aria-label="Include photo ${index+1} in ${escapeHtml(selectionLabel||'batch')}" onchange="${selectionAction}(${index},this.checked)"><button type="button" class="resizer-photo-thumb" aria-pressed="${pressed}" aria-label="${buttonLabel}" title="${buttonTitle}" onclick="${selectAction}(${index})">${image}${placeholder}</button><span class="resizer-photo-thumb-status${statusClass}" aria-hidden="true">${status}</span></div>`
   }).join('');
-  list.innerHTML=thumbnailMarkup||getPhotoResizeEmptyThumbnailMarkup();
-  list.scrollLeft=thumbnailMarkup?previousScrollLeft:0;
+  list.innerHTML=markup||`<span class="resizer-photo-empty-note">${escapeHtml(emptyText||'Choose images to begin.')}</span>`;
+  list.scrollLeft=markup?Math.min(previousScrollLeft,Math.max(0,list.scrollWidth-list.clientWidth)):0;
+}
+function renderPhotoResizeFileList(){
+  renderPhotoFileStrip(photoResizeQueue,'resizerFileList',{
+    selectAction:'togglePhotoResizeSelectedFromThumbnail',
+    selectionAction:'setPhotoResizeSelected',
+    selectionLabel:'Convert',
+    emptyText:'Choose images to start converting.'
+  });
   const available=document.getElementById('resizerAvailableCount');
   if(available){
     const queued=photoResizeQueue.length;
@@ -4810,23 +4883,48 @@ function renderPhotoResizeFileList(){
       ?`${queued} photos listed · first ${RESIZER_MAX_FILES} of ${photoResizeAvailableCount} supported · ${selectionText}`
       :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
   }
+  syncResizerPhotoScrollButtons();
 }
-function syncPhotoAdjustmentPhotoScrollButtons(){
-  const strip=document.getElementById('photoAdjustmentPhotoStrip');
-  const left=document.getElementById('photoAdjustmentPhotoScrollLeftBtn');
-  const right=document.getElementById('photoAdjustmentPhotoScrollRightBtn');
+function renderPhotoAdjustmentPhotoStrip(){
+  renderPhotoFileStrip(photoEditQueue,'photoAdjustmentPhotoStrip',{
+    currentId:photoEditCurrentFileId,
+    selectAction:'selectPhotoEditPreview',
+    selectionAction:'setPhotoEditSelected',
+    selectionLabel:'Edit download',
+    emptyText:'Choose images to preview and edit.'
+  });
+  const available=document.getElementById('photoEditAvailableCount');
+  if(available){
+    const queued=photoEditQueue.length;
+    const selected=photoEditQueue.filter(item=>item.selected).length;
+    const selectionText=`${selected} selected`;
+    available.textContent=queued===0?'Choose images to begin':photoEditAvailableCount>queued
+      ?`${queued} photos listed · first ${RESIZER_MAX_FILES} of ${photoEditAvailableCount} supported · ${selectionText}`
+      :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
+  }
+  syncPhotoAdjustmentPhotoScrollButtons();
+}
+function syncPhotoStripScrollButtons(stripId,leftId,rightId){
+  const strip=document.getElementById(stripId);
+  const left=document.getElementById(leftId);
+  const right=document.getElementById(rightId);
   if(!strip)return;
-  if(left)left.disabled=strip.scrollLeft<=1;
-  if(right)right.disabled=strip.scrollLeft+strip.clientWidth>=strip.scrollWidth-1;
+  const canScroll=strip.scrollWidth>strip.clientWidth+1;
+  if(left)left.disabled=!canScroll||strip.scrollLeft<=1;
+  if(right)right.disabled=!canScroll||strip.scrollLeft+strip.clientWidth>=strip.scrollWidth-1;
 }
-function scrollPhotoAdjustmentPhotos(direction){
-  const strip=document.getElementById('photoAdjustmentPhotoStrip');
+function syncResizerPhotoScrollButtons(){syncPhotoStripScrollButtons('resizerFileList','resizerPhotoScrollLeftBtn','resizerPhotoScrollRightBtn')}
+function syncPhotoAdjustmentPhotoScrollButtons(){syncPhotoStripScrollButtons('photoAdjustmentPhotoStrip','photoAdjustmentPhotoScrollLeftBtn','photoAdjustmentPhotoScrollRightBtn')}
+function scrollPhotoStrip(stripId,direction){
+  const strip=document.getElementById(stripId);
   if(!strip)return;
   const distance=Math.max(111,Math.round(strip.clientWidth*.75))*Math.sign(Number(direction)||1);
   if(typeof strip.scrollBy==='function')strip.scrollBy({left:distance,behavior:'smooth'});
   else strip.scrollLeft+=distance;
 }
-function scrollPhotoAdjustmentPhotosByWheel(event){
+function scrollResizerPhotos(direction){scrollPhotoStrip('resizerFileList',direction)}
+function scrollPhotoAdjustmentPhotos(direction){scrollPhotoStrip('photoAdjustmentPhotoStrip',direction)}
+function scrollPhotoStripByWheel(event){
   const strip=event.currentTarget;
   if(!strip||strip.scrollWidth<=strip.clientWidth)return;
   const delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;
@@ -4834,30 +4932,16 @@ function scrollPhotoAdjustmentPhotosByWheel(event){
   strip.scrollLeft+=delta;
   event.preventDefault();
 }
-function renderPhotoAdjustmentPhotoStrip(){
-  const strip=document.getElementById('photoAdjustmentPhotoStrip');
-  if(!strip)return;
-  const previousScrollLeft=strip.scrollLeft;
-  const thumbnails=photoResizeQueue.map((item,index)=>{
-    const current=item.id===photoResizeCurrentFileId;
-    const image=item.thumbnailUrl?`<img src="${escapeHtml(item.thumbnailUrl)}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true">`:'';
-    return`<button type="button" class="photo-adjustment-photo-thumb" aria-pressed="${current}" aria-label="Preview and edit photo ${index+1}" title="Preview and edit photo ${index+1}" onclick="selectPhotoResizePreview(${index})">${image}<span class="photo-adjustment-photo-index" aria-hidden="true">${index+1}</span></button>`;
-  }).join('');
-  strip.innerHTML=thumbnails||'<span class="photo-adjustment-photo-empty">Choose photos to preview and edit.</span>';
-  strip.scrollLeft=thumbnails?Math.min(previousScrollLeft,Math.max(0,strip.scrollWidth-strip.clientWidth)):0;
-  syncPhotoAdjustmentPhotoScrollButtons();
-}
-function updatePhotoResizeThumbnailStatus(item){
-  const status=document.getElementById('resizerFileList')?.children?.[item?.order]?.querySelector?.('.resizer-photo-thumb-status');
+function scrollResizerPhotosByWheel(event){scrollPhotoStripByWheel(event)}
+function scrollPhotoAdjustmentPhotosByWheel(event){scrollPhotoStripByWheel(event)}
+function updatePhotoResizeThumbnailStatus(item,listId='resizerFileList'){
+  const status=document.getElementById(listId)?.querySelector?.(`[data-photo-order="${Number(item?.order)}"] .resizer-photo-thumb-status`);
   if(!status)return;
   status.textContent=item.error?'!':item.uploaded?'✓':'';
   status.classList.toggle('is-error',Boolean(item.error));
 }
-function syncPhotoResizeControls({renderFiles=true,refreshPreview=true}={}){
+function syncPhotoResizeControls({renderFiles=true}={}){
   const busy=photoResizeBusy;
-  document.querySelectorAll('[data-photo-look]').forEach(button=>button.disabled=busy);
-  const lookStrength=document.getElementById('photoResizeLookStrength');
-  if(lookStrength)lookStrength.disabled=busy||!photoResizeActiveLook;
   const upscaleToggle=document.getElementById('resizerUpscaleToggleBtn');
   if(upscaleToggle)upscaleToggle.disabled=busy;
   const choose=document.getElementById('resizerChooseImagesBtn');
@@ -4882,18 +4966,36 @@ function syncPhotoResizeControls({renderFiles=true,refreshPreview=true}={}){
     start.disabled=busy||!hasSelection||!valid;
     start.textContent=busy?(photoResizeConverting?'Converting…':'Uploading…'):'Convert';
   }
-  const adjustmentReset=document.getElementById('photoAdjustmentResetBtn');
-  if(adjustmentReset)adjustmentReset.disabled=busy;
-  const download=document.getElementById('photoAdjustmentDownloadBtn');
-  if(download){
-    const hasDownloadTarget=photoResizeApplyToBatch?photoResizeQueue.some(item=>item.selected):Boolean(getCurrentPhotoResizePreviewItem());
-    download.disabled=busy||!hasDownloadTarget;
-  }
   const reset=document.getElementById('resizerResetBtn');
   if(reset)reset.disabled=busy||(!photoResizeSelectionLabel&&!photoResizeQueue.length&&!photoResizeUploadedCount&&!photoResizeCompleted);
   const panel=document.getElementById('resizerFilePanel');
   if(panel)panel.hidden=false;
-  if(renderFiles){renderPhotoResizeFileList();renderPhotoAdjustmentPhotoStrip()}
+  if(renderFiles)renderPhotoResizeFileList();
+}
+function syncPhotoEditControls({renderFiles=true,refreshPreview=true}={}){
+  const busy=photoEditBusy;
+  syncPhotoResizeAdjustmentControls();
+  const adjustmentReset=document.getElementById('photoAdjustmentResetBtn');
+  if(adjustmentReset)adjustmentReset.disabled=busy;
+  const choose=document.getElementById('photoEditChooseImagesBtn');
+  if(choose)choose.disabled=busy;
+  const browseFolder=document.getElementById('photoEditBrowseFolderBtn');
+  if(browseFolder)browseFolder.disabled=busy;
+  const hasFiles=photoEditQueue.length>0;
+  const selectAll=document.getElementById('photoEditSelectAllBtn');
+  if(selectAll)selectAll.disabled=!hasFiles;
+  const clearSelection=document.getElementById('photoEditClearSelectionBtn');
+  if(clearSelection)clearSelection.disabled=!hasFiles;
+  const clearImages=document.getElementById('photoEditClearImagesBtn');
+  if(clearImages)clearImages.disabled=busy||!hasFiles;
+  const download=document.getElementById('photoAdjustmentDownloadBtn');
+  if(download){
+    const hasDownloadTarget=photoResizeApplyToBatch?photoEditQueue.some(item=>item.selected):Boolean(getCurrentPhotoResizePreviewItem());
+    download.disabled=busy||!hasDownloadTarget;
+  }
+  const panel=document.getElementById('photoEditFilePanel');
+  if(panel)panel.hidden=false;
+  if(renderFiles)renderPhotoAdjustmentPhotoStrip();
   if(refreshPreview)refreshPhotoResizePreview();
 }
 function resetPhotoResizeStaging(clearResults=true){
@@ -4905,10 +5007,26 @@ function resetPhotoResizeStaging(clearResults=true){
   photoResizeQueue.forEach(item=>{item.uploaded=false;item.error=''});
   if(clearResults){const results=document.getElementById('resizerResults');if(results)results.innerHTML=''}
 }
+function resetPhotoEditStaging(clearResults=true){
+  const previousSession=photoEditSessionId;
+  if(previousSession)void deletePhotoResizeSession(previousSession);
+  photoEditSessionId='';
+  photoEditUploadedCount=0;
+  photoEditCompleted=false;
+  photoEditTargetSignature='';
+  photoEditQueue.forEach(item=>{item.uploaded=false;item.error=''});
+  if(clearResults){const results=document.getElementById('photoEditResults');if(results)results.innerHTML=''}
+}
 function notePhotoResizeSelectionChange(){
   if(photoResizeBusy){photoResizeSelectionChangedDuringRun=true;return false}
   const hasStagedData=photoResizeCompleted||photoResizeUploadedCount>0||photoResizeQueue.some(item=>item.uploaded||item.error);
   if(hasStagedData){resetPhotoResizeStaging();return true}
+  return false;
+}
+function notePhotoEditSelectionChange(){
+  if(photoEditBusy){photoEditSelectionChangedDuringRun=true;return false}
+  const hasStagedData=photoEditCompleted||photoEditUploadedCount>0||photoEditQueue.some(item=>item.uploaded||item.error);
+  if(hasStagedData){resetPhotoEditStaging();return true}
   return false;
 }
 function setPhotoResizeSelected(index,selected){
@@ -4929,6 +5047,24 @@ function selectAllResizerFiles(selected){
   syncPhotoResizeControls();
   if(restaged)setPhotoResizeStatus('Selection updated. Press Convert to process the selected images.');
 }
+function setPhotoEditSelected(index,selected){
+  const item=photoEditQueue[index];
+  if(!item)return;
+  const next=Boolean(selected);
+  if(item.selected===next)return;
+  const restaged=notePhotoEditSelectionChange();
+  item.selected=next;
+  syncPhotoEditControls();
+  if(restaged)setPhotoEditStatus('Edit selection updated. Press Download to process the selected images.');
+}
+function selectAllPhotoEditFiles(selected){
+  const next=Boolean(selected);
+  if(!photoEditQueue.some(item=>item.selected!==next))return;
+  const restaged=notePhotoEditSelectionChange();
+  photoEditQueue.forEach(item=>{item.selected=next});
+  syncPhotoEditControls();
+  if(restaged)setPhotoEditStatus('Edit selection updated. Press Download to process the selected images.');
+}
 async function deletePhotoResizeSession(sessionId){if(!sessionId)return;const path='/api/resize-upload?sessionId='+encodeURIComponent(sessionId);for(const endpoint of getApiUrls(path)){await fetchEndpointJson(endpoint,30000,{method:'DELETE'});break}}
 function finishPhotoResizeOperation(originalSelection){
   const originalIds=new Set((originalSelection||[]).map(item=>item.id));
@@ -4943,32 +5079,63 @@ function finishPhotoResizeOperation(originalSelection){
   syncPhotoResizeControls();
   return selectionChanged;
 }
-function handleResizerImagesPicked(event){
-  const files=Array.from(event?.target?.files||[]);
-  if(!files.length)return;
-  const previousSession=photoResizeSessionId;
-  if(previousSession)void deletePhotoResizeSession(previousSession);
-  revokePhotoResizeThumbnailUrls(photoResizeQueue);
-  photoResizePreviewGeneration++;
-  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewComparePointer=null;photoResizePreviewComparePosition=0.5;photoResizePreviewCompareHasPosition=false;photoResizePreviewCompareFrozen=false;photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
-  revokePhotoResizePreviewUrl();
-  const supported=files.filter(file=>{
+function finishPhotoEditOperation(originalSelection){
+  const originalIds=new Set((originalSelection||[]).map(item=>item.id));
+  const currentSelection=photoEditQueue.filter(item=>item.selected);
+  const selectionChanged=photoEditSelectionChangedDuringRun&&(
+    currentSelection.length!==originalIds.size||currentSelection.some(item=>!originalIds.has(item.id))
+  );
+  photoEditSelectionChangedDuringRun=false;
+  photoEditBusy=false;
+  photoEditConverting=false;
+  if(selectionChanged)resetPhotoEditStaging(false);
+  syncPhotoEditControls();
+  return selectionChanged;
+}
+function createPhotoResizeQueueEntries(files){
+  const supported=Array.from(files||[]).filter(file=>{
     const dot=file.name.lastIndexOf('.');
     const ext=dot>=0?file.name.slice(dot).toLowerCase():'';
     return RESIZER_ALLOWED_EXTENSIONS.has(ext)&&file.size>0&&file.size<=RESIZER_MAX_FILE_BYTES;
   });
+  const queue=supported.slice(0,RESIZER_MAX_FILES).map((file,index)=>({file,id:makePhotoResizeGuid(),order:index,selected:true,uploaded:false,error:'',thumbnailUrl:createPhotoResizeThumbnailUrl(file)}));
+  return{supported,queue};
+}
+function resetPhotoEditPreviewState(){
+  photoResizePreviewGeneration++;
+  photoResizePreviewFileId='';
+  photoEditCurrentFileId='';
+  photoResizePreviewImageData=null;
+  photoResizePreviewOriginal=false;
+  photoResizePreviewComparePointer=null;
+  photoResizePreviewComparePosition=0.5;
+  photoResizePreviewCompareHasPosition=false;
+  photoResizePreviewCompareFrozen=false;
+  photoResizePreviewZoom=1;
+  photoResizePreviewPanX=0;
+  photoResizePreviewPanY=0;
+  photoResizePreviewDragging=false;
+  photoResizePreviewDragPointerId=null;
+  revokePhotoResizePreviewUrl();
+  hidePhotoResizePreviewCompare();
+}
+function handleResizerImagesPicked(event){
+  const files=Array.from(event?.target?.files||[]);
+  if(!files.length||photoResizeBusy)return;
+  const previousSession=photoResizeSessionId;
+  if(previousSession)void deletePhotoResizeSession(previousSession);
+  revokePhotoResizeThumbnailUrls(photoResizeQueue);
+  const{supported,queue}=createPhotoResizeQueueEntries(files);
   photoResizeAvailableCount=supported.length;
-  photoResizeQueue=supported.slice(0,RESIZER_MAX_FILES).map((file,index)=>({file,id:makePhotoResizeGuid(),order:index,selected:true,uploaded:false,error:'',thumbnailUrl:createPhotoResizeThumbnailUrl(file)}));
+  photoResizeQueue=queue;
   const thumbnailStrip=document.getElementById('resizerFileList');if(thumbnailStrip)thumbnailStrip.scrollLeft=0;
-  photoResizeCurrentFileId=photoResizeQueue[0]?.id||'';
   photoResizeSelectionLabel=photoResizeQueue.length?'selected':'';
   photoResizeSessionId=photoResizeQueue.length?makePhotoResizeGuid():'';
   photoResizeUploadedCount=0;
-  photoResizeBusy=false;
   photoResizeConverting=false;
   photoResizeCompleted=false;
   photoResizeSelectionChangedDuringRun=false;
-  document.getElementById('resizerResults').innerHTML='';
+  const results=document.getElementById('resizerResults');if(results)results.innerHTML='';
   const omitted=files.length-supported.length;
   const notes=[];
   if(omitted)notes.push(`${omitted} unsupported, empty, or over-50-MB file${omitted===1?' was':'s were'} skipped.`);
@@ -4977,12 +5144,56 @@ function handleResizerImagesPicked(event){
   else setPhotoResizeStatus(notes.join(' '));
   syncPhotoResizeControls();
 }
-async function uploadResizerFiles(selected){
+function handlePhotoEditImagesPicked(event){
+  const files=Array.from(event?.target?.files||[]);
+  if(!files.length||photoEditBusy)return;
+  const previousSession=photoEditSessionId;
+  if(previousSession)void deletePhotoResizeSession(previousSession);
+  revokePhotoResizeThumbnailUrls(photoEditQueue);
+  resetPhotoEditPreviewState();
+  const{supported,queue}=createPhotoResizeQueueEntries(files);
+  photoEditAvailableCount=supported.length;
+  photoEditQueue=queue;
+  photoEditCurrentFileId=photoEditQueue[0]?.id||'';
+  const thumbnailStrip=document.getElementById('photoAdjustmentPhotoStrip');if(thumbnailStrip)thumbnailStrip.scrollLeft=0;
+  photoEditSelectionLabel=photoEditQueue.length?'selected':'';
+  photoEditSessionId=photoEditQueue.length?makePhotoResizeGuid():'';
+  photoEditUploadedCount=0;
+  photoEditBusy=false;
+  photoEditConverting=false;
+  photoEditCompleted=false;
+  photoEditSelectionChangedDuringRun=false;
+  photoEditTargetSignature='';
+  const results=document.getElementById('photoEditResults');if(results)results.innerHTML='';
+  const omitted=files.length-supported.length;
+  const notes=[];
+  if(omitted)notes.push(`${omitted} unsupported, empty, or over-50-MB file${omitted===1?' was':'s were'} skipped.`);
+  if(supported.length>RESIZER_MAX_FILES)notes.push(`Only the first ${RESIZER_MAX_FILES} supported images are listed.`);
+  if(!photoEditQueue.length)setPhotoEditStatus('No supported images found. Choose supported image files up to 50 MB each.','error');
+  else setPhotoEditStatus(notes.join(' '));
+  syncPhotoEditControls();
+}
+async function uploadPhotoResizeQueueItems(selected,editor=false){
   let failed=0;
+  const state=editor?{
+    getSession:()=>photoEditSessionId,
+    getUploadedCount:()=>photoEditUploadedCount,
+    setUploadedCount:value=>{photoEditUploadedCount=value},
+    setStatus:setPhotoEditStatus,
+    stripId:'photoAdjustmentPhotoStrip',
+    sync:()=>syncPhotoEditControls({renderFiles:false,refreshPreview:false})
+  }:{
+    getSession:()=>photoResizeSessionId,
+    getUploadedCount:()=>photoResizeUploadedCount,
+    setUploadedCount:value=>{photoResizeUploadedCount=value},
+    setStatus:setPhotoResizeStatus,
+    stripId:'resizerFileList',
+    sync:()=>syncPhotoResizeControls({renderFiles:false})
+  };
   for(let index=0;index<selected.length;index++){
     const item=selected[index];
-    setPhotoResizeStatus(`Uploading image ${index+1} of ${selected.length}… ${photoResizeUploadedCount} uploaded so far.`);
-    const query=`?sessionId=${encodeURIComponent(photoResizeSessionId)}&fileId=${encodeURIComponent(item.id)}&order=${encodeURIComponent(item.order)}&fileName=${encodeURIComponent(item.file.name)}`;
+    state.setStatus(`Uploading image ${index+1} of ${selected.length}… ${state.getUploadedCount()} uploaded so far.`);
+    const query=`?sessionId=${encodeURIComponent(state.getSession())}&fileId=${encodeURIComponent(item.id)}&order=${encodeURIComponent(item.order)}&fileName=${encodeURIComponent(item.file.name)}`;
     let data=null;
     try{
       for(const endpoint of getApiUrls('/api/resize-upload'+query)){
@@ -4993,32 +5204,34 @@ async function uploadResizerFiles(selected){
     if(data?.ok){
       item.uploaded=true;
       item.error='';
-      photoResizeUploadedCount=Math.max(photoResizeUploadedCount,Number(data.uploadedCount)||0);
+      state.setUploadedCount(Math.max(state.getUploadedCount(),Number(data.uploadedCount)||0));
     }else{
       item.error=data?.error||'upload_failed';
       failed++;
     }
-    updatePhotoResizeThumbnailStatus(item);
-    syncPhotoResizeControls({renderFiles:false,refreshPreview:false});
+    updatePhotoResizeThumbnailStatus(item,state.stripId);
+    state.sync();
   }
   return failed;
 }
-function renderPhotoResizeResults(result){const box=document.getElementById('resizerResults');if(!box)return;const files=Array.isArray(result?.files)?result.files:[];box.innerHTML=files.map(item=>{const status=item.status==='resized'?(item.edited?'Resized · Edited':'Resized'):item.status==='edited'?'Edited':item.status==='unchanged'?'Copied unchanged':item.status==='skipped'?'Skipped (duplicate)':'Failed';const error=item.error?` · ${photoResizeErrorMessage(item.error)}`:'';const output=item.outputName?` → ${item.outputName}`:'';const failed=item.status==='failed';return`<div class="resizer-result-row"><span class="resizer-result-name">${escapeHtml(item.fileName||'Image')}${escapeHtml(output)}${escapeHtml(error)}</span><span class="resizer-result-status${failed?' is-error':''}">${status}</span></div>`}).join('')}
-async function startPhotoResizing(mode='convert'){
+async function uploadResizerFiles(selected){return uploadPhotoResizeQueueItems(selected,false)}
+async function uploadPhotoEditFiles(selected){return uploadPhotoResizeQueueItems(selected,true)}
+function renderPhotoResizeResults(result,boxId='resizerResults'){
+  const box=document.getElementById(boxId);
+  if(!box)return;
+  const files=Array.isArray(result?.files)?result.files:[];
+  box.innerHTML=files.map(item=>{
+    const status=item.status==='resized'?(item.edited?'Resized · Edited':'Resized'):item.status==='edited'?'Edited':item.status==='unchanged'?'Copied unchanged':item.status==='skipped'?'Skipped (duplicate)':'Failed';
+    const error=item.error?` · ${photoResizeErrorMessage(item.error)}`:'';
+    const output=item.outputName?` → ${item.outputName}`:'';
+    const failed=item.status==='failed';
+    return`<div class="resizer-result-row"><span class="resizer-result-name">${escapeHtml(item.fileName||'Image')}${escapeHtml(output)}${escapeHtml(error)}</span><span class="resizer-result-status${failed?' is-error':''}">${status}</span></div>`
+  }).join('');
+}
+async function startPhotoResizing(){
   if(photoResizeBusy)return;
-  const isEditorDownload=mode==='editor-download';
   const selectionSnapshot=photoResizeQueue.filter(item=>item.selected);
-  const currentPhoto=getCurrentPhotoResizePreviewItem();
-  const targetItems=isEditorDownload&&!photoResizeApplyToBatch
-    ?(currentPhoto?[currentPhoto]:[])
-    :selectionSnapshot;
-  if(!targetItems.length){
-    const message=isEditorDownload&&!photoResizeApplyToBatch
-      ?'Choose a photo thumbnail to download.'
-      :isEditorDownload?'Select at least one photo for the batch download.':'Select one or more images to convert.';
-    setPhotoResizeStatus(message,'error');
-    return;
-  }
+  if(!selectionSnapshot.length){setPhotoResizeStatus('Select one or more images to convert.','error');return}
   const input=document.getElementById('resizerMaxSide');
   const maxSide=Number(input?.value);
   if(!Number.isInteger(maxSide)||maxSide<64||maxSide>16384){
@@ -5027,13 +5240,10 @@ async function startPhotoResizing(mode='convert'){
     return;
   }
   try{localStorage.setItem(RESIZER_MAX_SIDE_KEY,String(maxSide))}catch(_){}
-  // Conversion consumes its server session. A single-photo Download also gets
-  // a fresh session so it cannot accidentally include previously staged images.
-  if(photoResizeCompleted||(isEditorDownload&&!photoResizeApplyToBatch))resetPhotoResizeStaging();
-  const pending=targetItems.filter(item=>!item.uploaded);
+  if(photoResizeCompleted)resetPhotoResizeStaging();
+  const pending=selectionSnapshot.filter(item=>!item.uploaded);
   const noDuplicates=isResizerNoDuplicatesEnabled();
-  const adjustments=getPhotoResizeAdjustmentPayload();
-  const applyAdjustmentsToBatch=isEditorDownload?true:photoResizeApplyToBatch;
+  const outputFolder=getConfiguredPhotoResizerOutputFolder();
   if(!photoResizeSessionId)photoResizeSessionId=makePhotoResizeGuid();
   photoResizeSelectionChangedDuringRun=false;
   photoResizeBusy=true;
@@ -5044,10 +5254,9 @@ async function startPhotoResizing(mode='convert'){
     if(failed){
       const uploaded=photoResizeUploadedCount;
       const selectionChanged=finishPhotoResizeOperation(selectionSnapshot);
-      const action=isEditorDownload?'Download':'Convert';
       const message=selectionChanged
-        ?`Upload attempt ended with ${uploaded} uploaded and ${failed} failed. Your updated selection is ready; press ${action} to retry it.`
-        :`${uploaded} uploaded; ${failed} failed. Press ${action} again to retry the remaining images.`;
+        ?`Upload attempt ended with ${uploaded} uploaded and ${failed} failed. Your updated selection is ready; press Convert to retry it.`
+        :`${uploaded} uploaded; ${failed} failed. Press Convert again to retry the remaining images.`;
       setPhotoResizeStatus(message,uploaded?'':'error');
       return;
     }
@@ -5059,8 +5268,10 @@ async function startPhotoResizing(mode='convert'){
   }
   photoResizeConverting=true;
   syncPhotoResizeControls();
-  setPhotoResizeStatus(`${isEditorDownload?'Saving':'Converting'} ${photoResizeUploadedCount} image${photoResizeUploadedCount===1?'':'s'}…`);
-  const body={sessionId:photoResizeSessionId,maxSide,upscale:photoResizeUpscaleEnabled,noDuplicates,outputFolder:getConfiguredPhotoResizerOutputFolder(),adjustments,applyAdjustmentsToBatch};
+  setPhotoResizeStatus(`Converting ${photoResizeUploadedCount} image${photoResizeUploadedCount===1?'':'s'}…`);
+  // Convert is intentionally adjustment-free: Edit's look and slider state never
+  // enter the Change resolution request.
+  const body={sessionId:photoResizeSessionId,maxSide,upscale:photoResizeUpscaleEnabled,noDuplicates,outputFolder};
   let data=null;
   try{
     for(const endpoint of getApiUrls('/api/resize-convert')){
@@ -5085,23 +5296,95 @@ async function startPhotoResizing(mode='convert'){
   const unchanged=Number(data.unchangedCount)||0;
   const skipped=Number(data.skippedCount)||0;
   const failed=Number(data.failedCount)||0;
-  const verb=isEditorDownload?'Download':'Conversion';
-  const summary=`${verb} finished: ${resized} resized, ${edited} edited without resizing, ${unchanged} copied unchanged, ${skipped} duplicate${skipped===1?'':'s'} skipped, ${failed} failed.`;
+  const summary=`Conversion finished: ${resized} resized, ${edited} edited without resizing, ${unchanged} copied unchanged, ${skipped} duplicate${skipped===1?'':'s'} skipped, ${failed} failed.`;
   const note=selectionChanged?' Your updated selection is ready for the next conversion.':'';
   setPhotoResizeStatus(summary+note,failed?'error':'success');
+}
+async function startPhotoEditDownload(){
+  if(photoEditBusy)return;
+  const selectionSnapshot=photoEditQueue.filter(item=>item.selected);
+  const currentPhoto=getCurrentPhotoResizePreviewItem();
+  const targetItems=photoResizeApplyToBatch?selectionSnapshot:(currentPhoto?[currentPhoto]:[]);
+  if(!targetItems.length){
+    setPhotoEditStatus(photoResizeApplyToBatch?'Select at least one photo for the batch download.':'Choose a photo thumbnail to download.','error');
+    return;
+  }
+  const targetSignature=targetItems.map(item=>item.id).join('|');
+  if(photoEditCompleted||photoEditTargetSignature!==targetSignature)resetPhotoEditStaging();
+  photoEditTargetSignature=targetSignature;
+  const adjustments=getPhotoResizeAdjustmentPayload();
+  const outputFolder=getConfiguredPhotoEditOutputFolder();
+  const pending=targetItems.filter(item=>!item.uploaded);
+  if(!photoEditSessionId)photoEditSessionId=makePhotoResizeGuid();
+  photoEditSelectionChangedDuringRun=false;
+  photoEditBusy=true;
+  photoEditConverting=false;
+  syncPhotoEditControls();
+  if(pending.length){
+    const failed=await uploadPhotoEditFiles(pending);
+    if(failed){
+      const uploaded=photoEditUploadedCount;
+      const selectionChanged=finishPhotoEditOperation(selectionSnapshot);
+      const message=selectionChanged
+        ?`Upload attempt ended with ${uploaded} uploaded and ${failed} failed. Your updated Edit selection is ready; press Download to retry it.`
+        :`${uploaded} uploaded; ${failed} failed. Press Download again to retry the remaining images.`;
+      setPhotoEditStatus(message,uploaded?'':'error');
+      return;
+    }
+  }
+  if(photoEditUploadedCount<1){
+    const selectionChanged=finishPhotoEditOperation(selectionSnapshot);
+    setPhotoEditStatus(selectionChanged?'No images were uploaded. Your updated Edit selection is ready to try again.':'No target photos could be uploaded. Check the Edit thumbnail selection and try again.','error');
+    return;
+  }
+  photoEditConverting=true;
+  syncPhotoEditControls();
+  setPhotoEditStatus(`Saving ${photoEditUploadedCount} edited image${photoEditUploadedCount===1?'':'s'}…`);
+  const body={
+    sessionId:photoEditSessionId,
+    maxSide:16384,
+    upscale:false,
+    noDuplicates:false,
+    outputFolder,
+    adjustments,
+    applyAdjustmentsToBatch:true
+  };
+  let data=null;
+  try{
+    for(const endpoint of getApiUrls('/api/resize-convert')){
+      data=await fetchEndpointJson(endpoint,1740000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(data)break;
+    }
+  }catch(_){data=null}
+  if(!data?.ok){
+    const message=photoResizeErrorMessage(data?.error||'conversion_failed');
+    const selectionChanged=finishPhotoEditOperation(selectionSnapshot);
+    const note=selectionChanged?' Edit selection changes made during this run are ready for another download.':'';
+    setPhotoEditStatus(message+note,'error');
+    return;
+  }
+  photoEditCompleted=true;
+  photoEditUploadedCount=Number(data.requestedCount)||photoEditUploadedCount;
+  photoEditSessionId='';
+  renderPhotoResizeResults(data,'photoEditResults');
+  const selectionChanged=finishPhotoEditOperation(selectionSnapshot);
+  const resized=Number(data.resizedCount)||0;
+  const edited=Number(data.editedCount)||0;
+  const unchanged=Number(data.unchangedCount)||0;
+  const skipped=Number(data.skippedCount)||0;
+  const failed=Number(data.failedCount)||0;
+  const summary=`Download finished: ${resized} resized, ${edited} edited, ${unchanged} copied unchanged, ${skipped} duplicate${skipped===1?'':'s'} skipped, ${failed} failed.`;
+  const note=selectionChanged?' Your updated Edit selection is ready for the next download.':'';
+  setPhotoEditStatus(summary+note,failed?'error':'success');
 }
 function resetResizerQueue(){
   if(photoResizeBusy)return;
   const oldSession=photoResizeSessionId;
   if(oldSession)void deletePhotoResizeSession(oldSession);
   revokePhotoResizeThumbnailUrls(photoResizeQueue);
-  photoResizePreviewGeneration++;
-  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewComparePointer=null;photoResizePreviewComparePosition=0.5;photoResizePreviewCompareHasPosition=false;photoResizePreviewCompareFrozen=false;photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
-  revokePhotoResizePreviewUrl();
   photoResizeQueue=[];
   photoResizeSessionId='';
   photoResizeUploadedCount=0;
-  photoResizeBusy=false;
   photoResizeConverting=false;
   photoResizeCompleted=false;
   photoResizeSelectionChangedDuringRun=false;
@@ -5113,6 +5396,38 @@ function resetResizerQueue(){
   if(results)results.innerHTML='';
   setPhotoResizeStatus('');
   syncPhotoResizeControls();
+}
+function resetPhotoEditQueue(){
+  if(photoEditBusy)return;
+  const oldSession=photoEditSessionId;
+  if(oldSession)void deletePhotoResizeSession(oldSession);
+  revokePhotoResizeThumbnailUrls(photoEditQueue);
+  photoEditQueue=[];
+  photoEditSessionId='';
+  photoEditUploadedCount=0;
+  photoEditConverting=false;
+  photoEditCompleted=false;
+  photoEditSelectionChangedDuringRun=false;
+  photoEditSelectionLabel='';
+  photoEditAvailableCount=0;
+  photoEditTargetSignature='';
+  resetPhotoEditPreviewState();
+  const picker=document.getElementById('photoEditImagesInput');
+  if(picker)picker.value='';
+  const results=document.getElementById('photoEditResults');
+  if(results)results.innerHTML='';
+  setPhotoEditStatus('');
+  syncPhotoEditControls();
+}
+async function openPhotoEditOutputFolder(){
+  const folder=getConfiguredPhotoEditOutputFolder();
+  let data=null;
+  for(const endpoint of getApiUrls('/api/open-download-folder')){
+    data=await fetchEndpointJson(endpoint,30000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder})});
+    if(data)break;
+  }
+  if(data?.ok){toast('Opened the edited images folder in File Explorer');return}
+  toast(data?.error?'Could not open the edited images folder':'Folder opening is available in the desktop app');
 }
 async function openPhotoResizerOutputFolder(){
   const folder=getConfiguredPhotoResizerOutputFolder();
@@ -7531,8 +7846,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.033';
+const APP_VERSION='2.034';
 const VERSION_HISTORY=[
+  {version:'2.034',added:'An independent Edit image queue, chooser, download results, and output folder.',removed:'Edit reusing Change resolution’s image queue and resize settings; no-adjustment resizing using a different Windows bitmap path from edited exports.',fixed:'Edit now stages and downloads only its own selected images without reading Change resolution’s size, upscale, or duplicate settings. Both thumbnail rows share the same horizontal scrolling behavior. No-adjustment resizing uses the same BGRA pixel-data path as edited exports instead of the failing SoftwareBitmap convenience path.',tone:'green'},
   {version:'2.033',added:'The before/after slider now freezes at its last position when the pointer leaves the preview.',removed:'The slider disappearing on pointerleave and turning comparison off changing the preview image state.',fixed:'While enabled, keep the split visible in its last position after pointerleave and resume tracking when the pointer returns. When disabled, hide the slider and leave full-image original/edited selection to the Show/hide original button.',tone:'green'},
   {version:'2.032',added:'A separate horizontal raw-photo preview strip in Image Edit.',removed:'Preview controls with ambiguous toggle state and the adjustment reset action separated from the folder actions.',fixed:'Indicate toggle states with the main-page active-outline system; match Image Edit icon controls to the 37px folder button; keep no-edit conversions working even when Windows lacks a decoder; align preview colors with saved output; rename the panels and move Reset adjustments after Open folder.',tone:'yellow'},
   {version:'2.031',added:'No new features.',removed:'The Browser queue panel remaining visible with the media overlay switched off.',fixed:'The Browser toggle now hides and restores both the hover selector and queue panel without clearing queued media or interrupting downloads.',tone:'green'},
