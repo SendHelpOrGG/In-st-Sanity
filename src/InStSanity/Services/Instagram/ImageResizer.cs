@@ -101,7 +101,18 @@ internal static class ImageResizer
 			}
 
 			inStream.Seek(0);
-			var decoder = await BitmapDecoder.CreateAsync(inStream);
+			BitmapDecoder decoder;
+			try
+			{
+				decoder = await BitmapDecoder.CreateAsync(inStream);
+			}
+			catch when (!adjustments.HasEdits)
+			{
+				// Resizing needs dimensions, but a no-adjustment conversion can still preserve
+				// an otherwise supported source file when Windows has no decoder for its codec.
+				return new ImageResizeResult(payload, originalExtension, WasResized: false, WasEdited: false);
+			}
+
 			var largestSide = Math.Max(decoder.PixelWidth, decoder.PixelHeight);
 			var targetSide = (uint)maxSide;
 			var wasResized = largestSide > targetSide || (largestSide < targetSide && upscale);

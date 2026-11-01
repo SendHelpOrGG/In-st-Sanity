@@ -92,7 +92,7 @@ body[data-theme="v3"] .upload-dropzone-icon,body[data-theme="v3"] .upload-recent
    the themed `body .text-input` rule at (0,1,1) - so a hardcoded colour there
    silently pins the Download location field to the same look in every theme.
    Let the theme drive it: background var(--t-input-bg), border var(--t-input-border). */
-.folder-row{display:flex;gap:8px}.resizer-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:14px;align-items:start}.resizer-card{margin:14px 0}.resizer-card .settings-card-head{padding:17px 20px}.resizer-card .setting-body{padding:18px 20px}.resizer-pick-row,.resizer-upload-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.resizer-files-panel{margin-top:16px}.resizer-files-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:9px;color:var(--t-muted,#94a3b8);font-size:11px}.resizer-files-toolbar>div{display:flex;gap:6px}.resizer-files-toolbar .outline{padding:6px 9px}.resizer-file-list{max-height:340px;overflow:auto;border:1px solid var(--t-input-border,rgba(255,255,255,.18));border-radius:9px;background:var(--t-input-bg,rgba(11,15,20,.55))}.resizer-file-row{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 11px;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:11px;cursor:pointer;transition:background .15s}.resizer-file-row:hover{background:rgba(56,189,248,.06)}.resizer-file-row:last-child{border-bottom:0}.resizer-file-row input{flex:0 0 auto;accent-color:var(--t-accent,#38bdf8);cursor:pointer}.resizer-file-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t-ink,#f1f5f9)}.resizer-file-meta{flex:0 0 auto;color:var(--t-muted,#94a3b8);font-size:10px}.resizer-upload-actions{justify-content:flex-end;margin-top:11px}/* Preserve Upload JSON's native primary outline; let Convert use that same outline. */body #resizerStartBtn{height:37px!important;min-height:37px!important;max-height:37px!important;box-sizing:border-box!important;border-width:1px!important}body #resizerOpenOutputFolderBtn{width:37px!important;min-width:37px!important;max-width:37px!important;height:37px!important;min-height:37px!important;max-height:37px!important;flex:0 0 37px!important;box-sizing:border-box!important;padding:0!important}.resizer-max-row{display:flex;align-items:center;gap:9px;max-width:240px}.resizer-max-side-control{position:relative;display:block;flex:0 0 112px;width:112px;max-width:112px}.resizer-max-side-control .text-input{height:36px;width:100%;padding-right:51px}#resizerMaxSide{width:112px;box-sizing:border-box;appearance:textfield;-moz-appearance:textfield}#resizerMaxSide::-webkit-inner-spin-button,#resizerMaxSide::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.resizer-max-side-stepper{position:absolute;top:4px;right:4px;bottom:4px;width:42px;display:flex;flex-direction:row;gap:3px}.resizer-stepper-btn{flex:1 1 0;min-width:0;min-height:0;display:grid;place-items:center;padding:0;border:1px solid var(--t-input-border,rgba(255,255,255,.2));border-radius:4px;background:var(--t-nav-bg,rgba(148,163,184,.08));color:var(--t-muted,#94a3b8);cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .1s}.resizer-stepper-btn:hover:not(:disabled){background:var(--t-nav-act-bg,rgba(56,189,248,.14));border-color:var(--t-accent,#38bdf8);color:var(--t-accent,#38bdf8)}.resizer-stepper-btn:active:not(:disabled){transform:scale(.94)}.resizer-stepper-btn:disabled{opacity:.45;cursor:not-allowed}.resizer-stepper-btn:focus-visible{outline:2px solid var(--t-accent,#38bdf8);outline-offset:1px}.resizer-stepper-btn svg{display:block;width:9px;height:9px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}.resizer-max-side-unit{color:var(--t-muted,#94a3b8);font-size:11px}.resizer-state{margin-top:10px;padding:0;color:var(--t-muted,#94a3b8);font-size:11px;line-height:1.5;overflow-wrap:anywhere}.resizer-state[hidden]{display:none}.resizer-state.is-error{color:#fca5a5}.resizer-state.is-success{color:#6ee7b7}.resizer-results{margin-top:12px;max-height:250px;overflow:auto}.resizer-result-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:10.5px}.resizer-result-row:last-child{border-bottom:0}.resizer-result-name{min-width:0;overflow-wrap:anywhere;color:var(--t-ink,#f1f5f9)}.resizer-result-status{flex:0 0 auto;color:var(--t-muted,#94a3b8)}.resizer-result-status.is-error{color:#fca5a5}@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}}.save-row{display:flex;justify-content:flex-end;margin-top:18px}.crop-modal-wrap{display:none;position:fixed;inset:0;background:rgba(5,9,12,.86);backdrop-filter:blur(5px);z-index:40;align-items:center;justify-content:center;padding:16px}.crop-modal-wrap.show{display:flex}.crop-modal{width:min(760px,calc(100vw - 32px));max-height:94vh;overflow:auto;background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border:1px solid #496073;border-radius:16px;padding:23px;box-shadow:0 24px 80px #000b}.crop-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px}.crop-heading h2{font-size:18px;margin:0 0 5px}.crop-heading p{font-size:11px;color:#9fb1c1;margin:0}.crop-ratios{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}.crop-ratio{border:1px solid #496073;background:linear-gradient(120deg,#1c252e,#161f27);color:#cbd5e1;border-radius:7px;padding:7px 10px;font:inherit;font-size:11px;cursor:pointer}.crop-ratio.active{background:linear-gradient(105deg,rgba(204,251,241,.20),rgba(45,212,191,.14));border-color:rgba(204,251,241,.38);color:#99f6e4}.crop-preview{position:relative;width:100%;aspect-ratio:16/9;margin-inline:auto;overflow:hidden;background:#080c10;border:1px solid #99f6e488;border-radius:10px;touch-action:none;cursor:grab}.crop-preview:active{cursor:grabbing}.crop-preview img{position:absolute;left:0;top:0;max-width:none;max-height:none;user-select:none;pointer-events:none}.crop-zoom-label{display:flex;justify-content:space-between;margin:14px 0 6px}.crop-zoom-label strong{color:#99f6e4}.opacity-slider:disabled{opacity:.38;cursor:not-allowed}.crop-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.crop-actions button{min-width:96px;justify-content:center}.status{position:fixed;bottom:24px;left:50%;background:#1c2832;border:1px solid #99f6e4;color:#f8fafc;border-radius:9px;padding:12px 16px;box-shadow:var(--shadow);font-size:12px;font-weight:600;opacity:0;transform:translate(-50%,8px);transition:.2s;pointer-events:none;z-index:100}.status.show{opacity:1;transform:translate(-50%,0)}.status.download-progress{max-width:min(92vw,760px);white-space:normal;text-align:center;line-height:1.45;overflow-wrap:anywhere}.modal-wrap{display:none;position:fixed;inset:0;background:rgba(7,11,15,.82);backdrop-filter:blur(3px);z-index:30;align-items:center;justify-content:center}.modal-wrap.show{display:flex}.modal{width:min(410px,calc(100vw - 32px));background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border-radius:16px;padding:27px;box-shadow:0 20px 70px #0009;position:relative}.close{position:absolute;right:17px;top:17px;border:0;background:#25313d;width:29px;height:29px;border-radius:8px;cursor:pointer;color:#cbd5e1}.modal-logo{margin:0 auto 17px;width:44px;height:44px;border-radius:14px;background:#1e2c36;display:grid;place-items:center;color:#99f6e4}.modal h2{text-align:center;font-size:19px;margin:0 0 8px}.modal p{text-align:center;color:#9fb1c1;font-size:12px;line-height:1.6;margin:0 5px 20px}.ig-login{width:100%;justify-content:center;background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);color:#091318;padding:12px;border:1px solid #f1f5f9}.fineprint{text-align:center;color:#9fb1c1;font-size:10px;line-height:1.5;margin-top:14px}.fineprint a{color:#99f6e4;text-decoration:underline}.logged-in{display:none;background:#1b2c2a;border-radius:10px;padding:13px;margin-bottom:14px;font-size:12px;color:#5eead4}.logged-in strong{display:block;margin-bottom:3px}
+.folder-row{display:flex;gap:8px}.resizer-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:14px;align-items:start}.resizer-card{margin:14px 0}.resizer-card .settings-card-head{padding:17px 20px}.resizer-card .setting-body{padding:18px 20px}.resizer-pick-row,.resizer-upload-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.resizer-files-panel{margin-top:16px}.resizer-files-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:9px;color:var(--t-muted,#94a3b8);font-size:11px}.resizer-files-toolbar>div{display:flex;gap:6px}.resizer-files-toolbar .outline{padding:6px 9px}.resizer-file-list{max-height:340px;overflow:auto;border:1px solid var(--t-input-border,rgba(255,255,255,.18));border-radius:9px;background:var(--t-input-bg,rgba(11,15,20,.55))}.resizer-file-row{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 11px;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:11px;cursor:pointer;transition:background .15s}.resizer-file-row:hover{background:rgba(56,189,248,.06)}.resizer-file-row:last-child{border-bottom:0}.resizer-file-row input{flex:0 0 auto;accent-color:var(--t-accent,#38bdf8);cursor:pointer}.resizer-file-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t-ink,#f1f5f9)}.resizer-file-meta{flex:0 0 auto;color:var(--t-muted,#94a3b8);font-size:10px}.resizer-upload-actions{justify-content:flex-end;margin-top:11px}/* Preserve Upload JSON's native primary outline; let Convert use that same outline. */body #resizerStartBtn{height:37px!important;min-height:37px!important;max-height:37px!important;box-sizing:border-box!important;border-width:1px!important}body #resizerOpenOutputFolderBtn{width:37px!important;min-width:37px!important;max-width:37px!important;height:37px!important;min-height:37px!important;max-height:37px!important;flex:0 0 37px!important;box-sizing:border-box!important;padding:0!important}.resizer-max-row{display:flex;align-items:center;gap:9px;max-width:320px;flex-wrap:wrap}.resizer-max-side-control{position:relative;display:block;flex:0 0 112px;width:112px;max-width:112px}.resizer-max-side-control .text-input{height:36px;width:100%;padding-right:8px}#resizerMaxSide{width:112px;box-sizing:border-box;appearance:textfield;-moz-appearance:textfield}#resizerMaxSide::-webkit-inner-spin-button,#resizerMaxSide::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.resizer-max-side-stepper{display:flex;align-items:center;gap:5px;flex:0 0 auto}.resizer-stepper-btn{display:grid;place-items:center;flex:0 0 37px;width:37px;min-width:37px;max-width:37px;height:37px;min-height:37px;max-height:37px;box-sizing:border-box;padding:0;border:1px solid var(--t-input-border,rgba(255,255,255,.2));border-radius:8px;background:var(--t-nav-bg,rgba(148,163,184,.08));color:var(--t-muted,#94a3b8);cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .1s}.resizer-stepper-btn:hover:not(:disabled){background:var(--t-nav-act-bg,rgba(56,189,248,.14));border-color:var(--t-accent,#38bdf8);color:var(--t-accent,#38bdf8)}.resizer-stepper-btn:active:not(:disabled){transform:scale(.94)}.resizer-stepper-btn:disabled{opacity:.45;cursor:not-allowed}.resizer-stepper-btn:focus-visible{outline:2px solid var(--t-accent,#38bdf8);outline-offset:1px}.resizer-stepper-btn svg{display:block;width:12px;height:12px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}.resizer-upscale-toggle{display:grid!important;place-items:center!important;width:37px!important;min-width:37px!important;max-width:37px!important;height:37px!important;min-height:37px!important;max-height:37px!important;flex:0 0 37px!important;padding:0!important;box-sizing:border-box!important}.resizer-upscale-toggle svg{display:block;width:17px;height:17px;position:static!important;inset:auto!important;margin:0!important}.resizer-max-side-unit{color:var(--t-muted,#94a3b8);font-size:11px}.resizer-state{margin-top:10px;padding:0;color:var(--t-muted,#94a3b8);font-size:11px;line-height:1.5;overflow-wrap:anywhere}.resizer-state[hidden]{display:none}.resizer-state.is-error{color:#fca5a5}.resizer-state.is-success{color:#6ee7b7}.resizer-results{margin-top:12px;max-height:250px;overflow:auto}.resizer-result-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--t-line,rgba(255,255,255,.1));font-size:10.5px}.resizer-result-row:last-child{border-bottom:0}.resizer-result-name{min-width:0;overflow-wrap:anywhere;color:var(--t-ink,#f1f5f9)}.resizer-result-status{flex:0 0 auto;color:var(--t-muted,#94a3b8)}.resizer-result-status.is-error{color:#fca5a5}@media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}}.save-row{display:flex;justify-content:flex-end;margin-top:18px}.crop-modal-wrap{display:none;position:fixed;inset:0;background:rgba(5,9,12,.86);backdrop-filter:blur(5px);z-index:40;align-items:center;justify-content:center;padding:16px}.crop-modal-wrap.show{display:flex}.crop-modal{width:min(760px,calc(100vw - 32px));max-height:94vh;overflow:auto;background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border:1px solid #496073;border-radius:16px;padding:23px;box-shadow:0 24px 80px #000b}.crop-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px}.crop-heading h2{font-size:18px;margin:0 0 5px}.crop-heading p{font-size:11px;color:#9fb1c1;margin:0}.crop-ratios{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}.crop-ratio{border:1px solid #496073;background:linear-gradient(120deg,#1c252e,#161f27);color:#cbd5e1;border-radius:7px;padding:7px 10px;font:inherit;font-size:11px;cursor:pointer}.crop-ratio.active{background:linear-gradient(105deg,rgba(204,251,241,.20),rgba(45,212,191,.14));border-color:rgba(204,251,241,.38);color:#99f6e4}.crop-preview{position:relative;width:100%;aspect-ratio:16/9;margin-inline:auto;overflow:hidden;background:#080c10;border:1px solid #99f6e488;border-radius:10px;touch-action:none;cursor:grab}.crop-preview:active{cursor:grabbing}.crop-preview img{position:absolute;left:0;top:0;max-width:none;max-height:none;user-select:none;pointer-events:none}.crop-zoom-label{display:flex;justify-content:space-between;margin:14px 0 6px}.crop-zoom-label strong{color:#99f6e4}.opacity-slider:disabled{opacity:.38;cursor:not-allowed}.crop-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.crop-actions button{min-width:96px;justify-content:center}.status{position:fixed;bottom:24px;left:50%;background:#1c2832;border:1px solid #99f6e4;color:#f8fafc;border-radius:9px;padding:12px 16px;box-shadow:var(--shadow);font-size:12px;font-weight:600;opacity:0;transform:translate(-50%,8px);transition:.2s;pointer-events:none;z-index:100}.status.show{opacity:1;transform:translate(-50%,0)}.status.download-progress{max-width:min(92vw,760px);white-space:normal;text-align:center;line-height:1.45;overflow-wrap:anywhere}.modal-wrap{display:none;position:fixed;inset:0;background:rgba(7,11,15,.82);backdrop-filter:blur(3px);z-index:30;align-items:center;justify-content:center}.modal-wrap.show{display:flex}.modal{width:min(410px,calc(100vw - 32px));background:linear-gradient(145deg,#25313d,#1a232c 60%,#131a21);border-radius:16px;padding:27px;box-shadow:0 20px 70px #0009;position:relative}.close{position:absolute;right:17px;top:17px;border:0;background:#25313d;width:29px;height:29px;border-radius:8px;cursor:pointer;color:#cbd5e1}.modal-logo{margin:0 auto 17px;width:44px;height:44px;border-radius:14px;background:#1e2c36;display:grid;place-items:center;color:#99f6e4}.modal h2{text-align:center;font-size:19px;margin:0 0 8px}.modal p{text-align:center;color:#9fb1c1;font-size:12px;line-height:1.6;margin:0 5px 20px}.ig-login{width:100%;justify-content:center;background:linear-gradient(118deg,#cbd5e1 0%,#99f6e4 50%,#2dd4bf 100%);color:#091318;padding:12px;border:1px solid #f1f5f9}.fineprint{text-align:center;color:#9fb1c1;font-size:10px;line-height:1.5;margin-top:14px}.fineprint a{color:#99f6e4;text-decoration:underline}.logged-in{display:none;background:#1b2c2a;border-radius:10px;padding:13px;margin-bottom:14px;font-size:12px;color:#5eead4}.logged-in strong{display:block;margin-bottom:3px}
 .detail-overlay{display:none;position:fixed;inset:0;background:rgba(7,11,15,.84);backdrop-filter:blur(7px);z-index:25;align-items:center;justify-content:center;padding:24px}.detail-overlay.show{display:flex;isolation:isolate}.post-peek-svg{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;overflow:visible;opacity:var(--sticker-opacity,.5);transition:opacity .2s ease}.post-peek-behind{z-index:1}.post-peek-front{z-index:3}body.sticker-hidden .post-peek-svg,body.animations-disabled .post-peek-svg,body.imp-anim-disabled .post-peek-svg{display:none!important}body.post-detail-open .sidebar-sticker-slot{opacity:0!important;pointer-events:none!important}.post-modal{position:relative;z-index:2;margin-top:56px;width:min(920px,calc(100vw - 136px));max-height:calc(100vh - 150px);background:linear-gradient(145deg,#25313d,#1a232c 56%,#131a21);border:1px solid #3d5060;border-radius:16px;box-shadow:0 25px 90px #000a;display:flex;flex-direction:column;overflow:hidden}.save-url-post-modal{width:100%;max-width:100%;max-height:none;overflow:visible;margin:0 auto}.detail-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--line);gap:20px;flex-shrink:0;position:relative}.video-download-notice{position:absolute;top:8px;right:22px;z-index:5;width:min(382px,42%);height:37px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1px solid var(--t-accent,#38bdf8);border-radius:10px;background:linear-gradient(115deg,var(--t-nav-act-bg,rgba(56,189,248,.16)),var(--t-modal-bg,rgba(15,23,42,.94)));color:var(--t-ink,#f8fafc);box-shadow:0 12px 28px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.08);font-size:13px;font-weight:650;letter-spacing:.1px;opacity:0;visibility:hidden;transform:translateY(-4px);pointer-events:none;transition:opacity .16s ease,transform .16s ease,visibility .16s}.video-download-notice.show{opacity:1;visibility:visible;transform:translateY(0)}@media(max-width:700px){.video-download-notice{left:16px;right:16px;top:8px;width:auto;height:37px}}.detail-heading{min-width:0}.detail-heading .eyebrow{margin:0 0 6px}.detail-heading h2{font-size:19px;letter-spacing:-.4px;margin:0 0 5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;word-break:break-word}.detail-heading p{font-size:11px;color:#9fb1c1;margin:0}.detail-meta-label{display:block;color:var(--green);font-size:9px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase;opacity:.9;margin:6px 0 3px}.detail-meta-list{display:flex;flex-wrap:wrap;gap:4px 26px;margin-top:7px}.detail-meta-row{min-width:0;max-width:100%}.detail-meta-value{display:block;font-size:11.5px;color:#cbd5e1;line-height:1.5;word-break:break-word}.detail-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}.detail-head .detail-actions{align-self:flex-end}.detail-actions-folder-stack{position:relative;display:flex;align-items:center;flex:0 0 auto}.detail-actions-folder-stack .detail-close-btn{position:absolute;right:0;bottom:calc(100% + 8px);z-index:6}.brand-collapse{margin-left:0;flex-shrink:0}.post-url-bar{display:flex;align-items:end;gap:12px;margin:12px 23px 0;padding:11px 12px;border:1px solid #99f6e466;border-radius:10px;background:linear-gradient(112deg,#16222c 0%,#1c2b36 67%,#213f44 86%,#182630 100%);box-shadow:inset 0 1px rgba(204,251,241,.18);flex-shrink:0}.post-url-input{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;cursor:pointer}.post-url-input span{font-size:9px;letter-spacing:1.2px;font-weight:700;color:#99f6e4}.post-url-input input{height:37px;width:100%;min-width:0;padding:0 10px;border:1px solid #496073;border-radius:7px;background:linear-gradient(115deg,#121a22 0 68%,#1d3338 86%,#141e27 100%);color:#f8fafc;font:inherit;font-size:11px;outline:0;cursor:pointer;transition:border-color .15s,box-shadow .15s}.post-url-input:hover input,.post-url-input input:focus{border-color:#99f6e4;box-shadow:0 0 0 2px rgba(153,246,228,.18)}.open-browser{height:37px;white-space:nowrap;font-size:12px!important;line-height:1!important}
 .detail-actions .primary,.detail-actions .outline,.post-url-bar .primary,.post-url-bar .outline{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-size:13px!important;font-weight:600!important;letter-spacing:-0.1px!important;line-height:1!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;white-space:nowrap!important;vertical-align:middle!important;height:37px!important;min-height:37px!important;padding:0 14px!important;border-radius:8px!important}/* v1.91 global font: Inter for all text — size/weight untouched */html,body,button,input,textarea,select,div,span,p,a,h1,h2,h3,h4,h5,h6,li,label,strong,em,code,pre,small,kbd,summary{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}.detail-count{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
 .detail-actions .primary svg,.detail-actions .outline svg,.post-url-bar .primary svg,.post-url-bar .outline svg{width:14px!important;height:14px!important;flex-shrink:0!important;display:block!important;stroke-width:1.9!important}
@@ -621,21 +621,21 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
 .photo-adjustment-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
 .photo-adjustment-actions svg{width:15px;height:15px;flex:0 0 auto}
-.photo-adjustment-open-folder-btn{position:relative!important;width:37px!important;min-width:37px!important;max-width:37px!important;height:37px!important;min-height:37px!important;max-height:37px!important;flex:0 0 37px!important;box-sizing:border-box!important;padding:0!important}
-.photo-adjustment-open-folder-btn svg{width:17px;height:17px}
+.photo-adjustment-open-folder-btn,.photo-adjustment-reset{position:relative!important;display:grid!important;place-items:center!important;width:37px!important;min-width:37px!important;max-width:37px!important;height:37px!important;min-height:37px!important;max-height:37px!important;flex:0 0 37px!important;box-sizing:border-box!important;padding:0!important}
+.photo-adjustment-open-folder-btn svg,.photo-adjustment-reset svg{width:17px;height:17px;position:static!important;inset:auto!important;margin:0!important;transform:none!important}
+.photo-adjustment-reset:disabled{opacity:.38;cursor:not-allowed}
 .photo-adjustment-download-btn{padding:8px 13px}
 .photo-adjustment-download-btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 .photo-adjustment-summary{display:inline-flex;align-items:center;margin-left:8px;padding:3px 8px;border:1px solid var(--t-line,rgba(255,255,255,.16));border-radius:999px;color:var(--t-muted,#94a3b8);font-size:10px;font-weight:600;vertical-align:middle}
 .photo-adjustment-summary.is-active{color:var(--t-accent,#38bdf8);border-color:color-mix(in srgb,var(--t-accent,#38bdf8) 45%,transparent);background:color-mix(in srgb,var(--t-accent,#38bdf8) 10%,transparent)}
-.photo-editor-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:16px;align-items:start}
+.photo-adjustment-photo-picker{min-width:0;margin:0 0 14px}.photo-adjustment-photo-label{display:block;margin:0 0 6px;color:var(--t-muted,#94a3b8);font-size:10px;font-weight:650}.photo-adjustment-photo-picker-row{display:flex;align-items:center;gap:7px;min-width:0}.photo-adjustment-photo-strip{display:flex;align-items:center;flex:1 1 auto;gap:6px;min-width:0;height:45px;overflow-x:auto;overflow-y:hidden;padding:4px;box-sizing:border-box;scrollbar-width:thin;scroll-snap-type:x proximity;overscroll-behavior-x:contain}.photo-adjustment-photo-thumb{position:relative;display:grid;place-items:center;flex:0 0 37px;width:37px;height:37px;min-width:37px;overflow:hidden;padding:0;border:1px solid var(--t-line,rgba(255,255,255,.18));border-radius:8px;background:var(--t-input-bg,rgba(15,23,42,.45));cursor:pointer;scroll-snap-align:start;transition:border-color .14s,box-shadow .14s,transform .14s}.photo-adjustment-photo-thumb:hover{transform:translateY(-1px);border-color:var(--t-accent,#38bdf8)}.photo-adjustment-photo-thumb[aria-pressed="true"]{border:2px solid var(--t-accent,#38bdf8);box-shadow:0 0 0 2px color-mix(in srgb,var(--t-accent,#38bdf8) 24%,transparent)}.photo-adjustment-photo-thumb img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover}.photo-adjustment-photo-index{position:absolute;right:1px;bottom:1px;z-index:1;min-width:12px;padding:1px 2px;border-radius:4px;background:rgba(7,11,15,.78);color:#fff;font-size:8px;line-height:1.1;text-align:center;pointer-events:none}.photo-adjustment-photo-empty{flex:0 0 auto;padding:0 5px;color:var(--t-muted,#94a3b8);font-size:10px}.photo-adjustment-photo-scroll-btn{position:relative!important;display:grid!important;place-items:center!important;flex:0 0 37px!important;width:37px!important;min-width:37px!important;max-width:37px!important;height:37px!important;min-height:37px!important;max-height:37px!important;padding:0!important;box-sizing:border-box!important}.photo-adjustment-photo-scroll-btn svg{position:static!important;inset:auto!important;width:17px;height:17px;margin:0!important;transform:none!important}.photo-adjustment-photo-scroll-btn:disabled{opacity:.38;cursor:not-allowed}.photo-editor-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:16px;align-items:start}
 .photo-preview-panel{min-width:0;padding:12px;border:1px solid var(--t-line,rgba(255,255,255,.2));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.34))}
 .photo-preview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:9px;font-size:11px;color:var(--t-ink,#f1f5f9)}.photo-preview-heading strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .photo-preview-tools{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.photo-preview-zoom-btn{display:inline-grid;place-items:center;width:28px;height:28px;min-width:28px;padding:0;font-size:15px;line-height:1}
+.photo-preview-zoom-btn{display:inline-grid;place-items:center;width:37px;height:37px;min-width:37px;min-height:37px;padding:0;font-size:16px;line-height:1;flex:0 0 37px;box-sizing:border-box}
 .photo-preview-zoom-label{min-width:38px;color:var(--t-ink,#f1f5f9);font-size:9px;text-align:center;font-variant-numeric:tabular-nums}
-.photo-preview-icon-toggle{display:inline-grid;place-items:center;width:28px;height:28px;min-width:28px;min-height:28px;padding:0}
-.photo-preview-icon-toggle svg{display:block;width:16px;height:16px;pointer-events:none}
-.photo-preview-icon-toggle[aria-pressed="true"]{border-color:var(--t-accent,#38bdf8);color:var(--t-accent,#38bdf8);background:color-mix(in srgb,var(--t-accent,#38bdf8) 12%,transparent)}
+.photo-preview-icon-toggle{display:grid!important;place-items:center!important;width:37px!important;min-width:37px!important;max-width:37px!important;height:37px!important;min-height:37px!important;max-height:37px!important;flex:0 0 37px!important;padding:0!important;box-sizing:border-box!important}
+.photo-preview-icon-toggle svg{display:block;width:17px;height:17px;pointer-events:none;position:static!important;inset:auto!important;margin:0!important}
 .photo-preview-tools button:disabled{opacity:.4;cursor:not-allowed}
 .photo-preview-canvas-wrap{position:relative;display:grid;place-items:center;width:100%;height:min(82vh,900px);min-height:min(480px,82vh);max-height:min(82vh,900px);overflow:hidden;overflow:clip;margin-inline:auto;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:auto;touch-action:auto;cursor:default}
 .photo-preview-canvas-wrap.has-image{min-height:0}
@@ -668,8 +668,8 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-look-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
 .photo-adjustment-look-heading h3{margin:0}
 .photo-adjustment-look-actions{display:flex;align-items:center;gap:5px}
-.photo-look-icon-btn{position:relative;width:29px;min-width:29px;height:29px;min-height:29px;padding:0;display:grid;place-items:center}
-.photo-look-icon-btn svg{display:block;width:15px;height:15px}
+.photo-look-icon-btn{position:relative;width:37px;min-width:37px;max-width:37px;height:37px;min-height:37px;max-height:37px;flex:0 0 37px;padding:0;display:grid;place-items:center;box-sizing:border-box}
+.photo-look-icon-btn svg{display:block;width:17px;height:17px}
 .photo-look-icon-btn:disabled{opacity:.38;cursor:not-allowed}
 .photo-adjustment-look-strength{margin-top:12px}
 .photo-adjustment-look-strength input:disabled{opacity:.42;cursor:not-allowed}
@@ -698,7 +698,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-reset{flex:0 0 auto}
 @media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{height:min(74vh,700px);min-height:min(360px,74vh);max-height:min(74vh,700px)}.photo-adjustment-groups{max-height:none;overflow:visible;padding:0}}
 @media(max-width:760px){.resizer-adjustments-card .settings-card-head{align-items:flex-start;flex-direction:column}.photo-adjustment-actions{align-self:flex-end}}
-@media(max-width:600px){.photo-adjustment-footer{align-items:flex-start;flex-direction:column}.photo-adjustment-reset{align-self:flex-end}}
+@media(max-width:600px){.photo-adjustment-footer{align-items:flex-start;flex-direction:column}}
 </style>
 <style id="lsBootStyle">
 #lsBoot{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;min-width:100vw;min-height:100vh;min-height:100dvh;z-index:400;overflow:hidden;background:#0a0f18;contain:layout size;transform:none;will-change:auto}
@@ -933,7 +933,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
     <div class="heading-row"><div><h1>Image Edit (beta)</h1><p>Choose photos, adjust the current preview, then convert the selection or download the preview.</p></div></div>
     <div class="resizer-grid">
       <section class="settings-card resizer-card resizer-picker-card">
-        <div class="settings-card-head"><h2>1. Choose image</h2><p>Choose photos to fill the thumbnail strip. Click one to preview it; check photos for batch actions.</p></div>
+        <div class="settings-card-head"><h2>Change resolution</h2><p>Choose photos to fill the thumbnail strip. Click one to preview it; check photos for batch actions.</p></div>
         <div class="setting-body">
           <div class="resizer-pick-row"><button type="button" class="primary" id="resizerChooseImagesBtn" onclick="chooseResizerImages()">Choose images…</button><button type="button" class="primary" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button></div>
           <input id="resizerImagesInput" type="file" accept="image/*" multiple hidden onchange="handleResizerImagesPicked(event)">
@@ -952,10 +952,10 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
           <div class="resizer-max-row">
             <span class="resizer-max-side-control">
               <input class="text-input" id="resizerMaxSide" type="number" min="64" max="16384" step="50" value="2048" aria-describedby="resizerMaxSideHint" onchange="saveResizerMaxSide(this.value)">
-              <span class="resizer-max-side-stepper" role="group" aria-label="Adjust maximum longest side in 50-pixel increments">
-                <button type="button" class="resizer-stepper-btn" id="resizerMaxSideDownBtn" onclick="stepResizerMaxSide(-1)" title="Decrease by 50 pixels" aria-label="Decrease maximum longest side by 50 pixels"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 6 5 5 5-5"/></svg></button>
-                <button type="button" class="resizer-stepper-btn" id="resizerMaxSideUpBtn" onclick="stepResizerMaxSide(1)" title="Increase by 50 pixels" aria-label="Increase maximum longest side by 50 pixels"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 10 5-5 5 5"/></svg></button>
-              </span>
+            </span>
+            <span class="resizer-max-side-stepper" role="group" aria-label="Adjust maximum longest side in 50-pixel increments">
+              <button type="button" class="resizer-stepper-btn" id="resizerMaxSideDownBtn" onclick="stepResizerMaxSide(-1)" title="Decrease by 50 pixels" aria-label="Decrease maximum longest side by 50 pixels"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 6 5 5 5-5"/></svg></button>
+              <button type="button" class="resizer-stepper-btn" id="resizerMaxSideUpBtn" onclick="stepResizerMaxSide(1)" title="Increase by 50 pixels" aria-label="Increase maximum longest side by 50 pixels"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 10 5-5 5 5"/></svg></button>
             </span>
             <span class="resizer-max-side-unit">px</span>
             <button type="button" class="filter icon-filter-btn source-toggle-button active-outline-control resizer-upscale-toggle active" id="resizerUpscaleToggleBtn" onclick="togglePhotoResizerUpscale()" aria-label="Upscale smaller images" aria-pressed="true" aria-describedby="resizerMaxSideHint" title="Upscaling smaller images is on"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.2"/><path d="m6.5 16 4-4 2.5 2.5"/><path d="m13 10 4.5-4.5m-4.5 0h4.5V10"/></svg></button>
@@ -966,11 +966,19 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         </div>
       </section>
       <section class="settings-card resizer-card resizer-adjustments-card" aria-labelledby="photoAdjustmentsHeading">
-        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">3. Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Adjusted copies get an _Edited filename suffix; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoResizing('editor-download')" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open edited images folder in File Explorer" aria-label="Open edited images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button></div></div>
+        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">Edit <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Adjusted copies get an _Edited filename suffix; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoResizing('editor-download')" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoResizerOutputFolder()" title="Open edited images folder in File Explorer" aria-label="Open edited images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button><button type="button" class="icon-btn photo-adjustment-reset" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()" title="Reset adjustments" aria-label="Reset adjustments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
         <div class="setting-body">
+          <div class="photo-adjustment-photo-picker">
+            <span class="photo-adjustment-photo-label">Preview photo</span>
+            <div class="photo-adjustment-photo-picker-row">
+              <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="photoAdjustmentPhotoScrollLeftBtn" onclick="scrollPhotoAdjustmentPhotos(-1)" disabled title="Scroll preview photos left" aria-label="Scroll preview photos left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+              <div class="photo-adjustment-photo-strip" id="photoAdjustmentPhotoStrip" role="group" aria-label="Choose an original photo to preview and edit" onscroll="syncPhotoAdjustmentPhotoScrollButtons()" onwheel="scrollPhotoAdjustmentPhotosByWheel(event)"></div>
+              <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="photoAdjustmentPhotoScrollRightBtn" onclick="scrollPhotoAdjustmentPhotos(1)" disabled title="Scroll preview photos right" aria-label="Scroll preview photos right"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+            </div>
+          </div>
           <div class="photo-editor-layout">
             <div class="photo-preview-panel" id="photoResizePreviewPanel">
-              <div class="photo-preview-heading"><strong id="photoResizePreviewTitle">Live preview</strong><div class="photo-preview-tools"><button type="button" class="outline photo-preview-icon-toggle" id="photoResizePreviewCompareToggle" onclick="togglePhotoResizePreviewCompare()" aria-label="Toggle before-and-after comparison" title="Hide before-and-after comparison" aria-pressed="true" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v17"/><path d="m8 8-4 4 4 4"/><path d="m16 8 4 4-4 4"/></svg></button><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomOut" onclick="changePhotoResizePreviewZoom(-0.25)" aria-label="Zoom out" title="Zoom out" disabled>−</button><output class="photo-preview-zoom-label" id="photoResizePreviewZoomLabel">Fit</output><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomIn" onclick="changePhotoResizePreviewZoom(0.25)" aria-label="Zoom in" title="Zoom in" disabled>+</button><button type="button" class="outline photo-preview-icon-toggle" id="photoResizePreviewToggle" onclick="togglePhotoResizePreviewMode()" aria-label="Show original" title="Show original" aria-pressed="false" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.2-5.8 9.5-5.8 9.5 5.8 9.5 5.8-3.2 5.8-9.5 5.8-9.5-5.8-9.5-5.8z"/><circle cx="12" cy="12" r="2.7"/></svg></button></div></div>
+              <div class="photo-preview-heading"><strong id="photoResizePreviewTitle">Live preview</strong><div class="photo-preview-tools"><button type="button" class="filter icon-filter-btn source-toggle-button active-outline-control photo-preview-icon-toggle active" id="photoResizePreviewCompareToggle" onclick="togglePhotoResizePreviewCompare()" aria-label="Hide before-and-after comparison" title="Hide before-and-after comparison" aria-pressed="true" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v17"/><path d="m8 8-4 4 4 4"/><path d="m16 8 4 4-4 4"/></svg></button><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomOut" onclick="changePhotoResizePreviewZoom(-0.25)" aria-label="Zoom out" title="Zoom out" disabled>−</button><output class="photo-preview-zoom-label" id="photoResizePreviewZoomLabel">Fit</output><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomIn" onclick="changePhotoResizePreviewZoom(0.25)" aria-label="Zoom in" title="Zoom in" disabled>+</button><button type="button" class="filter icon-filter-btn source-toggle-button active-outline-control photo-preview-icon-toggle" id="photoResizePreviewToggle" onclick="togglePhotoResizePreviewMode()" aria-label="Show original" title="Show original" aria-pressed="false" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.2-5.8 9.5-5.8 9.5 5.8 9.5 5.8-3.2 5.8-9.5 5.8-9.5-5.8-9.5-5.8z"/><circle cx="12" cy="12" r="2.7"/></svg></button></div></div>
               <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Enable or disable the before-and-after slider with the split-view icon; hover over the photo to move its divider; Ctrl+scroll to zoom; double-click to fit"><canvas id="photoResizePreviewOriginalCanvas" hidden aria-label="Original image before adjustments"></canvas><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><div class="photo-preview-compare" id="photoResizePreviewCompare" hidden aria-hidden="true"><span class="photo-preview-compare-label photo-preview-compare-original">Original</span><span class="photo-preview-compare-label photo-preview-compare-edited">Edited</span><span class="photo-preview-compare-divider" id="photoResizePreviewCompareDivider"><span class="photo-preview-compare-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-4 6 4 6M16 6l4 6-4 6"/></svg></span></span></div><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
               <p class="hint">Use the split-view icon to enable or disable comparison; when enabled, hover over the photo to move the divider. Ctrl+scroll to zoom, scroll normally to move the page, drag to pan when zoomed, or double-click to fit.</p>
             </div>
@@ -1043,7 +1051,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             </div>
           </div>
           <label class="photo-adjustment-batch" for="photoAdjustmentBatch"><input type="checkbox" id="photoAdjustmentBatch" checked onchange="updatePhotoResizeBatchPreference(this.checked)"><span><strong>Apply adjustments to all selected images</strong><small>When off, Download applies the adjustments only to the photo currently shown in the preview.</small></span></label>
-          <div class="photo-adjustment-footer"><span class="hint">Reset restores neutral effects and the batch-on default. Settings persist on this device.</span><button type="button" class="outline" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()">Reset adjustments</button></div>
+          <div class="photo-adjustment-footer"><span class="hint">Reset restores neutral effects and the batch-on default. Settings persist on this device.</span></div>
         </div>
       </section>
     </div>
@@ -1398,7 +1406,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.031; open version history" title="Click to view what changed in each version">v.2.031</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.032; open version history" title="Click to view what changed in each version">v.2.032</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3969,6 +3977,9 @@ let photoResizePreviewDragStartX=0,photoResizePreviewDragStartY=0,photoResizePre
 let photoResizePreviewGeneration=0;
 let photoResizePreviewImageData=null;
 let photoResizePreviewComparePointer=null;
+let photoResizePreviewComparePosition=0.5;
+let photoResizePreviewCompareHasPosition=false;
+let photoResizePreviewCompareFrozen=false;
 let photoResizePreviewCompareEnabled=true;
 let photoOldPhotoTextureData=null;
 let photoOldPhotoTexturePromise=null;
@@ -4223,6 +4234,7 @@ function refreshPhotoResizePreview(){
   if(!item){
     if(photoResizePreviewFileId||photoResizePreviewImageData){photoResizePreviewGeneration++;photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;revokePhotoResizePreviewUrl()}
     photoResizePreviewOriginal=false;
+    photoResizePreviewComparePointer=null;photoResizePreviewComparePosition=0.5;photoResizePreviewCompareHasPosition=false;photoResizePreviewCompareFrozen=false;
     canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Select a photo thumbnail to preview adjustments.';
     if(title)title.textContent='Live preview';
     if(toggle){toggle.disabled=true;toggle.setAttribute('aria-pressed','false')}
@@ -4235,6 +4247,7 @@ function refreshPhotoResizePreview(){
   const token=++photoResizePreviewGeneration;
   photoResizePreviewImageData=null;
   photoResizePreviewOriginal=false;
+  photoResizePreviewComparePointer=null;photoResizePreviewComparePosition=0.5;photoResizePreviewCompareHasPosition=false;photoResizePreviewCompareFrozen=false;
   photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;
   photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
   canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Loading preview…';
@@ -4309,16 +4322,26 @@ function positionPhotoResizePreviewCompare(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
   const original=document.getElementById('photoResizePreviewOriginalCanvas');
   const compare=document.getElementById('photoResizePreviewCompare');
-  if(!photoResizePreviewCompareEnabled||!photoResizePreviewComparePointer||!wrap||!canvas||!original||!compare||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal){hidePhotoResizePreviewCompare(false);return}
+  const frozen=!photoResizePreviewCompareEnabled&&photoResizePreviewCompareFrozen;
+  if(!wrap||!canvas||!original||!compare||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal||(!photoResizePreviewCompareEnabled&&!frozen)){
+    hidePhotoResizePreviewCompare(false);return;
+  }
   const photo=canvas.getBoundingClientRect(),viewport=wrap.getBoundingClientRect();
   const left=Math.max(photo.left,viewport.left+(wrap.clientLeft||0));
   const top=Math.max(photo.top,viewport.top+(wrap.clientTop||0));
   const right=Math.min(photo.right,viewport.left+(wrap.clientLeft||0)+wrap.clientWidth);
   const bottom=Math.min(photo.bottom,viewport.top+(wrap.clientTop||0)+wrap.clientHeight);
-  const pointer=photoResizePreviewComparePointer;
-  if(right<=left||bottom<=top||pointer.x<left||pointer.x>right||pointer.y<top||pointer.y>bottom){hidePhotoResizePreviewCompare(false);return}
-  const clipPosition=Math.max(0,Math.min(100,(pointer.x-photo.left)/Math.max(1,photo.width)*100));
-  const dividerPosition=Math.max(0,Math.min(100,(pointer.x-left)/Math.max(1,right-left)*100));
+  if(right<=left||bottom<=top){hidePhotoResizePreviewCompare(false);return}
+  let splitPosition=Math.max(0,Math.min(1,photoResizePreviewComparePosition));
+  if(photoResizePreviewCompareEnabled){
+    const pointer=photoResizePreviewComparePointer;
+    if(!pointer||pointer.x<left||pointer.x>right||pointer.y<top||pointer.y>bottom){hidePhotoResizePreviewCompare(false);return}
+    splitPosition=Math.max(0,Math.min(1,(pointer.x-photo.left)/Math.max(1,photo.width)));
+    photoResizePreviewComparePosition=splitPosition;photoResizePreviewCompareHasPosition=true;
+  }
+  const splitX=photo.left+photo.width*splitPosition;
+  const clipPosition=splitPosition*100;
+  const dividerPosition=Math.max(0,Math.min(100,(splitX-left)/Math.max(1,right-left)*100));
   original.hidden=false;
   compare.hidden=false;
   compare.setAttribute('aria-hidden','false');
@@ -4331,10 +4354,11 @@ function positionPhotoResizePreviewCompare(){
   wrap.classList.add('is-comparing');
 }
 function handlePhotoResizePreviewCompareMove(event){
-  if(event.pointerType==='touch'){hidePhotoResizePreviewCompare();return}
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const canvas=document.getElementById('photoResizePreviewCanvas');
-  if(!photoResizePreviewCompareEnabled||!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap)){
+  if(event.pointerType==='touch'){if(photoResizePreviewCompareEnabled)hidePhotoResizePreviewCompare();return}
+  if(!photoResizePreviewCompareEnabled)return;
+  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap)){
     hidePhotoResizePreviewCompare();return;
   }
   photoResizePreviewComparePointer={x:event.clientX,y:event.clientY};
@@ -4405,8 +4429,8 @@ function syncPhotoResizePreviewZoomControls(){
   const label=document.getElementById('photoResizePreviewZoomLabel');
   if(zoomOut)zoomOut.disabled=!available||photoResizePreviewZoom<=1.01;
   if(zoomIn)zoomIn.disabled=!available||photoResizePreviewZoom>=4.5;
-  if(compareToggle){compareToggle.disabled=!available;compareToggle.setAttribute('aria-pressed',String(photoResizePreviewCompareEnabled));compareToggle.title=photoResizePreviewCompareEnabled?'Hide before-and-after comparison':'Show before-and-after comparison'}
-  if(originalToggle){const action=photoResizePreviewOriginal?'Show edited':'Show original';originalToggle.disabled=!available;originalToggle.setAttribute('aria-label',action);originalToggle.title=action;originalToggle.setAttribute('aria-pressed',String(photoResizePreviewOriginal))}
+  if(compareToggle){const action=photoResizePreviewCompareEnabled?'Hide before-and-after comparison':'Show before-and-after comparison';compareToggle.disabled=!available;compareToggle.classList.toggle('active',photoResizePreviewCompareEnabled);compareToggle.setAttribute('aria-pressed',String(photoResizePreviewCompareEnabled));compareToggle.setAttribute('aria-label',action);compareToggle.title=action}
+  if(originalToggle){const action=photoResizePreviewOriginal?'Show edited':'Show original';originalToggle.disabled=!available;originalToggle.classList.toggle('active',photoResizePreviewOriginal);originalToggle.setAttribute('aria-label',action);originalToggle.title=action;originalToggle.setAttribute('aria-pressed',String(photoResizePreviewOriginal))}
   if(label)label.textContent=photoResizePreviewZoom<=1.01?'Fit':`${Math.round(photoResizePreviewZoom*100)}%`;
 }
 function applyPhotoResizePreviewZoom(){
@@ -4485,7 +4509,7 @@ function initPhotoResizePreviewZoom(){
   wrap._photoResizeZoomBound=true;
   wrap.addEventListener('wheel',handlePhotoResizePreviewWheel,{passive:false});
   wrap.addEventListener('pointermove',handlePhotoResizePreviewCompareMove);
-  wrap.addEventListener('pointerleave',()=>hidePhotoResizePreviewCompare());
+  wrap.addEventListener('pointerleave',()=>{if(photoResizePreviewCompareEnabled)hidePhotoResizePreviewCompare()});
   wrap.addEventListener('pointerdown',handlePhotoResizePreviewPointerDown);
   wrap.addEventListener('dblclick',event=>{const canvas=document.getElementById('photoResizePreviewCanvas');if(!canvas||canvas.hidden||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap))return;event.preventDefault();resetPhotoResizePreviewZoom()});
   window.addEventListener('pointermove',handlePhotoResizePreviewPointerMove);
@@ -4499,7 +4523,15 @@ function initPhotoResizePreviewZoom(){
 function togglePhotoResizePreviewCompare(){
   if(!photoResizePreviewImageData)return;
   photoResizePreviewCompareEnabled=!photoResizePreviewCompareEnabled;
-  if(!photoResizePreviewCompareEnabled)hidePhotoResizePreviewCompare();
+  if(photoResizePreviewCompareEnabled){
+    photoResizePreviewCompareFrozen=false;
+    hidePhotoResizePreviewCompare();
+  }else{
+    photoResizePreviewCompareFrozen=photoResizePreviewCompareHasPosition;
+    photoResizePreviewComparePointer=null;
+    if(photoResizePreviewCompareFrozen)positionPhotoResizePreviewCompare();
+    else hidePhotoResizePreviewCompare(false);
+  }
   syncPhotoResizePreviewZoomControls();
 }
 function togglePhotoResizePreviewMode(){
@@ -4510,6 +4542,7 @@ function togglePhotoResizePreviewMode(){
   schedulePhotoResizePreviewRender();
 }
 function schedulePhotoResizePreviewRender(){if(photoResizePreviewRenderPending)return;photoResizePreviewRenderPending=true;requestAnimationFrame(()=>{photoResizePreviewRenderPending=false;renderPhotoResizePreview()})}
+function swapPhotoResizePreviewRedBlueChannels(pixels){for(let index=0;index+2<pixels.length;index+=4){const red=pixels[index];pixels[index]=pixels[index+2];pixels[index+2]=red}return pixels}
 function renderPhotoResizePreview(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
   const originalCanvas=document.getElementById('photoResizePreviewOriginalCanvas');
@@ -4526,7 +4559,10 @@ function renderPhotoResizePreview(){
   if(originalContext)originalContext.putImageData(photoResizePreviewImageData,0,0);
   if(photoResizePreviewOriginal){context.putImageData(photoResizePreviewImageData,0,0);hidePhotoResizePreviewCompare();applyPhotoResizePreviewZoom();return}
   const pixels=new Uint8ClampedArray(original);
+  // Canvas ImageData is RGBA, while both the preview filters and Windows encoder use BGRA.
+  swapPhotoResizePreviewRedBlueChannels(pixels);
   if(hasPhotoResizeAdjustmentEdits(photoResizeAdjustments))applyPhotoResizePreviewAdjustments(pixels,width,height,photoResizeAdjustments,original);
+  swapPhotoResizePreviewRedBlueChannels(pixels);
   context.putImageData(new ImageData(pixels,width,height),0,0);
   applyPhotoResizePreviewZoom();
 }
@@ -4765,6 +4801,42 @@ function renderPhotoResizeFileList(){
       :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
   }
 }
+function syncPhotoAdjustmentPhotoScrollButtons(){
+  const strip=document.getElementById('photoAdjustmentPhotoStrip');
+  const left=document.getElementById('photoAdjustmentPhotoScrollLeftBtn');
+  const right=document.getElementById('photoAdjustmentPhotoScrollRightBtn');
+  if(!strip)return;
+  if(left)left.disabled=strip.scrollLeft<=1;
+  if(right)right.disabled=strip.scrollLeft+strip.clientWidth>=strip.scrollWidth-1;
+}
+function scrollPhotoAdjustmentPhotos(direction){
+  const strip=document.getElementById('photoAdjustmentPhotoStrip');
+  if(!strip)return;
+  const distance=Math.max(111,Math.round(strip.clientWidth*.75))*Math.sign(Number(direction)||1);
+  if(typeof strip.scrollBy==='function')strip.scrollBy({left:distance,behavior:'smooth'});
+  else strip.scrollLeft+=distance;
+}
+function scrollPhotoAdjustmentPhotosByWheel(event){
+  const strip=event.currentTarget;
+  if(!strip||strip.scrollWidth<=strip.clientWidth)return;
+  const delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;
+  if(!delta)return;
+  strip.scrollLeft+=delta;
+  event.preventDefault();
+}
+function renderPhotoAdjustmentPhotoStrip(){
+  const strip=document.getElementById('photoAdjustmentPhotoStrip');
+  if(!strip)return;
+  const previousScrollLeft=strip.scrollLeft;
+  const thumbnails=photoResizeQueue.map((item,index)=>{
+    const current=item.id===photoResizeCurrentFileId;
+    const image=item.thumbnailUrl?`<img src="${escapeHtml(item.thumbnailUrl)}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true">`:'';
+    return`<button type="button" class="photo-adjustment-photo-thumb" aria-pressed="${current}" aria-label="Preview and edit photo ${index+1}" title="Preview and edit photo ${index+1}" onclick="selectPhotoResizePreview(${index})">${image}<span class="photo-adjustment-photo-index" aria-hidden="true">${index+1}</span></button>`;
+  }).join('');
+  strip.innerHTML=thumbnails||'<span class="photo-adjustment-photo-empty">Choose photos to preview and edit.</span>';
+  strip.scrollLeft=thumbnails?Math.min(previousScrollLeft,Math.max(0,strip.scrollWidth-strip.clientWidth)):0;
+  syncPhotoAdjustmentPhotoScrollButtons();
+}
 function updatePhotoResizeThumbnailStatus(item){
   const status=document.getElementById('resizerFileList')?.children?.[item?.order]?.querySelector?.('.resizer-photo-thumb-status');
   if(!status)return;
@@ -4800,6 +4872,8 @@ function syncPhotoResizeControls({renderFiles=true,refreshPreview=true}={}){
     start.disabled=busy||!hasSelection||!valid;
     start.textContent=busy?(photoResizeConverting?'Converting…':'Uploading…'):'Convert';
   }
+  const adjustmentReset=document.getElementById('photoAdjustmentResetBtn');
+  if(adjustmentReset)adjustmentReset.disabled=busy;
   const download=document.getElementById('photoAdjustmentDownloadBtn');
   if(download){
     const hasDownloadTarget=photoResizeApplyToBatch?photoResizeQueue.some(item=>item.selected):Boolean(getCurrentPhotoResizePreviewItem());
@@ -4809,7 +4883,7 @@ function syncPhotoResizeControls({renderFiles=true,refreshPreview=true}={}){
   if(reset)reset.disabled=busy||(!photoResizeSelectionLabel&&!photoResizeQueue.length&&!photoResizeUploadedCount&&!photoResizeCompleted);
   const panel=document.getElementById('resizerFilePanel');
   if(panel)panel.hidden=false;
-  if(renderFiles)renderPhotoResizeFileList();
+  if(renderFiles){renderPhotoResizeFileList();renderPhotoAdjustmentPhotoStrip()}
   if(refreshPreview)refreshPhotoResizePreview();
 }
 function resetPhotoResizeStaging(clearResults=true){
@@ -4866,7 +4940,7 @@ function handleResizerImagesPicked(event){
   if(previousSession)void deletePhotoResizeSession(previousSession);
   revokePhotoResizeThumbnailUrls(photoResizeQueue);
   photoResizePreviewGeneration++;
-  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
+  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewComparePointer=null;photoResizePreviewComparePosition=0.5;photoResizePreviewCompareHasPosition=false;photoResizePreviewCompareFrozen=false;photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
   revokePhotoResizePreviewUrl();
   const supported=files.filter(file=>{
     const dot=file.name.lastIndexOf('.');
@@ -5012,7 +5086,7 @@ function resetResizerQueue(){
   if(oldSession)void deletePhotoResizeSession(oldSession);
   revokePhotoResizeThumbnailUrls(photoResizeQueue);
   photoResizePreviewGeneration++;
-  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
+  photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;photoResizePreviewComparePointer=null;photoResizePreviewComparePosition=0.5;photoResizePreviewCompareHasPosition=false;photoResizePreviewCompareFrozen=false;photoResizePreviewZoom=1;photoResizePreviewPanX=0;photoResizePreviewPanY=0;photoResizePreviewDragging=false;photoResizePreviewDragPointerId=null;
   revokePhotoResizePreviewUrl();
   photoResizeQueue=[];
   photoResizeSessionId='';
@@ -7447,8 +7521,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.031';
+const APP_VERSION='2.032';
 const VERSION_HISTORY=[
+  {version:'2.032',added:'A separate horizontal raw-photo preview strip in Image Edit.',removed:'The before/after split reverting when comparison is disabled, preview controls with ambiguous toggle state, and the adjustment reset action separated from the folder actions.',fixed:'Freeze the comparison at its last divider position when disabled; indicate toggle states with the main-page active-outline system; match Image Edit icon controls to the 37px folder button; keep no-edit conversions working even when Windows lacks a decoder; align preview colors with saved output; rename the panels and move Reset adjustments after Open folder.',tone:'yellow'},
   {version:'2.031',added:'No new features.',removed:'The Browser queue panel remaining visible with the media overlay switched off.',fixed:'The Browser toggle now hides and restores both the hover selector and queue panel without clearing queued media or interrupting downloads.',tone:'green'},
   {version:'2.030',added:'An icon-only Browser control to enable or disable the Instagram media-selection overlay.',removed:'No removals.',fixed:'Place the toggle after the address bar, keep the selector hidden when disabled, preserve queue and download behavior, and remember the preference between app sessions.',tone:'green'},
   {version:'2.029',added:'An icon-only toggle for the before-and-after preview slider.',removed:'The redundant Fit preview toolbar button and text-only Show original action.',fixed:'Place comparison before the zoom controls, let users enable or disable its hover divider, and make Show original icon-only with dynamic accessible labels. The comparison toggle defaults on to preserve existing preview behavior.',tone:'green'},
