@@ -39,7 +39,7 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- The browser WebView is created on first open, not during app startup.
+        <!-- The browser WebView is warmed after the loading-screen animation ends.
              It docks over the themed viewport of the web layer's Browser page (the
              region is pushed via POST /api/browser-view), instead of covering the app. -->
         <Grid x:Name="InstagramBrowserOverlay"

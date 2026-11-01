@@ -61,43 +61,10 @@ public partial class MainPage : ContentPage
 		// guard keeps the platform-specific intent explicit).
 #if WINDOWS
 		WebViewBootstrapper.Attach(WebAppView);
-#endif
 
-		_ = InitializeInstagramSessionAsync();
-	}
-
-	/// <summary>
-	/// The WebView2 profile keeps the Instagram sign-in between runs, so restore the
-	/// account surfaces at startup and warm the Instagram page: the browser tab opens
-	/// straight onto the main page and the top bar and Settings know the signed-in user
-	/// without waiting for a navigation to trigger a probe.
-	/// </summary>
-	async Task InitializeInstagramSessionAsync()
-	{
-#if WINDOWS
-		try
-		{
-			RestoreKnownAccount();
-
-			// Give the window a beat to lay out before the WebView2 control initialises.
-			await Task.Delay(250);
-			EnsureInstagramBrowserView();
-			if (_instagramBrowserView is null)
-			{
-				return;
-			}
-
-			if (_currentInstagramUrl is null)
-			{
-				NavigateInstagramBrowser(new Uri(InstagramHomeUrl));
-			}
-
-			await RefreshInstagramAccountAsync();
-		}
-		catch
-		{
-			// Best-effort: the URL watcher re-probes the account periodically.
-		}
+		// Restore the last-known account immediately without creating WebView2. The
+		// Instagram browser is warmed only after the loading-screen animation completes.
+		RestoreKnownAccount();
 #endif
 	}
 

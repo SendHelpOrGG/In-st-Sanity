@@ -1394,7 +1394,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.027; open version history" title="Click to view what changed in each version">v.2.027</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.028; open version history" title="Click to view what changed in each version">v.2.028</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5170,9 +5170,7 @@ function browserSaveViaUrl(){const input=document.getElementById('browserAddress
 function browserGo(){const input=document.getElementById('browserAddressInput');const url=String((input&&input.value)||'').trim();if(!url){toast('Enter an Instagram URL, @username, or search term.');return}sendBrowserView({action:'navigate',url:url});setTimeout(loadBrowserState,350)}
 window.addEventListener('resize',function(){if(document.getElementById('browserPage')&&document.getElementById('browserPage').style.display==='block')reportBrowserRegion()});
 document.querySelector('main').addEventListener('scroll',function(){if(document.getElementById('browserPage')&&document.getElementById('browserPage').style.display==='block')reportBrowserRegion()});
-setTimeout(()=>loadInstagramSession(true),1200);
 setTimeout(scheduleNextPageWarm,4000);
-setInterval(loadInstagramSession,5000);
 function openCurrentPostInBuiltInBrowser(){if(currentPost<0||!posts[currentPost])return false;const url=posts[currentPost].url;closePost();return openInstagramBrowser(url)}
 const APP_THEME_NAMES={
   default:'Default',
@@ -7399,8 +7397,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.027';
+const APP_VERSION='2.028';
 const VERSION_HISTORY=[
+  {version:'2.028',added:'No new features.',removed:'Instagram WebView2 startup competing with the loading-screen animation.',fixed:'Restore the cached account without creating the browser; defer the Instagram WebView, initial session refresh, and polling until the loading animation finishes.',tone:'green'},
   {version:'2.027',added:'Hover-driven before/after comparison, editable persistent one-click looks, and icon-only Browser queue actions.',removed:'The Browser queue disappearing after its first completed download.',fixed:'Keep the original/edited divider responsive to pointer position without changing Fit, zoom, pan, or ordinary scrolling; preserve look strength while manually editing, save or restore presets for future sessions, keep the queue visible after items finish, add per-item open/remove actions, and apply Sticker opacity to the leaving prompt. Full-size photo queue resolution is unchanged.',tone:'yellow'},
   {version:'2.026',added:'Full-size photo downloads in the Browser queue.',removed:'Saving the smaller responsive image currently displayed by Instagram.',fixed:'Resolve each queued photo’s post and slide through InstagramResolver, download its best validated ImgUrl, and keep older preview-sized files from suppressing a full-size retry. If the full-size source cannot be resolved, the photo remains queued with an actionable sign-in/retry message.',tone:'yellow'},
   {version:'2.025',added:'More reliable Browser queue downloads and scroll-aware media selection in the Instagram feed.',removed:'Queue filename collisions when carousel slide tracking lags, plus selector width shifting between “+ Add” and “✓ Queued”.',fixed:'Give each distinct queued media item a stable filename identity, keep both selector labels the same width, and re-scan under the stationary pointer as the feed scrolls.',tone:'yellow'},
@@ -7679,6 +7678,10 @@ function closeVersionHistory(){
 function startAppAfterLoadingScreen(){
   if(window.__instSanityAppStarted)return;
   window.__instSanityAppStarted=true;
+  // Start the Instagram WebView/session refresh only after the boot animation has
+  // finished and the app is being revealed; keep the cached account visible meanwhile.
+  setTimeout(()=>loadInstagramSession(true),250);
+  window.__instSanityInstagramSessionPollTimer=setInterval(loadInstagramSession,5000);
   document.body.classList.remove('app-startup-blocked');
   initializeSavedTheme();
   renderVersionHistory();
