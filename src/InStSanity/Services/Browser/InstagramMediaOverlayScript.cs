@@ -139,17 +139,20 @@ internal static class InstagramMediaOverlayScript
 	  function clearTimer() { if (hideTimer) clearTimeout(hideTimer); hideTimer = 0; }
 	  function setMediaOverlayEnabled(enabled, reason = 'state-sync') {
 	    const next = enabled === true;
-	    if (state.mediaOverlayEnabled === next) return;
+	    const changed = state.mediaOverlayEnabled !== next;
 	    state.mediaOverlayEnabled = next;
-	    clearTimer();
+	    if (changed || !next) clearTimer();
 	    if (!next) {
 	      if (selectButton) selectButton.style.display = 'none';
+	      if (tray) tray.dataset.open = 'false';
 	      activeMedia = null;
 	      activeCandidate = null;
 	      buttonAnchorShortcode = '';
 	      buttonAnchorSlideIndex = null;
+	    } else if (tray) {
+	      tray.dataset.open = String(queuePanelEverOpened);
 	    }
-	    debugLog('media-overlay-enabled-changed', { enabled: next, reason });
+	    if (changed) debugLog('media-overlay-enabled-changed', { enabled: next, reason });
 	  }
 
 	  function ensureUi() {
@@ -281,7 +284,7 @@ internal static class InstagramMediaOverlayScript
 
 	    const hasItems = state.items.length > 0;
 	    queuePanelEverOpened = state.hasBeenOpened || hasItems || state.isDownloading;
-	    tray.dataset.open = String(queuePanelEverOpened);
+	    tray.dataset.open = String(state.mediaOverlayEnabled && queuePanelEverOpened);
 	    tray.querySelector('.isg-count').textContent = String(state.items.length);
 	    const start = tray.querySelector('.isg-start');
 	    start.textContent = state.isDownloading

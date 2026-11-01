@@ -925,7 +925,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <input class="text-input browser-address" id="browserAddressInput" type="text" spellcheck="false" autocomplete="off" placeholder="https://www.instagram.com/ or @username" onkeydown="if(event.key==='Enter'){event.preventDefault();browserGo()}">
         <button class="browser-save-btn" id="browserSaveBtn" type="button" onclick="browserSaveViaUrl()" title="Save this post via URL" aria-label="Save this post via URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/><path d="M12 8v8"/><path d="M8.5 12l3.5 3.5 3.5-3.5"/></svg></button>
       </div>
-      <button class="icon-btn browser-nav-btn browser-overlay-toggle active-outline-control active" id="browserOverlayToggleBtn" type="button" onclick="toggleBrowserMediaOverlay()" title="Disable media selection overlay" aria-label="Disable media selection overlay" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <button class="icon-btn browser-nav-btn browser-overlay-toggle active-outline-control active" id="browserOverlayToggleBtn" type="button" onclick="toggleBrowserMediaOverlay()" title="Disable Browser overlay" aria-label="Disable Browser overlay" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
     </div>
     <div class="browser-viewport" id="browserViewport"><div class="browser-viewport-placeholder">Instagram opens here in the Windows desktop app.</div></div>
   </section>
@@ -1398,7 +1398,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.030; open version history" title="Click to view what changed in each version">v.2.030</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.031; open version history" title="Click to view what changed in each version">v.2.031</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5162,7 +5162,7 @@ function syncBrowserMediaOverlayToggle(){
   const button=document.getElementById('browserOverlayToggleBtn');
   if(!button)return;
   const action=browserMediaOverlayEnabled?'Disable':'Enable';
-  const label=`${action} media selection overlay`;
+  const label=`${action} Browser overlay`;
   button.classList.toggle('active',browserMediaOverlayEnabled);
   button.setAttribute('aria-pressed',String(browserMediaOverlayEnabled));
   button.setAttribute('aria-label',label);
@@ -7447,8 +7447,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.030';
+const APP_VERSION='2.031';
 const VERSION_HISTORY=[
+  {version:'2.031',added:'No new features.',removed:'The Browser queue panel remaining visible with the media overlay switched off.',fixed:'The Browser toggle now hides and restores both the hover selector and queue panel without clearing queued media or interrupting downloads.',tone:'green'},
   {version:'2.030',added:'An icon-only Browser control to enable or disable the Instagram media-selection overlay.',removed:'No removals.',fixed:'Place the toggle after the address bar, keep the selector hidden when disabled, preserve queue and download behavior, and remember the preference between app sessions.',tone:'green'},
   {version:'2.029',added:'An icon-only toggle for the before-and-after preview slider.',removed:'The redundant Fit preview toolbar button and text-only Show original action.',fixed:'Place comparison before the zoom controls, let users enable or disable its hover divider, and make Show original icon-only with dynamic accessible labels. The comparison toggle defaults on to preserve existing preview behavior.',tone:'green'},
   {version:'2.028',added:'No new features.',removed:'Instagram WebView2 startup competing with the loading-screen animation.',fixed:'Restore the cached account without creating the browser; defer the Instagram WebView, initial session refresh, and polling until the loading animation finishes.',tone:'green'},
