@@ -632,7 +632,9 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-tools{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .photo-preview-zoom-btn{display:inline-grid;place-items:center;width:28px;height:28px;min-width:28px;padding:0;font-size:15px;line-height:1}
 .photo-preview-zoom-label{min-width:38px;color:var(--t-ink,#f1f5f9);font-size:9px;text-align:center;font-variant-numeric:tabular-nums}
-.photo-preview-toggle{padding:5px 8px;font-size:10px}
+.photo-preview-icon-toggle{display:inline-grid;place-items:center;width:28px;height:28px;min-width:28px;min-height:28px;padding:0}
+.photo-preview-icon-toggle svg{display:block;width:16px;height:16px;pointer-events:none}
+.photo-preview-icon-toggle[aria-pressed="true"]{border-color:var(--t-accent,#38bdf8);color:var(--t-accent,#38bdf8);background:color-mix(in srgb,var(--t-accent,#38bdf8) 12%,transparent)}
 .photo-preview-tools button:disabled{opacity:.4;cursor:not-allowed}
 .photo-preview-canvas-wrap{position:relative;display:grid;place-items:center;width:100%;height:min(82vh,900px);min-height:min(480px,82vh);max-height:min(82vh,900px);overflow:hidden;overflow:clip;margin-inline:auto;padding:12px;box-sizing:border-box;border:1px solid var(--t-line,rgba(255,255,255,.1));border-radius:8px;background:repeating-conic-gradient(rgba(148,163,184,.07) 0% 25%,transparent 0% 50%) 50%/16px 16px,#080c10;color:var(--t-muted,#94a3b8);font-size:11px;text-align:center;overscroll-behavior:auto;touch-action:auto;cursor:default}
 .photo-preview-canvas-wrap.has-image{min-height:0}
@@ -966,9 +968,9 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <div class="setting-body">
           <div class="photo-editor-layout">
             <div class="photo-preview-panel" id="photoResizePreviewPanel">
-              <div class="photo-preview-heading"><strong id="photoResizePreviewTitle">Live preview</strong><div class="photo-preview-tools"><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomOut" onclick="changePhotoResizePreviewZoom(-0.25)" aria-label="Zoom out" title="Zoom out" disabled>−</button><output class="photo-preview-zoom-label" id="photoResizePreviewZoomLabel">Fit</output><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomIn" onclick="changePhotoResizePreviewZoom(0.25)" aria-label="Zoom in" title="Zoom in" disabled>+</button><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomFit" onclick="resetPhotoResizePreviewZoom()" aria-label="Fit preview" title="Fit preview" disabled>↔</button><button type="button" class="outline photo-preview-toggle" id="photoResizePreviewToggle" onclick="togglePhotoResizePreviewMode()" aria-pressed="false" disabled>Show original</button></div></div>
-              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Hover over the photo to compare original and edited sides; Ctrl+scroll to zoom; ordinary scroll moves the page; drag to pan when zoomed; double-click to fit"><canvas id="photoResizePreviewOriginalCanvas" hidden aria-label="Original image before adjustments"></canvas><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><div class="photo-preview-compare" id="photoResizePreviewCompare" hidden aria-hidden="true"><span class="photo-preview-compare-label photo-preview-compare-original">Original</span><span class="photo-preview-compare-label photo-preview-compare-edited">Edited</span><span class="photo-preview-compare-divider" id="photoResizePreviewCompareDivider"><span class="photo-preview-compare-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-4 6 4 6M16 6l4 6-4 6"/></svg></span></span></div><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
-              <p class="hint">Hover over the photo to compare original and edited sides. Ctrl+scroll to zoom, scroll normally to move the page, drag to pan when zoomed, or double-click to fit.</p>
+              <div class="photo-preview-heading"><strong id="photoResizePreviewTitle">Live preview</strong><div class="photo-preview-tools"><button type="button" class="outline photo-preview-icon-toggle" id="photoResizePreviewCompareToggle" onclick="togglePhotoResizePreviewCompare()" aria-label="Toggle before-and-after comparison" title="Hide before-and-after comparison" aria-pressed="true" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v17"/><path d="m8 8-4 4 4 4"/><path d="m16 8 4 4-4 4"/></svg></button><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomOut" onclick="changePhotoResizePreviewZoom(-0.25)" aria-label="Zoom out" title="Zoom out" disabled>−</button><output class="photo-preview-zoom-label" id="photoResizePreviewZoomLabel">Fit</output><button type="button" class="outline photo-preview-zoom-btn" id="photoResizePreviewZoomIn" onclick="changePhotoResizePreviewZoom(0.25)" aria-label="Zoom in" title="Zoom in" disabled>+</button><button type="button" class="outline photo-preview-icon-toggle" id="photoResizePreviewToggle" onclick="togglePhotoResizePreviewMode()" aria-label="Show original" title="Show original" aria-pressed="false" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.2-5.8 9.5-5.8 9.5 5.8 9.5 5.8-3.2 5.8-9.5 5.8-9.5-5.8-9.5-5.8z"/><circle cx="12" cy="12" r="2.7"/></svg></button></div></div>
+              <div class="photo-preview-canvas-wrap" id="photoResizePreviewCanvasWrap" title="Enable or disable the before-and-after slider with the split-view icon; hover over the photo to move its divider; Ctrl+scroll to zoom; double-click to fit"><canvas id="photoResizePreviewOriginalCanvas" hidden aria-label="Original image before adjustments"></canvas><canvas id="photoResizePreviewCanvas" hidden aria-label="Preview of adjusted image"></canvas><div class="photo-preview-compare" id="photoResizePreviewCompare" hidden aria-hidden="true"><span class="photo-preview-compare-label photo-preview-compare-original">Original</span><span class="photo-preview-compare-label photo-preview-compare-edited">Edited</span><span class="photo-preview-compare-divider" id="photoResizePreviewCompareDivider"><span class="photo-preview-compare-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-4 6 4 6M16 6l4 6-4 6"/></svg></span></span></div><span id="photoResizePreviewMessage">Select a photo thumbnail to preview adjustments.</span></div>
+              <p class="hint">Use the split-view icon to enable or disable comparison; when enabled, hover over the photo to move the divider. Ctrl+scroll to zoom, scroll normally to move the page, drag to pan when zoomed, or double-click to fit.</p>
             </div>
             <div class="photo-adjustment-groups" id="photoAdjustmentGroups" role="region" aria-label="Image adjustment controls" tabindex="0">
               <div class="photo-adjustment-group">
@@ -1394,7 +1396,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.028; open version history" title="Click to view what changed in each version">v.2.028</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.029; open version history" title="Click to view what changed in each version">v.2.029</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3965,6 +3967,7 @@ let photoResizePreviewDragStartX=0,photoResizePreviewDragStartY=0,photoResizePre
 let photoResizePreviewGeneration=0;
 let photoResizePreviewImageData=null;
 let photoResizePreviewComparePointer=null;
+let photoResizePreviewCompareEnabled=true;
 let photoOldPhotoTextureData=null;
 let photoOldPhotoTexturePromise=null;
 let photoResizePreviewOriginal=false;
@@ -4217,9 +4220,10 @@ function refreshPhotoResizePreview(){
   if(!canvas||!message)return;
   if(!item){
     if(photoResizePreviewFileId||photoResizePreviewImageData){photoResizePreviewGeneration++;photoResizePreviewFileId='';photoResizeCurrentFileId='';photoResizePreviewImageData=null;revokePhotoResizePreviewUrl()}
+    photoResizePreviewOriginal=false;
     canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Select a photo thumbnail to preview adjustments.';
     if(title)title.textContent='Live preview';
-    if(toggle){toggle.disabled=true;toggle.textContent='Show original';toggle.setAttribute('aria-pressed','false')}
+    if(toggle){toggle.disabled=true;toggle.setAttribute('aria-pressed','false')}
     applyPhotoResizePreviewZoom();
     return;
   }
@@ -4234,7 +4238,7 @@ function refreshPhotoResizePreview(){
   canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Loading preview…';
   const itemNumber=photoResizeQueue.indexOf(item)+1;
   if(title)title.textContent=`Photo ${itemNumber} of ${photoResizeQueue.length}`;
-  if(toggle){toggle.disabled=true;toggle.textContent='Show original';toggle.setAttribute('aria-pressed','false')}
+  if(toggle){toggle.disabled=true;toggle.setAttribute('aria-pressed','false')}
   applyPhotoResizePreviewZoom();
   revokePhotoResizePreviewUrl();
   const installPreview=(source,width,height,closeSource)=>{
@@ -4303,7 +4307,7 @@ function positionPhotoResizePreviewCompare(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
   const original=document.getElementById('photoResizePreviewOriginalCanvas');
   const compare=document.getElementById('photoResizePreviewCompare');
-  if(!photoResizePreviewComparePointer||!wrap||!canvas||!original||!compare||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal){hidePhotoResizePreviewCompare(false);return}
+  if(!photoResizePreviewCompareEnabled||!photoResizePreviewComparePointer||!wrap||!canvas||!original||!compare||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal){hidePhotoResizePreviewCompare(false);return}
   const photo=canvas.getBoundingClientRect(),viewport=wrap.getBoundingClientRect();
   const left=Math.max(photo.left,viewport.left+(wrap.clientLeft||0));
   const top=Math.max(photo.top,viewport.top+(wrap.clientTop||0));
@@ -4328,7 +4332,7 @@ function handlePhotoResizePreviewCompareMove(event){
   if(event.pointerType==='touch'){hidePhotoResizePreviewCompare();return}
   const wrap=document.getElementById('photoResizePreviewCanvasWrap');
   const canvas=document.getElementById('photoResizePreviewCanvas');
-  if(!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap)){
+  if(!photoResizePreviewCompareEnabled||!wrap||!canvas||canvas.hidden||!photoResizePreviewImageData||photoResizePreviewOriginal||!isPhotoResizePreviewEventOnPhoto(event,canvas,wrap)){
     hidePhotoResizePreviewCompare();return;
   }
   photoResizePreviewComparePointer={x:event.clientX,y:event.clientY};
@@ -4394,11 +4398,13 @@ function syncPhotoResizePreviewZoomControls(){
   const available=Boolean(canvas&&!canvas.hidden&&photoResizePreviewImageData);
   const zoomOut=document.getElementById('photoResizePreviewZoomOut');
   const zoomIn=document.getElementById('photoResizePreviewZoomIn');
-  const zoomFit=document.getElementById('photoResizePreviewZoomFit');
+  const compareToggle=document.getElementById('photoResizePreviewCompareToggle');
+  const originalToggle=document.getElementById('photoResizePreviewToggle');
   const label=document.getElementById('photoResizePreviewZoomLabel');
   if(zoomOut)zoomOut.disabled=!available||photoResizePreviewZoom<=1.01;
   if(zoomIn)zoomIn.disabled=!available||photoResizePreviewZoom>=4.5;
-  if(zoomFit)zoomFit.disabled=!available||photoResizePreviewZoom<=1.01;
+  if(compareToggle){compareToggle.disabled=!available;compareToggle.setAttribute('aria-pressed',String(photoResizePreviewCompareEnabled));compareToggle.title=photoResizePreviewCompareEnabled?'Hide before-and-after comparison':'Show before-and-after comparison'}
+  if(originalToggle){const action=photoResizePreviewOriginal?'Show edited':'Show original';originalToggle.disabled=!available;originalToggle.setAttribute('aria-label',action);originalToggle.title=action;originalToggle.setAttribute('aria-pressed',String(photoResizePreviewOriginal))}
   if(label)label.textContent=photoResizePreviewZoom<=1.01?'Fit':`${Math.round(photoResizePreviewZoom*100)}%`;
 }
 function applyPhotoResizePreviewZoom(){
@@ -4488,7 +4494,19 @@ function initPhotoResizePreviewZoom(){
   syncPhotoResizePreviewViewport();
 }
 
-function togglePhotoResizePreviewMode(){if(!photoResizePreviewImageData)return;photoResizePreviewOriginal=!photoResizePreviewOriginal;const toggle=document.getElementById('photoResizePreviewToggle');if(toggle){toggle.textContent=photoResizePreviewOriginal?'Show edited':'Show original';toggle.setAttribute('aria-pressed',String(photoResizePreviewOriginal))}if(photoResizePreviewOriginal)hidePhotoResizePreviewCompare();schedulePhotoResizePreviewRender()}
+function togglePhotoResizePreviewCompare(){
+  if(!photoResizePreviewImageData)return;
+  photoResizePreviewCompareEnabled=!photoResizePreviewCompareEnabled;
+  if(!photoResizePreviewCompareEnabled)hidePhotoResizePreviewCompare();
+  syncPhotoResizePreviewZoomControls();
+}
+function togglePhotoResizePreviewMode(){
+  if(!photoResizePreviewImageData)return;
+  photoResizePreviewOriginal=!photoResizePreviewOriginal;
+  if(photoResizePreviewOriginal)hidePhotoResizePreviewCompare();
+  syncPhotoResizePreviewZoomControls();
+  schedulePhotoResizePreviewRender();
+}
 function schedulePhotoResizePreviewRender(){if(photoResizePreviewRenderPending)return;photoResizePreviewRenderPending=true;requestAnimationFrame(()=>{photoResizePreviewRenderPending=false;renderPhotoResizePreview()})}
 function renderPhotoResizePreview(){
   const canvas=document.getElementById('photoResizePreviewCanvas');
@@ -7397,8 +7415,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.028';
+const APP_VERSION='2.029';
 const VERSION_HISTORY=[
+  {version:'2.029',added:'An icon-only toggle for the before-and-after preview slider.',removed:'The redundant Fit preview toolbar button and text-only Show original action.',fixed:'Place comparison before the zoom controls, let users enable or disable its hover divider, and make Show original icon-only with dynamic accessible labels. The comparison toggle defaults on to preserve existing preview behavior.',tone:'green'},
   {version:'2.028',added:'No new features.',removed:'Instagram WebView2 startup competing with the loading-screen animation.',fixed:'Restore the cached account without creating the browser; defer the Instagram WebView, initial session refresh, and polling until the loading animation finishes.',tone:'green'},
   {version:'2.027',added:'Hover-driven before/after comparison, editable persistent one-click looks, and icon-only Browser queue actions.',removed:'The Browser queue disappearing after its first completed download.',fixed:'Keep the original/edited divider responsive to pointer position without changing Fit, zoom, pan, or ordinary scrolling; preserve look strength while manually editing, save or restore presets for future sessions, keep the queue visible after items finish, add per-item open/remove actions, and apply Sticker opacity to the leaving prompt. Full-size photo queue resolution is unchanged.',tone:'yellow'},
   {version:'2.026',added:'Full-size photo downloads in the Browser queue.',removed:'Saving the smaller responsive image currently displayed by Instagram.',fixed:'Resolve each queued photo’s post and slide through InstagramResolver, download its best validated ImgUrl, and keep older preview-sized files from suppressing a full-size retry. If the full-size source cannot be resolved, the photo remains queued with an actionable sign-in/retry message.',tone:'yellow'},
