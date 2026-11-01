@@ -1442,7 +1442,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.034; open version history" title="Click to view what changed in each version">v.2.034</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.035; open version history" title="Click to view what changed in each version">v.2.035</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -7846,8 +7846,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.034';
+const APP_VERSION='2.035';
 const VERSION_HISTORY=[
+  {version:'2.035',added:'Feed-post-aware Browser media overlay anchoring and privacy-safe post identity diagnostics.',removed:'The selector staying anchored to the first post when separate feed cards resolve to the same shortcode.',fixed:'The + Add selector now keys its anchor to both the resolved post and its DOM post root, while carousel slides within one post keep the same anchor. Hover diagnostics include session-local post tokens, root IDs, permalink counts, identity source, and nearest-link distance without logging shortcodes or media URLs.',tone:'green'},
   {version:'2.034',added:'An independent Edit image queue, chooser, download results, and output folder.',removed:'Edit reusing Change resolution’s image queue and resize settings; no-adjustment resizing using a different Windows bitmap path from edited exports.',fixed:'Edit now stages and downloads only its own selected images without reading Change resolution’s size, upscale, or duplicate settings. Both thumbnail rows share the same horizontal scrolling behavior. No-adjustment resizing uses the same BGRA pixel-data path as edited exports instead of the failing SoftwareBitmap convenience path.',tone:'green'},
   {version:'2.033',added:'The before/after slider now freezes at its last position when the pointer leaves the preview.',removed:'The slider disappearing on pointerleave and turning comparison off changing the preview image state.',fixed:'While enabled, keep the split visible in its last position after pointerleave and resume tracking when the pointer returns. When disabled, hide the slider and leave full-image original/edited selection to the Show/hide original button.',tone:'green'},
   {version:'2.032',added:'A separate horizontal raw-photo preview strip in Image Edit.',removed:'Preview controls with ambiguous toggle state and the adjustment reset action separated from the folder actions.',fixed:'Indicate toggle states with the main-page active-outline system; match Image Edit icon controls to the 37px folder button; keep no-edit conversions working even when Windows lacks a decoder; align preview colors with saved output; rename the panels and move Reset adjustments after Open folder.',tone:'yellow'},

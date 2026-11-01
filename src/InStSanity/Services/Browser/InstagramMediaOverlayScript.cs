@@ -34,6 +34,7 @@ internal static class InstagramMediaOverlayScript
 	  let activeMedia = null;
 	  let activeCandidate = null;
 	  let buttonAnchorShortcode = '';
+	  let buttonAnchorRootId = 0;
 	  let buttonAnchorSlideIndex = null;
 	  let lastObservedRoute = location.pathname;
 	  let routePollTimer = 0;
@@ -46,6 +47,9 @@ internal static class InstagramMediaOverlayScript
 	  const scrollOffsets = new WeakMap();
 	  const horizontalScrollLogged = new WeakSet();
 	  const diagnosticRootIds = new WeakMap();
+	  const candidateRootIds = new WeakMap();
+	  const diagnosticPostTokens = new Map();
+	  let nextDiagnosticPostToken = 1;
 	  let hideTimer = 0;
 	  let mutationRefreshTimer = 0;
 	  let selectButton = null;
@@ -148,6 +152,7 @@ internal static class InstagramMediaOverlayScript
 	      activeMedia = null;
 	      activeCandidate = null;
 	      buttonAnchorShortcode = '';
+	      buttonAnchorRootId = 0;
 	      buttonAnchorSlideIndex = null;
 	    } else if (tray) {
 	      tray.dataset.open = String(queuePanelEverOpened);
@@ -607,7 +612,10 @@ internal static class InstagramMediaOverlayScript
 	      if (!postUrl) return reject('post-permalink-missing', { geometry: visibility.geometry });
 	      const { slideIndex, contentCount } = slideInfo(root, shortcode);
 	      const thumbnailUrl = isVideo ? (media.poster || '') : (media.currentSrc || media.src || '');
-	      return {
+	      const postRootId = diagnosticRootId(root);
+	      const postToken = diagnosticPostToken(shortcode);
+	      if (diagnostics) Object.assign(diagnostics, { postRootId, postToken });
+	      const candidate = {
 	        shortcode,
 	        postUrl,
 	        mediaType: isVideo ? 'video' : 'photo',
@@ -616,6 +624,8 @@ internal static class InstagramMediaOverlayScript
 	        rawUrl,
 	        thumbnailUrl: /^https:\/\//i.test(thumbnailUrl) ? thumbnailUrl : '',
 	      };
+	      candidateRootIds.set(candidate, postRootId);
+	      return candidate;
 	    } catch (_) { return reject('candidate-exception'); }
 	  }
 
@@ -624,6 +634,14 @@ internal static class InstagramMediaOverlayScript
 	    let id = diagnosticRootIds.get(root);
 	    if (!id) { id = nextDiagnosticRootId++; diagnosticRootIds.set(root, id); }
 	    return id;
+	  }
+
+	  function diagnosticPostToken(shortcode) {
+	    const key = String(shortcode || '');
+	    if (!key) return 0;
+	    let token = diagnosticPostTokens.get(key);
+	    if (!token) { token = nextDiagnosticPostToken++; diagnosticPostTokens.set(key, token); }
+	    return token;
 	  }
 
 	  function rememberScrollPositions(element) {
@@ -651,17 +669,21 @@ internal static class InstagramMediaOverlayScript
 
 	  function positionButton(media, candidate, forcePosition = false, reason = 'candidate') {
 	    if (!state.mediaOverlayEnabled || !selectButton || !media || !candidate) return;
-	    const hasSamePostAnchor = buttonAnchorShortcode === candidate.shortcode && selectButton.style.left && selectButton.style.top;
+	    const candidateRootId = candidateRootIds.get(candidate) || 0;
+	    const samePostAnchor = buttonAnchorShortcode === candidate.shortcode && buttonAnchorRootId === candidateRootId;
+	    const hasSamePostAnchor = samePostAnchor && selectButton.style.left && selectButton.style.top;
 	    if (forcePosition || !hasSamePostAnchor) {
 	      const rect = media.getBoundingClientRect();
 	      const width = measureSelectButtonWidth();
 	      const left = Math.max(8, Math.min(innerWidth - width - 8, rect.right - width - 10));
 	      const top = Math.max(8, Math.min(innerHeight - 42, rect.top + 10));
-	      const anchorChanged = buttonAnchorShortcode !== candidate.shortcode;
+	      const previousRootId = buttonAnchorRootId;
+	      const anchorChanged = buttonAnchorShortcode !== candidate.shortcode || previousRootId !== candidateRootId;
 	      const positionChanged = selectButton.style.left !== `${left}px` || selectButton.style.top !== `${top}px`;
 	      selectButton.style.left = `${left}px`;
 	      selectButton.style.top = `${top}px`;
 	      buttonAnchorShortcode = candidate.shortcode;
+	      buttonAnchorRootId = candidateRootId;
 	      const now = Date.now();
 	      if (anchorChanged || positionChanged) {
 	        if (reason !== 'scroll' || now - lastPositionLogAt >= 900) {
@@ -669,6 +691,9 @@ internal static class InstagramMediaOverlayScript
 	          debugLog('selector-positioned', {
 	            reason,
 	            shortcodeLength: String(candidate.shortcode || '').length,
+	            postToken: diagnosticPostToken(candidate.shortcode),
+	            postRootId: candidateRootId,
+	            previousPostRootId: previousRootId,
 	            mediaType: candidate.mediaType,
 	            slideIndex: candidate.slideIndex,
 	            left: Math.round(left),
@@ -677,6 +702,7 @@ internal static class InstagramMediaOverlayScript
 	        }
 	      }
 	    }
+	    buttonAnchorRootId = candidateRootId;
 	    buttonAnchorSlideIndex = Number.isInteger(candidate.slideIndex) ? candidate.slideIndex : null;
 	    selectButton.style.display = 'inline-flex';
 	    const key = itemKey(candidate);
@@ -768,6 +794,7 @@ internal static class InstagramMediaOverlayScript
 
 	    let media = null;
 	    let candidate = null;
+	    let candidateDiagnosticsForLog = null;
 	    const hits = pointHitStack(point);
 	    const seen = new Set();
 	    let mediaChecks = 0;
@@ -802,6 +829,7 @@ internal static class InstagramMediaOverlayScript
 	      }
 	      media = possibleMedia;
 	      candidate = found;
+	      candidateDiagnosticsForLog = candidateDiagnostics;
 	      return true;
 	    };
 
@@ -865,6 +893,12 @@ internal static class InstagramMediaOverlayScript
 	          mediaType: candidate.mediaType,
 	          slideIndex: candidate.slideIndex,
 	          shortcodeLength: String(candidate.shortcode || '').length,
+	          postToken: candidateDiagnosticsForLog?.postToken ?? 0,
+	          postRootId: candidateDiagnosticsForLog?.postRootId ?? 0,
+	          postIdentitySource: candidateDiagnosticsForLog?.postIdentitySource || 'unknown',
+	          postRootPermalinkCount: candidateDiagnosticsForLog?.postRootPermalinkCount ?? 0,
+	          documentPermalinkCount: candidateDiagnosticsForLog?.documentPermalinkCount ?? 0,
+	          nearestPermalinkDistance: candidateDiagnosticsForLog?.nearestPermalinkDistance ?? null,
 	          postUrlMatchesShortcode: parseShortcode(candidate.postUrl) === candidate.shortcode,
 	          sourceAvailable: !!candidate.rawUrl,
 	        } : null,
@@ -878,9 +912,11 @@ internal static class InstagramMediaOverlayScript
 	    if (!state.mediaOverlayEnabled || !inspection?.media || !inspection.candidate) return false;
 	    const previous = activeCandidate;
 	    const next = inspection.candidate;
-	    const samePost = !!previous && previous.shortcode === next.shortcode;
+	    const nextRootId = candidateRootIds.get(next) || 0;
+	    const previousRootId = previous ? candidateRootIds.get(previous) || 0 : 0;
+	    const samePost = !!previous && previous.shortcode === next.shortcode && previousRootId === nextRootId;
 	    const slideChanged = samePost && (previous.slideIndex !== next.slideIndex || itemKey(previous) !== itemKey(next));
-	    const anchorWasAvailable = buttonAnchorShortcode === next.shortcode && !!selectButton?.style.left && !!selectButton?.style.top;
+	    const anchorWasAvailable = buttonAnchorShortcode === next.shortcode && buttonAnchorRootId === nextRootId && !!selectButton?.style.left && !!selectButton?.style.top;
 	    const previousAnchorSlideIndex = buttonAnchorSlideIndex;
 	    const selectorWasVisible = selectButton?.style.display !== 'none';
 	    const anchorSlideChanged = anchorWasAvailable && Number.isInteger(previousAnchorSlideIndex) && previousAnchorSlideIndex !== next.slideIndex;
@@ -1005,6 +1041,7 @@ internal static class InstagramMediaOverlayScript
 	    const selectorVisible = !!selectButton && selectButton.style.display !== 'none';
 	    if (!selectorVisible) {
 	      buttonAnchorShortcode = '';
+	      buttonAnchorRootId = 0;
 	      buttonAnchorSlideIndex = null;
 	    }
 	    if (!selectorVisible || !activeMedia || !activeCandidate) {
@@ -1023,6 +1060,7 @@ internal static class InstagramMediaOverlayScript
 	    }
 	    if (selectButton?.style.display === 'none') {
 	      buttonAnchorShortcode = '';
+	      buttonAnchorRootId = 0;
 	      buttonAnchorSlideIndex = null;
 	    }
 	    refreshMediaUnderPointer(true, 'route-change');
@@ -1105,6 +1143,7 @@ internal static class InstagramMediaOverlayScript
 	    window.addEventListener('resize', () => {
 	      if (selectButton?.style.display === 'none') {
 	        buttonAnchorShortcode = '';
+	        buttonAnchorRootId = 0;
 	        buttonAnchorSlideIndex = null;
 	      }
 	      updatePosition('resize');
