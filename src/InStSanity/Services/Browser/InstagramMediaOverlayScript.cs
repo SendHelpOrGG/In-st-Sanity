@@ -381,12 +381,26 @@ internal static class InstagramMediaOverlayScript
 	    } catch (_) { return false; }
 	  }
 
+	  function topmostVisibleDialog() {
+	    try {
+	      const dialogs = Array.from(document.querySelectorAll('[role="dialog"]'));
+	      for (let index = dialogs.length - 1; index >= 0; index--) {
+	        const dialog = dialogs[index];
+	        const style = getComputedStyle(dialog);
+	        const rect = dialog.getBoundingClientRect();
+	        if (dialog.getAttribute('aria-hidden') === 'true' || style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || Number(style.opacity || 1) <= 0.05) continue;
+	        if (rect.width <= 0 || rect.height <= 0 || rect.bottom <= 0 || rect.right <= 0 || rect.top >= innerHeight || rect.left >= innerWidth) continue;
+	        return dialog;
+	      }
+	    } catch (_) { }
+	    return null;
+	  }
+
 	  function isOverlayAllowedTarget(target) {
+	    const visibleDialog = topmostVisibleDialog();
+	    if (visibleDialog) return target instanceof Element && visibleDialog.contains(target);
 	    const pathname = String(location.pathname || '/');
-	    if (pathname === '/' || postPattern.test(pathname)) return true;
-	    if (!(target instanceof Element)) return false;
-	    const postDialog = target.closest('[role="dialog"]');
-	    return !!postDialog && hasPostPermalink(postDialog);
+	    return pathname === '/' || postPattern.test(pathname);
 	  }
 
 	  function postRootFor(element) {

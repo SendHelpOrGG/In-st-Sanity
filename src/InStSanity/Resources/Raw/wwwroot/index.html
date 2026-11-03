@@ -1442,7 +1442,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.038; open version history" title="Click to view what changed in each version">v.2.038</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.039; open version history" title="Click to view what changed in each version">v.2.039</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -7846,8 +7846,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.038';
+const APP_VERSION='2.039';
 const VERSION_HISTORY=[
+  {version:'2.039',added:'No new features.',removed:'The + Add selector appearing over profile and saved-post thumbnails behind an opened post.',fixed:'When Instagram presents a post in a dialog, keep the selector scoped to that foreground dialog and ignore media in the background grid; continue to allow direct post routes without a dialog.',tone:'green'},
   {version:'2.038',added:'No new features.',removed:'The + Add selector appearing on profile-grid posts during hover.',fixed:'Show the Instagram media selector on the home feed or an opened post only; suppress it on profile grids while still allowing media inside an opened post dialog.',tone:'green'},
   {version:'2.037',added:'Browser overlay hit-stack validation for Instagram feed media.',removed:'False negatives when transformed carousel clipping disagrees with the browser’s actual pointer hit.',fixed:'When WebView2’s hit stack contains the hovered image, trust that hit despite a stale ancestor clip rectangle; keep media bounds, visibility, and opacity checks, and record the clip mismatch for diagnostics.',tone:'green'},
   {version:'2.036',added:'Scroll-aware Browser overlay hit-test diagnostics.',removed:'Ambiguous overlay failures without pointer, viewport, or hit-stack context.',fixed:'Hover diagnostics now include event reason, pointer and viewport coordinates, visual viewport and scroll state, target bounds, top hit elements, and current selector identity so feed-scroll failures can be isolated without logging media URLs or shortcodes.',tone:'green'},
