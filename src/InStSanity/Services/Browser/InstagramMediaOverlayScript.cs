@@ -733,6 +733,10 @@ internal static class InstagramMediaOverlayScript
 	      const rect = media.getBoundingClientRect();
 	      const geometry = { width: Math.round(rect.width), height: Math.round(rect.height), left: Math.round(rect.left), top: Math.round(rect.top), right: Math.round(rect.right), bottom: Math.round(rect.bottom) };
 	      if (point.x < rect.left || point.x > rect.right || point.y < rect.top || point.y > rect.bottom) return reject('outside-media-bounds', { geometry });
+	      // WebView2's hit stack is authoritative when it includes this media. Instagram's
+	      // transformed carousel ancestors can report stale/oversized clip rectangles.
+	      const hits = Array.isArray(hitStack) ? hitStack : pointHitStack(point);
+	      const hitInMedia = hits.some(hit => hit instanceof Element && (hit === media || media.contains(hit)));
 
 	      let visibleOpacity = 1;
 	      for (let ancestor = media; ancestor; ancestor = ancestor.parentElement) {
@@ -753,12 +757,16 @@ internal static class InstagramMediaOverlayScript
 	        const clipTop = clipRect.top + (ancestor.clientTop || 0) * scaleY;
 	        const clipRight = clipLeft + (ancestor.clientWidth || 0) * scaleX;
 	        const clipBottom = clipTop + (ancestor.clientHeight || 0) * scaleY;
-	        if (clipsX && (point.x < clipLeft || point.x > clipRight)) return reject('outside-horizontal-clip', { geometry });
-	        if (clipsY && (point.y < clipTop || point.y > clipBottom)) return reject('outside-vertical-clip', { geometry });
+	        if (clipsX && (point.x < clipLeft || point.x > clipRight)) {
+	          if (!hitInMedia) return reject('outside-horizontal-clip', { geometry });
+	          if (diagnostics) diagnostics.clipBoundsDisagreedWithHitStack = true;
+	        }
+	        if (clipsY && (point.y < clipTop || point.y > clipBottom)) {
+	          if (!hitInMedia) return reject('outside-vertical-clip', { geometry });
+	          if (diagnostics) diagnostics.clipBoundsDisagreedWithHitStack = true;
+	        }
 	      }
 
-	      const hits = Array.isArray(hitStack) ? hitStack : pointHitStack(point);
-	      const hitInMedia = hits.some(hit => hit instanceof Element && (hit === media || media.contains(hit)));
 	      const eventTargetsMedia = eventTarget instanceof Element && (eventTarget === media || media.contains(eventTarget) || eventTarget.contains(media));
 	      const relatedFrameTarget = isRelatedMediaFrameTarget(media, eventTarget);
 	      if (hits.length === 0 || hitInMedia || eventTargetsMedia || relatedFrameTarget) {
@@ -926,6 +934,7 @@ internal static class InstagramMediaOverlayScript
 	          postRootPermalinkCount: candidateDiagnosticsForLog?.postRootPermalinkCount ?? 0,
 	          documentPermalinkCount: candidateDiagnosticsForLog?.documentPermalinkCount ?? 0,
 	          nearestPermalinkDistance: candidateDiagnosticsForLog?.nearestPermalinkDistance ?? null,
+	          clipBoundsDisagreedWithHitStack: candidateDiagnosticsForLog?.clipBoundsDisagreedWithHitStack === true,
 	          postUrlMatchesShortcode: parseShortcode(candidate.postUrl) === candidate.shortcode,
 	          sourceAvailable: !!candidate.rawUrl,
 	        } : null,
