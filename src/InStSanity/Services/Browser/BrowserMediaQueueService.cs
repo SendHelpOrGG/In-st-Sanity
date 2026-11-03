@@ -257,7 +257,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 				if (cancellation.IsCancellationRequested) break;
 				_currentIndex = index + 1;
 				_status = item.IsVideo
-					? $"Downloading {index + 1} of {batch.Length} · video"
+					? $"Resolving video source {index + 1} of {batch.Length}…"
 					: $"Resolving full-size photo {index + 1} of {batch.Length}…";
 			}
 			Publish();
@@ -275,11 +275,14 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 				try
 				{
 					var rawUrl = item.RawUrl;
-					if (item.IsVideo && string.IsNullOrWhiteSpace(rawUrl))
+					if (item.IsVideo)
 					{
+						// Match the Saved Posts path: resolve the selected post slide at download
+						// time instead of trusting the WebView's possibly ephemeral video source.
 						try
 						{
-							rawUrl = await ResolveQueuedVideoUrlAsync(item, cancellation.Token).ConfigureAwait(false) ?? string.Empty;
+							var resolvedVideoUrl = await ResolveQueuedVideoUrlAsync(item, cancellation.Token).ConfigureAwait(false);
+						if (!string.IsNullOrWhiteSpace(resolvedVideoUrl)) rawUrl = resolvedVideoUrl;
 						}
 						catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
 						{
@@ -287,10 +290,12 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 						}
 						catch (Exception)
 						{
-							rawUrl = string.Empty;
+							// Fall back to a validated WebView source below if resolution is unavailable.
 						}
+
+						if (!IsDownloadableVideoUrl(rawUrl)) rawUrl = string.Empty;
 					}
-					else if (!item.IsVideo)
+					else
 					{
 						// Instagram's visible <img> URL is often a responsive/preview variant.
 						// Always resolve the post's selected slide and download its best image URL.
@@ -340,6 +345,20 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 							index,
 							noDuplicates,
 							cancellation.Token).ConfigureAwait(false);
+
+						if (item.IsVideo && !result.Ok && !result.Skipped &&
+							IsDownloadableVideoUrl(item.RawUrl) &&
+							!string.Equals(item.RawUrl, rawUrl, StringComparison.Ordinal))
+						{
+							// A cached or newly resolved URL can still be stale; retry once with the
+							// current, allow-listed WebView source before keeping the item failed.
+							result = await downloads.DownloadOneAsync(
+								downloadItem with { RawUrl = item.RawUrl },
+								resolvedFolders[item.IsVideo]!,
+								index,
+								noDuplicates,
+								cancellation.Token).ConfigureAwait(false);
+						}
 					}
 				}
 				catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
@@ -479,6 +498,29 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		return photoIndices.Length == 1 ? photoIndices[0] : -1;
 	}
 
+	static int FindQueuedVideoSlide(BrowserQueuedMedia item, IReadOnlyList<ResolvedMedia> pictures)
+	{
+		var videoIndices = Enumerable.Range(0, pictures.Count).Where(index => pictures[index].IsVideo).ToArray();
+		var sourceMatches = videoIndices
+			.Where(index => HasSameMediaPath(item.RawUrl, pictures[index].VideoUrl))
+			.ToArray();
+		if (sourceMatches.Length == 1) return sourceMatches[0];
+		if (sourceMatches.Contains(item.SlideIndex)) return item.SlideIndex;
+
+		var posterMatches = videoIndices
+			.Where(index => HasSameMediaPath(item.ThumbnailUrl, pictures[index].ThumbnailUrl) ||
+				HasSameMediaPath(item.ThumbnailUrl, pictures[index].ImgUrl))
+			.ToArray();
+		if (posterMatches.Length == 1) return posterMatches[0];
+		if (posterMatches.Contains(item.SlideIndex)) return item.SlideIndex;
+		if (item.SlideIndex >= 0 && item.SlideIndex < pictures.Count && pictures[item.SlideIndex].IsVideo)
+		{
+			return item.SlideIndex;
+		}
+
+		return videoIndices.Length == 1 ? videoIndices[0] : -1;
+	}
+
 	static bool HasSameMediaPath(string? firstUrl, string? secondUrl)
 	{
 		if (!Uri.TryCreate(firstUrl, UriKind.Absolute, out var first) ||
@@ -501,17 +543,17 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 	{
 		var postUrl = $"https://www.instagram.com/p/{Uri.EscapeDataString(item.Shortcode)}/";
 		var post = await resolver.ResolveAsync(postUrl, cancellationToken).ConfigureAwait(false);
-		if (post is null || !post.Ok || item.SlideIndex >= post.Pictures.Count) return null;
+		if (post is null || !post.Ok || post.Pictures.Count == 0) return null;
 
-		var media = post.Pictures[item.SlideIndex];
-		var videoUrl = media.VideoUrl;
-		if (!media.IsVideo || !SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(videoUrl) || IsUnsupportedVideoStream(videoUrl))
-		{
-			return null;
-		}
+		var slideIndex = FindQueuedVideoSlide(item, post.Pictures);
+		if (slideIndex < 0) return null;
 
-		return videoUrl;
+		var videoUrl = post.Pictures[slideIndex].VideoUrl;
+		return IsDownloadableVideoUrl(videoUrl) ? videoUrl : null;
 	}
+
+	static bool IsDownloadableVideoUrl(string? rawUrl) =>
+		SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(rawUrl) && !IsUnsupportedVideoStream(rawUrl);
 
 	static bool IsUnsupportedVideoStream(string? rawUrl)
 	{
@@ -557,8 +599,12 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		}
 		else if (!SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(rawUrl))
 		{
-			error = "invalid_media_raw_url";
-			return false;
+			if (!isVideo)
+			{
+				error = "invalid_media_raw_url";
+				return false;
+			}
+			rawUrl = string.Empty;
 		}
 		if (IsUnsupportedVideoStream(rawUrl))
 		{

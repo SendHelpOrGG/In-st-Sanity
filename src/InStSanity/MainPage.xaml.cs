@@ -496,6 +496,9 @@ public partial class MainPage : ContentPage
 			var photoFolder = TryGetPreferenceString(root, "photoFolder") ?? "~/Pictures/Instagram";
 			var videoFolder = TryGetPreferenceString(root, "videoFolder") ?? photoFolder;
 			var noDuplicates = !root.TryGetProperty("noDuplicates", out var duplicateValue) || duplicateValue.ValueKind != JsonValueKind.False;
+			// The Saved Posts resolver endpoint refreshes the native WebView session before
+			// resolving. The Browser queue calls the resolver directly, so sync it here too.
+			await _browserWindow.EnsureSessionCookiesAsync(force: true);
 			await Task.Run(() => _browserMediaQueue.DownloadAsync(photoFolder, videoFolder, noDuplicates));
 		}
 		catch
