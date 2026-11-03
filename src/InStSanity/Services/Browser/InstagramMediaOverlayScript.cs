@@ -787,7 +787,7 @@ internal static class InstagramMediaOverlayScript
 	    } catch (_) { return []; }
 	  }
 
-	  function inspectMediaTarget(target, point = null) {
+	  function inspectMediaTarget(target, point = null, reason = 'pointer') {
 	    if (!(target instanceof Element) || target.closest('#inst-sanity-tray,#inst-sanity-select')) {
 	      return { media: null, candidate: null };
 	    }
@@ -861,9 +861,22 @@ internal static class InstagramMediaOverlayScript
 	    const result = candidate ? 'candidate-found' : mediaChecks === 0 ? 'no-media-found' :
 	      candidateRejected ? 'candidate-rejected' : hitTestRejected ? 'pointer-hit-rejected' : 'no-eligible-media';
 	    const rootId = diagnosticRootId(scope);
-	    const rejectionSignature = Object.keys(candidateRejectReasons).sort().join(',');
+	    const rejectionSignature = `${Object.keys(hitTestRejectReasons).sort().join(',')}|${Object.keys(candidateRejectReasons).sort().join(',')}`;
 	    const inspectionIdentity = candidate ? itemKey(candidate) : `${result}|${rejectionSignature}`;
-	    const signature = `${routeEpoch}|${rootId}|${inspectionIdentity}`;
+	    const signature = `${routeEpoch}|${rootId}|${reason}|${inspectionIdentity}`;
+	    const targetRect = (() => {
+	      try {
+	        const rect = target.getBoundingClientRect();
+	        return { left: Math.round(rect.left), top: Math.round(rect.top), width: Math.round(rect.width), height: Math.round(rect.height) };
+	      } catch (_) { return null; }
+	    })();
+	    const visualViewport = window.visualViewport ? {
+	      offsetLeft: Math.round(window.visualViewport.offsetLeft || 0),
+	      offsetTop: Math.round(window.visualViewport.offsetTop || 0),
+	      width: Math.round(window.visualViewport.width || 0),
+	      height: Math.round(window.visualViewport.height || 0),
+	      scale: Number(window.visualViewport.scale) || 1,
+	    } : null;
 	    let loggedSignatures = scope instanceof Element ? inspectionLogKeys.get(scope) : null;
 	    if (!loggedSignatures) {
 	      loggedSignatures = new Set();
@@ -874,6 +887,20 @@ internal static class InstagramMediaOverlayScript
 	      loggedSignatures.add(signature);
 	      debugLog('media-inspection', {
 	        route: routeKind(),
+	        reason,
+	        pointer: point && Number.isFinite(point.x) && Number.isFinite(point.y)
+	          ? { x: Math.round(point.x), y: Math.round(point.y) }
+	          : null,
+	        viewport: { width: Math.round(innerWidth), height: Math.round(innerHeight) },
+	        visualViewport,
+	        pageScroll: { x: Math.round(window.scrollX || 0), y: Math.round(window.scrollY || 0) },
+	        targetRect,
+	        hitStackTags: hits.slice(0, 6).map(hit => String(hit?.tagName || 'unknown').toLowerCase()),
+	        activeSelector: {
+	          visible: !!selectButton && selectButton.style.display !== 'none',
+	          postToken: activeCandidate ? diagnosticPostToken(activeCandidate.shortcode) : 0,
+	          postRootId: activeCandidate ? candidateRootIds.get(activeCandidate) || 0 : 0,
+	        },
 	        rootId,
 	        rootTag: String(scope?.tagName || 'unknown').toLowerCase(),
 	        rootRole: safeText(scope?.getAttribute?.('role') || ''),
@@ -952,7 +979,7 @@ internal static class InstagramMediaOverlayScript
 	    lastPointer = { x: event.clientX, y: event.clientY };
 	    if (!state.mediaOverlayEnabled) return;
 	    if (event.target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) { clearTimer(); return; }
-	    const inspection = inspectMediaTarget(event.target, lastPointer);
+	    const inspection = inspectMediaTarget(event.target, lastPointer, 'pointerover');
 	    if (!activateInspectedCandidate(inspection) && activeMedia && !selectButton?.matches(':hover')) hideSelectSoon();
 	  }
 
@@ -979,7 +1006,7 @@ internal static class InstagramMediaOverlayScript
 	    const now = Date.now();
 	    if (now - lastMoveInspectionAt < 100) return;
 	    lastMoveInspectionAt = now;
-	    const inspection = inspectMediaTarget(event.target, lastPointer);
+	    const inspection = inspectMediaTarget(event.target, lastPointer, 'pointermove');
 	    if (inspection.media && (inspection.media !== activeMedia || !activeCandidate ||
 	        itemKey(inspection.candidate) !== itemKey(activeCandidate) || inspection.candidate.slideIndex !== activeCandidate.slideIndex)) {
 	      activateInspectedCandidate(inspection);
@@ -1070,7 +1097,7 @@ internal static class InstagramMediaOverlayScript
 	    if (!state.mediaOverlayEnabled || !lastPointer) return;
 	    const target = document.elementFromPoint(lastPointer.x, lastPointer.y);
 	    if (target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) return;
-	    const inspection = inspectMediaTarget(target, lastPointer);
+	    const inspection = inspectMediaTarget(target, lastPointer, reason);
 	    if (!activateInspectedCandidate(inspection, forcePosition, reason) && activeMedia && !selectButton?.matches(':hover')) {
 	      hideSelectSoon();
 	    }

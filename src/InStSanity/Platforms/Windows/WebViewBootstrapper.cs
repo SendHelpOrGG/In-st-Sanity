@@ -31,7 +31,7 @@ internal static class WebViewBootstrapper
 	static void LogInstagramBrowserOverlay(string message)
 	{
 		message = message.Replace('\r', ' ').Replace('\n', ' ');
-		if (message.Length > 3_500) message = message[..3_500] + "…";
+		if (message.Length > 6_000) message = message[..6_000] + "…";
 		var line = $"[{DateTimeOffset.Now:O}] [InstagramBrowserOverlay] {message}";
 		System.Diagnostics.Debug.WriteLine(line);
 		_ = AppendInstagramBrowserOverlayLogAsync(line);
