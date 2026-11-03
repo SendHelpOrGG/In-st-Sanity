@@ -1,6 +1,8 @@
 using InStSanity.Platforms.Windows;
 using InStSanity.Services.Api;
 using InStSanity.Services.Browser;
+using InStSanity.Services.Downloads;
+using InStSanity.Services.Images;
 using InStSanity.Services.Instagram;
 using InStSanity.Services.WebHost;
 using InStSanity.ViewModels;
@@ -28,6 +30,10 @@ public static class MauiProgram
 
 		builder.UseMauiApp<App>();
 
+#if DEBUG
+		builder.Logging.AddDebug();
+#endif
+
 #if WINDOWS
 		// The desktop UX owns its own close affordances (the caught-imp prompt by default,
 		// or an optional in-app exit icon). Collapse the WinUI title bar so Windows does
@@ -42,6 +48,10 @@ public static class MauiProgram
 				var handle = WindowNative.GetWindowHandle(window);
 				var id = Win32Interop.GetWindowIdFromWindow(handle);
 				var appWindow = AppWindow.GetFromWindowId(id);
+
+				// The web UI already carries the app branding, so avoid repeating the name
+				// in the native caption while keeping the window icon and caption controls.
+				appWindow.Title = string.Empty;
 
 				// The taskbar and caption must show the imp app icon. ApplicationIcon
 				// covers the exe; this pins the window itself to the same .ico.
@@ -59,6 +69,17 @@ public static class MauiProgram
 				var titleBar = appWindow.TitleBar;
 				titleBar.ExtendsContentIntoTitleBar = true;
 				titleBar.PreferredHeightOption = TitleBarHeightOption.Collapsed;
+
+				// Always place a new app window in the center of the primary display's
+				// usable area, rather than relying on Windows' remembered placement.
+				var primaryDisplay = DisplayArea.GetFromPoint(
+					new Windows.Graphics.PointInt32(0, 0),
+					DisplayAreaFallback.Primary);
+				var workArea = primaryDisplay.WorkArea;
+				var windowSize = appWindow.Size;
+				var x = workArea.X + (workArea.Width - windowSize.Width) / 2;
+				var y = workArea.Y + (workArea.Height - windowSize.Height) / 2;
+				appWindow.Move(new Windows.Graphics.PointInt32(x, y));
 			}));
 		});
 #endif
@@ -72,8 +93,11 @@ public static class MauiProgram
 		builder.Services.AddSingleton<InstagramResolver>();
 		builder.Services.AddSingleton<MediaCache>();
 		builder.Services.AddSingleton<InstagramBrowserWindowService>();
+		builder.Services.AddSingleton<SelectedMediaDownloadService>();
+		builder.Services.AddSingleton<BrowserMediaQueueService>();
 		builder.Services.AddSingleton<IFolderPickerService, WindowsFolderPickerService>();
 		builder.Services.AddSingleton<IDownloadFolderOpener, WindowsDownloadFolderOpener>();
+		builder.Services.AddSingleton<PhotoResizeService>();
 
 		// /api/image and /api/download-photo share one implementation, differing only in
 		// how the payload is presented.
@@ -91,8 +115,12 @@ public static class MauiProgram
 			asAttachment: true));
 
 		builder.Services.AddSingleton<IApiEndpoint, DownloadSelectedEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, DownloadHistoryEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, ResizeUploadEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, ResizeConvertEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenDownloadFolderEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ExitAppEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, CollapseWindowEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenInstagramBrowserEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, InstagramBrowserViewEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, InstagramSessionEndpoint>();

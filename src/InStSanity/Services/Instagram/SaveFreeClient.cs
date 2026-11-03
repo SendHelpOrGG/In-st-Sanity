@@ -142,7 +142,7 @@ public sealed class SaveFreeClient
 
 			if (!response.IsSuccessStatusCode)
 			{
-				_logger.LogInformation(
+				_logger.LogDebug(
 					"save-free: upstream {Status} for {Shortcode}",
 					(int)response.StatusCode,
 					shortcode);
@@ -155,7 +155,7 @@ public sealed class SaveFreeClient
 
 			if (slides.Count > 0)
 			{
-				_logger.LogInformation(
+				_logger.LogDebug(
 					"save-free: {Count} slide(s) for {Shortcode}",
 					slides.Count,
 					shortcode);
@@ -165,12 +165,12 @@ public sealed class SaveFreeClient
 		}
 		catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
 		{
-			_logger.LogInformation("save-free: timed out for {Shortcode}", shortcode);
+			_logger.LogDebug("save-free: timed out for {Shortcode}", shortcode);
 			return Array.Empty<ResolvedMedia>();
 		}
 		catch (HttpRequestException ex)
 		{
-			_logger.LogInformation(ex, "save-free: unreachable for {Shortcode}", shortcode);
+			_logger.LogDebug(ex, "save-free: unreachable for {Shortcode}", shortcode);
 			return Array.Empty<ResolvedMedia>();
 		}
 	}
@@ -179,6 +179,11 @@ public sealed class SaveFreeClient
 
 	IReadOnlyList<ResolvedMedia> Parse(string body)
 	{
+		if (!InstagramHttp.HasJsonValuePrefix(body))
+		{
+			return Array.Empty<ResolvedMedia>();
+		}
+
 		JsonNode? root;
 		try
 		{
@@ -265,6 +270,8 @@ public sealed class SaveFreeClient
 				RawUrl = imageUrl,
 				IsVideo = isVideo,
 				VideoUrl = isVideo ? bestUrl : string.Empty,
+				Origin = "api",
+				HasFullSizeImage = !isVideo && bestUrl.Length > 0 && (options.Count > 0 || download.Success),
 			});
 		}
 
@@ -384,7 +391,7 @@ public sealed class SaveFreeClient
 		try
 		{
 			var decoded = Base64UrlDecode(match.Groups[2].Value);
-			if (decoded.Length == 0)
+			if (!InstagramHttp.HasJsonValuePrefix(decoded))
 			{
 				return token;
 			}

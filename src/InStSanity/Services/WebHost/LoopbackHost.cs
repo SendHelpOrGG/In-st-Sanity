@@ -37,6 +37,8 @@ public sealed class LoopbackHost : IAsyncDisposable
 	static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
 	static readonly TimeSpan FolderPickerTimeout = TimeSpan.FromMinutes(5);
 	static readonly TimeSpan SelectedDownloadTimeout = TimeSpan.FromMinutes(5);
+	static readonly TimeSpan ResizeUploadTimeout = TimeSpan.FromMinutes(5);
+	static readonly TimeSpan ResizeConversionTimeout = TimeSpan.FromMinutes(30);
 	static readonly byte[] HeadTerminator = { 13, 10, 13, 10 };
 
 	readonly IReadOnlyDictionary<string, IApiEndpoint> _endpoints;
@@ -273,6 +275,14 @@ public sealed class LoopbackHost : IAsyncDisposable
 				else if (request.Path.Equals("/api/download-selected", StringComparison.OrdinalIgnoreCase))
 				{
 					timeout.CancelAfter(SelectedDownloadTimeout);
+				}
+				else if (request.Path.Equals("/api/resize-upload", StringComparison.OrdinalIgnoreCase))
+				{
+					timeout.CancelAfter(ResizeUploadTimeout);
+				}
+				else if (request.Path.Equals("/api/resize-convert", StringComparison.OrdinalIgnoreCase))
+				{
+					timeout.CancelAfter(ResizeConversionTimeout);
 				}
 
 				var response = await RouteAsync(request, token).ConfigureAwait(false);

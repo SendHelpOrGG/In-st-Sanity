@@ -17,18 +17,20 @@
 		<ApplicationTitle>In-st-Sanity</ApplicationTitle>
 		<ApplicationId>com.instsanity.app</ApplicationId>
 		<ApplicationIcon>Resources\AppIcon\appicon.ico</ApplicationIcon>
-		<ApplicationDisplayVersion>1.69</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>2.042</ApplicationDisplayVersion>
+		<ApplicationVersion>111</ApplicationVersion>
 
 		<!-- Unpackaged desktop app: run it straight from the build output (F5 / dotnet run), no MSIX required. -->
 		<WindowsPackageType>None</WindowsPackageType>
+		<!-- Keep managed satellite resources in English only. -->
+		<SatelliteResourceLanguages>en;en-GB;en-US</SatelliteResourceLanguages>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<!-- App icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#15181D" />
-		<!-- Win32 icon for the exe + a copy at the app root so the window can pin the same icon. -->
-		<Content Include="Resources\AppIcon\appicon.ico" CopyToOutputDirectory="PreserveNewest" TargetPath="appicon.ico" />
+		<!-- Keep the source icon in build output for AppWindow.SetIcon; MauiIcon supplies the publish copy. -->
+		<Content Include="Resources\AppIcon\appicon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" TargetPath="appicon.ico" />
 
 		<!-- Splash screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#111318" BaseSize="128,128" />
@@ -44,6 +46,20 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
+
+	<!-- WindowsAppSDKSelfContained copies .mui folders from its framework package and does not honor SatelliteResourceLanguages. Keep English variants in publish; remove only non-English folders that contain MUI resources. -->
+	<Target Name="RemoveNonEnglishWindowsAppSdkLanguageFolders"
+			AfterTargets="Publish"
+			Condition="'$(PublishDir)' != ''">
+		<ItemGroup>
+			<_EnglishMuiPattern Include="$(PublishDir)en\*.mui" />
+			<_EnglishMuiPattern Include="$(PublishDir)en-*\*.mui" />
+			<_NonEnglishMuiFile Include="$(PublishDir)*\*.mui" Exclude="@(_EnglishMuiPattern)" />
+			<_NonEnglishMuiDirectory Include="@(_NonEnglishMuiFile-&gt;'%(RootDir)%(Directory)')" />
+		</ItemGroup>
+		<RemoveDir Directories="@(_NonEnglishMuiDirectory)" />
+	</Target>
 
 </Project>
