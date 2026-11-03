@@ -1442,7 +1442,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.040; open version history" title="Click to view what changed in each version">v.2.040</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.041; open version history" title="Click to view what changed in each version">v.2.041</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -3974,8 +3974,12 @@ function persistVideoFolder(path){if(typeof path!=='string'||!path.trim())return
 function isSeparateVideoFolderEnabled(){return Boolean(getUiPref('separateVideoFolder',false))}
 function syncSeparateVideoFolderSettings(){const enabled=isSeparateVideoFolderEnabled();const button=document.getElementById('separateVideoFolderBtn');const settings=document.getElementById('separateVideoFolderSettings');if(button){button.textContent=`Separate video folder: ${enabled?'On':'Off'}`;button.classList.toggle('active',enabled);button.setAttribute('aria-pressed',String(enabled))}if(settings){settings.hidden=!enabled;settings.setAttribute('aria-hidden',String(!enabled))}}
 function loadVideoFolderSettings(){const input=document.getElementById('videoFolder');if(input){try{const saved=localStorage.getItem(VIDEO_FOLDER_KEY);if(saved&&saved.trim())input.value=saved.trim()}catch(_){}}syncSeparateVideoFolderSettings()}
-function getConfiguredVideoDownloadFolder(){if(!isSeparateVideoFolderEnabled())return getConfiguredDownloadFolder();try{const saved=localStorage.getItem(VIDEO_FOLDER_KEY);if(saved&&saved.trim())return saved.trim()}catch(_){}const input=document.getElementById('videoFolder');return String(input?.value||'~/Videos/Instagram').trim()||'~/Videos/Instagram'}
+function getSavedVideoDownloadFolder(){try{const saved=localStorage.getItem(VIDEO_FOLDER_KEY);if(saved&&saved.trim())return saved.trim()}catch(_){}return''}
+function getStoredVideoDownloadFolder(){const input=document.getElementById('videoFolder');const inputValue=String(input?.value||'').trim();const defaultValue=String(input?.defaultValue||'').trim();return(inputValue&&inputValue!==defaultValue?inputValue:'')||getSavedVideoDownloadFolder()||inputValue}
+function getConfiguredVideoDownloadFolder(){if(!isSeparateVideoFolderEnabled())return getConfiguredDownloadFolder();return getStoredVideoDownloadFolder()||'~/Videos/Instagram'}
+function getBrowserQueueFolderPreferences(){const photoFolder=getConfiguredDownloadFolder();const separateVideoFolder=isSeparateVideoFolderEnabled();let videoFolder=photoFolder;if(separateVideoFolder){const input=document.getElementById('videoFolder');const inputValue=String(input?.value||'').trim();const defaultValue=String(input?.defaultValue||'').trim();videoFolder=(inputValue&&inputValue!==defaultValue?inputValue:'')||getSavedVideoDownloadFolder()}return{photoFolder,videoFolder,separateVideoFolder,settingsReady:true}}
 window.getConfiguredVideoDownloadFolder=getConfiguredVideoDownloadFolder;
+window.getBrowserQueueFolderPreferences=getBrowserQueueFolderPreferences;
 function toggleSeparateVideoFolder(){setUiPref('separateVideoFolder',!isSeparateVideoFolderEnabled());syncSeparateVideoFolderSettings();scheduleDownloadHistorySync(true);toast(isSeparateVideoFolderEnabled()?'Separate video folder enabled':'Videos will use the Download location')}
 async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);scheduleDownloadHistorySync(true);toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
 async function chooseVideoFolder(){const input=document.getElementById('videoFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistVideoFolder(data.path);scheduleDownloadHistorySync(true);toast('Video download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
@@ -7846,8 +7850,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.040';
+const APP_VERSION='2.041';
 const VERSION_HISTORY=[
+  {version:'2.041',added:'No new features.',removed:'Browser queue videos silently falling back to the standard Windows Videos location when the configured separate folder was not handed off.',fixed:'Read the separate-folder switch and saved video path explicitly for the Browser queue. If the enabled video folder is unavailable, keep videos queued and report the settings issue instead of saving them somewhere else.',tone:'green'},
   {version:'2.040',added:'No new features.',removed:'Browser video downloads relying only on the WebView’s current video URL.',fixed:'Resolve selected Browser videos through the same per-post Instagram resolver as Saved Posts, refresh the Browser session first, match the resolved video to its slide, and retry once with the validated current WebView source if needed.',tone:'green'},
   {version:'2.039',added:'No new features.',removed:'The + Add selector appearing over profile and saved-post thumbnails behind an opened post.',fixed:'When Instagram presents a post in a dialog, keep the selector scoped to that foreground dialog and ignore media in the background grid; continue to allow direct post routes without a dialog.',tone:'green'},
   {version:'2.038',added:'No new features.',removed:'The + Add selector appearing on profile-grid posts during hover.',fixed:'Show the Instagram media selector on the home feed or an opened post only; suppress it on profile grids while still allowing media inside an opened post dialog.',tone:'green'},

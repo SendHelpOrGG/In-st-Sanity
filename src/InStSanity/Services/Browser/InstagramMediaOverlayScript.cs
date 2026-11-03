@@ -359,7 +359,9 @@ internal static class InstagramMediaOverlayScript
 	      queue_item_unavailable: 'That item is no longer in the queue.',
 	      invalid_media: 'That media item could not be selected.',
 	      untrusted_source: 'Media selection is only available on Instagram pages.',
-	      bridge_unavailable: 'Could not reach the download service. Your selections are still queued.'
+	      bridge_unavailable: 'Could not reach the download service. Your selections are still queued.',
+      download_folders_unavailable: 'Could not read the download locations in Settings. Your selections are still queued.',
+      video_folder_unavailable: 'Separate video folder is enabled, but no folder is saved in Settings. Choose a video folder and retry.'
 	    })[String(code)] || 'Could not update the media queue.';
 	  }
 

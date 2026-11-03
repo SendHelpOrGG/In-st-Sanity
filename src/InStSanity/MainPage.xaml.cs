@@ -489,12 +489,24 @@ public partial class MainPage : ContentPage
 				return;
 			}
 			var raw = await WebViewBootstrapper.ExecOnUiAsync(core,
-				"(()=>{try{return JSON.stringify({photoFolder:String(window.getConfiguredDownloadFolder?.()||'~/Pictures/Instagram'),videoFolder:String(window.getConfiguredVideoDownloadFolder?.()||window.getConfiguredDownloadFolder?.()||'~/Pictures/Instagram'),noDuplicates:window.isNoDuplicatesEnabled?.()!==false})}catch(e){return '{}'}})()");
+				"(()=>{try{const folders=window.getBrowserQueueFolderPreferences?.();if(!folders)return '{}';return JSON.stringify({photoFolder:String(folders.photoFolder||''),videoFolder:String(folders.videoFolder||''),separateVideoFolder:folders.separateVideoFolder===true,settingsReady:folders.settingsReady===true,noDuplicates:window.isNoDuplicatesEnabled?.()!==false})}catch(e){return '{}'}})()");
 			var json = WebViewBootstrapper.TryUnwrapScriptJson(raw);
 			using var preferences = JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json);
 			var root = preferences.RootElement;
+			var settingsReady = root.TryGetProperty("settingsReady", out var settingsReadyValue) && settingsReadyValue.ValueKind == JsonValueKind.True;
+			if (!settingsReady)
+			{
+				await SyncBrowserQueueToPageAsync("download_folders_unavailable");
+				return;
+			}
 			var photoFolder = TryGetPreferenceString(root, "photoFolder") ?? "~/Pictures/Instagram";
-			var videoFolder = TryGetPreferenceString(root, "videoFolder") ?? photoFolder;
+			var separateVideoFolder = root.TryGetProperty("separateVideoFolder", out var separateValue) && separateValue.ValueKind == JsonValueKind.True;
+			var videoFolder = separateVideoFolder ? TryGetPreferenceString(root, "videoFolder")?.Trim() : photoFolder;
+			if (separateVideoFolder && string.IsNullOrWhiteSpace(videoFolder))
+			{
+				await SyncBrowserQueueToPageAsync("video_folder_unavailable");
+				return;
+			}
 			var noDuplicates = !root.TryGetProperty("noDuplicates", out var duplicateValue) || duplicateValue.ValueKind != JsonValueKind.False;
 			// The Saved Posts resolver endpoint refreshes the native WebView session before
 			// resolving. The Browser queue calls the resolver directly, so sync it here too.

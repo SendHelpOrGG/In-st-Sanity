@@ -239,6 +239,14 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		var folderErrors = new HashSet<bool>();
 		foreach (var isVideo in batch.Select(item => item.IsVideo).Distinct())
 		{
+			if (isVideo && string.IsNullOrWhiteSpace(videoFolder))
+			{
+				// Never let a missing dedicated video setting silently resolve to the
+				// downloader's default folder.
+				folderErrors.Add(true);
+				continue;
+			}
+
 			try
 			{
 				resolvedFolders[isVideo] = downloads.PrepareFolder(isVideo ? videoFolder : photoFolder);
