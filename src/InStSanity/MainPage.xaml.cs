@@ -172,9 +172,17 @@ public partial class MainPage : ContentPage
 		{
 			var raw = await MainThread.InvokeOnMainThreadAsync<string>(
 				() => WebAppView.EvaluateJavaScriptAsync(StartupProbeScript));
-			var json = raw;
-			try { json = JsonSerializer.Deserialize<string>(raw) ?? raw; }
-			catch (JsonException) { }
+			var json = raw.Trim();
+			if (json.StartsWith('"'))
+			{
+				json = JsonSerializer.Deserialize<string>(json) ?? json;
+			}
+			else if (json.StartsWith("{\\\"", StringComparison.Ordinal))
+			{
+				// Some MAUI WebView handlers remove a returned JS string's outer quotes
+				// but leave escaped property quotes, e.g. {\\"ready\\":true}.
+				json = JsonSerializer.Deserialize<string>($"\"{json}\"") ?? json;
+			}
 
 			using var document = JsonDocument.Parse(json);
 			var root = document.RootElement;
