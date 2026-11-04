@@ -502,7 +502,7 @@ try {
     if ($downloadSummaryStart -lt 0) {
         throw 'The media download completion summary is missing.'
     }
-    $downloadSummaryEnd = $document.Content.IndexOf('function snapshotSelectedMediaIndices', $downloadSummaryStart)
+    $downloadSummaryEnd = $document.Content.IndexOf('async function downloadUrlTabSelected()', $downloadSummaryStart)
     if ($downloadSummaryEnd -le $downloadSummaryStart) {
         throw 'The media download completion summary could not be inspected.'
     }
