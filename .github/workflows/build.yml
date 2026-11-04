@@ -74,12 +74,16 @@ jobs:
 
       - name: Run smoke test
         shell: pwsh
-        run: pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe -IncludeUi
+        run: |
+          pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe -IncludeUi *>&1 | Tee-Object -FilePath smoke-test-console.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload smoke test log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: smoke-test-log
-          path: smoke-test.log
+          path: |
+            smoke-test.log
+            smoke-test-console.log
           if-no-files-found: ignore
