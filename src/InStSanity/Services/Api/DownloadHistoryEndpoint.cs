@@ -245,15 +245,17 @@ public sealed class DownloadHistoryEndpoint : IApiEndpoint
 		}
 
 		if (TryReadNumberedMarker(stem, "_photo_", out var legacyPhotoPrefix, out var legacyPhotoNumber) &&
-			requestedShortcodes.TryGetValue(legacyPhotoPrefix, out canonicalShortcode))
+			requestedShortcodes.TryGetValue(legacyPhotoPrefix, out var resolvedLegacyShortcode))
 		{
+			canonicalShortcode = resolvedLegacyShortcode;
 			zeroBasedIndex = legacyPhotoNumber - 1;
 			return true;
 		}
 
 		if (TryReadNumberedMarker(stem, "_", out var numberedPrefix, out var photoIndex) &&
-			requestedShortcodes.TryGetValue(numberedPrefix, out canonicalShortcode))
+			requestedShortcodes.TryGetValue(numberedPrefix, out var resolvedNumberedShortcode))
 		{
+			canonicalShortcode = resolvedNumberedShortcode;
 			zeroBasedIndex = photoIndex - 1;
 			return true;
 		}

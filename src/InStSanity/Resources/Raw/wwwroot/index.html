@@ -8161,8 +8161,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.043';
+const APP_VERSION='2.044';
 const VERSION_HISTORY=[
+  {version:'2.044',added:'No new features.',removed:'A Windows build error from an unavailable WebView2 console event, plus nullable warnings in download-history parsing.',fixed:'Keep navigation diagnostics on the supported WebView2 API and preserve non-null out values when numbered filenames do not match a requested post.',tone:'green'},
   {version:'2.043',added:'No new features.',removed:'A black startup window caused by a malformed filename-sanitizing regular expression stopping app JavaScript before the UI booted.',fixed:'Store the control-character range as JavaScript escapes so HTML parsing cannot rewrite raw control bytes into invalid regex syntax. The native host also detects stalled boot, attempts bounded recovery, and provides startup diagnostics with retry.',tone:'green'},
   {version:'2.042',added:'Resize, Image Edit, and Moment capture now have dedicated tabs; Moment capture can preview a local video and save its current frame.',removed:'The redundant apply-to-all button, preview hover hint, and item-count badge on Browser Save/Retry.',fixed:'Edited-image previews render off the UI thread; Old Photo wear is sharper and responds to Sharpness. Downloads use account_shortcode_vN/phN names with resized/edited suffixes, folder buttons open images on left-click and the configured video folder on right-click, and Open in Instagram browser switches to the Browser tab.',tone:'green'},
   {version:'2.041',added:'No new features.',removed:'Browser queue videos silently falling back to the standard Windows Videos location when the configured separate folder was not handed off.',fixed:'Read the separate-folder switch and saved video path explicitly for the Browser queue. If the enabled video folder is unavailable, keep videos queued and report the settings issue instead of saving them somewhere else.',tone:'green'},
