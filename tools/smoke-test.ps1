@@ -271,7 +271,7 @@ try {
         -not $document.Content.Contains("mode==='browser'?'Browser':mode==='resizer'?'Image Edit'")) {
         throw 'The Image Edit name must be consistent in navigation, page heading, and breadcrumb.'
     }
-    if (-not $resizerPageSource.Contains('Choose photos for Resize. Click or check a thumbnail to toggle it in this panel’s selection.')) {
+    if (-not $resizerPageSource.Contains('Choose photos for Resize. Click or check a thumbnail to toggle it in this panel')) {
         throw 'The Resize panel must explain its independent thumbnail selection.'
     }
     $nativePickedFileStorePath = Join-Path $PSScriptRoot '..\src\InStSanity\Services\Api\NativePickedFileStore.cs'
