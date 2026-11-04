@@ -951,7 +951,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <input class="text-input browser-address" id="browserAddressInput" type="text" spellcheck="false" autocomplete="off" placeholder="https://www.instagram.com/ or @username" onkeydown="if(event.key==='Enter'){event.preventDefault();browserGo()}">
         <button class="browser-save-btn" id="browserSaveBtn" type="button" onclick="browserSaveViaUrl()" title="Save this post via URL" aria-label="Save this post via URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/><path d="M12 8v8"/><path d="M8.5 12l3.5 3.5 3.5-3.5"/></svg></button>
       </div>
-      <button class="icon-btn browser-nav-btn browser-overlay-toggle active-outline-control active" id="browserOverlayToggleBtn" type="button" onclick="toggleBrowserMediaOverlay()" title="Disable Browser overlay" aria-label="Disable Browser overlay" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.2" y="3.5" width="14.5" height="15.7" rx="1.3"/><path d="M3.2 7.5h14.5"/><rect x="9.8" y="10.5" width="11.2" height="9.7" rx="1.2" fill="currentColor" fill-opacity=".16"/><path d="M12.9 15.35h5M15.4 12.85v5"/></svg></button>
+      <button class="filter icon-filter-btn source-toggle-button active-outline-control browser-overlay-toggle active" id="browserOverlayToggleBtn" type="button" onclick="toggleBrowserMediaOverlay()" title="Disable Browser overlay" aria-label="Disable Browser overlay" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.7 6.4V5.9A1.8 1.8 0 0 0 15.9 4.1H5.2A1.8 1.8 0 0 0 3.4 5.9v8.4a1.8 1.8 0 0 0 1.8 1.8h.6"/><rect x="6.3" y="6.4" width="14.2" height="12" rx="2"/><path d="M13.35 12.5h5.4M13.35 13.95h5.4M13.35 15.5h5.4"/></svg></button>
     </div>
     <div class="browser-viewport" id="browserViewport"><div class="browser-viewport-placeholder">Instagram opens here in the Windows desktop app.</div></div>
   </section>
@@ -1476,7 +1476,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.050; open version history" title="Click to view what changed in each version">v.2.050</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.051; open version history" title="Click to view what changed in each version">v.2.051</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -2004,7 +2004,7 @@ function updateTileSrcBadges(){
 }
 const SOURCE_EYE_ICON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const SOURCE_EYE_OFF_ICON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-4.2 4.5"/><path d="M6.6 6.6C3.6 8.3 2 12 2 12s3.5 7 10 7c.7 0 1.4-.1 2.1-.2"/></svg>';
-const BROWSER_MEDIA_OVERLAY_ICON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.2" y="3.5" width="14.5" height="15.7" rx="1.3"/><path d="M3.2 7.5h14.5"/><rect x="9.8" y="10.5" width="11.2" height="9.7" rx="1.2" fill="currentColor" fill-opacity=".16"/><path d="M12.9 15.35h5M15.4 12.85v5"/></svg>';
+const BROWSER_MEDIA_OVERLAY_ICON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.7 6.4V5.9A1.8 1.8 0 0 0 15.9 4.1H5.2A1.8 1.8 0 0 0 3.4 5.9v8.4a1.8 1.8 0 0 0 1.8 1.8h.6"/><rect x="6.3" y="6.4" width="14.2" height="12" rx="2"/><path d="M13.35 12.5h5.4M13.35 13.95h5.4M13.35 15.5h5.4"/></svg>';
 const VIDEO_ICON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="M15 10l5-3v10l-5-3z"/></svg>';
 const VIDEO_OFF_ICON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="M15 10l5-3v10l-5-3z"/><path d="m3 3 18 18"/></svg>';
 const DOWNLOAD_HISTORY_ICON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2.5 12.5 3.3 3.3L12.5 8"/><path d="m9.5 12.5 3.3 3.3L21 7.5"/></svg>';
@@ -8180,8 +8180,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.050';
+const APP_VERSION='2.051';
 const VERSION_HISTORY=[
+  {version:'2.051',added:'No new features.',removed:'The Browser overlay toggle’s floating-panel-plus glyph and nav-button styling.',fixed:'Use the provided stacked-card icon with three lines, and match the 37px icon-toggle treatment used on Saved Posts.',tone:'green'},
   {version:'2.050',added:'No new features.',removed:'Undersized Browser download-queue controls and duplicate Open folder activations.',fixed:'Set every queue button to the established 37×37 size, and handle left/right folder actions once while suppressing duplicate clicks and bridge messages.',tone:'green'},
   {version:'2.049',added:'No new features.',removed:'The Browser overlay toggle’s eye and eye-off glyphs.',fixed:'The toggle now uses a dedicated browser-window and floating-panel icon in both initial markup and runtime synchronization; its active outline and accessible pressed state still show whether the overlay is enabled.',tone:'green'},
   {version:'2.048',added:'No new features.',removed:'The document-and-pointer glyph from the static Browser overlay button markup.',fixed:'Changed the initial SVG to a browser window with a floating panel, but its runtime synchronizer still replaced it with the shared eye icon; that mismatch is corrected in 2.049.',tone:'green'},
