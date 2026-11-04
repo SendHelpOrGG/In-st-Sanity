@@ -460,7 +460,7 @@ try {
     }
 
     $resizeListStart = $document.Content.IndexOf('function renderPhotoResizeFileList(){')
-    $resizeControlsStart = $document.Content.IndexOf('function syncPhotoResizeControls()', $resizeListStart)
+    $resizeControlsStart = $document.Content.IndexOf('function syncPhotoResizeControls({renderFiles=true}={})', $resizeListStart)
     if ($resizeListStart -lt 0 -or $resizeControlsStart -le $resizeListStart) {
         throw 'The Photo Resizer file-list renderer could not be inspected.'
     }
