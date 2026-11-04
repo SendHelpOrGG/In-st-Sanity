@@ -77,14 +77,14 @@ internal static class InstagramMediaOverlayScript
 	    #inst-sanity-tray *{box-sizing:border-box}
 	    .isg-head{display:flex;align-items:center;gap:6px;padding:8px 10px 7px;border-bottom:1px solid var(--isg-border,#ffffff22)}
 	    .isg-title{flex:1;min-width:0;font-size:12px;font-weight:700;letter-spacing:.1px}
-	    .isg-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;border-radius:999px;background:color-mix(in srgb,var(--isg-accent,#2dd4bf) 80%,transparent);color:var(--isg-button-ink,#091318);font-weight:750;font-size:10px}
+	    .isg-count{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;padding:0;box-sizing:border-box;border-radius:999px;background:color-mix(in srgb,var(--isg-accent,#2dd4bf) 80%,transparent);color:var(--isg-button-ink,#091318);font-weight:750;font-size:10px}
 	    .isg-actions{display:flex;gap:4px;align-items:center}
-	    .isg-icon-action{display:inline-flex;align-items:center;justify-content:center;flex:0 0 37px;width:37px;height:37px;min-width:37px;min-height:37px;max-width:37px;max-height:37px;padding:0;box-sizing:border-box}
-	    .isg-icon-action svg{display:block;width:18px;height:18px}
+	    .isg-icon-action{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;padding:0;box-sizing:border-box}
+	    .isg-icon-action svg{display:block;width:16px;height:16px}
 	    .isg-collapse svg{transition:transform .15s ease}
 	    #inst-sanity-tray[data-collapsed="true"] .isg-collapse svg{transform:rotate(180deg)}
 	    #inst-sanity-tray[data-collapsed="true"] .isg-items,#inst-sanity-tray[data-collapsed="true"] .isg-footer{display:none}
-	    .isg-action{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;flex:0 0 37px;width:37px;height:37px;min-width:37px;min-height:37px;max-width:37px;max-height:37px;box-sizing:border-box;border:1px solid var(--isg-border,#ffffff30);border-radius:7px;padding:0 2px;background:transparent;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:650 10px/1.2 "Segoe UI",sans-serif;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+	    .isg-action{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;box-sizing:border-box;border:1px solid var(--isg-border,#ffffff30);border-radius:7px;padding:0 2px;background:transparent;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:650 10px/1.2 "Segoe UI",sans-serif;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 	    .isg-action:disabled{opacity:.5;cursor:default}
 	    .isg-action-secondary{--isg-surface:var(--isg-panel,#151b23);color:var(--isg-ink,#f8fafc)}
 	    .isg-items{display:flex;flex-direction:column;gap:7px;padding:7px 9px;overflow:auto;min-height:0}
@@ -99,8 +99,8 @@ internal static class InstagramMediaOverlayScript
 	    .isg-meta{margin-top:1px;color:var(--isg-muted,#9fb1c1);font-size:9px}
 	    .isg-error{margin-top:1px;color:#ff9a9a;font-size:9px}
 	    .isg-row-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto;margin-left:auto}
-	    .isg-row-action{flex:0 0 37px!important;width:37px!important;height:37px!important;min-width:37px!important;min-height:37px!important;max-width:37px!important;max-height:37px!important;padding:0!important;box-sizing:border-box!important}
-	    .isg-row-action svg{display:block;width:18px;height:18px}
+	    .isg-row-action{flex:0 0 32px!important;width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;max-width:32px!important;max-height:32px!important;padding:0!important;box-sizing:border-box!important}
+	    .isg-row-action svg{display:block;width:16px;height:16px}
 	    .isg-empty{padding:6px 3px 8px;color:var(--isg-muted,#9fb1c1);font-size:10px}
 	    .isg-footer{padding:6px 10px 8px;color:var(--isg-muted,#9fb1c1);font-size:9px}
 	    #inst-sanity-notice{position:fixed;z-index:2147483647;left:50%;bottom:18px;max-width:min(460px,calc(100vw - 32px));transform:translate(-50%,12px);opacity:0;pointer-events:none;border:1px solid var(--isg-border,#ffffff30);border-radius:9px;padding:8px 11px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:600 11px/1.4 "Segoe UI",sans-serif;box-shadow:0 7px 28px #0008;transition:opacity .18s,transform .18s;isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
