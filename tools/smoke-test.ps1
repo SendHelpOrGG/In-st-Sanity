@@ -213,10 +213,10 @@ try {
         throw 'Saved Posts selection must be cleared when imported posts are restored at app startup.'
     }
     $browserSaveButtonThemed =
-        $document.Content -match '(?s)\.browser-save-btn\{[^}]*border:1px solid var\(--t-input-border,[^}]*background:var\(--t-card-bg,[^}]*color:var\(--t-ink,[^}]*\}' -and
+        $document.Content -match '(?s)\.browser-save-btn\{[^}]*border:1px solid var\(--t-nav-border,[^}]*background:var\(--t-nav-bg,[^}]*color:var\(--t-nav-ink,[^}]*\}' -and
         $document.Content -match '(?s)\.browser-save-btn:hover\{[^}]*background:var\(--t-nav-act-bg,[^}]*border-color:var\(--t-nav-act-border,[^}]*color:var\(--t-nav-act-ink,[^}]*\}'
     if (-not $browserSaveButtonThemed -or -not $document.Content.Contains('id="browserSaveBtn"')) {
-        throw 'The Browser Save button must match the theme-aware card surface in idle state and use theme-aware hover colors.'
+        throw 'The Browser Save button must use theme-aware navigation colors in its normal and hover states.'
     }
     $nativePickerIds = @('resizerImagesInput', 'photoEditImagesInput', 'momentCaptureVideoInput', 'postJsonFile', 'uploadJsonModalFile', 'backgroundFile', 'backgroundGifFile')
     foreach ($pickerId in $nativePickerIds) {
@@ -625,12 +625,14 @@ try {
     $browserViewportPosition = $document.Content.IndexOf('<div class="browser-viewport" id="browserViewport">')
     if ($browserAddressWrapStart -lt 0 -or $browserAddressWrapEnd -le $browserAddressWrapStart -or
         $browserOverlayTogglePosition -le $browserAddressWrapEnd -or $browserViewportPosition -le $browserOverlayTogglePosition -or
+        -not $document.Content.Contains('body .source-toggle-button{background:var(--t-nav-bg),var(--t-card-bg);border-color:var(--t-input-border);color:var(--t-ink)}') -or
+        -not $document.Content.Contains('body .source-toggle-button.active{background:var(--t-nav-act-bg),var(--t-card-bg)}') -or
         -not $document.Content.Contains('class="filter icon-filter-btn source-toggle-button active-outline-control browser-overlay-toggle active" id="browserOverlayToggleBtn"') -or
         -not $document.Content.Contains('id="browserOverlayToggleBtn" type="button" onclick="toggleBrowserMediaOverlay()" title="Disable Browser overlay" aria-label="Disable Browser overlay" aria-pressed="true"><svg') -or
         -not $document.Content.Contains("const BROWSER_MEDIA_OVERLAY_STORAGE_KEY='stillSane.browserMediaOverlayEnabledV1'") -or
         -not $document.Content.Contains('function toggleBrowserMediaOverlay()') -or
         -not $document.Content.Contains("action:'media-overlay'")) {
-        throw 'The Browser must place an accessible icon-only media-overlay toggle after the address bar and preserve its enabled preference.'
+        throw 'The Browser must place an accessible, theme-aware filled media-overlay toggle after the address bar and preserve its enabled preference.'
     }
     if (-not $document.Content.Contains('<path d="M17.7 6.4V5.9A1.8 1.8 0 0 0 15.9 4.1H5.2A1.8 1.8 0 0 0 3.4 5.9v8.4a1.8 1.8 0 0 0 1.8 1.8h.6"/>') -or
         -not $document.Content.Contains('<rect x="6.3" y="6.4" width="14.2" height="12" rx="2"/>') -or
