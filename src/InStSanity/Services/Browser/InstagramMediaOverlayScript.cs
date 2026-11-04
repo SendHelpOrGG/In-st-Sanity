@@ -304,9 +304,9 @@ internal static class InstagramMediaOverlayScript
 	    tray.dataset.open = String(state.mediaOverlayEnabled && queuePanelEverOpened);
 	    tray.querySelector('.isg-count').textContent = String(state.items.length);
 	    const start = tray.querySelector('.isg-start');
-    start.textContent = state.isDownloading
-      ? `Cancel ${state.currentIndex}/${state.total || state.items.length}`
-      : state.items.some(item => item.error) ? 'Retry' : 'Save';
+	    start.textContent = state.isDownloading
+	      ? `Cancel ${state.currentIndex}/${state.total || state.items.length}`
+	      : state.items.some(item => item.error) ? 'Retry' : 'Save';
 	    start.disabled = !state.isDownloading && !hasItems;
 	    const clear = tray.querySelector('.isg-clear');
 	    clear.disabled = state.isDownloading || !hasItems;
@@ -365,8 +365,8 @@ internal static class InstagramMediaOverlayScript
 	      invalid_media: 'That media item could not be selected.',
 	      untrusted_source: 'Media selection is only available on Instagram pages.',
 	      bridge_unavailable: 'Could not reach the download service. Your selections are still queued.',
-      download_folders_unavailable: 'Could not read the download locations in Settings. Your selections are still queued.',
-      video_folder_unavailable: 'Separate video folder is enabled, but no folder is saved in Settings. Choose a video folder and retry.'
+	      download_folders_unavailable: 'Could not read the download locations in Settings. Your selections are still queued.',
+	      video_folder_unavailable: 'Separate video folder is enabled, but no folder is saved in Settings. Choose a video folder and retry.'
 	    })[String(code)] || 'Could not update the media queue.';
 	  }
 
