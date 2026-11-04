@@ -889,11 +889,11 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </style>
 <style id="nativeFilePickerStyles">
 .file-picker-control{position:relative;isolation:isolate}
-.file-picker-control--button{display:inline-flex;flex:0 0 auto;vertical-align:middle}
+.file-picker-control--button,.file-picker-control--native{display:inline-flex;flex:0 0 auto;vertical-align:middle}
 .file-picker-control--button>button{pointer-events:none}
 .file-picker-control--button>.native-file-picker-input,.file-picker-control--dropzone>.native-file-picker-input{position:absolute!important;inset:0!important;z-index:5!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;opacity:0!important;cursor:pointer!important;box-sizing:border-box!important}
 .file-picker-control--button>.native-file-picker-input:disabled,.file-picker-control--dropzone>.native-file-picker-input:disabled{cursor:not-allowed!important}
-.file-picker-control--button:focus-within>button{outline:2px solid var(--t-accent,#38bdf8);outline-offset:2px}
+.file-picker-control--button:focus-within>button,.file-picker-control--native>button:focus-visible{outline:2px solid var(--t-accent,#38bdf8);outline-offset:2px}
 .file-picker-control--dropzone:focus-within{outline:2px solid var(--t-accent,#38bdf8);outline-offset:3px}
 .file-picker-control--dropzone>:not(.native-file-picker-input){pointer-events:none}
 </style>
@@ -967,7 +967,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 <section class="settings-card resizer-card resizer-picker-card">
         <div class="settings-card-head"><h2>Resize photos</h2><p>Choose photos for Resize. Click or check a thumbnail to toggle it in this panel’s selection.</p></div>
         <div class="setting-body">
-          <div class="resizer-pick-row"><div class="file-picker-control file-picker-control--button"><button type="button" class="primary" id="resizerChooseImagesBtn" tabindex="-1" aria-hidden="true">Choose images…</button><input class="native-file-picker-input" id="resizerImagesInput" type="file" accept="image/*" multiple aria-label="Choose images to resize" onchange="handleResizerImagesPicked(event)"></div><button type="button" class="primary" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button></div>
+          <div class="resizer-pick-row"><div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="resizerChooseImagesBtn" onclick="chooseResizerImages()">Choose images…</button></div><input hidden class="native-file-picker-input" id="resizerImagesInput" type="file" accept="image/*" multiple aria-label="Choose images to resize" onchange="handleResizerImagesPicked(event)"><button type="button" class="primary" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button></div>
           <div class="resizer-files-panel" id="resizerFilePanel">
             <div class="resizer-files-toolbar"><span id="resizerAvailableCount">Choose photos to resize</span><div><button type="button" class="outline" id="resizerSelectAllBtn" onclick="selectAllResizerFiles(true)">Select all</button><button type="button" class="outline" id="resizerClearSelectionBtn" onclick="selectAllResizerFiles(false)">Clear</button></div></div>
             <div class="resizer-photo-picker-row">
@@ -1005,7 +1005,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
     <div class="photo-editor-tab-panel" id="photoEditorEditPanel" role="tabpanel" aria-labelledby="photoEditorEditTab" hidden>
       <div class="resizer-grid photo-editor-edit-grid">
 <section class="settings-card resizer-card resizer-adjustments-card" aria-labelledby="photoAdjustmentsHeading">
-        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Image Edit applies adjustments independently of Resize settings and saves separate copies; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><div class="file-picker-control file-picker-control--button"><button type="button" class="primary" id="photoEditChooseImagesBtn" tabindex="-1" aria-hidden="true">Choose images…</button><input class="native-file-picker-input" id="photoEditImagesInput" type="file" accept="image/*" multiple aria-label="Choose images for Image Edit" onchange="handlePhotoEditImagesPicked(event)"></div><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoEditDownload()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoEditOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open edited images folder in File Explorer" aria-label="Open edited images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button><button type="button" class="icon-btn photo-adjustment-reset" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()" title="Reset adjustments" aria-label="Reset adjustments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
+        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Image Edit applies adjustments independently of Resize settings and saves separate copies; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="photoEditChooseImagesBtn" onclick="choosePhotoEditImages()">Choose images…</button></div><input hidden class="native-file-picker-input" id="photoEditImagesInput" type="file" accept="image/*" multiple aria-label="Choose images for Image Edit" onchange="handlePhotoEditImagesPicked(event)"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoEditDownload()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoEditOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open edited images folder in File Explorer" aria-label="Open edited images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button><button type="button" class="icon-btn photo-adjustment-reset" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()" title="Reset adjustments" aria-label="Reset adjustments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
         <div class="setting-body">
           <div class="resizer-files-panel photo-adjustment-files-panel" id="photoEditFilePanel">
             <div class="resizer-files-toolbar"><span id="photoEditAvailableCount">Choose images to begin</span><div><button type="button" class="outline" id="photoEditSelectAllBtn" onclick="selectAllPhotoEditFiles(true)" disabled>Select all</button><button type="button" class="outline" id="photoEditClearSelectionBtn" onclick="selectAllPhotoEditFiles(false)" disabled>Clear</button><button type="button" class="outline" id="photoEditClearImagesBtn" onclick="resetPhotoEditQueue()" disabled>Clear images</button></div></div>
@@ -1112,7 +1112,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         </div>
         <div class="setting-body moment-capture-body">
           <div class="moment-capture-actions">
-            <div class="file-picker-control file-picker-control--button"><button type="button" class="primary" id="momentCaptureChooseVideoBtn" tabindex="-1" aria-hidden="true">Choose video…</button><input class="native-file-picker-input" id="momentCaptureVideoInput" type="file" accept="video/*" aria-label="Choose a video for Moment capture" onchange="handleMomentCaptureVideoPicked(event)"></div>
+            <div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="momentCaptureChooseVideoBtn" onclick="chooseMomentCaptureVideo()">Choose video…</button></div><input hidden class="native-file-picker-input" id="momentCaptureVideoInput" type="file" accept="video/*" aria-label="Choose a video for Moment capture" onchange="handleMomentCaptureVideoPicked(event)">
             <button type="button" class="outline" id="momentCaptureStopBtn" onclick="stopMomentCaptureVideo()" disabled>Stop</button>
             <button type="button" class="primary" id="momentCaptureFrameBtn" onclick="captureMomentFrame()" disabled>Capture &amp; save frame</button>
           </div>
@@ -1263,7 +1263,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             </div>
             <span class="settings-card-chevron" aria-hidden="true">▾</span>
           </div></div>
-          <div class="setting-body"><div class="background-actions"><div class="file-picker-control file-picker-control--button"><button type="button" class="outline" tabindex="-1" aria-hidden="true">Choose picture…</button><input class="native-file-picker-input" id="backgroundFile" type="file" accept="image/jpeg,image/png,image/webp,image/bmp" aria-label="Choose a background picture" onchange="importBackground(event)"></div><div class="file-picker-control file-picker-control--button"><button type="button" class="outline" tabindex="-1" aria-hidden="true">Choose GIF…</button><input class="native-file-picker-input" id="backgroundGifFile" type="file" accept="image/gif,.gif" aria-label="Choose an animated GIF background" onchange="importBackgroundGif(event)"></div><button class="outline" onclick="resetBackground()">Default theme</button></div><label class="field-label opacity-label" for="backgroundOpacity">Background opacity <strong id="backgroundOpacityValue">30%</strong></label><input class="opacity-slider" id="backgroundOpacity" type="range" min="0" max="80" value="30" oninput="setBackgroundOpacity(this.value)"><p class="hint">The original dark gradient stays underneath the image.</p></div>
+          <div class="setting-body"><div class="background-actions"><div class="file-picker-control file-picker-control--native"><button type="button" class="outline" id="backgroundChoosePictureBtn" onclick="chooseBackgroundPicture()">Choose picture…</button></div><input hidden class="native-file-picker-input" id="backgroundFile" type="file" accept="image/jpeg,image/png,image/webp,image/bmp" aria-label="Choose a background picture" onchange="importBackground(event)"><div class="file-picker-control file-picker-control--native"><button type="button" class="outline" id="backgroundChooseGifBtn" onclick="chooseBackgroundGif()">Choose GIF…</button></div><input hidden class="native-file-picker-input" id="backgroundGifFile" type="file" accept="image/gif,.gif" aria-label="Choose an animated GIF background" onchange="importBackgroundGif(event)"><button class="outline" onclick="resetBackground()">Default theme</button></div><label class="field-label opacity-label" for="backgroundOpacity">Background opacity <strong id="backgroundOpacityValue">30%</strong></label><input class="opacity-slider" id="backgroundOpacity" type="range" min="0" max="80" value="30" oninput="setBackgroundOpacity(this.value)"><p class="hint">The original dark gradient stays underneath the image.</p></div>
         </div>
 <div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
@@ -1476,7 +1476,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.066; open version history" title="Click to view what changed in each version">v.2.066</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.067; open version history" title="Click to view what changed in each version">v.2.067</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -4141,6 +4141,7 @@ let photoEditorActiveTab='resize';
 let momentCaptureObjectUrl='';
 let momentCaptureFile=null;
 let momentCaptureSaving=false;
+let nativeFilePickerBusy=false;
 function makePhotoResizeGuid(){try{if(window.crypto?.randomUUID)return window.crypto.randomUUID()}catch(_){}return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)})}
 function photoAdjustmentSuffix(name){return name.charAt(0).toUpperCase()+name.slice(1)}
 function isPhotoAdjustmentHexColor(value){return typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)}
@@ -4387,9 +4388,21 @@ function refreshPhotoResizePreview(){
       applyPhotoResizePreviewZoom();
     }finally{try{closeSource?.()}catch(_){}}
   };
-  if(typeof createImageBitmap==='function'){
-    createImageBitmap(item.file).then(bitmap=>installPreview(bitmap,bitmap.width,bitmap.height,()=>bitmap.close?.())).catch(()=>loadPhotoResizePreviewWithImage(item.file,token,installPreview));
-  }else loadPhotoResizePreviewWithImage(item.file,token,installPreview);
+  const previewSource=item.nativeFileId?fetchNativePickedFileBlob(item.nativeFileId):Promise.resolve(item.file);
+  previewSource.then(file=>{
+    if(token!==photoResizePreviewGeneration)return;
+    if(!file)throw new Error('picked_file_unavailable');
+    if(typeof createImageBitmap==='function'){
+      createImageBitmap(file).then(bitmap=>installPreview(bitmap,bitmap.width,bitmap.height,()=>bitmap.close?.())).catch(()=>loadPhotoResizePreviewWithImage(file,token,installPreview));
+    }else loadPhotoResizePreviewWithImage(file,token,installPreview);
+  }).catch(()=>{
+    if(token!==photoResizePreviewGeneration)return;
+    const message=document.getElementById('photoResizePreviewMessage');
+    if(message){message.hidden=false;message.textContent='Preview is unavailable for this image format.'}
+    const originalCanvas=document.getElementById('photoResizePreviewOriginalCanvas');if(originalCanvas)originalCanvas.hidden=true;
+    hidePhotoResizePreviewCompare();
+    const previewToggle=document.getElementById('photoResizePreviewToggle');if(previewToggle)previewToggle.disabled=true;
+  });
 }
 function loadPhotoResizePreviewWithImage(file,token,installPreview){
   if(token!==photoResizePreviewGeneration)return;
@@ -4986,7 +4999,44 @@ function saveResizerMaxSide(value){const input=document.getElementById('resizerM
 function stepResizerMaxSide(direction){if(photoResizeBusy)return;const input=document.getElementById('resizerMaxSide');if(!input)return;const current=Number(input.value);const base=Number.isInteger(current)?current:2048;const amount=Number(direction)>=0?50:-50;input.value=String(Math.max(64,Math.min(16384,base+amount)));saveResizerMaxSide(input.value)}
 async function chooseResizerOutputFolder(){const input=document.getElementById('resizerOutputFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistPhotoResizerOutputFolder(data.path);toast('Resized-photo folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
 async function choosePhotoEditOutputFolder(){if(photoEditBusy)return;const input=document.getElementById('photoEditOutputFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistPhotoEditOutputFolder(data.path);toast('Edited-images folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
-function photoResizeErrorMessage(code){const messages={invalid_upload:'This file could not be added.',empty_file:'The selected file is empty.',file_too_large:'Each image must be 50 MB or smaller.',unsupported_image_type:'That file type is not supported.',too_many_files:'A maximum of 500 images can be loaded at once.',upload_limit_reached:'The 1 GB staging limit has been reached.',upload_failed:'The image could not be uploaded.',invalid_max_side:'Choose a maximum side from 64 to 16,384 pixels.',no_uploaded_files:'Select at least one image to convert.',output_folder_unavailable:'The resized-photo folder could not be opened. Check its location and permissions.',image_decode_failed:'Windows could not extract pixels for this conversion; no output was saved.',image_too_large:'This image is too large for safe adjustment processing. Try a smaller image or reduce its dimensions first.',resize_failed:'The image could not be resized or saved.',conversion_failed:'The conversion did not complete. Your uploaded images are still staged.',invalid_request:'The conversion request was invalid.'};return messages[code]||'The request could not be completed.'}
+function nativePickedFileUrl(id){return'/api/picked-file?id='+encodeURIComponent(String(id||''))}
+async function fetchNativePickedFileBlob(id){
+  const path=nativePickedFileUrl(id);
+  for(const endpoint of getApiUrls(path)){
+    try{const response=await fetch(endpoint,{cache:'no-store'});if(response.ok)return await response.blob()}catch(_){}
+  }
+  throw new Error('picked_file_unavailable');
+}
+function makeFileFromNativePick(info,blob){return new File([blob],String(info?.name||'selected-file'),{type:String(info?.contentType||blob?.type||'application/octet-stream'),lastModified:Date.now()})}
+async function chooseNativeFiles(kind,inputId,onPicked,setError,errorMessage,isBusy=()=>false){
+  if(isBusy())return;
+  if(!isLocalBackendOrigin()){document.getElementById(inputId)?.click();return}
+  if(nativeFilePickerBusy)return;
+  nativeFilePickerBusy=true;
+  syncPhotoResizeControls({renderFiles:false});
+  syncPhotoEditControls({renderFiles:false,refreshPreview:false});
+  syncMomentCaptureControls();
+  try{
+    const path='/api/pick-native-files?kind='+encodeURIComponent(kind);
+    let data=null;
+    for(const endpoint of getApiUrls(path)){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}
+    if(data?.cancelled)return;
+    if(data?.ok&&Array.isArray(data.files)){await onPicked(data.files);return}
+    setError(errorMessage,'error');
+  }catch(_){setError(errorMessage,'error')}
+  finally{
+    nativeFilePickerBusy=false;
+    syncPhotoResizeControls({renderFiles:false});
+    syncPhotoEditControls({renderFiles:false,refreshPreview:false});
+    syncMomentCaptureControls();
+  }
+}
+function chooseResizerImages(){void chooseNativeFiles('images','resizerImagesInput',handleResizerImagesPicked,setPhotoResizeStatus,'Could not open the image picker.',()=>photoResizeBusy)}
+function choosePhotoEditImages(){void chooseNativeFiles('images','photoEditImagesInput',handlePhotoEditImagesPicked,setPhotoEditStatus,'Could not open the image picker.',()=>photoEditBusy)}
+function chooseMomentCaptureVideo(){void chooseNativeFiles('video','momentCaptureVideoInput',handleMomentCaptureVideoPicked,setMomentCaptureStatus,'Could not open the video picker.',()=>momentCaptureSaving)}
+function chooseBackgroundPicture(){void chooseNativeFiles('background','backgroundFile',async files=>{const info=files[0];if(!info)return;try{const blob=await fetchNativePickedFileBlob(info.id);importBackground({target:{files:[makeFileFromNativePick(info,blob)],value:''}})}catch(_){toast('That picture could not be opened')}},message=>toast(message),'Could not open the picture picker.')}
+function chooseBackgroundGif(){void chooseNativeFiles('gif','backgroundGifFile',async files=>{const info=files[0];if(!info)return;try{const blob=await fetchNativePickedFileBlob(info.id);await importBackgroundGif({target:{files:[makeFileFromNativePick(info,blob)],value:''}})}catch(_){toast('That GIF could not be opened')}},message=>toast(message),'Could not open the GIF picker.')}
+function photoResizeErrorMessage(code){const messages={invalid_upload:'This file could not be added.',empty_file:'The selected file is empty.',file_too_large:'Each image must be 50 MB or smaller.',unsupported_image_type:'That file type is not supported.',file_unavailable:'The selected file is no longer available. Choose it again.',too_many_files:'A maximum of 500 images can be loaded at once.',upload_limit_reached:'The 1 GB staging limit has been reached.',upload_failed:'The image could not be uploaded.',invalid_max_side:'Choose a maximum side from 64 to 16,384 pixels.',no_uploaded_files:'Select at least one image to convert.',output_folder_unavailable:'The resized-photo folder could not be opened. Check its location and permissions.',image_decode_failed:'Windows could not extract pixels for this conversion; no output was saved.',image_too_large:'This image is too large for safe adjustment processing. Try a smaller image or reduce its dimensions first.',resize_failed:'The image could not be resized or saved.',conversion_failed:'The conversion did not complete. Your uploaded images are still staged.',invalid_request:'The conversion request was invalid.'};return messages[code]||'The request could not be completed.'}
 function setPhotoResizeStatus(message,kind=''){
   const status=document.getElementById('resizerStatus');
   if(!status)return;
@@ -5007,7 +5057,7 @@ function setPhotoEditStatus(message,kind=''){
 }
 function formatPhotoResizeBytes(bytes){const n=Math.max(0,Number(bytes)||0);if(n<1024)return n+' B';if(n<1024*1024)return(n/1024).toFixed(n<10*1024?1:0)+' KB';return(n/(1024*1024)).toFixed(n<10*1024*1024?1:0)+' MB'}
 function revokePhotoResizeThumbnailUrls(items=photoResizeQueue){
-  for(const item of items||[]){if(item?.thumbnailUrl){try{URL.revokeObjectURL(item.thumbnailUrl)}catch(_){}item.thumbnailUrl=''}}
+  for(const item of items||[]){if(item?.thumbnailUrl?.startsWith('blob:')){try{URL.revokeObjectURL(item.thumbnailUrl)}catch(_){}item.thumbnailUrl=''}}
 }
 function createPhotoResizeThumbnailUrl(file){try{return URL.createObjectURL(file)}catch(_){return''}}
 function togglePhotoResizeSelectedFromThumbnail(index){
@@ -5116,9 +5166,9 @@ function syncPhotoResizeControls({renderFiles=true}={}){
   const upscaleToggle=document.getElementById('resizerUpscaleToggleBtn');
   if(upscaleToggle)upscaleToggle.disabled=busy;
   const choose=document.getElementById('resizerChooseImagesBtn');
-  if(choose)choose.disabled=busy;
+  if(choose)choose.disabled=busy||nativeFilePickerBusy;
   const picker=document.getElementById('resizerImagesInput');
-  if(picker)picker.disabled=busy;
+  if(picker)picker.disabled=busy||nativeFilePickerBusy;
   const maxSideInput=document.getElementById('resizerMaxSide');
   if(maxSideInput)maxSideInput.disabled=busy;
   const maxSideUp=document.getElementById('resizerMaxSideUpBtn');
@@ -5151,9 +5201,9 @@ function syncPhotoEditControls({renderFiles=true,refreshPreview=true}={}){
   const adjustmentReset=document.getElementById('photoAdjustmentResetBtn');
   if(adjustmentReset)adjustmentReset.disabled=busy;
   const choose=document.getElementById('photoEditChooseImagesBtn');
-  if(choose)choose.disabled=busy;
+  if(choose)choose.disabled=busy||nativeFilePickerBusy;
   const picker=document.getElementById('photoEditImagesInput');
-  if(picker)picker.disabled=busy;
+  if(picker)picker.disabled=busy||nativeFilePickerBusy;
   const browseFolder=document.getElementById('photoEditBrowseFolderBtn');
   if(browseFolder)browseFolder.disabled=busy;
   const hasFiles=photoEditQueue.length>0;
@@ -5269,11 +5319,17 @@ function finishPhotoEditOperation(originalSelection){
 }
 function createPhotoResizeQueueEntries(files){
   const supported=Array.from(files||[]).filter(file=>{
-    const dot=file.name.lastIndexOf('.');
-    const ext=dot>=0?file.name.slice(dot).toLowerCase():'';
-    return RESIZER_ALLOWED_EXTENSIONS.has(ext)&&file.size>0&&file.size<=RESIZER_MAX_FILE_BYTES;
+    const name=String(file?.name||'');
+    const dot=name.lastIndexOf('.');
+    const ext=dot>=0?name.slice(dot).toLowerCase():'';
+    const size=Number(file?.size)||0;
+    return RESIZER_ALLOWED_EXTENSIONS.has(ext)&&size>0&&size<=RESIZER_MAX_FILE_BYTES;
   });
-  const queue=supported.slice(0,RESIZER_MAX_FILES).map((file,index)=>({file,id:makePhotoResizeGuid(),order:index,selected:true,uploaded:false,error:'',thumbnailUrl:createPhotoResizeThumbnailUrl(file)}));
+  const queue=supported.slice(0,RESIZER_MAX_FILES).map((file,index)=>{
+    const nativeFileId=/^[a-f0-9]{32}$/i.test(String(file?.id||''))?String(file.id):'';
+    const fileName=String(file?.name||'Image');
+    return{file:nativeFileId?null:file,nativeFileId,fileName,fileSize:Number(file?.size)||0,id:makePhotoResizeGuid(),order:index,selected:true,uploaded:false,error:'',thumbnailUrl:nativeFileId?nativePickedFileUrl(nativeFileId):createPhotoResizeThumbnailUrl(file)};
+  });
   return{supported,queue};
 }
 function resetPhotoEditPreviewState(){
@@ -5294,9 +5350,9 @@ function resetPhotoEditPreviewState(){
   revokePhotoResizePreviewUrl();
   hidePhotoResizePreviewCompare();
 }
-function handleResizerImagesPicked(event){
-  const input=event?.target;
-  const files=Array.from(input?.files||[]);
+function handleResizerImagesPicked(selection){
+  const input=Array.isArray(selection)?null:selection?.target;
+  const files=Array.isArray(selection)?selection:Array.from(input?.files||[]);
   if(input)input.value='';
   if(!files.length||photoResizeBusy)return;
   const previousSession=photoResizeSessionId;
@@ -5321,9 +5377,9 @@ function handleResizerImagesPicked(event){
   else setPhotoResizeStatus(notes.join(' '));
   syncPhotoResizeControls();
 }
-function handlePhotoEditImagesPicked(event){
-  const input=event?.target;
-  const files=Array.from(input?.files||[]);
+function handlePhotoEditImagesPicked(selection){
+  const input=Array.isArray(selection)?null:selection?.target;
+  const files=Array.isArray(selection)?selection:Array.from(input?.files||[]);
   if(input)input.value='';
   if(!files.length||photoEditBusy)return;
   const previousSession=photoEditSessionId;
@@ -5372,11 +5428,15 @@ async function uploadPhotoResizeQueueItems(selected,editor=false){
   for(let index=0;index<selected.length;index++){
     const item=selected[index];
     state.setStatus(`Uploading image ${index+1} of ${selected.length}… ${state.getUploadedCount()} uploaded so far.`);
-    const query=`?sessionId=${encodeURIComponent(state.getSession())}&fileId=${encodeURIComponent(item.id)}&order=${encodeURIComponent(item.order)}&fileName=${encodeURIComponent(item.file.name)}`;
+    const fileName=String(item.fileName||item.file?.name||'Image');
+    const nativeFileId=String(item.nativeFileId||'');
+    const query=`?sessionId=${encodeURIComponent(state.getSession())}&fileId=${encodeURIComponent(item.id)}&order=${encodeURIComponent(item.order)}&fileName=${encodeURIComponent(fileName)}${nativeFileId?'&nativeFileId='+encodeURIComponent(nativeFileId):''}`;
+    const uploadPath=(nativeFileId?'/api/resize-native-upload':'/api/resize-upload')+query;
     let data=null;
     try{
-      for(const endpoint of getApiUrls('/api/resize-upload'+query)){
-        data=await fetchEndpointJson(endpoint,300000,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:item.file});
+      for(const endpoint of getApiUrls(uploadPath)){
+        const request=nativeFileId?{method:'POST'}:{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:item.file};
+        data=await fetchEndpointJson(endpoint,300000,request);
         if(data)break;
       }
     }catch(_){data=null}
@@ -5610,8 +5670,8 @@ function syncMomentCaptureControls(){
   const picker=document.getElementById('momentCaptureVideoInput');
   const stop=document.getElementById('momentCaptureStopBtn');
   const capture=document.getElementById('momentCaptureFrameBtn');
-  if(choose)choose.disabled=momentCaptureSaving;
-  if(picker)picker.disabled=momentCaptureSaving;
+  if(choose)choose.disabled=momentCaptureSaving||nativeFilePickerBusy;
+  if(picker)picker.disabled=momentCaptureSaving||nativeFilePickerBusy;
   if(stop)stop.disabled=momentCaptureSaving||!momentCaptureFile||!video||video.paused||video.ended;
   if(capture)capture.disabled=momentCaptureSaving||!ready;
 }
@@ -5623,23 +5683,29 @@ function bindMomentCaptureVideoEvents(){
   video.addEventListener('loadedmetadata',()=>{if(momentCaptureFile)setMomentCaptureStatus(`Ready: ${momentCaptureFile.name} · ${video.videoWidth} × ${video.videoHeight}`)});
   video.addEventListener('error',()=>{if(momentCaptureFile)setMomentCaptureStatus('This video could not be previewed by the browser. Try an MP4 or WebM file.','error');syncMomentCaptureControls()});
 }
-function handleMomentCaptureVideoPicked(event){
-  const input=event?.target;
-  const file=Array.from(input?.files||[])[0]||null;
+function handleMomentCaptureVideoPicked(selection){
+  const input=Array.isArray(selection)?null:selection?.target;
+  const file=(Array.isArray(selection)?selection:Array.from(input?.files||[]))[0]||null;
   if(input)input.value='';
   if(!file)return;
+  const nativeFileId=/^[a-f0-9]{32}$/i.test(String(file?.id||''))?String(file.id):'';
   const extension=(String(file.name||'').match(/\.[^.]+$/)||[''])[0].toLowerCase();
   const videoExtensions=new Set(['.mp4','.m4v','.mov','.webm','.avi','.mkv','.3gp','.mpeg','.mpg']);
-  if(!(String(file.type||'').toLowerCase().startsWith('video/')||videoExtensions.has(extension))){setMomentCaptureStatus('Choose a supported video file.','error');return}
+  const contentType=String(file.type||file.contentType||'').toLowerCase();
+  if(!(contentType.startsWith('video/')||videoExtensions.has(extension))){setMomentCaptureStatus('Choose a supported video file.','error');return}
   const video=document.getElementById('momentCaptureVideo'),empty=document.getElementById('momentCaptureEmpty'),canvas=document.getElementById('momentCaptureFramePreview');
   if(!video)return;
   try{video.pause();video.removeAttribute('src');video.load()}catch(_){}
   if(momentCaptureObjectUrl){try{URL.revokeObjectURL(momentCaptureObjectUrl)}catch(_){}momentCaptureObjectUrl=''}
-  momentCaptureFile=file;
+  momentCaptureFile=nativeFileId?{nativeFileId,name:String(file.name||'video'),size:Number(file.size)||0,type:contentType}:file;
   if(canvas){canvas.hidden=true;canvas.width=0;canvas.height=0}
   if(empty)empty.hidden=true;
   bindMomentCaptureVideoEvents();
-  try{momentCaptureObjectUrl=URL.createObjectURL(file);video.src=momentCaptureObjectUrl;video.hidden=false;video.load();setMomentCaptureStatus(`Loading ${file.name}…`)}catch(_){momentCaptureFile=null;video.hidden=true;if(empty)empty.hidden=false;setMomentCaptureStatus('This video could not be opened.','error')}
+  try{
+    const source=nativeFileId?nativePickedFileUrl(nativeFileId):URL.createObjectURL(file);
+    momentCaptureObjectUrl=source.startsWith('blob:')?source:'';
+    video.src=source;video.hidden=false;video.load();setMomentCaptureStatus(`Loading ${file.name}…`);
+  }catch(_){momentCaptureFile=null;video.hidden=true;if(empty)empty.hidden=false;setMomentCaptureStatus('This video could not be opened.','error')}
   syncMomentCaptureControls();
 }
 function stopMomentCaptureVideo(){
@@ -8139,8 +8205,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.066';
+const APP_VERSION='2.067';
 const VERSION_HISTORY=[
+  {version:'2.067',added:'No new features.',removed:'WebView2-owned HTML file-input dialogs for photo and video selection.',fixed:'Route photo and video selection through the owner-window Windows picker, keeping previews and editing on the app’s local file service.',tone:'yellow'},
   {version:'2.066',added:'No new features.',removed:'Image Edit effects automatically restoring from the previous app session.',fixed:'Reset active image adjustments and selected looks to neutral on app startup, while keeping saved custom look presets available.',tone:'green'},
   {version:'2.065',added:'No new features.',removed:'Text labels on the Browser queue Save and Clear buttons.',fixed:'Use download, retry, cancel, and clear icons while retaining descriptive accessible labels and hover tooltips.',tone:'green'},
   {version:'2.064',added:'No new features.',removed:'Different Browser queue items sharing a filename when Instagram carousel slide tracking lags.',fixed:'Add a stable short media-identity suffix to full-size photo and video filenames so the no-duplicates check saves distinct queued items instead of skipping later ones.',tone:'green'},

@@ -268,15 +268,21 @@ public sealed class LoopbackHost : IAsyncDisposable
 				}
 
 				// Native dialogs and media downloads can outlive the short static/API timeout.
-				if (request.Path.Equals("/api/browse-folder", StringComparison.OrdinalIgnoreCase))
+				if (request.Path.Equals("/api/browse-folder", StringComparison.OrdinalIgnoreCase) ||
+					request.Path.Equals("/api/pick-native-files", StringComparison.OrdinalIgnoreCase))
 				{
 					timeout.CancelAfter(FolderPickerTimeout);
+				}
+				else if (request.Path.Equals("/api/picked-file", StringComparison.OrdinalIgnoreCase))
+				{
+					timeout.CancelAfter(ResizeUploadTimeout);
 				}
 				else if (request.Path.Equals("/api/download-selected", StringComparison.OrdinalIgnoreCase))
 				{
 					timeout.CancelAfter(SelectedDownloadTimeout);
 				}
-				else if (request.Path.Equals("/api/resize-upload", StringComparison.OrdinalIgnoreCase))
+				else if (request.Path.Equals("/api/resize-upload", StringComparison.OrdinalIgnoreCase) ||
+					request.Path.Equals("/api/resize-native-upload", StringComparison.OrdinalIgnoreCase))
 				{
 					timeout.CancelAfter(ResizeUploadTimeout);
 				}

@@ -96,6 +96,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SelectedMediaDownloadService>();
 		builder.Services.AddSingleton<BrowserMediaQueueService>();
 		builder.Services.AddSingleton<IFolderPickerService, WindowsFolderPickerService>();
+		builder.Services.AddSingleton<INativeFilePickerService, WindowsNativeFilePickerService>();
+		builder.Services.AddSingleton<NativePickedFileStore>();
 		builder.Services.AddSingleton<IDownloadFolderOpener, WindowsDownloadFolderOpener>();
 		builder.Services.AddSingleton<PhotoResizeService>();
 
@@ -116,6 +118,9 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<IApiEndpoint, DownloadSelectedEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, DownloadHistoryEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, PickNativeFilesEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, NativePickedFileContentEndpoint>();
+		builder.Services.AddSingleton<IApiEndpoint, ResizeNativeFileUploadEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ResizeUploadEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, ResizeConvertEndpoint>();
 		builder.Services.AddSingleton<IApiEndpoint, OpenDownloadFolderEndpoint>();
