@@ -65,6 +65,8 @@ internal static class InstagramMediaOverlayScript
 	  let pendingStickerCursor = null;
 	  let stickerCursorFrame = 0;
 	  let lastStickerCursorSentAt = -Infinity;
+	  let toggleRequestSequence = 0;
+	  const pendingToggleRequests = new Map();
 
 	  const css = `
 	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;justify-content:center;gap:6px;min-width:76px;box-sizing:border-box;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:7px 10px;appearance:none;-webkit-appearance:none;background:transparent!important;background-image:none!important;color:var(--isg-button-ink,#091318);font:650 11px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
@@ -146,6 +148,38 @@ internal static class InstagramMediaOverlayScript
 	    const identity = item.rawUrl ? mediaPathIdentity(item.rawUrl) : `slide:${Math.max(0, Number(item.slideIndex) || 0)}`;
 	    return `${item.shortcode}|${type}|${identity}`;
 	  }
+	  function rememberToggleRequest(requestId, candidate) {
+	    pendingToggleRequests.set(requestId, {
+	      shortcode: String(candidate.shortcode || ''),
+	      mediaType: candidate.mediaType || (candidate.isVideo ? 'video' : 'photo'),
+	      slideIndex: Number(candidate.slideIndex),
+	    });
+	    while (pendingToggleRequests.size > 32) {
+	      pendingToggleRequests.delete(pendingToggleRequests.keys().next().value);
+	    }
+	  }
+	  function queuedSelectionMatchesAttempt(item, attempt) {
+	    if (!item || !attempt) return false;
+	    const mediaType = item.mediaType || (item.isVideo === true ? 'video' : 'photo');
+	    return String(item.shortcode || '') === attempt.shortcode &&
+	      mediaType === attempt.mediaType && Number(item.slideIndex) === attempt.slideIndex;
+	  }
+	  function showQueueError(error, errorRequestId) {
+	    if (!error) return;
+	    const requestId = String(errorRequestId || '');
+	    const attempt = requestId ? pendingToggleRequests.get(requestId) : null;
+	    if (requestId) pendingToggleRequests.delete(requestId);
+	    const mediaValidationError = /^invalid_media_(?:shortcode|post_url|type|raw_url|stream_url|slide_index)$/.test(String(error));
+	    if (mediaValidationError && attempt && state.items.some(item => queuedSelectionMatchesAttempt(item, attempt))) {
+	      debugLog('queued-media-validation-error-suppressed', {
+	        error: String(error),
+	        requestId,
+	        itemCount: state.items.length,
+	      });
+	      return;
+	    }
+	    showNotice(errorMessage(error));
+	  }
 	  function safeText(value, fallback = '') { return String(value ?? fallback).slice(0, 180); }
 	  function safeUrlSummary(value) {
 	    if (typeof value !== 'string' || !value) return { present: false };
@@ -206,7 +240,10 @@ internal static class InstagramMediaOverlayScript
 	          slideIndex: activeCandidate?.slideIndex ?? null,
 	        });
 	        if (!activeCandidate) return;
-	        postMessage('toggle-media', activeCandidate);
+	        const candidate = { ...activeCandidate };
+	        const requestId = `${Date.now().toString(36)}-${(++toggleRequestSequence).toString(36)}`;
+	        rememberToggleRequest(requestId, candidate);
+	        if (!postMessage('toggle-media', { ...candidate, requestId })) pendingToggleRequests.delete(requestId);
 	      });
 	      document.documentElement.appendChild(selectButton);
 	    }
@@ -299,7 +336,7 @@ internal static class InstagramMediaOverlayScript
 	    } catch (_) { showNotice('This queued media link is unavailable.'); }
 	  }
 
-	  function renderState(snapshot, error) {
+	  function renderState(snapshot, error, errorRequestId = null) {
 	    ensureUi();
 	    if (snapshot && typeof snapshot === 'object') {
 	      state.items = Array.isArray(snapshot.items) ? snapshot.items : [];
@@ -373,7 +410,7 @@ internal static class InstagramMediaOverlayScript
 	      ? state.status || 'Downloading in order…'
 	      : hasItems ? state.status || 'Photos and videos are saved in the folders selected in Settings.' : '';
 
-	    if (error) showNotice(errorMessage(error));
+	    if (error) showQueueError(error, errorRequestId);
 	  }
 
 	  function errorMessage(code) {
@@ -1231,7 +1268,7 @@ internal static class InstagramMediaOverlayScript
 	    else if (/previous|prev|back/.test(label)) trackSlide(root, shortcode, Math.max(0, current - 1));
 	  }
 
-	  function receiveQueueState(snapshot, error, theme) {
+	  function receiveQueueState(snapshot, error, theme, errorRequestId = null) {
 	    debugLog('queue-state-received', {
 	      itemCount: Array.isArray(snapshot?.items) ? snapshot.items.length : null,
 	      isDownloading: snapshot?.isDownloading === true,
@@ -1240,7 +1277,7 @@ internal static class InstagramMediaOverlayScript
 	    const wasDownloading = state.isDownloading;
 	    if (snapshot && theme) snapshot = { ...snapshot, theme };
 	    if (typeof snapshot?.mediaOverlayEnabled === 'boolean') setMediaOverlayEnabled(snapshot.mediaOverlayEnabled, 'native-state-sync');
-	    renderState(snapshot, error);
+	    renderState(snapshot, error, errorRequestId);
 	    if (!state.isDownloading && !state.items.length && state.status && (wasDownloading || /saved|cancelled/i.test(state.status))) showNotice(state.status);
 	  }
 	  function install() {

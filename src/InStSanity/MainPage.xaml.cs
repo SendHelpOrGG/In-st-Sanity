@@ -556,6 +556,28 @@ public partial class MainPage : ContentPage
 		}
 	}
 
+	static string? GetOverlayRequestId(string message)
+	{
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			var root = document.RootElement;
+			if (root.ValueKind != JsonValueKind.Object ||
+				!root.TryGetProperty("requestId", out var requestId) ||
+				requestId.ValueKind != JsonValueKind.String)
+			{
+				return null;
+			}
+
+			var value = requestId.GetString();
+			return !string.IsNullOrWhiteSpace(value) && value.Length <= 80 ? value : null;
+		}
+		catch (JsonException)
+		{
+			return null;
+		}
+	}
+
 	static bool IsTrustedInstagramBrowserSource(string? source)
 	{
 		if (!Uri.TryCreate(source, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
@@ -645,8 +667,11 @@ public partial class MainPage : ContentPage
 				_ = StartBrowserQueueDownloadAsync();
 				break;
 			case BrowserMediaOverlayAction.Rejected:
-				_ = SyncBrowserQueueToPageAsync(command.Error);
+			{
+				var errorRequestId = overlayAction == "toggle-media" ? GetOverlayRequestId(message) : null;
+				_ = SyncBrowserQueueToPageAsync(command.Error, errorRequestId: errorRequestId);
 				break;
+			}
 		}
 	}
 
@@ -737,7 +762,7 @@ public partial class MainPage : ContentPage
 #endif
 	}
 
-	async Task SyncBrowserQueueToPageAsync(string? error = null, bool refreshTheme = false)
+	async Task SyncBrowserQueueToPageAsync(string? error = null, bool refreshTheme = false, string? errorRequestId = null)
 	{
 #if WINDOWS
 		var view = _instagramBrowserView;
@@ -769,8 +794,9 @@ public partial class MainPage : ContentPage
 			};
 			var snapshotJson = JsonSerializer.Serialize(pageSnapshot, QueueJsonOptions);
 			var errorJson = JsonSerializer.Serialize(error, QueueJsonOptions);
+			var errorRequestIdJson = JsonSerializer.Serialize(errorRequestId, QueueJsonOptions);
 			var themeJson = await GetBrowserOverlayThemeJsonAsync(refreshTheme);
-			var script = $"window.__instSanityReceiveQueueState?.({snapshotJson},{errorJson},{themeJson})";
+			var script = $"window.__instSanityReceiveQueueState?.({snapshotJson},{errorJson},{themeJson},{errorRequestIdJson})";
 			await WebViewBootstrapper.ExecOnUiAsync(core, script);
 		}
 		catch
