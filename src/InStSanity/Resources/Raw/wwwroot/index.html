@@ -1478,7 +1478,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.057; open version history" title="Click to view what changed in each version">v.2.057</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.058; open version history" title="Click to view what changed in each version">v.2.058</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8182,8 +8182,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.057';
+const APP_VERSION='2.058';
 const VERSION_HISTORY=[
+  {version:'2.058',added:'No new features.',removed:'The undersized circular Browser queue count badge.',fixed:'Show a readable inline count such as “1 item” or “2 items” beside Download queue instead of forcing the number into a circle.',tone:'green'},
   {version:'2.057',added:'No new features.',removed:'The Browser overlay toggle’s faint surface compared with neighboring toolbar controls.',fixed:'Give icon-only source toggles a theme-aware card base beneath their normal and active tints, keeping Browser and Saved Posts toggles consistent while preserving active-state feedback.',tone:'green'},
   {version:'2.056',added:'No new features.',removed:'Saved Posts selections being restored after an app restart.',fixed:'Clear restored photo/video selections and select-all flags when loading the saved post list on startup; selections remain intact during the current session.',tone:'green'},
   {version:'2.055',added:'No new features.',removed:'The Browser Save button’s fixed turquoise idle and hover colors.',fixed:'Use the current theme’s navigation palette for the Save button in its normal and hovered states.',tone:'green'},

@@ -77,7 +77,7 @@ internal static class InstagramMediaOverlayScript
 	    #inst-sanity-tray *{box-sizing:border-box}
 	    .isg-head{display:flex;align-items:center;gap:6px;padding:8px 10px 7px;border-bottom:1px solid var(--isg-border,#ffffff22)}
 	    .isg-title{flex:1;min-width:0;font-size:12px;font-weight:700;letter-spacing:.1px}
-	    .isg-count{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;padding:0;box-sizing:border-box;border-radius:999px;background:color-mix(in srgb,var(--isg-accent,#2dd4bf) 80%,transparent);color:var(--isg-button-ink,#091318);font-weight:750;font-size:10px}
+	    .isg-count{display:inline-flex;align-items:center;justify-content:flex-start;flex:0 0 auto;min-width:0;padding:0;box-sizing:border-box;border:0;border-radius:0;background:none;color:var(--isg-muted,#9fb1c1);font-weight:650;font-size:10px;line-height:1.2;white-space:nowrap;font-variant-numeric:tabular-nums}
 	    .isg-actions{display:flex;gap:4px;align-items:center}
 	    .isg-icon-action{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;padding:0;box-sizing:border-box}
 	    .isg-icon-action svg{display:block;width:16px;height:16px}
@@ -217,7 +217,7 @@ internal static class InstagramMediaOverlayScript
 	      tray.id = 'inst-sanity-tray';
 	      tray.setAttribute('role', 'region');
 	      tray.setAttribute('aria-label', 'In-st-Sanity media download queue');
-	      tray.innerHTML = '<div class="isg-head"><div class="isg-title">Download queue</div><span class="isg-count">0</span><div class="isg-actions"><button class="isg-action isg-start" type="button">Save</button><button class="isg-action isg-action-secondary isg-clear" type="button">Clear</button><button class="isg-action isg-action-secondary isg-icon-action isg-open-folder" type="button" title="Open download folder" aria-label="Open download folder"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-collapse" type="button" title="Collapse download queue" aria-label="Collapse download queue" aria-expanded="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div></div><div class="isg-items"></div><div class="isg-footer"></div>';
+	      tray.innerHTML = '<div class="isg-head"><div class="isg-title">Download queue</div><span class="isg-count" aria-live="polite" aria-atomic="true">0 items</span><div class="isg-actions"><button class="isg-action isg-start" type="button">Save</button><button class="isg-action isg-action-secondary isg-clear" type="button">Clear</button><button class="isg-action isg-action-secondary isg-icon-action isg-open-folder" type="button" title="Open download folder" aria-label="Open download folder"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-collapse" type="button" title="Collapse download queue" aria-label="Collapse download queue" aria-expanded="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div></div><div class="isg-items"></div><div class="isg-footer"></div>';
 	      tray.dataset.collapsed = String(trayCollapsed);
 	      tray.querySelector('.isg-start').addEventListener('click', () => {
 	        if (state.isDownloading) postMessage('cancel-download');
@@ -322,7 +322,8 @@ internal static class InstagramMediaOverlayScript
 	    const hasItems = state.items.length > 0;
 	    queuePanelEverOpened = state.hasBeenOpened || hasItems || state.isDownloading;
 	    tray.dataset.open = String(state.mediaOverlayEnabled && queuePanelEverOpened);
-	    tray.querySelector('.isg-count').textContent = String(state.items.length);
+	    const itemCount = state.items.length;
+	    tray.querySelector('.isg-count').textContent = itemCount + (itemCount === 1 ? ' item' : ' items');
 	    const start = tray.querySelector('.isg-start');
 	    start.textContent = state.isDownloading
 	      ? 'Cancel'
