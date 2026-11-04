@@ -235,198 +235,231 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		var skipped = 0;
 		var failed = 0;
 		var wasCancelled = false;
-		var resolvedFolders = new Dictionary<bool, string?>();
-		var folderErrors = new HashSet<bool>();
-		foreach (var isVideo in batch.Select(item => item.IsVideo).Distinct())
+		var batchFailure = false;
+		try
 		{
-			if (isVideo && string.IsNullOrWhiteSpace(videoFolder))
+			var resolvedFolders = new Dictionary<bool, string?>();
+			var folderErrors = new HashSet<bool>();
+			foreach (var isVideo in batch.Select(item => item.IsVideo).Distinct())
 			{
-				// Never let a missing dedicated video setting silently resolve to the
-				// downloader's default folder.
-				folderErrors.Add(true);
-				continue;
-			}
+				if (isVideo && string.IsNullOrWhiteSpace(videoFolder))
+				{
+					// Never let a missing dedicated video setting silently resolve to the
+					// downloader's default folder.
+					folderErrors.Add(true);
+					continue;
+				}
 
-			try
-			{
-				resolvedFolders[isVideo] = downloads.PrepareFolder(isVideo ? videoFolder : photoFolder);
-			}
-			catch (Exception exception) when (IsFolderFailure(exception))
-			{
-				folderErrors.Add(isVideo);
-			}
-		}
-
-		for (var index = 0; index < batch.Length; index++)
-		{
-			var item = batch[index];
-			lock (_gate)
-			{
-				if (cancellation.IsCancellationRequested) break;
-				_currentIndex = index + 1;
-				_status = item.IsVideo
-					? $"Resolving video source {index + 1} of {batch.Length}…"
-					: $"Resolving full-size photo {index + 1} of {batch.Length}…";
-			}
-			Publish();
-
-			SelectedMediaDownloadFileResult result;
-			if (folderErrors.Contains(item.IsVideo))
-			{
-				result = new SelectedMediaDownloadFileResult(
-					item.Filename,
-					Ok: false,
-					Error: "folder_unavailable");
-			}
-			else
-			{
 				try
 				{
-					var rawUrl = item.RawUrl;
-					if (item.IsVideo)
+					resolvedFolders[isVideo] = downloads.PrepareFolder(isVideo ? videoFolder : photoFolder);
+				}
+				catch (Exception exception) when (IsFolderFailure(exception))
+				{
+					folderErrors.Add(isVideo);
+				}
+			}
+
+			for (var index = 0; index < batch.Length; index++)
+			{
+				var item = batch[index];
+				lock (_gate)
+				{
+					if (cancellation.IsCancellationRequested) break;
+					_currentIndex = index + 1;
+					_status = item.IsVideo
+						? $"Resolving video source {index + 1} of {batch.Length}…"
+						: $"Resolving full-size photo {index + 1} of {batch.Length}…";
+				}
+				Publish();
+
+				SelectedMediaDownloadFileResult result;
+				if (folderErrors.Contains(item.IsVideo))
+				{
+					result = new SelectedMediaDownloadFileResult(
+						item.Filename,
+						Ok: false,
+						Error: "folder_unavailable");
+				}
+				else
+				{
+					try
 					{
-						// Match the Saved Posts path: resolve the selected post slide at download
-						// time instead of trusting the WebView's possibly ephemeral video source.
-						try
+						var rawUrl = item.RawUrl;
+						if (item.IsVideo)
 						{
-							var resolvedVideoUrl = await ResolveQueuedVideoUrlAsync(item, cancellation.Token).ConfigureAwait(false);
-						if (!string.IsNullOrWhiteSpace(resolvedVideoUrl)) rawUrl = resolvedVideoUrl;
+							// Match the Saved Posts path: resolve the selected post slide at download
+							// time instead of trusting the WebView's possibly ephemeral video source.
+							try
+							{
+								var resolvedVideoUrl = await ResolveQueuedVideoUrlAsync(item, cancellation.Token).ConfigureAwait(false);
+							if (!string.IsNullOrWhiteSpace(resolvedVideoUrl)) rawUrl = resolvedVideoUrl;
+							}
+							catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+							{
+								throw;
+							}
+							catch (Exception)
+							{
+								// Fall back to a validated WebView source below if resolution is unavailable.
+							}
+
+							if (!IsDownloadableVideoUrl(rawUrl)) rawUrl = string.Empty;
 						}
-						catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+						else
 						{
-							throw;
-						}
-						catch (Exception)
-						{
-							// Fall back to a validated WebView source below if resolution is unavailable.
+							// Instagram's visible <img> URL is often a responsive/preview variant.
+							// Always resolve the post's selected slide and download its best image URL.
+							try
+							{
+								rawUrl = await ResolveQueuedPhotoUrlAsync(item, cancellation.Token).ConfigureAwait(false) ?? string.Empty;
+							}
+							catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+							{
+								throw;
+							}
+							catch (Exception)
+							{
+								rawUrl = string.Empty;
+							}
 						}
 
-						if (!IsDownloadableVideoUrl(rawUrl)) rawUrl = string.Empty;
-					}
-					else
-					{
-						// Instagram's visible <img> URL is often a responsive/preview variant.
-						// Always resolve the post's selected slide and download its best image URL.
-						try
+						if (string.IsNullOrWhiteSpace(rawUrl))
 						{
-							rawUrl = await ResolveQueuedPhotoUrlAsync(item, cancellation.Token).ConfigureAwait(false) ?? string.Empty;
+							result = new SelectedMediaDownloadFileResult(
+								item.Filename,
+								Ok: false,
+								Error: item.IsVideo ? "video_source_unavailable" : "photo_full_size_unavailable");
 						}
-						catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+						else
 						{
-							throw;
-						}
-						catch (Exception)
-						{
-							rawUrl = string.Empty;
-						}
-					}
+							lock (_gate)
+							{
+								_status = $"Downloading {index + 1} of {batch.Length} · {(item.IsVideo ? "video" : "full-size photo")}";
+							}
+							Publish();
 
-					if (string.IsNullOrWhiteSpace(rawUrl))
-					{
-						result = new SelectedMediaDownloadFileResult(
-							item.Filename,
-							Ok: false,
-							Error: item.IsVideo ? "video_source_unavailable" : "photo_full_size_unavailable");
-					}
-					else
-					{
-						lock (_gate)
-						{
-							_status = $"Downloading {index + 1} of {batch.Length} · {(item.IsVideo ? "video" : "full-size photo")}";
-						}
-						Publish();
-
-						var downloadItem = new SelectedMediaDownloadItem(
-							Filename: item.Filename,
-							Shortcode: item.Shortcode,
-							PhotoIndex: null,
-							VideoIndex: null,
-							ContentIndex: item.SlideIndex,
-							IsVideo: item.IsVideo,
-							RawUrl: rawUrl,
-							DataUri: null,
-							SvgMarkup: null,
-							IsBrowserQueue: true,
-							Account: item.Account);
-						result = await downloads.DownloadOneAsync(
-							downloadItem,
-							resolvedFolders[item.IsVideo]!,
-							index,
-							noDuplicates,
-							cancellation.Token).ConfigureAwait(false);
-
-						if (item.IsVideo && !result.Ok && !result.Skipped &&
-							IsDownloadableVideoUrl(item.RawUrl) &&
-							!string.Equals(item.RawUrl, rawUrl, StringComparison.Ordinal))
-						{
-							// A cached or newly resolved URL can still be stale; retry once with the
-							// current, allow-listed WebView source before keeping the item failed.
+							var downloadItem = new SelectedMediaDownloadItem(
+								Filename: item.Filename,
+								Shortcode: item.Shortcode,
+								PhotoIndex: null,
+								VideoIndex: null,
+								ContentIndex: item.SlideIndex,
+								IsVideo: item.IsVideo,
+								RawUrl: rawUrl,
+								DataUri: null,
+								SvgMarkup: null,
+								IsBrowserQueue: true,
+								Account: item.Account);
 							result = await downloads.DownloadOneAsync(
-								downloadItem with { RawUrl = item.RawUrl },
+								downloadItem,
 								resolvedFolders[item.IsVideo]!,
 								index,
 								noDuplicates,
 								cancellation.Token).ConfigureAwait(false);
+
+							if (item.IsVideo && !result.Ok && !result.Skipped &&
+								IsDownloadableVideoUrl(item.RawUrl) &&
+								!string.Equals(item.RawUrl, rawUrl, StringComparison.Ordinal))
+							{
+								// A cached or newly resolved URL can still be stale; retry once with the
+								// current, allow-listed WebView source before keeping the item failed.
+								result = await downloads.DownloadOneAsync(
+									downloadItem with { RawUrl = item.RawUrl },
+									resolvedFolders[item.IsVideo]!,
+									index,
+									noDuplicates,
+									cancellation.Token).ConfigureAwait(false);
+							}
 						}
 					}
+					catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+					{
+						wasCancelled = true;
+						break;
+					}
+					catch (Exception exception)
+					{
+						System.Diagnostics.Debug.WriteLine(
+							$"[In-st-Sanity] Browser queue item {index + 1} failed unexpectedly ({exception.GetType().Name}).");
+						result = new SelectedMediaDownloadFileResult(
+							item.Filename,
+							Ok: false,
+							Error: "download_failed");
+					}
 				}
-				catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-				{
-					wasCancelled = true;
-					break;
-				}
-			}
 
-			lock (_gate)
-			{
-				var queueIndex = _items.FindIndex(candidate => candidate.Key == item.Key);
+				lock (_gate)
+				{
+					var queueIndex = _items.FindIndex(candidate => candidate.Key == item.Key);
+					if (result.Ok || result.Skipped)
+					{
+						completed++;
+						if (result.Skipped) skipped++;
+						if (queueIndex >= 0) _items.RemoveAt(queueIndex);
+					}
+					else
+					{
+						failed++;
+						if (queueIndex >= 0) _items[queueIndex] = item with { Error = FriendlyError(result.Error) };
+					}
+					_status = result.Ok || result.Skipped
+						? $"Saved {completed} of {batch.Length} · {failed} failed"
+						: $"{completed} saved · {failed} failed; failures stay queued";
+				}
+
 				if (result.Ok || result.Skipped)
 				{
-					completed++;
-					if (result.Skipped) skipped++;
-					if (queueIndex >= 0) _items.RemoveAt(queueIndex);
+					try { ItemCompleted?.Invoke(new BrowserQueueItemCompleted(item, result)); } catch { }
+				}
+				Publish();
+			}
+
+			if (cancellation.IsCancellationRequested && completed + failed < batch.Length) wasCancelled = true;
+		}
+		catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+		{
+			wasCancelled = true;
+		}
+		catch (Exception exception)
+		{
+			batchFailure = true;
+			System.Diagnostics.Debug.WriteLine(
+				$"[In-st-Sanity] Browser queue batch stopped unexpectedly ({exception.GetType().Name}).");
+		}
+		finally
+		{
+			if (cancellation.IsCancellationRequested && completed + failed < batch.Length) wasCancelled = true;
+			lock (_gate)
+			{
+				_isDownloading = false;
+				_currentIndex = 0;
+				_total = 0;
+				if (wasCancelled)
+				{
+					_status = _items.Count == 0 ? "Download cancelled." : "Cancelled · unfinished and failed items remain queued";
+				}
+				else if (batchFailure)
+				{
+					_status = _items.Count == 0
+						? $"Saved {completed} media item{(completed == 1 ? "" : "s")} · download stopped"
+						: $"{completed} saved · download stopped; remaining items stay queued";
+				}
+				else if (_items.Count == 0)
+				{
+					_status = completed == 0 ? string.Empty : skipped > 0 && completed == skipped
+						? $"{skipped} already saved · queue complete"
+						: $"Saved {completed} media item{(completed == 1 ? "" : "s")}";
 				}
 				else
 				{
-					failed++;
-					if (queueIndex >= 0) _items[queueIndex] = item with { Error = FriendlyError(result.Error) };
+					_status = $"{completed} saved · {failed} failed; failed items remain queued";
 				}
-				_status = result.Ok || result.Skipped
-					? $"Saved {completed} of {batch.Length} · {failed} failed"
-					: $"{completed} saved · {failed} failed; failures stay queued";
+				if (ReferenceEquals(_downloadCancellation, cancellation)) _downloadCancellation = null;
 			}
-
-			if (result.Ok || result.Skipped)
-			{
-				try { ItemCompleted?.Invoke(new BrowserQueueItemCompleted(item, result)); } catch { }
-			}
+			cancellation.Dispose();
 			Publish();
 		}
-
-		if (cancellation.IsCancellationRequested && completed + failed < batch.Length) wasCancelled = true;
-		lock (_gate)
-		{
-			_isDownloading = false;
-			_currentIndex = 0;
-			_total = 0;
-			if (wasCancelled)
-			{
-				_status = _items.Count == 0 ? "Download cancelled." : "Cancelled · unfinished and failed items remain queued";
-			}
-			else if (_items.Count == 0)
-			{
-				_status = completed == 0 ? string.Empty : skipped > 0 && completed == skipped
-					? $"{skipped} already saved · queue complete"
-					: $"Saved {completed} media item{(completed == 1 ? "" : "s")}";
-			}
-			else
-			{
-				_status = $"{completed} saved · {failed} failed; failed items remain queued";
-			}
-			if (ReferenceEquals(_downloadCancellation, cancellation)) _downloadCancellation = null;
-		}
-		cancellation.Dispose();
-		Publish();
 	}
 
 	bool TryToggle(BrowserQueuedMedia item, out string error)

@@ -59,6 +59,7 @@ internal static class InstagramMediaOverlayScript
 	  let tray = null;
 	  let trayCollapsed = false;
 	  let lastFolderOpenRequestAt = -Infinity;
+	  let lastQueueActionAt = -Infinity;
 	  let suppressFolderClickUntil = 0;
 	  let lastPointer = null;
 	  let lastMoveInspectionAt = 0;
@@ -257,6 +258,12 @@ internal static class InstagramMediaOverlayScript
 	      tray.innerHTML = '<div class="isg-head"><div class="isg-title">Download queue</div><span class="isg-count" aria-live="polite" aria-atomic="true">0 items</span><div class="isg-actions"><button class="isg-action isg-start" type="button">Save</button><button class="isg-action isg-action-secondary isg-clear" type="button">Clear</button><button class="isg-action isg-action-secondary isg-icon-action isg-open-folder" type="button" title="Open download folder" aria-label="Open download folder"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-collapse" type="button" title="Collapse download queue" aria-label="Collapse download queue" aria-expanded="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div></div><div class="isg-items"></div><div class="isg-footer"></div>';
 	      tray.dataset.collapsed = String(trayCollapsed);
 	      tray.querySelector('.isg-start').addEventListener('click', () => {
+	        const now = performance.now();
+	        if (now - lastQueueActionAt < 750) {
+	          debugLog('duplicate-queue-action-suppressed', { action: state.isDownloading ? 'cancel-download' : 'start-download' });
+	          return;
+	        }
+	        lastQueueActionAt = now;
 	        if (state.isDownloading) postMessage('cancel-download');
 	        else postMessage('start-download');
 	      });
