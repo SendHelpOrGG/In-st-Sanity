@@ -255,7 +255,7 @@ internal static class InstagramMediaOverlayScript
 	      tray.id = 'inst-sanity-tray';
 	      tray.setAttribute('role', 'region');
 	      tray.setAttribute('aria-label', 'In-st-Sanity media download queue');
-	      tray.innerHTML = '<div class="isg-head"><div class="isg-title">Download queue</div><span class="isg-count" aria-live="polite" aria-atomic="true">0 items</span><div class="isg-actions"><button class="isg-action isg-start" type="button">Save</button><button class="isg-action isg-action-secondary isg-clear" type="button">Clear</button><button class="isg-action isg-action-secondary isg-icon-action isg-open-folder" type="button" title="Open download folder" aria-label="Open download folder"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-collapse" type="button" title="Collapse download queue" aria-label="Collapse download queue" aria-expanded="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div></div><div class="isg-items"></div><div class="isg-footer"></div>';
+	      tray.innerHTML = '<div class="isg-head"><div class="isg-title">Download queue</div><span class="isg-count" aria-live="polite" aria-atomic="true">0 items</span><div class="isg-actions"><button class="isg-action isg-icon-action isg-start" type="button" title="Save queued media" aria-label="Save queued media"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M5 17v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-clear" type="button" title="Clear download queue" aria-label="Clear download queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-open-folder" type="button" title="Open download folder" aria-label="Open download folder"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-collapse" type="button" title="Collapse download queue" aria-label="Collapse download queue" aria-expanded="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div></div><div class="isg-items"></div><div class="isg-footer"></div>';
 	      tray.dataset.collapsed = String(trayCollapsed);
 	      tray.querySelector('.isg-start').addEventListener('click', () => {
 	        const now = performance.now();
@@ -369,9 +369,18 @@ internal static class InstagramMediaOverlayScript
 	    const itemCount = state.items.length;
 	    tray.querySelector('.isg-count').textContent = itemCount + (itemCount === 1 ? ' item' : ' items');
 	    const start = tray.querySelector('.isg-start');
-	    start.textContent = state.isDownloading
-	      ? 'Cancel'
-	      : state.items.some(item => item.error) ? 'Retry' : 'Save';
+	    const hasFailedItems = state.items.some(item => item.error);
+	    const startLabel = state.isDownloading
+	      ? 'Cancel queue download'
+	      : hasFailedItems ? 'Retry failed queue items' : 'Save queued media';
+	    const startIcon = state.isDownloading
+	      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10H7z" fill="currentColor" stroke="none"/></svg>'
+	      : hasFailedItems
+	        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>'
+	        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M5 17v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2"/></svg>';
+	    start.innerHTML = startIcon;
+	    start.title = startLabel;
+	    start.setAttribute('aria-label', startLabel);
 	    start.disabled = !state.isDownloading && !hasItems;
 	    const clear = tray.querySelector('.isg-clear');
 	    clear.disabled = state.isDownloading || !hasItems;
