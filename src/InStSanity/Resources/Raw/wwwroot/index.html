@@ -1479,7 +1479,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.069; open version history" title="Click to view what changed in each version">v.2.069</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.070; open version history" title="Click to view what changed in each version">v.2.070</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8224,8 +8224,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.069';
+const APP_VERSION='2.070';
 const VERSION_HISTORY=[
+  {version:'2.070',added:'Saved Browser queue items stay visible after downloading.',removed:'Successful queue items disappearing as soon as they are saved.',fixed:'Mark downloaded and duplicate-skipped entries, keep them until manually removed or cleared, and only retry unfinished or failed items.',tone:'green'},
   {version:'2.069',added:'Higher-resolution Image Edit live preview, up to 2,400px on the longest side.',removed:'The 1,200px preview limit.',fixed:'Show more image detail in the live preview while keeping preview memory capped; edited downloads still process the staged original image.',tone:'green'},
   {version:'2.068',added:'Persistent picker, image-click, and WebView crash diagnostics.',removed:'Separate output-folder settings for Resize and Image Edit.',fixed:'Both tools now save to the selected photos folder in Settings. The local diagnostics log records picker stages, image-preview milestones, JavaScript errors, and WebView2 process failures.',tone:'yellow'},
   {version:'2.067',added:'No new features.',removed:'WebView2-owned HTML file-input dialogs for photo and video selection.',fixed:'Route photo and video selection through the owner-window Windows picker, keeping previews and editing on the app’s local file service.',tone:'yellow'},

@@ -29,7 +29,9 @@ public sealed record BrowserQueuedMedia(
 	string RawUrl,
 	string? ThumbnailUrl,
 	string Filename,
-	string? Error = null);
+	string? Error = null,
+	bool IsDownloaded = false,
+	bool WasSkipped = false);
 
 public sealed record BrowserMediaQueueSnapshot(
 	IReadOnlyList<BrowserQueuedMedia> Items,
@@ -133,6 +135,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 					{
 						if (_isDownloading) return new(BrowserMediaOverlayAction.Rejected, "queue_busy");
 						if (_items.Count == 0) return new(BrowserMediaOverlayAction.Rejected, "queue_empty");
+						if (_items.All(item => item.IsDownloaded)) return new(BrowserMediaOverlayAction.Rejected, "queue_complete");
 					}
 					return new(BrowserMediaOverlayAction.StartDownload);
 
@@ -221,12 +224,20 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		CancellationTokenSource cancellation;
 		lock (_gate)
 		{
-			if (_isDownloading || _items.Count == 0) return;
+			if (_isDownloading || _items.Count == 0 || _items.All(item => item.IsDownloaded)) return;
+			for (var index = 0; index < _items.Count; index++)
+			{
+				if (!_items[index].IsDownloaded && _items[index].Error is not null)
+				{
+					_items[index] = _items[index] with { Error = null };
+				}
+			}
+			batch = _items.Where(item => !item.IsDownloaded).ToArray();
+			if (batch.Length == 0) return;
 			_isDownloading = true;
 			_currentIndex = 0;
-			_total = _items.Count;
+			_total = batch.Length;
 			_status = "Preparing downloads…";
-			batch = _items.ToArray();
 			cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 			_downloadCancellation = cancellation;
 		}
@@ -397,12 +408,28 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 					{
 						completed++;
 						if (result.Skipped) skipped++;
-						if (queueIndex >= 0) _items.RemoveAt(queueIndex);
+						if (queueIndex >= 0)
+						{
+							_items[queueIndex] = item with
+							{
+								Error = null,
+								IsDownloaded = true,
+								WasSkipped = result.Skipped,
+							};
+						}
 					}
 					else
 					{
 						failed++;
-						if (queueIndex >= 0) _items[queueIndex] = item with { Error = FriendlyError(result.Error) };
+						if (queueIndex >= 0)
+						{
+							_items[queueIndex] = item with
+							{
+								Error = FriendlyError(result.Error),
+								IsDownloaded = false,
+								WasSkipped = false,
+							};
+						}
 					}
 					_status = result.Ok || result.Skipped
 						? $"Saved {completed} of {batch.Length} · {failed} failed"
@@ -436,25 +463,36 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 				_isDownloading = false;
 				_currentIndex = 0;
 				_total = 0;
+				var pendingCount = _items.Count(item => !item.IsDownloaded);
 				if (wasCancelled)
 				{
-					_status = _items.Count == 0 ? "Download cancelled." : "Cancelled · unfinished and failed items remain queued";
+					_status = _items.Count == 0
+						? "Download cancelled."
+						: pendingCount == 0
+							? "All queued media are saved · queue retained"
+							: "Download cancelled · completed items are kept; remaining items stay queued";
 				}
 				else if (batchFailure)
 				{
-					_status = _items.Count == 0
-						? $"Saved {completed} media item{(completed == 1 ? "" : "s")} · download stopped"
-						: $"{completed} saved · download stopped; remaining items stay queued";
+					_status = pendingCount == 0
+						? "Download stopped · queue retained"
+						: $"{completed} completed · download stopped; remaining items stay queued";
 				}
-				else if (_items.Count == 0)
+				else if (pendingCount == 0)
 				{
-					_status = completed == 0 ? string.Empty : skipped > 0 && completed == skipped
-						? $"{skipped} already saved · queue complete"
-						: $"Saved {completed} media item{(completed == 1 ? "" : "s")}";
+					_status = skipped > 0
+						? completed == skipped
+							? $"{skipped} already saved · queue retained"
+							: $"Saved {completed - skipped} · {skipped} already saved · queue retained"
+						: $"Saved {completed} media item{(completed == 1 ? "" : "s")} · queue retained";
+				}
+				else if (failed > 0)
+				{
+					_status = $"{completed} completed · {failed} failed; failed items stay queued";
 				}
 				else
 				{
-					_status = $"{completed} saved · {failed} failed; failed items remain queued";
+					_status = $"{completed} completed · remaining items stay queued";
 				}
 				if (ReferenceEquals(_downloadCancellation, cancellation)) _downloadCancellation = null;
 			}

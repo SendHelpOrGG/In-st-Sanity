@@ -784,6 +784,8 @@ public partial class MainPage : ContentPage
 					item.ThumbnailUrl,
 					item.Filename,
 					item.Error,
+					item.IsDownloaded,
+					item.WasSkipped,
 				}),
 				isDownloading = snapshot.IsDownloading,
 				currentIndex = snapshot.CurrentIndex,

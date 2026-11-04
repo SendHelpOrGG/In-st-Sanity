@@ -101,6 +101,8 @@ internal static class InstagramMediaOverlayScript
 	    .isg-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:650}
 	    .isg-meta{margin-top:1px;color:var(--isg-muted,#9fb1c1);font-size:9px}
 	    .isg-error{margin-top:1px;color:#ff9a9a;font-size:9px}
+	    .isg-saved{margin-top:1px;color:var(--isg-accent2,var(--isg-accent,#99f6e4));font-size:9px;font-weight:700}
+	    .isg-item.isg-complete{border-style:dashed}
 	    .isg-row-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto;margin-left:auto}
 	    .isg-row-action{flex:0 0 32px!important;width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;max-width:32px!important;max-height:32px!important;padding:0!important;box-sizing:border-box!important}
 	    .isg-row-action svg{display:block;width:16px;height:16px}
@@ -364,24 +366,30 @@ internal static class InstagramMediaOverlayScript
 	    }
 
 	    const hasItems = state.items.length > 0;
+	    const hasPendingItems = state.items.some(item => item.isDownloaded !== true);
+	    const hasSavedItems = state.items.some(item => item.isDownloaded === true);
 	    queuePanelEverOpened = state.hasBeenOpened || hasItems || state.isDownloading;
 	    tray.dataset.open = String(state.mediaOverlayEnabled && queuePanelEverOpened);
 	    const itemCount = state.items.length;
 	    tray.querySelector('.isg-count').textContent = itemCount + (itemCount === 1 ? ' item' : ' items');
 	    const start = tray.querySelector('.isg-start');
-	    const hasFailedItems = state.items.some(item => item.error);
+	    const hasFailedItems = state.items.some(item => item.isDownloaded !== true && item.error);
 	    const startLabel = state.isDownloading
 	      ? 'Cancel queue download'
-	      : hasFailedItems ? 'Retry failed queue items' : 'Save queued media';
+	      : hasFailedItems ? 'Retry failed queue items'
+	      : hasPendingItems ? 'Save queued media'
+	      : hasSavedItems ? 'All queued media saved' : 'Save queued media';
 	    const startIcon = state.isDownloading
 	      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10H7z" fill="currentColor" stroke="none"/></svg>'
 	      : hasFailedItems
 	        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>'
-	        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M5 17v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2"/></svg>';
+	        : hasSavedItems && !hasPendingItems
+	          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>'
+	          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M5 17v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2"/></svg>';
 	    start.innerHTML = startIcon;
 	    start.title = startLabel;
 	    start.setAttribute('aria-label', startLabel);
-	    start.disabled = !state.isDownloading && !hasItems;
+	    start.disabled = !state.isDownloading && !hasPendingItems;
 	    const clear = tray.querySelector('.isg-clear');
 	    clear.disabled = state.isDownloading || !hasItems;
 
@@ -400,7 +408,7 @@ internal static class InstagramMediaOverlayScript
 	        const heading = document.createElement('div'); heading.className = 'isg-group-heading'; heading.textContent = `${label} (${items.length})`;
 	        const rows = document.createElement('div'); rows.className = 'isg-group-items';
 	        for (const item of items) {
-	          const row = document.createElement('div'); row.className = 'isg-item';
+	          const row = document.createElement('div'); row.className = item.isDownloaded === true ? 'isg-item isg-complete' : 'isg-item';
 	          if (item.thumbnailUrl) {
 	            const image = document.createElement('img'); image.className = 'isg-thumb'; image.alt = ''; image.loading = 'lazy'; image.src = item.thumbnailUrl; row.appendChild(image);
 	          } else {
@@ -410,7 +418,8 @@ internal static class InstagramMediaOverlayScript
 	          const name = document.createElement('div'); name.className = 'isg-name'; name.textContent = item.filename || `${item.shortcode} · ${item.isVideo ? 'Video' : 'Photo'} ${Number(item.slideIndex) + 1}`;
 	          const meta = document.createElement('div'); meta.className = 'isg-meta'; meta.textContent = `${item.isVideo ? 'Video' : 'Photo'} · ${item.shortcode} · slide ${Number(item.slideIndex) + 1}`;
 	          info.append(name, meta);
-	          if (item.error) { const failure = document.createElement('div'); failure.className = 'isg-error'; failure.textContent = safeText(item.error, 'Download failed'); info.appendChild(failure); }
+	          if (item.isDownloaded === true) { const saved = document.createElement('div'); saved.className = 'isg-saved'; saved.textContent = item.wasSkipped === true ? 'Already saved' : 'Downloaded'; info.appendChild(saved); }
+	          if (item.error && item.isDownloaded !== true) { const failure = document.createElement('div'); failure.className = 'isg-error'; failure.textContent = safeText(item.error, 'Download failed'); info.appendChild(failure); }
 	          const actions = document.createElement('div'); actions.className = 'isg-row-actions';
 	          const openButton = document.createElement('button'); openButton.type = 'button'; openButton.className = 'isg-action isg-action-secondary isg-icon-action isg-row-action'; openButton.title = 'Open this photo or video'; openButton.setAttribute('aria-label', `Open ${item.isVideo ? 'video' : 'photo'} ${Number(item.slideIndex) + 1} from ${safeText(item.shortcode, 'queued post')}`); openButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6M19 5l-9 9"/><path d="M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 	          openButton.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); navigateToQueuedMedia(item); });
@@ -435,6 +444,7 @@ internal static class InstagramMediaOverlayScript
 	      queue_full: 'The queue is full. Save or clear items before adding more.',
 	      queue_busy: 'Wait for the current queue download to finish.',
 	      queue_empty: 'Add at least one photo or video first.',
+	      queue_complete: 'Everything in this queue is already downloaded. Remove or clear items before saving another batch.',
 	      queue_item_unavailable: 'That item is no longer in the queue.',
 	      invalid_media: 'That media item could not be selected.',
 	      untrusted_source: 'Media selection is only available on Instagram pages.',
