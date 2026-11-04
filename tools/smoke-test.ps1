@@ -958,7 +958,7 @@ try {
         -not $overlayScriptSource.Contains('const postPattern = /^\/(?:[A-Za-z0-9._]{1,30}\/)?(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;') -or
         -not $overlayScriptSource.Contains('const parsed = new URL(value, location.href);') -or
         -not $queueServiceSource.Contains('invalid_media_post_url') -or
-        -not $queueServiceSource.Contains('(?:[A-Za-z0-9._]{1,30}/)?(?:p|reel|reels|tv)/(?<shortcode>') -or
+        -not $queueServiceSource.Contains('^/(?:(?<account>[A-Za-z0-9._]{1,30})/)?(?:p|reel|reels|tv)/(?<shortcode>') -or
         -not $queueServiceSource.Contains('invalid_media_raw_url') -or
         -not $queueServiceSource.Contains('invalid_media_slide_index') -or
         -not $overlayScriptSource.Contains('findPostPermalink') -or
@@ -984,7 +984,7 @@ try {
         -not $queueServiceSource.Contains('ResolveQueuedVideoUrlAsync') -or
         -not $queueServiceSource.Contains('var resolvedVideoUrl = await ResolveQueuedVideoUrlAsync(item, cancellation.Token)') -or
         -not $queueServiceSource.Contains('FindQueuedVideoSlide(item, post.Pictures)') -or
-        -not $queueServiceSource.Contains('HasSameMediaPath(item.ThumbnailUrl, media.ImgUrl)') -or
+        -not $queueServiceSource.Contains('HasSameMediaPath(item.ThumbnailUrl, pictures[index].ImgUrl)') -or
         -not $queueServiceSource.Contains('IsDownloadableVideoUrl(item.RawUrl)') -or
         -not $queueServiceSource.Contains('downloadItem with { RawUrl = item.RawUrl }') -or
         -not $queueServiceSource.Contains('IsUnsupportedVideoStream') -or
