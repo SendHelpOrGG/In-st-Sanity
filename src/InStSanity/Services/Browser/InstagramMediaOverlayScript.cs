@@ -305,7 +305,7 @@ internal static class InstagramMediaOverlayScript
 	    tray.querySelector('.isg-count').textContent = String(state.items.length);
 	    const start = tray.querySelector('.isg-start');
 	    start.textContent = state.isDownloading
-	      ? `Cancel ${state.currentIndex}/${state.total || state.items.length}`
+	      ? 'Cancel'
 	      : state.items.some(item => item.error) ? 'Retry' : 'Save';
 	    start.disabled = !state.isDownloading && !hasItems;
 	    const clear = tray.querySelector('.isg-clear');
