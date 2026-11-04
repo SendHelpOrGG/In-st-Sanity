@@ -12,6 +12,7 @@ namespace InStSanity;
 public partial class MainPage : ContentPage
 {
 	const string InstagramHomeUrl = "https://www.instagram.com/";
+	const long BrowserFolderOpenDuplicateWindowMs = 750;
 	static readonly JsonSerializerOptions QueueJsonOptions = new(JsonSerializerDefaults.Web);
 
 	readonly InstagramBrowserWindowService _browserWindow;
@@ -22,6 +23,9 @@ public partial class MainPage : ContentPage
 	string? _currentInstagramUrl;
 	InstagramBrowserRegion? _instagramBrowserRegion;
 	long _lastStickerCursorForwardedAtMs;
+	long _lastBrowserFolderOpenRequestAtMs;
+	string _lastBrowserFolderOpenAction = string.Empty;
+	bool _hasBrowserFolderOpenRequest;
 	string _cachedBrowserOverlayThemeJson = "null";
 	DateTime _browserOverlayThemeCachedAtUtc = DateTime.MinValue;
 
@@ -623,7 +627,7 @@ public partial class MainPage : ContentPage
 		var overlayAction = GetOverlayMessageAction(message);
 		if (overlayAction is "open-download-folder" or "open-video-folder")
 		{
-			if (IsTrustedInstagramBrowserSource(source))
+			if (IsTrustedInstagramBrowserSource(source) && TryAcceptBrowserFolderOpenAction(overlayAction))
 			{
 				if (overlayAction == "open-video-folder") _ = OpenVideoFolderFromBrowserAsync();
 				else _ = OpenDownloadFolderFromBrowserAsync();
@@ -644,6 +648,23 @@ public partial class MainPage : ContentPage
 				_ = SyncBrowserQueueToPageAsync(command.Error);
 				break;
 		}
+	}
+
+	bool TryAcceptBrowserFolderOpenAction(string action)
+	{
+		var now = Environment.TickCount64;
+		if (_hasBrowserFolderOpenRequest &&
+			now - _lastBrowserFolderOpenRequestAtMs < BrowserFolderOpenDuplicateWindowMs)
+		{
+			System.Diagnostics.Debug.WriteLine(
+				$"[In-st-Sanity] suppressed duplicate Browser folder-open action={action} previous={_lastBrowserFolderOpenAction}");
+			return false;
+		}
+
+		_lastBrowserFolderOpenAction = action;
+		_lastBrowserFolderOpenRequestAtMs = now;
+		_hasBrowserFolderOpenRequest = true;
+		return true;
 	}
 
 	async Task OpenDownloadFolderFromBrowserAsync()

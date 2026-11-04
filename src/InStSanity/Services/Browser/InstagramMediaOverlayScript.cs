@@ -58,6 +58,8 @@ internal static class InstagramMediaOverlayScript
 	  let selectButton = null;
 	  let tray = null;
 	  let trayCollapsed = false;
+	  let lastFolderOpenRequestAt = -Infinity;
+	  let suppressFolderClickUntil = 0;
 	  let lastPointer = null;
 	  let lastMoveInspectionAt = 0;
 	  let pendingStickerCursor = null;
@@ -73,16 +75,16 @@ internal static class InstagramMediaOverlayScript
 	    #inst-sanity-tray{position:fixed;z-index:2147483645;right:12px;bottom:12px;width:min(320px,calc(100vw - 24px));max-height:min(360px,calc(100vh - 24px));display:none;flex-direction:column;overflow:hidden;border:1px solid var(--isg-border,#ffffff30);border-radius:14px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:11px/1.4 "Segoe UI",sans-serif;box-shadow:0 14px 42px #0009;isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 	    #inst-sanity-tray[data-open="true"]{display:flex}
 	    #inst-sanity-tray *{box-sizing:border-box}
-	    .isg-head{display:flex;align-items:center;gap:8px;padding:8px 10px 7px;border-bottom:1px solid var(--isg-border,#ffffff22)}
+	    .isg-head{display:flex;align-items:center;gap:6px;padding:8px 10px 7px;border-bottom:1px solid var(--isg-border,#ffffff22)}
 	    .isg-title{flex:1;min-width:0;font-size:12px;font-weight:700;letter-spacing:.1px}
 	    .isg-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;border-radius:999px;background:color-mix(in srgb,var(--isg-accent,#2dd4bf) 80%,transparent);color:var(--isg-button-ink,#091318);font-weight:750;font-size:10px}
-	    .isg-actions{display:flex;gap:5px;align-items:center}
-	    .isg-icon-action{display:inline-flex;align-items:center;justify-content:center;flex:0 0 28px;width:28px;height:28px;min-width:28px;padding:0}
-	    .isg-icon-action svg{display:block;width:16px;height:16px}
+	    .isg-actions{display:flex;gap:4px;align-items:center}
+	    .isg-icon-action{display:inline-flex;align-items:center;justify-content:center;flex:0 0 37px;width:37px;height:37px;min-width:37px;min-height:37px;max-width:37px;max-height:37px;padding:0;box-sizing:border-box}
+	    .isg-icon-action svg{display:block;width:18px;height:18px}
 	    .isg-collapse svg{transition:transform .15s ease}
 	    #inst-sanity-tray[data-collapsed="true"] .isg-collapse svg{transform:rotate(180deg)}
 	    #inst-sanity-tray[data-collapsed="true"] .isg-items,#inst-sanity-tray[data-collapsed="true"] .isg-footer{display:none}
-	    .isg-action{position:relative;isolation:isolate;border:1px solid var(--isg-border,#ffffff30);border-radius:7px;padding:5px 8px;background:transparent;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:650 10px/1.2 "Segoe UI",sans-serif;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+	    .isg-action{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;flex:0 0 37px;width:37px;height:37px;min-width:37px;min-height:37px;max-width:37px;max-height:37px;box-sizing:border-box;border:1px solid var(--isg-border,#ffffff30);border-radius:7px;padding:0 2px;background:transparent;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:650 10px/1.2 "Segoe UI",sans-serif;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 	    .isg-action:disabled{opacity:.5;cursor:default}
 	    .isg-action-secondary{--isg-surface:var(--isg-panel,#151b23);color:var(--isg-ink,#f8fafc)}
 	    .isg-items{display:flex;flex-direction:column;gap:7px;padding:7px 9px;overflow:auto;min-height:0}
@@ -97,8 +99,8 @@ internal static class InstagramMediaOverlayScript
 	    .isg-meta{margin-top:1px;color:var(--isg-muted,#9fb1c1);font-size:9px}
 	    .isg-error{margin-top:1px;color:#ff9a9a;font-size:9px}
 	    .isg-row-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto;margin-left:auto}
-	    .isg-row-action{flex:0 0 28px!important;width:28px!important;height:28px!important;min-width:28px!important;padding:0!important}
-	    .isg-row-action svg{display:block;width:14px;height:14px}
+	    .isg-row-action{flex:0 0 37px!important;width:37px!important;height:37px!important;min-width:37px!important;min-height:37px!important;max-width:37px!important;max-height:37px!important;padding:0!important;box-sizing:border-box!important}
+	    .isg-row-action svg{display:block;width:18px;height:18px}
 	    .isg-empty{padding:6px 3px 8px;color:var(--isg-muted,#9fb1c1);font-size:10px}
 	    .isg-footer{padding:6px 10px 8px;color:var(--isg-muted,#9fb1c1);font-size:9px}
 	    #inst-sanity-notice{position:fixed;z-index:2147483647;left:50%;bottom:18px;max-width:min(460px,calc(100vw - 32px));transform:translate(-50%,12px);opacity:0;pointer-events:none;border:1px solid var(--isg-border,#ffffff30);border-radius:9px;padding:8px 11px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:600 11px/1.4 "Segoe UI",sans-serif;box-shadow:0 7px 28px #0008;transition:opacity .18s,transform .18s;isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
@@ -106,7 +108,17 @@ internal static class InstagramMediaOverlayScript
 	    @media(max-width:540px){#inst-sanity-tray{right:8px;bottom:8px;width:min(320px,calc(100vw - 16px));max-height:min(360px,calc(100vh - 16px))}#inst-sanity-select{padding:7px 10px;font-size:11px}}
 	  `;
 
-	  function postMessage(action, payload = {}) {
+	  function requestFolderOpen(action) {
+    const now = performance.now();
+    if (now - lastFolderOpenRequestAt < 750) {
+      debugLog('duplicate-folder-open-suppressed', { action });
+      return false;
+    }
+    lastFolderOpenRequestAt = now;
+    return postMessage(action);
+  }
+
+  function postMessage(action, payload = {}) {
 	    try {
 	      const bridge = window.chrome?.webview;
 	      if (typeof bridge?.postMessage !== 'function') {
@@ -212,13 +224,21 @@ internal static class InstagramMediaOverlayScript
 	        else postMessage('start-download');
 	      });
 	      tray.querySelector('.isg-clear').addEventListener('click', () => postMessage('clear-queue'));
-	      tray.querySelector('.isg-open-folder').title = 'Left-click: open images folder · right-click: open separate video folder';
-	      tray.querySelector('.isg-open-folder').setAttribute('aria-label', 'Open images folder; right-click to open the separate video folder');
-	      tray.querySelector('.isg-open-folder').addEventListener('click', event => {
-	        event.preventDefault(); event.stopPropagation(); postMessage('open-download-folder');
+	      const openFolderButton = tray.querySelector('.isg-open-folder');
+	      openFolderButton.title = 'Left-click: open images folder · right-click: open separate video folder';
+      openFolderButton.setAttribute('aria-label', 'Open images folder; right-click to open the separate video folder');
+      openFolderButton.addEventListener('pointerdown', event => {
+        if (event.button !== 0) suppressFolderClickUntil = performance.now() + 750;
+      });
+      openFolderButton.addEventListener('click', event => {
+	        event.preventDefault(); event.stopPropagation();
+	        if (event.button !== 0 || performance.now() < suppressFolderClickUntil) return;
+	        requestFolderOpen('open-download-folder');
 	      });
-	      tray.querySelector('.isg-open-folder').addEventListener('contextmenu', event => {
-	        event.preventDefault(); event.stopPropagation(); postMessage('open-video-folder');
+	      openFolderButton.addEventListener('contextmenu', event => {
+	        event.preventDefault(); event.stopPropagation();
+	        suppressFolderClickUntil = performance.now() + 750;
+	        requestFolderOpen('open-video-folder');
 	      });
 	      const collapseButton = tray.querySelector('.isg-collapse');
 	      collapseButton.addEventListener('click', event => {
