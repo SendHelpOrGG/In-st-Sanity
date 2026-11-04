@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -679,10 +680,13 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			? identityUri.AbsolutePath
 			: $"slide:{slideIndex}";
 		var key = $"{shortcode}|{type}|{mediaIdentity}";
+		// Distinct carousel items can share a stale slide index; keep filenames unique so
+		// the no-duplicates check does not mistake later queue entries for the first file.
+		var identitySuffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))[..8].ToLowerInvariant();
 		var extension = isVideo ? ".mp4" : ".jpg";
 		var filename = isVideo
-			? $"{account}_{shortcode}_v{slideIndex + 1}{extension}"
-			: $"{account}_{shortcode}_ph{slideIndex + 1}{extension}";
+			? $"{account}_{shortcode}_v{slideIndex + 1}_{identitySuffix}{extension}"
+			: $"{account}_{shortcode}_ph{slideIndex + 1}_full_{identitySuffix}{extension}";
 		item = new BrowserQueuedMedia(key, shortcode, account, slideIndex, contentCount, isVideo, rawUrl, thumbnailUrl, filename, null);
 		error = string.Empty;
 		return true;
