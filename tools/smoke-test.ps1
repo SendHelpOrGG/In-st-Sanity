@@ -813,7 +813,7 @@ try {
     $mainPageSource = Get-Content -LiteralPath $mainPagePath -Raw
     $browserViewEndpointSource = Get-Content -LiteralPath $browserViewEndpointPath -Raw
     $browserWindowServiceSource = Get-Content -LiteralPath $browserWindowServicePath -Raw
-    if (-not $overlayScriptSource.Contains("? 'Cancel'") -or
+    if (-not $overlayScriptSource.Contains("? 'Cancel queue download'") -or
         $overlayScriptSource.Contains('Cancel ${state.currentIndex}/')) {
         throw 'The Browser download-queue Save/Cancel action must not show an item counter.'
     }
