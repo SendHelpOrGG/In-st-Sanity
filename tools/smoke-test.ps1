@@ -742,7 +742,7 @@ try {
         -not $document.Content.Contains('photoPreviewTextureMapping(texture,width,height,settings.oldPhotoSeed)') -or
         -not $document.Content.Contains('function ensurePhotoOldPhotoTexture()') -or
         -not $document.Content.Contains('photoPreviewTextureSample(texture,textureMapping,x,y,width,height)') -or
-        -not $document.Content.Contains("savedLook.name==='oldPhoto'") -or
+        -not $document.Content.Contains("if(key!=='oldPhoto'&&key!=='oldPhotoSeed')values[key]=photoResizeAdjustments[key];") -or
         $document.Content.Contains('data-photo-look="oldPhoto"') -or
         -not (Test-Path -LiteralPath $oldPhotoTexturePath)) {
         throw 'Image Edit must expose Old Photo damage as a separate finishing slider and include its supplied texture asset.'
