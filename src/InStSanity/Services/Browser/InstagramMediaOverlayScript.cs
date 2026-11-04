@@ -109,16 +109,16 @@ internal static class InstagramMediaOverlayScript
 	  `;
 
 	  function requestFolderOpen(action) {
-    const now = performance.now();
-    if (now - lastFolderOpenRequestAt < 750) {
-      debugLog('duplicate-folder-open-suppressed', { action });
-      return false;
-    }
-    lastFolderOpenRequestAt = now;
-    return postMessage(action);
-  }
+	    const now = performance.now();
+	    if (now - lastFolderOpenRequestAt < 750) {
+	      debugLog('duplicate-folder-open-suppressed', { action });
+	      return false;
+	    }
+	    lastFolderOpenRequestAt = now;
+	    return postMessage(action);
+	  }
 
-  function postMessage(action, payload = {}) {
+	  function postMessage(action, payload = {}) {
 	    try {
 	      const bridge = window.chrome?.webview;
 	      if (typeof bridge?.postMessage !== 'function') {
@@ -226,11 +226,11 @@ internal static class InstagramMediaOverlayScript
 	      tray.querySelector('.isg-clear').addEventListener('click', () => postMessage('clear-queue'));
 	      const openFolderButton = tray.querySelector('.isg-open-folder');
 	      openFolderButton.title = 'Left-click: open images folder · right-click: open separate video folder';
-      openFolderButton.setAttribute('aria-label', 'Open images folder; right-click to open the separate video folder');
-      openFolderButton.addEventListener('pointerdown', event => {
-        if (event.button !== 0) suppressFolderClickUntil = performance.now() + 750;
-      });
-      openFolderButton.addEventListener('click', event => {
+	      openFolderButton.setAttribute('aria-label', 'Open images folder; right-click to open the separate video folder');
+	      openFolderButton.addEventListener('pointerdown', event => {
+	        if (event.button !== 0) suppressFolderClickUntil = performance.now() + 750;
+	      });
+	      openFolderButton.addEventListener('click', event => {
 	        event.preventDefault(); event.stopPropagation();
 	        if (event.button !== 0 || performance.now() < suppressFolderClickUntil) return;
 	        requestFolderOpen('open-download-folder');
