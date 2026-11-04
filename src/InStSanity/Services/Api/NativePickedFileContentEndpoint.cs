@@ -1,3 +1,4 @@
+using InStSanity.Platforms.Windows;
 using InStSanity.Services.WebHost;
 using Microsoft.Extensions.Logging;
 
@@ -55,6 +56,11 @@ public sealed class NativePickedFileContentEndpoint : IApiEndpoint
 			long start;
 			long end;
 			var partial = !string.IsNullOrWhiteSpace(rangeHeader);
+			if (!partial && contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+			{
+				AppDiagnostics.Write("picked-file.image-read",
+					$"extension={Path.GetExtension(file.Path).ToLowerInvariant()}; bytes={length}");
+			}
 			if (partial)
 			{
 				if (!LoopbackHost.TryParseRange(rangeHeader, length, out start, out end))
@@ -98,6 +104,7 @@ public sealed class NativePickedFileContentEndpoint : IApiEndpoint
 			exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or
 			System.Security.SecurityException)
 		{
+			AppDiagnostics.WriteException("picked-file.read-failed", exception);
 			_logger.LogWarning(exception, "Could not read a user-selected file for WebView preview");
 			return HttpResponseInfo.Error("picked_file_unavailable", 404);
 		}

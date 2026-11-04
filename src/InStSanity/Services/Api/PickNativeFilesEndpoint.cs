@@ -1,3 +1,4 @@
+using InStSanity.Platforms.Windows;
 using InStSanity.Services.WebHost;
 using Microsoft.Extensions.Logging;
 
@@ -37,23 +38,28 @@ public sealed class PickNativeFilesEndpoint : IApiEndpoint
 			return HttpResponseInfo.Error("invalid_picker_kind", 400);
 		}
 
+		AppDiagnostics.Write("picker.endpoint.request", $"kind={kind}");
 		try
 		{
 			var selectedFiles = await _filePicker.PickFilesAsync(kind, cancellationToken).ConfigureAwait(false);
 			if (selectedFiles.Count == 0)
 			{
+				AppDiagnostics.Write("picker.endpoint.cancelled", $"kind={kind}");
 				return HttpResponseInfo.Json(new { ok = true, cancelled = true, files = Array.Empty<NativePickedFileDescriptor>() });
 			}
 
 			var files = selectedFiles.Select(_pickedFiles.Register).ToArray();
+			AppDiagnostics.Write("picker.endpoint.complete", $"kind={kind}; selectedCount={files.Length}");
 			return HttpResponseInfo.Json(new { ok = true, cancelled = false, files });
 		}
 		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 		{
+			AppDiagnostics.Write("picker.endpoint.cancelled-by-host", $"kind={kind}");
 			throw;
 		}
 		catch (Exception exception)
 		{
+			AppDiagnostics.WriteException("picker.endpoint.failed", exception, $"kind={kind}");
 			_logger.LogError(exception, "Could not open the native {Kind} file picker", kind);
 			return HttpResponseInfo.Json(new { ok = false, error = "file_picker_failed" });
 		}

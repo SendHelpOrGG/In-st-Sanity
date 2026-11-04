@@ -18,6 +18,101 @@ internal static class WebViewBootstrapper
 	const long BrowserOverlayDiagnosticMaxBytes = 2 * 1024 * 1024;
 	sealed record VideoDownloadHistoryContext(string Shortcode, string Account, int? ContentIndex, int? VideoIndex, int? ContentCount);
 
+	static readonly string MainAppDiagnosticsScript = """
+		(()=>{
+			if(window.__instSanityDiagnosticsInstalled)return;
+			window.__instSanityDiagnosticsInstalled=true;
+			const clean=(value,max=240)=>String(value??'').replace(/[\r\n\t]+/g,' ').slice(0,max);
+			const photoAreaSelector='#photoResizePreviewCanvasWrap,#resizerFileList,#photoAdjustmentPhotoStrip,#photoEditFilePanel,#resizerFilePanel,.moment-capture-stage';
+			const targetDetails=target=>{
+				if(!target)return null;
+				const media=target.closest?.('img,video,canvas')||null;
+				const area=target.closest?.(photoAreaSelector)||null;
+				const source=String(media?.currentSrc||media?.src||'');
+				let sourceKind='none';
+				if(source.startsWith('blob:'))sourceKind='blob';
+			else if(source.startsWith('data:'))sourceKind='data';
+			else if(source.includes('/api/picked-file'))sourceKind='native-picked-file';
+			else if(source.includes('/api/image')||source.includes('/api/download-photo'))sourceKind='app-media-proxy';
+			else if(source){try{sourceKind=new URL(source,location.href).host}catch{sourceKind='other'}}
+				const canvas=document.getElementById('photoResizePreviewCanvas');
+				const original=document.getElementById('photoResizePreviewOriginalCanvas');
+				const naturalWidth=Number(media?.naturalWidth||media?.videoWidth||media?.width)||null;
+				const naturalHeight=Number(media?.naturalHeight||media?.videoHeight||media?.height)||null;
+				const usedHeap=Number(window.performance?.memory?.usedJSHeapSize);
+				return{
+					targetTag:clean(target.tagName||'').toLowerCase(),
+					targetId:clean(target.id),
+					targetClass:clean(typeof target.className==='string'?target.className:''),
+					areaId:clean(area?.id),
+					areaClass:clean(typeof area?.className==='string'?area.className:''),
+					mediaTag:clean(media?.tagName||'').toLowerCase(),
+					mediaId:clean(media?.id),
+					mediaClass:clean(typeof media?.className==='string'?media.className:''),
+					sourceKind,
+					mediaComplete:media instanceof HTMLImageElement?media.complete:null,
+					mediaNaturalWidth:naturalWidth,
+					mediaNaturalHeight:naturalHeight,
+					canvasWidth:Number(canvas?.width)||0,
+					canvasHeight:Number(canvas?.height)||0,
+					originalCanvasWidth:Number(original?.width)||0,
+					originalCanvasHeight:Number(original?.height)||0,
+					activeEditorTab:document.querySelector('.photo-editor-tab.active')?.id||'',
+					devicePixelRatio:Number(window.devicePixelRatio)||1,
+					jsHeapUsedBytes:Number.isFinite(usedHeap)&&usedHeap>0?usedHeap:null,
+					documentVisibility:document.visibilityState
+				};
+			};
+			const send=(event,details)=>{
+				try{window.chrome?.webview?.postMessage({action:'instsanity-diagnostic',event,details})}catch{}
+			};
+			window.__instSanityLogDiagnostic=(event,details={})=>send(clean(event,100),details||{});
+			const interactionDetails=target=>{
+				const details=targetDetails(target);
+				if(!details)return null;
+				const hasMedia=Boolean(details.mediaTag);
+				const hasPhotoArea=Boolean(details.areaId||details.areaClass);
+				return hasMedia||hasPhotoArea?details:null;
+			};
+			document.addEventListener('pointerdown',event=>{
+				const target=event.target instanceof Element?event.target:null;
+				const details=interactionDetails(target);
+				if(details)send('photo.pointerdown',details);
+			},true);
+			document.addEventListener('click',event=>{
+				const target=event.target instanceof Element?event.target:null;
+				const details=interactionDetails(target);
+				if(details)send('photo.click',details);
+				const button=target?.closest?.('button');
+				if(button&&['resizerChooseImagesBtn','photoEditChooseImagesBtn','momentCaptureChooseVideoBtn'].includes(button.id)){
+					send('picker.button.click',{buttonId:button.id,activeEditorTab:document.querySelector('.photo-editor-tab.active')?.id||''});
+				}
+			},true);
+			window.addEventListener('error',event=>{
+				const target=event.target instanceof Element?event.target:null;
+				let sourceHost='';
+				try{sourceHost=event.filename?new URL(event.filename,location.href).host:''}catch{}
+				send('javascript.error',{
+					message:clean(event.message,1200),
+					sourceHost,
+					line:Number(event.lineno)||0,
+					column:Number(event.colno)||0,
+					target:targetDetails(target)
+				});
+			},true);
+			window.addEventListener('unhandledrejection',event=>{
+				const reason=event.reason;
+				send('javascript.unhandledrejection',{
+					name:clean(reason?.name||typeof reason),
+					message:clean(reason?.message||reason,1200),
+					stack:clean(reason?.stack,2400)
+				});
+			});
+			window.addEventListener('beforeunload',()=>send('document.beforeunload',{activeEditorTab:document.querySelector('.photo-editor-tab.active')?.id||''}));
+			send('diagnostics.installed',{readyState:document.readyState,pathname:location.pathname});
+		})();
+		""";
+
 	static string BrowserOverlayDiagnosticLogPath
 	{
 		get
@@ -97,6 +192,67 @@ internal static class WebViewBootstrapper
 
 	static string GetSourceHost(string? source) =>
 		Uri.TryCreate(source, UriKind.Absolute, out var uri) ? uri.Host : "unknown";
+
+	static string GetSafeWebViewSource(string? source) =>
+		Uri.TryCreate(source, UriKind.Absolute, out var uri)
+			? $"{uri.Scheme}://{uri.Host}:{uri.Port}{(uri.IsLoopback ? uri.AbsolutePath : string.Empty)}"
+			: "unknown";
+
+	static async Task InstallMainAppDiagnosticsScriptAsync(CoreWebView2 core)
+	{
+		try
+		{
+			await core.AddScriptToExecuteOnDocumentCreatedAsync(MainAppDiagnosticsScript).ConfigureAwait(false);
+			AppDiagnostics.Write("webview.main.diagnostics", "Document-created click/error hooks registered.");
+		}
+		catch (Exception exception)
+		{
+			AppDiagnostics.WriteException("webview.main.diagnostics-registration-failed", exception);
+		}
+
+		try
+		{
+			await core.ExecuteScriptAsync(MainAppDiagnosticsScript).ConfigureAwait(false);
+		}
+		catch (Exception exception)
+		{
+			AppDiagnostics.WriteException("webview.main.diagnostics-current-document-failed", exception,
+				$"source={GetSafeWebViewSource(core.Source)}");
+		}
+	}
+
+	static void HandleMainAppDiagnosticMessage(CoreWebView2WebMessageReceivedEventArgs args)
+	{
+		if (!Uri.TryCreate(args.Source, UriKind.Absolute, out var source) || !source.IsLoopback)
+		{
+			return;
+		}
+
+		try
+		{
+			var json = args.WebMessageAsJson;
+			if (json.Length > 12 * 1024) return;
+			using var document = JsonDocument.Parse(json);
+			var root = document.RootElement;
+			if (root.ValueKind != JsonValueKind.Object ||
+				!root.TryGetProperty("action", out var action) ||
+				action.ValueKind != JsonValueKind.String ||
+				action.GetString() != "instsanity-diagnostic")
+			{
+				return;
+			}
+
+			var eventName = root.TryGetProperty("event", out var eventValue) && eventValue.ValueKind == JsonValueKind.String
+				? eventValue.GetString() ?? "unknown"
+				: "unknown";
+			var details = root.TryGetProperty("details", out var detailsValue) ? detailsValue.GetRawText() : "{}";
+			AppDiagnostics.Write("webview.main.js", $"event={eventName}; source={GetSafeWebViewSource(args.Source)}; details={details}");
+		}
+		catch (Exception exception)
+		{
+			AppDiagnostics.WriteException("webview.main.message-failed", exception);
+		}
+	}
 
 	// Same-origin call Instagram's own web app makes; the x-ig-app-id header is the
 	// public one every browser session uses. Page scripts cannot see HttpOnly cookies,
@@ -481,6 +637,14 @@ internal static class WebViewBootstrapper
 
 	static void Configure(CoreWebView2 core, bool isInstagramBrowser, Action<string, string>? onOverlayMessage)
 	{
+		core.ProcessFailed += (_, args) =>
+		{
+			AppDiagnostics.Write("webview2.process-failed",
+				$"view={(isInstagramBrowser ? "instagram-browser" : "main-app")}; kind={args.ProcessFailedKind}; " +
+				$"reason={args.Reason}; exitCode={args.ExitCode}; process={args.ProcessDescription}; " +
+				$"source={GetSafeWebViewSource(core.Source)}");
+		};
+
 		if (isInstagramBrowser && onOverlayMessage is not null)
 		{
 			core.Settings.IsWebMessageEnabled = true;
@@ -519,12 +683,16 @@ internal static class WebViewBootstrapper
 		}
 		else
 		{
+			core.Settings.IsWebMessageEnabled = true;
+			core.WebMessageReceived += (_, args) => HandleMainAppDiagnosticMessage(args);
+			core.NavigationStarting += (_, args) =>
+				AppDiagnostics.Write("webview.main.navigation-starting",
+					$"userInitiated={args.IsUserInitiated}; redirected={args.IsRedirected}; source={GetSafeWebViewSource(args.Uri)}");
 			core.NavigationCompleted += (_, args) =>
-			{
-				System.Diagnostics.Debug.WriteLine(
-					$"[In-st-Sanity] WebView2 navigation completed success={args.IsSuccess} " +
-					$"http={args.HttpStatusCode} error={args.WebErrorStatus} source={core.Source}");
-			};
+				AppDiagnostics.Write("webview.main.navigation-completed",
+					$"success={args.IsSuccess}; http={args.HttpStatusCode}; error={args.WebErrorStatus}; source={GetSafeWebViewSource(core.Source)}");
+			AppDiagnostics.Write("webview.main.configured", $"source={GetSafeWebViewSource(core.Source)}");
+			_ = InstallMainAppDiagnosticsScriptAsync(core);
 		}
 
 		core.DownloadStarting += (_sender, args) =>

@@ -977,7 +977,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             </div>
             <div class="hint" style="margin-top:7px">Choose photos here for Resize. This queue is separate from Image Edit.</div>
           </div>
-          <div class="resizer-upload-actions"><button type="button" class="primary" id="resizerStartBtn" onclick="startPhotoResizing()" disabled>Resize</button><button type="button" class="icon-btn resizer-open-output-folder-btn" id="resizerOpenOutputFolderBtn" onclick="openPhotoResizerOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open resized images folder in File Explorer" aria-label="Open resized images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button></div>
+          <div class="resizer-upload-actions"><button type="button" class="primary" id="resizerStartBtn" onclick="startPhotoResizing()" disabled>Resize</button><button type="button" class="icon-btn resizer-open-output-folder-btn" id="resizerOpenOutputFolderBtn" onclick="openPhotoResizerOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open the selected photos folder containing resized images" aria-label="Open the selected photos folder containing resized images"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button></div>
         </div>
       </section>
 <section class="settings-card resizer-card resizer-config-card">
@@ -1005,7 +1005,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
     <div class="photo-editor-tab-panel" id="photoEditorEditPanel" role="tabpanel" aria-labelledby="photoEditorEditTab" hidden>
       <div class="resizer-grid photo-editor-edit-grid">
 <section class="settings-card resizer-card resizer-adjustments-card" aria-labelledby="photoAdjustmentsHeading">
-        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Image Edit applies adjustments independently of Resize settings and saves separate copies; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="photoEditChooseImagesBtn" onclick="choosePhotoEditImages()">Choose images…</button></div><input hidden class="native-file-picker-input" id="photoEditImagesInput" type="file" accept="image/*" multiple aria-label="Choose images for Image Edit" onchange="handlePhotoEditImagesPicked(event)"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoEditDownload()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoEditOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open edited images folder in File Explorer" aria-label="Open edited images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button><button type="button" class="icon-btn photo-adjustment-reset" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()" title="Reset adjustments" aria-label="Reset adjustments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
+        <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Image Edit applies adjustments independently of Resize settings and saves separate copies; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="photoEditChooseImagesBtn" onclick="choosePhotoEditImages()">Choose images…</button></div><input hidden class="native-file-picker-input" id="photoEditImagesInput" type="file" accept="image/*" multiple aria-label="Choose images for Image Edit" onchange="handlePhotoEditImagesPicked(event)"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoEditDownload()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoEditOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open the selected photos folder containing edited images" aria-label="Open the selected photos folder containing edited images"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button><button type="button" class="icon-btn photo-adjustment-reset" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()" title="Reset adjustments" aria-label="Reset adjustments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
         <div class="setting-body">
           <div class="resizer-files-panel photo-adjustment-files-panel" id="photoEditFilePanel">
             <div class="resizer-files-toolbar"><span id="photoEditAvailableCount">Choose images to begin</span><div><button type="button" class="outline" id="photoEditSelectAllBtn" onclick="selectAllPhotoEditFiles(true)" disabled>Select all</button><button type="button" class="outline" id="photoEditClearSelectionBtn" onclick="selectAllPhotoEditFiles(false)" disabled>Clear</button><button type="button" class="outline" id="photoEditClearImagesBtn" onclick="resetPhotoEditQueue()" disabled>Clear images</button></div></div>
@@ -1021,7 +1021,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
           </div>
           <div class="photo-edit-output-folder">
             <label class="field-label" for="photoEditOutputFolder">Save edited images to</label>
-            <div class="folder-row"><input class="text-input" id="photoEditOutputFolder" value="~/Pictures/Instagram/Edited" readonly><button type="button" class="outline" id="photoEditBrowseFolderBtn" onclick="choosePhotoEditOutputFolder()">Browse…</button></div>
+            <div class="folder-row"><input class="text-input" id="photoEditOutputFolder" value="~/Pictures/Instagram" readonly></div>
+            <p class="hint">Uses the photos download location selected under Settings → Saving folder. Resize outputs use the same folder.</p>
           </div>
           <div class="photo-editor-layout">
             <div class="photo-preview-panel" id="photoResizePreviewPanel">
@@ -1427,13 +1428,14 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             <div class="settings-card-head-inner">
             <div class="settings-card-head-text">
               <h2>Saving folder</h2>
-              <p>Choose where downloaded photos and videos will be saved.</p>
+              <p>Choose where photos, resized images, and edited image copies are saved. Videos may use their separate folder.</p>
             </div>
             <span class="settings-card-chevron" aria-hidden="true">▾</span>
           </div></div>
           <div class="setting-body">
             <label class="field-label" for="saveFolder">Download location</label>
             <div class="folder-row"><input class="text-input" id="saveFolder" value="~/Pictures/Instagram" readonly><button class="outline" onclick="chooseFolder()">Browse…</button></div>
+            <p class="hint">Crash diagnosis log: %LOCALAPPDATA%\InStSanity\Logs\app-diagnostics.log. It records image/picker checkpoints and WebView errors, not image contents.</p>
             <div class="anim-group" style="margin-top:18px">
               <div class="background-actions" style="margin-bottom:10px">
                 <button type="button" class="outline ui-toggle-btn" id="separateVideoFolderBtn" aria-pressed="false" onclick="toggleSeparateVideoFolder()">Separate video folder: Off</button>
@@ -1455,13 +1457,13 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
             <div class="settings-card-head-inner">
-              <div class="settings-card-head-text"><h2>Resized photos folder</h2><p>Choose where resized images are saved and control duplicate handling for resized outputs.</p></div>
+                <div class="settings-card-head-text"><h2>Resized photos folder</h2><p>Resize outputs share the photos download location selected under Settings → Saving folder.</p></div>
               <span class="settings-card-chevron" aria-hidden="true">▾</span>
             </div>
           </div>
           <div class="setting-body">
             <label class="field-label" for="resizerOutputFolder">Save resized images to</label>
-            <div class="folder-row"><input class="text-input" id="resizerOutputFolder" value="~/Pictures/Instagram/Resized" readonly><button type="button" class="outline" onclick="chooseResizerOutputFolder()">Browse…</button></div>
+            <div class="folder-row"><input class="text-input" id="resizerOutputFolder" value="~/Pictures/Instagram" readonly></div>
             <div class="anim-group" style="margin-top:18px">
               <div class="background-actions" style="margin-bottom:6px">
                 <button type="button" class="outline ui-toggle-btn active" id="resizerNoDuplicatesBtn" aria-pressed="true" onclick="toggleResizerNoDuplicates()">No duplicates: On</button>
@@ -1476,7 +1478,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.067; open version history" title="Click to view what changed in each version">v.2.067</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.068; open version history" title="Click to view what changed in each version">v.2.068</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -4052,7 +4054,7 @@ function refreshLastJsonUi(){const rec=lastJsonMeta||null;const count=Number(rec
 async function importPostsFromJson(event){const file=event.target.files?.[0];event.target.value='';if(!file)return;await processImportedJsonFile(file)}const SAVE_FOLDER_KEY='stillSane.downloadFolderV1';
 const VIDEO_FOLDER_KEY='stillSane.videoDownloadFolderV1';
 function persistDownloadFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(SAVE_FOLDER_KEY,path.trim())}catch(_){}}
-function loadDownloadFolder(){const input=document.getElementById('saveFolder');if(!input)return;try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())input.value=saved}catch(_){}}
+function loadDownloadFolder(){const input=document.getElementById('saveFolder');if(!input)return;try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())input.value=saved}catch(_){}syncPhotoOutputFolderDisplays()}
 function getConfiguredDownloadFolder(){try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())return saved.trim()}catch(_){}const input=document.getElementById('saveFolder');return String(input?.value||'~/Pictures/Instagram').trim()||'~/Pictures/Instagram'}
 window.getConfiguredDownloadFolder=getConfiguredDownloadFolder;
 function persistVideoFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(VIDEO_FOLDER_KEY,path.trim())}catch(_){}}
@@ -4066,11 +4068,8 @@ function getBrowserQueueFolderPreferences(){const photoFolder=getConfiguredDownl
 window.getConfiguredVideoDownloadFolder=getConfiguredVideoDownloadFolder;
 window.getBrowserQueueFolderPreferences=getBrowserQueueFolderPreferences;
 function toggleSeparateVideoFolder(){setUiPref('separateVideoFolder',!isSeparateVideoFolderEnabled());syncSeparateVideoFolderSettings();scheduleDownloadHistorySync(true);toast(isSeparateVideoFolderEnabled()?'Separate video folder enabled':'Videos will use the Download location')}
-async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);scheduleDownloadHistorySync(true);toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
+async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);syncPhotoOutputFolderDisplays();scheduleDownloadHistorySync(true);toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
 async function chooseVideoFolder(){const input=document.getElementById('videoFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistVideoFolder(data.path);scheduleDownloadHistorySync(true);toast('Video download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
-const RESIZER_OUTPUT_FOLDER_KEY='stillSane.photoResizerOutputFolderV1';
-const PHOTO_EDIT_OUTPUT_FOLDER_KEY='stillSane.photoEditOutputFolderV1';
-const PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER='~/Pictures/Instagram/Edited';
 const RESIZER_MAX_SIDE_KEY='stillSane.photoResizerMaxSideV1';
 const RESIZER_UPSCALE_KEY='stillSane.photoResizerUpscaleV1';
 const RESIZER_ALLOWED_EXTENSIONS=new Set(['.jpg','.jpeg','.png','.bmp','.tif','.tiff','.webp','.heic','.heif','.avif','.jxl']);
@@ -4346,6 +4345,8 @@ function refreshPhotoResizePreview(){
   photoEditCurrentFileId=item.id;
   if(item.id===photoResizePreviewFileId){applyPhotoResizePreviewZoom();return}
   photoResizePreviewFileId=item.id;
+  const fileName=String(item.fileName||item.file?.name||'');
+  try{window.__instSanityLogDiagnostic?.('photo.preview.decode-start',{index:photoEditQueue.indexOf(item)+1,queueCount:photoEditQueue.length,size:Number(item.fileSize||item.file?.size)||0,extension:(fileName.match(/\.[^.]+$/)||[''])[0].toLowerCase(),source:item.nativeFileId?'native-selected':'webview-file'})}catch(_){}
   const token=++photoResizePreviewGeneration;
   photoResizePreviewRenderVersion++;
   photoResizePreviewWorkerLatestRequest=null;
@@ -4363,11 +4364,13 @@ function refreshPhotoResizePreview(){
   revokePhotoResizePreviewUrl();
   const installPreview=(source,width,height,closeSource)=>{
     if(token!==photoResizePreviewGeneration){try{closeSource?.()}catch(_){}return}
+    try{window.__instSanityLogDiagnostic?.('photo.preview.bitmap-ready',{width:Number(width)||0,height:Number(height)||0,token})}catch(_){}
     try{
       const maxSide=1200;
       const scale=Math.min(1,maxSide/Math.max(width,height));
       const targetWidth=Math.max(1,Math.round(width*scale));
       const targetHeight=Math.max(1,Math.round(height*scale));
+      try{window.__instSanityLogDiagnostic?.('photo.preview.canvas-allocate',{sourceWidth:Number(width)||0,sourceHeight:Number(height)||0,targetWidth,targetHeight,estimatedRgbaBytes:targetWidth*targetHeight*4})}catch(_){}
       canvas.width=targetWidth;canvas.height=targetHeight;
       if(original){original.width=targetWidth;original.height=targetHeight;original.hidden=true}
       syncPhotoResizePreviewModeVisibility();
@@ -4376,13 +4379,15 @@ function refreshPhotoResizePreview(){
       context.clearRect(0,0,targetWidth,targetHeight);
       context.drawImage(source,0,0,targetWidth,targetHeight);
       photoResizePreviewImageData=context.getImageData(0,0,targetWidth,targetHeight);
+      try{window.__instSanityLogDiagnostic?.('photo.preview.pixels-ready',{width:targetWidth,height:targetHeight,rgbaBytes:photoResizePreviewImageData.data.byteLength})}catch(_){}
       if(original){const originalContext=original.getContext('2d',{willReadFrequently:true});if(originalContext)originalContext.putImageData(photoResizePreviewImageData,0,0)}
       canvas.hidden=false;message.hidden=true;
       if(toggle)toggle.disabled=false;
       syncPhotoResizePreviewViewport();
       schedulePhotoResizePreviewRender();
       applyPhotoResizePreviewZoom();
-    }catch(_){
+    }catch(error){
+      try{window.__instSanityLogDiagnostic?.('photo.preview.canvas-failed',{name:String(error?.name||''),message:String(error?.message||error),sourceWidth:Number(width)||0,sourceHeight:Number(height)||0,canvasWidth:Number(canvas.width)||0,canvasHeight:Number(canvas.height)||0})}catch(_){}
       canvas.hidden=true;if(original)original.hidden=true;hidePhotoResizePreviewCompare();message.hidden=false;message.textContent='Preview is unavailable for this image format.';
       if(toggle)toggle.disabled=true;
       applyPhotoResizePreviewZoom();
@@ -4393,9 +4398,13 @@ function refreshPhotoResizePreview(){
     if(token!==photoResizePreviewGeneration)return;
     if(!file)throw new Error('picked_file_unavailable');
     if(typeof createImageBitmap==='function'){
-      createImageBitmap(file).then(bitmap=>installPreview(bitmap,bitmap.width,bitmap.height,()=>bitmap.close?.())).catch(()=>loadPhotoResizePreviewWithImage(file,token,installPreview));
+      createImageBitmap(file).then(bitmap=>installPreview(bitmap,bitmap.width,bitmap.height,()=>bitmap.close?.())).catch(error=>{
+        try{window.__instSanityLogDiagnostic?.('photo.preview.bitmap-decode-failed',{name:String(error?.name||''),message:String(error?.message||error)})}catch(_){}
+        loadPhotoResizePreviewWithImage(file,token,installPreview);
+      });
     }else loadPhotoResizePreviewWithImage(file,token,installPreview);
-  }).catch(()=>{
+  }).catch(error=>{
+    try{window.__instSanityLogDiagnostic?.('photo.preview.source-failed',{name:String(error?.name||''),message:String(error?.message||error),source:item.nativeFileId?'native-selected':'webview-file'})}catch(_){}
     if(token!==photoResizePreviewGeneration)return;
     const message=document.getElementById('photoResizePreviewMessage');
     if(message){message.hidden=false;message.textContent='Preview is unavailable for this image format.'}
@@ -4715,6 +4724,7 @@ function handlePhotoResizePreviewWorkerMessage(event){
     }catch(_){ }
   }
   if(message.type==='error'){
+    try{window.__instSanityLogDiagnostic?.('photo.preview.worker-error',{message:String(message.message||'preview_failed'),token:Number(message.token)||0,sourceGeneration:Number(message.sourceGeneration)||0})}catch(_){}
     photoResizePreviewWorkerUnavailable=true;
     const worker=photoResizePreviewWorker;photoResizePreviewWorker=null;
     if(worker){try{worker.terminate()}catch(_){}if(photoResizePreviewWorkerUrl){try{URL.revokeObjectURL(photoResizePreviewWorkerUrl)}catch(_){}photoResizePreviewWorkerUrl=''}}
@@ -4730,7 +4740,8 @@ function createPhotoResizePreviewWorker(){
     const url=URL.createObjectURL(new Blob([source],{type:'application/javascript'}));
     const worker=new Worker(url);
     worker.onmessage=handlePhotoResizePreviewWorkerMessage;
-    worker.onerror=()=>{
+    worker.onerror=event=>{
+      try{window.__instSanityLogDiagnostic?.('photo.preview.worker-crash',{message:String(event?.message||''),line:Number(event?.lineno)||0,column:Number(event?.colno)||0})}catch(_){}
       photoResizePreviewWorkerBusy=false;photoResizePreviewWorkerUnavailable=true;
       try{worker.terminate()}catch(_){}
       if(photoResizePreviewWorker===worker)photoResizePreviewWorker=null;
@@ -4759,7 +4770,7 @@ function runPhotoResizePreviewFallback(request){
       swapPhotoResizePreviewRedBlueChannels(pixels);
       const canvas=document.getElementById('photoResizePreviewCanvas'),context=canvas?.getContext('2d',{willReadFrequently:true});
       if(context){context.putImageData(new ImageData(pixels,request.width,request.height),0,0);applyPhotoResizePreviewZoom()}
-    }catch(_){ }
+    }catch(error){try{window.__instSanityLogDiagnostic?.('photo.preview.fallback-failed',{name:String(error?.name||''),message:String(error?.message||error),width:request.width,height:request.height})}catch(_){}}
   },0);
 }
 function dispatchPhotoResizePreviewWorkerRequest(){
@@ -4988,17 +4999,14 @@ function applyPhotoResizePreviewAdjustments(pixels,width,height,settings,seedDat
   if(settings.halftone>0)photoPreviewHalftone(pixels,width,height,settings.halftone,settings.halftoneSize);
   if(settings.pixelate>0)photoPreviewPixelate(pixels,width,height,settings.pixelate);
 }
-function loadPhotoResizerSettings(){const output=document.getElementById('resizerOutputFolder');const editOutput=document.getElementById('photoEditOutputFolder');const maxSide=document.getElementById('resizerMaxSide');if(output){try{const saved=localStorage.getItem(RESIZER_OUTPUT_FOLDER_KEY);if(saved&&saved.trim())output.value=saved.trim()}catch(_){}}if(editOutput){try{const saved=localStorage.getItem(PHOTO_EDIT_OUTPUT_FOLDER_KEY);editOutput.value=saved&&saved.trim()?saved.trim():PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER}catch(_){editOutput.value=PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER}}if(maxSide){let saved=2048;try{const raw=Number(localStorage.getItem(RESIZER_MAX_SIDE_KEY));if(Number.isInteger(raw)&&raw>=64&&raw<=16384)saved=raw}catch(_){}maxSide.value=String(saved)}try{photoResizeUpscaleEnabled=localStorage.getItem(RESIZER_UPSCALE_KEY)!=='0'}catch(_){photoResizeUpscaleEnabled=true}renderPhotoResizeUpscaleToggle();syncResizerNoDuplicatesButton();loadPhotoResizeAdjustments();initPhotoResizePreviewZoom();syncPhotoResizeControls();syncPhotoEditControls()}
-function persistPhotoResizerOutputFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(RESIZER_OUTPUT_FOLDER_KEY,path.trim())}catch(_){}}
-function getConfiguredPhotoResizerOutputFolder(){const input=document.getElementById('resizerOutputFolder');const value=String(input?.value||'~/Pictures/Instagram/Resized').trim()||'~/Pictures/Instagram/Resized';persistPhotoResizerOutputFolder(value);return value}
-function persistPhotoEditOutputFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(PHOTO_EDIT_OUTPUT_FOLDER_KEY,path.trim())}catch(_){}}
-function getConfiguredPhotoEditOutputFolder(){const input=document.getElementById('photoEditOutputFolder');const value=String(input?.value||PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER).trim()||PHOTO_EDIT_DEFAULT_OUTPUT_FOLDER;persistPhotoEditOutputFolder(value);return value}
+function syncPhotoOutputFolderDisplays(){const folder=getConfiguredDownloadFolder();const resizerOutput=document.getElementById('resizerOutputFolder');const editOutput=document.getElementById('photoEditOutputFolder');if(resizerOutput)resizerOutput.value=folder;if(editOutput)editOutput.value=folder}
+function loadPhotoResizerSettings(){syncPhotoOutputFolderDisplays();const maxSide=document.getElementById('resizerMaxSide');if(maxSide){let saved=2048;try{const raw=Number(localStorage.getItem(RESIZER_MAX_SIDE_KEY));if(Number.isInteger(raw)&&raw>=64&&raw<=16384)saved=raw}catch(_){}maxSide.value=String(saved)}try{photoResizeUpscaleEnabled=localStorage.getItem(RESIZER_UPSCALE_KEY)!=='0'}catch(_){photoResizeUpscaleEnabled=true}renderPhotoResizeUpscaleToggle();syncResizerNoDuplicatesButton();loadPhotoResizeAdjustments();initPhotoResizePreviewZoom();syncPhotoResizeControls();syncPhotoEditControls()}
+function getConfiguredPhotoResizerOutputFolder(){return getConfiguredDownloadFolder()}
+function getConfiguredPhotoEditOutputFolder(){return getConfiguredDownloadFolder()}
 function renderPhotoResizeUpscaleToggle(){const button=document.getElementById('resizerUpscaleToggleBtn');if(button){button.classList.toggle('active',photoResizeUpscaleEnabled);button.setAttribute('aria-pressed',String(photoResizeUpscaleEnabled));button.title=photoResizeUpscaleEnabled?'Upscaling smaller images: on. Click to turn off.':'Upscaling smaller images: off. Click to turn on.';button.disabled=photoResizeBusy}const hint=document.getElementById('resizerMaxSideHint');if(hint)hint.textContent=photoResizeUpscaleEnabled?'Larger images are reduced proportionally; smaller images are enlarged to this longest-side target.':'Larger images are reduced proportionally; smaller images are copied unchanged.'}
 function togglePhotoResizerUpscale(){if(photoResizeBusy)return;photoResizeUpscaleEnabled=!photoResizeUpscaleEnabled;try{localStorage.setItem(RESIZER_UPSCALE_KEY,photoResizeUpscaleEnabled?'1':'0')}catch(_){}renderPhotoResizeUpscaleToggle();setPhotoResizeStatus(photoResizeUpscaleEnabled?'Smaller images will be enlarged to the target size.':'Smaller images will be copied unchanged.',photoResizeUpscaleEnabled?'success':'')}
 function saveResizerMaxSide(value){const input=document.getElementById('resizerMaxSide');const n=Number(value);if(!Number.isInteger(n)||n<64||n>16384){if(input)input.value='2048';setPhotoResizeStatus('Enter a whole number from 64 to 16,384 pixels.','error');syncPhotoResizeControls();return}try{localStorage.setItem(RESIZER_MAX_SIDE_KEY,String(n))}catch(_){}setPhotoResizeStatus('Maximum longest side set to '+n.toLocaleString()+' pixels.');syncPhotoResizeControls()}
 function stepResizerMaxSide(direction){if(photoResizeBusy)return;const input=document.getElementById('resizerMaxSide');if(!input)return;const current=Number(input.value);const base=Number.isInteger(current)?current:2048;const amount=Number(direction)>=0?50:-50;input.value=String(Math.max(64,Math.min(16384,base+amount)));saveResizerMaxSide(input.value)}
-async function chooseResizerOutputFolder(){const input=document.getElementById('resizerOutputFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistPhotoResizerOutputFolder(data.path);toast('Resized-photo folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
-async function choosePhotoEditOutputFolder(){if(photoEditBusy)return;const input=document.getElementById('photoEditOutputFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistPhotoEditOutputFolder(data.path);toast('Edited-images folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
 function nativePickedFileUrl(id){return'/api/picked-file?id='+encodeURIComponent(String(id||''))}
 async function fetchNativePickedFileBlob(id){
   const path=nativePickedFileUrl(id);
@@ -5013,6 +5021,7 @@ async function chooseNativeFiles(kind,inputId,onPicked,setError,errorMessage,isB
   if(!isLocalBackendOrigin()){document.getElementById(inputId)?.click();return}
   if(nativeFilePickerBusy)return;
   nativeFilePickerBusy=true;
+  try{window.__instSanityLogDiagnostic?.('native-picker.request',{kind,inputId})}catch(_){}
   syncPhotoResizeControls({renderFiles:false});
   syncPhotoEditControls({renderFiles:false,refreshPreview:false});
   syncMomentCaptureControls();
@@ -5020,10 +5029,19 @@ async function chooseNativeFiles(kind,inputId,onPicked,setError,errorMessage,isB
     const path='/api/pick-native-files?kind='+encodeURIComponent(kind);
     let data=null;
     for(const endpoint of getApiUrls(path)){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}
-    if(data?.cancelled)return;
-    if(data?.ok&&Array.isArray(data.files)){await onPicked(data.files);return}
+    if(data?.cancelled){try{window.__instSanityLogDiagnostic?.('native-picker.cancelled',{kind})}catch(_){}return}
+    if(data?.ok&&Array.isArray(data.files)){
+      const extensions=Array.from(new Set(data.files.map(file=>(String(file?.name||'').match(/\.[^.]+$/)||[''])[0].toLowerCase()).filter(Boolean)));
+      const totalBytes=data.files.reduce((sum,file)=>sum+(Number(file?.size)||0),0);
+      try{window.__instSanityLogDiagnostic?.('native-picker.selected',{kind,count:data.files.length,totalBytes,extensions})}catch(_){}
+      await onPicked(data.files);return
+    }
+    try{window.__instSanityLogDiagnostic?.('native-picker.failed',{kind,error:String(data?.error||'no_response')})}catch(_){}
     setError(errorMessage,'error');
-  }catch(_){setError(errorMessage,'error')}
+  }catch(error){
+    try{window.__instSanityLogDiagnostic?.('native-picker.exception',{kind,name:String(error?.name||''),message:String(error?.message||error)})}catch(_){}
+    setError(errorMessage,'error');
+  }
   finally{
     nativeFilePickerBusy=false;
     syncPhotoResizeControls({renderFiles:false});
@@ -5036,7 +5054,7 @@ function choosePhotoEditImages(){void chooseNativeFiles('images','photoEditImage
 function chooseMomentCaptureVideo(){void chooseNativeFiles('video','momentCaptureVideoInput',handleMomentCaptureVideoPicked,setMomentCaptureStatus,'Could not open the video picker.',()=>momentCaptureSaving)}
 function chooseBackgroundPicture(){void chooseNativeFiles('background','backgroundFile',async files=>{const info=files[0];if(!info)return;try{const blob=await fetchNativePickedFileBlob(info.id);importBackground({target:{files:[makeFileFromNativePick(info,blob)],value:''}})}catch(_){toast('That picture could not be opened')}},message=>toast(message),'Could not open the picture picker.')}
 function chooseBackgroundGif(){void chooseNativeFiles('gif','backgroundGifFile',async files=>{const info=files[0];if(!info)return;try{const blob=await fetchNativePickedFileBlob(info.id);await importBackgroundGif({target:{files:[makeFileFromNativePick(info,blob)],value:''}})}catch(_){toast('That GIF could not be opened')}},message=>toast(message),'Could not open the GIF picker.')}
-function photoResizeErrorMessage(code){const messages={invalid_upload:'This file could not be added.',empty_file:'The selected file is empty.',file_too_large:'Each image must be 50 MB or smaller.',unsupported_image_type:'That file type is not supported.',file_unavailable:'The selected file is no longer available. Choose it again.',too_many_files:'A maximum of 500 images can be loaded at once.',upload_limit_reached:'The 1 GB staging limit has been reached.',upload_failed:'The image could not be uploaded.',invalid_max_side:'Choose a maximum side from 64 to 16,384 pixels.',no_uploaded_files:'Select at least one image to convert.',output_folder_unavailable:'The resized-photo folder could not be opened. Check its location and permissions.',image_decode_failed:'Windows could not extract pixels for this conversion; no output was saved.',image_too_large:'This image is too large for safe adjustment processing. Try a smaller image or reduce its dimensions first.',resize_failed:'The image could not be resized or saved.',conversion_failed:'The conversion did not complete. Your uploaded images are still staged.',invalid_request:'The conversion request was invalid.'};return messages[code]||'The request could not be completed.'}
+function photoResizeErrorMessage(code){const messages={invalid_upload:'This file could not be added.',empty_file:'The selected file is empty.',file_too_large:'Each image must be 50 MB or smaller.',unsupported_image_type:'That file type is not supported.',file_unavailable:'The selected file is no longer available. Choose it again.',too_many_files:'A maximum of 500 images can be loaded at once.',upload_limit_reached:'The 1 GB staging limit has been reached.',upload_failed:'The image could not be uploaded.',invalid_max_side:'Choose a maximum side from 64 to 16,384 pixels.',no_uploaded_files:'Select at least one image to convert.',output_folder_unavailable:'The photos download folder selected in Settings could not be opened. Check its location and permissions.',image_decode_failed:'Windows could not extract pixels for this conversion; no output was saved.',image_too_large:'This image is too large for safe adjustment processing. Try a smaller image or reduce its dimensions first.',resize_failed:'The image could not be resized or saved.',conversion_failed:'The conversion did not complete. Your uploaded images are still staged.',invalid_request:'The conversion request was invalid.'};return messages[code]||'The request could not be completed.'}
 function setPhotoResizeStatus(message,kind=''){
   const status=document.getElementById('resizerStatus');
   if(!status)return;
@@ -5068,6 +5086,8 @@ function selectPhotoEditPreview(index){
   const item=photoEditQueue[index];
   if(!item)return;
   photoEditCurrentFileId=item.id;
+  const fileName=String(item.fileName||item.file?.name||'');
+  try{window.__instSanityLogDiagnostic?.('photo.preview.select',{index:index+1,queueCount:photoEditQueue.length,size:Number(item.fileSize||item.file?.size)||0,extension:(fileName.match(/\.[^.]+$/)||[''])[0].toLowerCase(),source:item.nativeFileId?'native-selected':'webview-file'})}catch(_){}
   syncPhotoEditControls();
 }
 function renderPhotoFileStrip(queue,listId,{currentId='',selectAction,selectionAction,selectionLabel,emptyText}={}){
@@ -5204,8 +5224,6 @@ function syncPhotoEditControls({renderFiles=true,refreshPreview=true}={}){
   if(choose)choose.disabled=busy||nativeFilePickerBusy;
   const picker=document.getElementById('photoEditImagesInput');
   if(picker)picker.disabled=busy||nativeFilePickerBusy;
-  const browseFolder=document.getElementById('photoEditBrowseFolderBtn');
-  if(browseFolder)browseFolder.disabled=busy;
   const hasFiles=photoEditQueue.length>0;
   const selectAll=document.getElementById('photoEditSelectAllBtn');
   if(selectAll)selectAll.disabled=!hasFiles;
@@ -8205,8 +8223,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.067';
+const APP_VERSION='2.068';
 const VERSION_HISTORY=[
+  {version:'2.068',added:'Persistent picker, image-click, and WebView crash diagnostics.',removed:'Separate output-folder settings for Resize and Image Edit.',fixed:'Both tools now save to the selected photos folder in Settings. The local diagnostics log records picker stages, image-preview milestones, JavaScript errors, and WebView2 process failures.',tone:'yellow'},
   {version:'2.067',added:'No new features.',removed:'WebView2-owned HTML file-input dialogs for photo and video selection.',fixed:'Route photo and video selection through the owner-window Windows picker, keeping previews and editing on the app’s local file service.',tone:'yellow'},
   {version:'2.066',added:'No new features.',removed:'Image Edit effects automatically restoring from the previous app session.',fixed:'Reset active image adjustments and selected looks to neutral on app startup, while keeping saved custom look presets available.',tone:'green'},
   {version:'2.065',added:'No new features.',removed:'Text labels on the Browser queue Save and Clear buttons.',fixed:'Use download, retry, cancel, and clear icons while retaining descriptive accessible labels and hover tooltips.',tone:'green'},

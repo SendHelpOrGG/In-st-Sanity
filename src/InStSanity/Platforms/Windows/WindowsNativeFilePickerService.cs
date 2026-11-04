@@ -28,6 +28,7 @@ public sealed class WindowsNativeFilePickerService : INativeFilePickerService
 		string kind,
 		CancellationToken cancellationToken)
 	{
+		AppDiagnostics.Write("picker.request", $"kind={kind}; mainThread={MainThread.IsMainThread}");
 		var selectedFiles = await MainThread.InvokeOnMainThreadAsync(async () =>
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -39,6 +40,8 @@ public sealed class WindowsNativeFilePickerService : INativeFilePickerService
 			}
 
 			var spec = GetPickerSpec(kind);
+			AppDiagnostics.Write("picker.dialog.prepare",
+				$"kind={kind}; allowMultiple={spec.AllowMultiple}; extensions={spec.Extensions.Count}; startLocation={spec.StartLocation}");
 			var picker = new global::Windows.Storage.Pickers.FileOpenPicker
 			{
 				SuggestedStartLocation = spec.StartLocation,
@@ -51,6 +54,8 @@ public sealed class WindowsNativeFilePickerService : INativeFilePickerService
 			// WinRT pickers need the owning WinUI window so the dialog is modal to this app.
 			var windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(nativeWindow);
 			WinRT.Interop.InitializeWithWindow.Initialize(picker, windowHandle);
+			AppDiagnostics.Write("picker.dialog.opening",
+				$"kind={kind}; hwnd=0x{windowHandle.ToInt64():X}; pickerInitialized=true");
 
 			var pickedFiles = new List<global::Windows.Storage.StorageFile>();
 			if (spec.AllowMultiple)
@@ -70,10 +75,13 @@ public sealed class WindowsNativeFilePickerService : INativeFilePickerService
 				}
 			}
 
+			AppDiagnostics.Write("picker.dialog.returned",
+				$"kind={kind}; selectedCount={pickedFiles.Count}; cancelled={pickedFiles.Count == 0}");
 			return (IReadOnlyList<global::Windows.Storage.StorageFile>)pickedFiles;
 		}).ConfigureAwait(false);
 
 		cancellationToken.ThrowIfCancellationRequested();
+		AppDiagnostics.Write("picker.metadata.start", $"kind={kind}; selectedCount={selectedFiles.Count}");
 		var selections = new List<NativeFileSelection>(selectedFiles.Count);
 		foreach (var file in selectedFiles)
 		{
@@ -82,7 +90,13 @@ public sealed class WindowsNativeFilePickerService : INativeFilePickerService
 			cancellationToken.ThrowIfCancellationRequested();
 			var size = properties.Size > (ulong)long.MaxValue ? long.MaxValue : (long)properties.Size;
 			selections.Add(new NativeFileSelection(file.Path, file.Name, size, file.ContentType));
+			if (selections.Count <= 10 || selections.Count % 50 == 0)
+			{
+				AppDiagnostics.Write("picker.metadata.file",
+					$"kind={kind}; index={selections.Count}; extension={Path.GetExtension(file.Name).ToLowerInvariant()}; size={size}; contentType={file.ContentType}");
+			}
 		}
+		AppDiagnostics.Write("picker.metadata.complete", $"kind={kind}; count={selections.Count}");
 
 		return selections;
 	}

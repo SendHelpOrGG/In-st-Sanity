@@ -602,7 +602,7 @@ public sealed class PhotoResizeService
 	static string ResolveFolder(string? requestedFolder)
 	{
 		var folder = string.IsNullOrWhiteSpace(requestedFolder)
-			? "~/Pictures/Instagram/Resized"
+			? "~/Pictures/Instagram"
 			: Environment.ExpandEnvironmentVariables(requestedFolder.Trim());
 		var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
