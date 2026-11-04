@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Threading;
 using InStSanity.Platforms.Windows;
 using InStSanity.Services.Browser;
 using InStSanity.Services.Downloads;
@@ -29,6 +30,12 @@ public partial class MainPage : ContentPage
 	const string AccountUsernameKey = "ig_account_username";
 	const string AccountFullNameKey = "ig_account_full_name";
 	const string AccountPicKey = "ig_account_pic";
+	const int StartupNavigationTimeoutSeconds = 15;
+	const int StartupUiTimeoutSeconds = 15;
+	const string StartupProbeScript = "(()=>{const body=document.body;const app=document.querySelector('.app');const grid=document.getElementById('postGrid');const boot=document.getElementById('lsBoot');const started=window.__instSanityAppStarted===true;const blocked=!!body?.classList.contains('app-startup-blocked');return JSON.stringify({ready:!!(app&&grid&&started&&!boot&&!blocked&&grid.innerHTML.trim()),hasApp:!!app,hasGrid:!!grid,started,boot:!!boot,blocked,hasStartHook:typeof window.startAppAfterLoadingScreen==='function',url:String(location.href||''),error:String(window.__instSanityStartupError||'')})})()";
+	const string StartupRecoveryScript = "(()=>{try{document.getElementById('lsBoot')?.remove();document.body?.classList.remove('app-startup-blocked');if(!window.__instSanityAppStarted&&typeof window.startAppAfterLoadingScreen==='function')window.startAppAfterLoadingScreen();return 'recovery-requested'}catch(e){return String(e&&e.message||e)}})()";
+	int _startupMonitorGeneration;
+	volatile bool _mainWebAppNavigationCompleted;
 	string _knownAccountUsername = string.Empty;
 	string _knownAccountFullName = string.Empty;
 	string _knownAccountPic = string.Empty;
@@ -66,24 +73,185 @@ public partial class MainPage : ContentPage
 		// Instagram browser is warmed only after the loading-screen animation completes.
 		RestoreKnownAccount();
 #endif
+		StartStartupNavigationWatchdog();
 	}
 
-	void OnWebAppNavigated(object? sender, WebNavigatedEventArgs e)
+	async void OnWebAppNavigated(object? sender, WebNavigatedEventArgs e)
 	{
-		if (e.Result == WebNavigationResult.Success)
+		var generation = Interlocked.Increment(ref _startupMonitorGeneration);
+		_mainWebAppNavigationCompleted = true;
+		System.Diagnostics.Debug.WriteLine(
+			$"[In-st-Sanity] main WebView navigated result={e.Result} source={GetWebAppUrlForDiagnostics()}");
+
+		if (e.Result != WebNavigationResult.Success)
 		{
-			StartupOverlay.IsVisible = false;
+			ShowStartupFailure(
+				$"Could not load the app UI from {GetWebAppUrlForDiagnostics()} ({e.Result}).\n" +
+				"Check the startup log, then retry.");
 			return;
 		}
 
-		// The web host is not reachable: keep the overlay up and say so, instead of
-		// leaving the user with a blank window.
+		// Let the HTML loading animation show after the document arrives, but verify the
+		// host returned this app rather than a successful HTTP error/empty document.
+		StartupOverlay.IsVisible = false;
+		var snapshot = await ReadWebAppStartupSnapshotAsync();
+		if (generation != Volatile.Read(ref _startupMonitorGeneration)) return;
+		if (snapshot is { HasApp: false })
+		{
+			ShowStartupFailure(
+				$"The local page responded, but the app shell was missing.\n{DescribeStartupSnapshot(snapshot)}");
+			return;
+		}
+
+		if (snapshot?.Ready != true)
+		{
+			_ = WatchForAppStartupAsync(generation);
+		}
+	}
+
+	void StartStartupNavigationWatchdog()
+	{
+		var generation = Interlocked.Increment(ref _startupMonitorGeneration);
+		_mainWebAppNavigationCompleted = false;
+		_ = WatchForNavigationAsync(generation);
+	}
+
+	async Task WatchForNavigationAsync(int generation)
+	{
+		await Task.Delay(TimeSpan.FromSeconds(StartupNavigationTimeoutSeconds));
+		if (generation != Volatile.Read(ref _startupMonitorGeneration) || _mainWebAppNavigationCompleted) return;
+		await MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			if (generation != Volatile.Read(ref _startupMonitorGeneration) || _mainWebAppNavigationCompleted) return;
+			ShowStartupFailure(
+				$"The app page did not respond after {StartupNavigationTimeoutSeconds} seconds.\n" +
+				$"URL: {GetWebAppUrlForDiagnostics()}\n" +
+				"Check the [In-st-Sanity] host line in Visual Studio Output, then retry.");
+		});
+	}
+
+	async Task WatchForAppStartupAsync(int generation)
+	{
+		await Task.Delay(TimeSpan.FromSeconds(StartupUiTimeoutSeconds));
+		if (generation != Volatile.Read(ref _startupMonitorGeneration)) return;
+
+		var snapshot = await ReadWebAppStartupSnapshotAsync();
+		if (snapshot?.Ready == true || generation != Volatile.Read(ref _startupMonitorGeneration)) return;
+
+		// If the local document loaded but its boot animation stalled, dismiss only that
+		// animation and invoke the app's normal post-animation entry point as a failsafe.
+		if (snapshot is { HasApp: true, HasStartHook: true })
+		{
+			try
+			{
+				await MainThread.InvokeOnMainThreadAsync<string>(() => WebAppView.EvaluateJavaScriptAsync(StartupRecoveryScript));
+				await Task.Delay(TimeSpan.FromSeconds(1));
+				snapshot = await ReadWebAppStartupSnapshotAsync();
+			}
+			catch (Exception exception)
+			{
+				System.Diagnostics.Debug.WriteLine(
+					$"[In-st-Sanity] startup recovery failed: {exception.GetType().Name}: {exception.Message}");
+			}
+		}
+
+		if (snapshot?.Ready == true || generation != Volatile.Read(ref _startupMonitorGeneration)) return;
+		await MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			if (generation == Volatile.Read(ref _startupMonitorGeneration))
+			{
+				ShowStartupFailure(
+					$"The app page opened, but its UI did not finish starting.\n{DescribeStartupSnapshot(snapshot)}");
+			}
+		});
+	}
+
+	async Task<WebAppStartupSnapshot?> ReadWebAppStartupSnapshotAsync()
+	{
+		try
+		{
+			var raw = await MainThread.InvokeOnMainThreadAsync<string>(
+				() => WebAppView.EvaluateJavaScriptAsync(StartupProbeScript));
+			var json = raw;
+			try { json = JsonSerializer.Deserialize<string>(raw) ?? raw; }
+			catch (JsonException) { }
+
+			using var document = JsonDocument.Parse(json);
+			var root = document.RootElement;
+			return new WebAppStartupSnapshot(
+				GetStartupBoolean(root, "ready"),
+				GetStartupBoolean(root, "hasApp"),
+				GetStartupBoolean(root, "hasGrid"),
+				GetStartupBoolean(root, "started"),
+				GetStartupBoolean(root, "boot"),
+				GetStartupBoolean(root, "blocked"),
+				GetStartupBoolean(root, "hasStartHook"),
+				GetStartupString(root, "url"),
+				GetStartupString(root, "error"));
+		}
+		catch (Exception exception)
+		{
+			System.Diagnostics.Debug.WriteLine(
+				$"[In-st-Sanity] startup probe failed: {exception.GetType().Name}: {exception.Message}");
+			return null;
+		}
+	}
+
+	static bool GetStartupBoolean(JsonElement root, string name) =>
+		root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.True;
+
+	static string GetStartupString(JsonElement root, string name) =>
+		root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+			? value.GetString() ?? string.Empty
+			: string.Empty;
+
+	static string DescribeStartupSnapshot(WebAppStartupSnapshot? snapshot) => snapshot is null
+		? "The WebView could not inspect the app page. Check the WebView2 error lines in Visual Studio Output."
+		: $"app={snapshot.HasApp}, grid={snapshot.HasGrid}, started={snapshot.Started}, " +
+		  $"boot={snapshot.BootOverlay}, blocked={snapshot.StartupBlocked}, startHook={snapshot.HasStartHook}, " +
+		  $"url={snapshot.Url}" +
+		  (string.IsNullOrWhiteSpace(snapshot.Error) ? string.Empty : $", startupError={snapshot.Error}");
+
+	string GetWebAppUrlForDiagnostics() => WebAppView.Source is UrlWebViewSource source
+		? source.Url ?? "(URL not set)"
+		: "(no URL source)";
+
+	void ShowStartupFailure(string message)
+	{
+		System.Diagnostics.Debug.WriteLine($"[In-st-Sanity] startup: {message.Replace('\r', ' ').Replace('\n', ' ')}");
+		StartupOverlay.IsVisible = true;
 		StartupSpinner.IsRunning = false;
 		StartupSpinner.IsVisible = false;
-		StartupMessage.Text =
-			$"Could not load the app UI from {WebAppView.Source}.\n" +
-			"Check the log for the host URL and try again.";
+		StartupRetryButton.IsVisible = true;
+		StartupMessage.Text = message;
 	}
+
+	void OnStartupRetryClicked(object? sender, EventArgs e)
+	{
+		StartStartupNavigationWatchdog();
+		StartupOverlay.IsVisible = true;
+		StartupMessage.Text = "Retrying the local app page…";
+		StartupSpinner.IsVisible = true;
+		StartupSpinner.IsRunning = true;
+		StartupRetryButton.IsVisible = false;
+
+		try { WebAppView.Reload(); }
+		catch (Exception exception)
+		{
+			ShowStartupFailure($"Could not retry the app page: {exception.Message}");
+		}
+	}
+
+	sealed record WebAppStartupSnapshot(
+		bool Ready,
+		bool HasApp,
+		bool HasGrid,
+		bool Started,
+		bool BootOverlay,
+		bool StartupBlocked,
+		bool HasStartHook,
+		string Url,
+		string Error);
 
 	void OnInstagramBrowserOpenRequested(object? sender, string requestedUrl)
 	{

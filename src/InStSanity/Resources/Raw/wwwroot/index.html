@@ -5695,7 +5695,8 @@ async function encodeMomentCaptureFrame(sourceCanvas){
 }
 function momentCaptureBaseName(){
   const raw=String(momentCaptureFile?.name||'video').replace(/\.[^.]+$/,'');
-  const clean=raw.replace(/[<>:"/\|?* -]/g,'_').replace(/[. ]+$/,'').trim().slice(0,80);
+  // Keep these as JavaScript escapes: literal control bytes in HTML can break this startup script.
+  const clean=raw.replace(/[<>:"/\|?*\x00-\x1f]/g,'_').replace(/[. ]+$/,'').trim().slice(0,80);
   return clean||'video';
 }
 async function captureMomentFrame(){
@@ -8160,8 +8161,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.042';
+const APP_VERSION='2.043';
 const VERSION_HISTORY=[
+  {version:'2.043',added:'No new features.',removed:'A black startup window caused by a malformed filename-sanitizing regular expression stopping app JavaScript before the UI booted.',fixed:'Store the control-character range as JavaScript escapes so HTML parsing cannot rewrite raw control bytes into invalid regex syntax. The native host also detects stalled boot, attempts bounded recovery, and provides startup diagnostics with retry.',tone:'green'},
   {version:'2.042',added:'Resize, Image Edit, and Moment capture now have dedicated tabs; Moment capture can preview a local video and save its current frame.',removed:'The redundant apply-to-all button, preview hover hint, and item-count badge on Browser Save/Retry.',fixed:'Edited-image previews render off the UI thread; Old Photo wear is sharper and responds to Sharpness. Downloads use account_shortcode_vN/phN names with resized/edited suffixes, folder buttons open images on left-click and the configured video folder on right-click, and Open in Instagram browser switches to the Browser tab.',tone:'green'},
   {version:'2.041',added:'No new features.',removed:'Browser queue videos silently falling back to the standard Windows Videos location when the configured separate folder was not handed off.',fixed:'Read the separate-folder switch and saved video path explicitly for the Browser queue. If the enabled video folder is unavailable, keep videos queued and report the settings issue instead of saving them somewhere else.',tone:'green'},
   {version:'2.040',added:'No new features.',removed:'Browser video downloads relying only on the WebView’s current video URL.',fixed:'Resolve selected Browser videos through the same per-post Instagram resolver as Saved Posts, refresh the Browser session first, match the resolved video to its slide, and retry once with the validated current WebView source if needed.',tone:'green'},
@@ -8452,27 +8454,46 @@ function closeVersionHistory(){
     }
   }
 }
+function reportAppStartupError(name,error){
+  const detail=String(error?.message||error||'unknown error').slice(0,300);
+  window.__instSanityStartupError=`${name}: ${detail}`;
+  try{console.error(`[In-st-Sanity] startup ${name} failed: ${detail}`)}catch(_){}
+}
+function runAppStartupStep(name,action){
+  try{
+    const result=action();
+    if(result&&typeof result.catch==='function')result.catch(error=>reportAppStartupError(name,error));
+  }catch(error){reportAppStartupError(name,error)}
+}
 function startAppAfterLoadingScreen(){
-  if(window.__instSanityAppStarted)return;
-  window.__instSanityAppStarted=true;
+  if(window.__instSanityAppStarted||window.__instSanityAppStarting)return;
+  window.__instSanityAppStarting=true;
   // Start the Instagram WebView/session refresh only after the boot animation has
   // finished and the app is being revealed; keep the cached account visible meanwhile.
-  setTimeout(()=>loadInstagramSession(true),250);
-  window.__instSanityInstagramSessionPollTimer=setInterval(loadInstagramSession,5000);
-  document.body.classList.remove('app-startup-blocked');
-  initializeSavedTheme();
-  renderVersionHistory();
-  initializeBackgroundSettings();
-  loadDownloadFolder();
-  loadVideoFolderSettings();
-  loadPhotoResizerSettings();
-  render();
-  restoreLibraryOnStartup();
-  restoreUrlTabState();
-  initSourceBadges();
-  applySavedUiPrefs();
-  try{window.startStickerFacialExpressionsLoop?.()}catch(_){}
-  try{window.startBrandHeaderGlitchLoop?.()}catch(_){}
+  try{
+    runAppStartupStep('reveal app',()=>document.body.classList.remove('app-startup-blocked'));
+    runAppStartupStep('saved theme',initializeSavedTheme);
+    runAppStartupStep('version history',renderVersionHistory);
+    runAppStartupStep('background settings',initializeBackgroundSettings);
+    runAppStartupStep('download folder',loadDownloadFolder);
+    runAppStartupStep('video folder settings',loadVideoFolderSettings);
+    runAppStartupStep('photo editor settings',loadPhotoResizerSettings);
+    runAppStartupStep('initial render',render);
+    runAppStartupStep('saved library restore',restoreLibraryOnStartup);
+    runAppStartupStep('URL tab restore',restoreUrlTabState);
+    runAppStartupStep('source badges',initSourceBadges);
+    runAppStartupStep('UI preferences',applySavedUiPrefs);
+    runAppStartupStep('sticker expressions',()=>window.startStickerFacialExpressionsLoop?.());
+    runAppStartupStep('brand animation',()=>window.startBrandHeaderGlitchLoop?.());
+    runAppStartupStep('Instagram session refresh',()=>setTimeout(()=>runAppStartupStep('Instagram session refresh',()=>loadInstagramSession(true)),250));
+    runAppStartupStep('Instagram session polling',()=>{
+      if(window.__instSanityInstagramSessionPollTimer)clearInterval(window.__instSanityInstagramSessionPollTimer);
+      window.__instSanityInstagramSessionPollTimer=setInterval(()=>runAppStartupStep('Instagram session poll',loadInstagramSession),5000);
+    });
+  }finally{
+    window.__instSanityAppStarted=true;
+    window.__instSanityAppStarting=false;
+  }
 }
 window.startAppAfterLoadingScreen=startAppAfterLoadingScreen;
 /* ---------------------------------------------------------------------

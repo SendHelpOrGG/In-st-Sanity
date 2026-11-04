@@ -36,6 +36,11 @@
                 <ActivityIndicator x:Name="StartupSpinner"
                                    IsRunning="True"
                                    Color="{AppThemeBinding Light=#0B0F14, Dark=#F1F5F9}" />
+                <Button x:Name="StartupRetryButton"
+                        Text="Retry app load"
+                        IsVisible="False"
+                        Clicked="OnStartupRetryClicked"
+                        HorizontalOptions="Center" />
             </VerticalStackLayout>
         </Border>
 

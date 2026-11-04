@@ -517,6 +517,23 @@ internal static class WebViewBootstrapper
 			};
 			_ = InstallInstagramOverlayScriptAsync(core);
 		}
+		else
+		{
+			core.NavigationCompleted += (_, args) =>
+			{
+				System.Diagnostics.Debug.WriteLine(
+					$"[In-st-Sanity] WebView2 navigation completed success={args.IsSuccess} " +
+					$"http={args.HttpStatusCode} error={args.WebErrorStatus} source={core.Source}");
+			};
+			core.ConsoleMessageReceived += (_, args) =>
+			{
+				if (args.Level == CoreWebView2ConsoleMessageLevel.Error)
+				{
+					System.Diagnostics.Debug.WriteLine(
+						$"[In-st-Sanity] WebView JavaScript error {args.Source}:{args.LineNumber}: {args.Message}");
+				}
+			};
+		}
 
 		core.DownloadStarting += (_sender, args) =>
 		{
