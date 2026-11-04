@@ -1008,7 +1008,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Image Edit applies adjustments independently of Resize settings and saves separate copies; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="photoEditChooseImagesBtn" onclick="choosePhotoEditImages()">Choose images…</button></div><input hidden class="native-file-picker-input" id="photoEditImagesInput" type="file" accept="image/*" multiple aria-label="Choose images for Image Edit" onchange="handlePhotoEditImagesPicked(event)"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoEditDownload()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoEditOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open the selected photos folder containing edited images" aria-label="Open the selected photos folder containing edited images"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button><button type="button" class="icon-btn photo-adjustment-reset" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()" title="Reset adjustments" aria-label="Reset adjustments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
         <div class="setting-body">
           <div class="resizer-files-panel photo-adjustment-files-panel" id="photoEditFilePanel">
-            <div class="resizer-files-toolbar"><span id="photoEditAvailableCount">Choose images to begin</span><div><button type="button" class="outline" id="photoEditSelectAllBtn" onclick="selectAllPhotoEditFiles(true)" disabled>Select all</button><button type="button" class="outline" id="photoEditClearSelectionBtn" onclick="selectAllPhotoEditFiles(false)" disabled>Clear</button><button type="button" class="outline" id="photoEditClearImagesBtn" onclick="resetPhotoEditQueue()" disabled>Clear images</button></div></div>
+            <div class="resizer-files-toolbar"><span id="photoEditAvailableCount">Choose images to begin</span><div><button type="button" class="outline" id="photoEditSelectionToggleBtn" onclick="togglePhotoEditSelection()" aria-label="Select all Image Edit images" title="Select all Image Edit images" aria-pressed="false" disabled>Select all</button><button type="button" class="outline" id="photoEditClearImagesBtn" onclick="resetPhotoEditQueue()" disabled>Clear images</button></div></div>
             <div class="photo-adjustment-photo-picker">
               <span class="photo-adjustment-photo-label">Preview photo</span>
               <div class="resizer-photo-picker-row">
@@ -1479,7 +1479,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.070; open version history" title="Click to view what changed in each version">v.2.070</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.071; open version history" title="Click to view what changed in each version">v.2.071</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5226,10 +5226,16 @@ function syncPhotoEditControls({renderFiles=true,refreshPreview=true}={}){
   const picker=document.getElementById('photoEditImagesInput');
   if(picker)picker.disabled=busy||nativeFilePickerBusy;
   const hasFiles=photoEditQueue.length>0;
-  const selectAll=document.getElementById('photoEditSelectAllBtn');
-  if(selectAll)selectAll.disabled=!hasFiles;
-  const clearSelection=document.getElementById('photoEditClearSelectionBtn');
-  if(clearSelection)clearSelection.disabled=!hasFiles;
+  const selectionToggle=document.getElementById('photoEditSelectionToggleBtn');
+  if(selectionToggle){
+    const allSelected=hasFiles&&photoEditQueue.every(item=>item.selected);
+    const label=allSelected?'Clear selection':'Select all';
+    selectionToggle.textContent=label;
+    selectionToggle.title=allSelected?'Clear the Image Edit selection':'Select all Image Edit images';
+    selectionToggle.setAttribute('aria-label',allSelected?'Clear Image Edit selection':'Select all Image Edit images');
+    selectionToggle.setAttribute('aria-pressed',String(allSelected));
+    selectionToggle.disabled=!hasFiles;
+  }
   const clearImages=document.getElementById('photoEditClearImagesBtn');
   if(clearImages)clearImages.disabled=busy||!hasFiles;
   const download=document.getElementById('photoAdjustmentDownloadBtn');
@@ -5309,6 +5315,11 @@ function selectAllPhotoEditFiles(selected){
   syncPhotoEditControls();
   if(restaged)setPhotoEditStatus('Edit selection updated. Press Download to process the selected images.');
 }
+function togglePhotoEditSelection(){
+  if(!photoEditQueue.length)return;
+  const allSelected=photoEditQueue.every(item=>item.selected);
+  selectAllPhotoEditFiles(!allSelected);
+}
 async function deletePhotoResizeSession(sessionId){if(!sessionId)return;const path='/api/resize-upload?sessionId='+encodeURIComponent(sessionId);for(const endpoint of getApiUrls(path)){await fetchEndpointJson(endpoint,30000,{method:'DELETE'});break}}
 function finishPhotoResizeOperation(originalSelection){
   const originalIds=new Set((originalSelection||[]).map(item=>item.id));
@@ -5336,18 +5347,33 @@ function finishPhotoEditOperation(originalSelection){
   syncPhotoEditControls();
   return selectionChanged;
 }
-function createPhotoResizeQueueEntries(files){
-  const supported=Array.from(files||[]).filter(file=>{
+function getSupportedPhotoResizeFiles(files){
+  return Array.from(files||[]).filter(file=>{
     const name=String(file?.name||'');
     const dot=name.lastIndexOf('.');
     const ext=dot>=0?name.slice(dot).toLowerCase():'';
     const size=Number(file?.size)||0;
     return RESIZER_ALLOWED_EXTENSIONS.has(ext)&&size>0&&size<=RESIZER_MAX_FILE_BYTES;
   });
-  const queue=supported.slice(0,RESIZER_MAX_FILES).map((file,index)=>{
+}
+function getPhotoEditDuplicateKey(file){
+  const pathFingerprint=String(file?.pathFingerprint||'').trim().toUpperCase();
+  if(pathFingerprint)return`native-path:${pathFingerprint}`;
+  const rawName=String(file?.name||'').trim();
+  const fileName=(typeof rawName.normalize==='function'?rawName.normalize('NFC'):rawName).toLowerCase();
+  const size=Number(file?.size)||0;
+  const lastModified=Number(file?.lastModified)||0;
+  const contentType=String(file?.contentType||file?.type||'').trim().toLowerCase();
+  return`file:${fileName}\u0000${size}\u0000${lastModified}\u0000${contentType}`;
+}
+function createPhotoResizeQueueEntries(files,limit=RESIZER_MAX_FILES){
+  const supported=getSupportedPhotoResizeFiles(files);
+  const maxEntries=Math.max(0,Math.floor(Number(limit)||0));
+  const queue=supported.slice(0,maxEntries).map((file,index)=>{
     const nativeFileId=/^[a-f0-9]{32}$/i.test(String(file?.id||''))?String(file.id):'';
     const fileName=String(file?.name||'Image');
-    return{file:nativeFileId?null:file,nativeFileId,fileName,fileSize:Number(file?.size)||0,id:makePhotoResizeGuid(),order:index,selected:true,uploaded:false,error:'',thumbnailUrl:nativeFileId?nativePickedFileUrl(nativeFileId):createPhotoResizeThumbnailUrl(file)};
+    const duplicateKey=getPhotoEditDuplicateKey(file);
+    return{file:nativeFileId?null:file,nativeFileId,fileName,fileSize:Number(file?.size)||0,id:makePhotoResizeGuid(),order:index,selected:true,uploaded:false,error:'',duplicateKey,thumbnailUrl:nativeFileId?nativePickedFileUrl(nativeFileId):createPhotoResizeThumbnailUrl(file)};
   });
   return{supported,queue};
 }
@@ -5401,30 +5427,53 @@ function handlePhotoEditImagesPicked(selection){
   const files=Array.isArray(selection)?selection:Array.from(input?.files||[]);
   if(input)input.value='';
   if(!files.length||photoEditBusy)return;
-  const previousSession=photoEditSessionId;
-  if(previousSession)void deletePhotoResizeSession(previousSession);
-  revokePhotoResizeThumbnailUrls(photoEditQueue);
-  resetPhotoEditPreviewState();
-  const{supported,queue}=createPhotoResizeQueueEntries(files);
-  photoEditAvailableCount=supported.length;
-  photoEditQueue=queue;
-  photoEditCurrentFileId=photoEditQueue[0]?.id||'';
-  const thumbnailStrip=document.getElementById('photoAdjustmentPhotoStrip');if(thumbnailStrip)thumbnailStrip.scrollLeft=0;
-  photoEditSelectionLabel=photoEditQueue.length?'selected':'';
-  photoEditSessionId=photoEditQueue.length?makePhotoResizeGuid():'';
-  photoEditUploadedCount=0;
-  photoEditBusy=false;
-  photoEditConverting=false;
-  photoEditCompleted=false;
-  photoEditSelectionChangedDuringRun=false;
-  photoEditTargetSignature='';
-  const results=document.getElementById('photoEditResults');if(results)results.innerHTML='';
+  const supported=getSupportedPhotoResizeFiles(files);
   const omitted=files.length-supported.length;
-  const notes=[];
+  if(!supported.length){
+    setPhotoEditStatus('No supported images found. Choose supported image files up to 50 MB each.','error');
+    return;
+  }
+  const seen=new Set(photoEditQueue.map(item=>item.duplicateKey).filter(Boolean));
+  const uniqueFiles=[];
+  let duplicateCount=0;
+  for(const file of supported){
+    const key=getPhotoEditDuplicateKey(file);
+    if(seen.has(key)){duplicateCount++;continue}
+    seen.add(key);
+    uniqueFiles.push(file);
+  }
+  if(!uniqueFiles.length){
+    const notes=[`Skipped ${duplicateCount} duplicate image${duplicateCount===1?'':'s'} already in the list.`];
+    if(omitted)notes.push(`${omitted} unsupported, empty, or over-50-MB file${omitted===1?' was':'s were'} skipped.`);
+    setPhotoEditStatus(notes.join(' '),omitted?'error':'success');
+    return;
+  }
+  const availableSlots=Math.max(0,RESIZER_MAX_FILES-photoEditQueue.length);
+  const {queue}=createPhotoResizeQueueEntries(uniqueFiles,availableSlots);
+  const overflowCount=uniqueFiles.length-queue.length;
+  photoEditAvailableCount+=uniqueFiles.length;
+  if(!queue.length){
+    const notes=[];
+    if(duplicateCount)notes.push(`Skipped ${duplicateCount} duplicate image${duplicateCount===1?'':'s'}.`);
+    notes.push(`Image Edit can list up to ${RESIZER_MAX_FILES} images; clear the list before adding more.`);
+    if(omitted)notes.push(`${omitted} unsupported, empty, or over-50-MB file${omitted===1?' was':'s were'} skipped.`);
+    setPhotoEditStatus(notes.join(' '),'error');
+    syncPhotoEditControls({renderFiles:true,refreshPreview:false});
+    return;
+  }
+  const restaged=notePhotoEditSelectionChange();
+  const existingCount=photoEditQueue.length;
+  queue.forEach((item,index)=>{item.order=existingCount+index});
+  photoEditQueue.push(...queue);
+  if(!photoEditQueue.some(item=>item.id===photoEditCurrentFileId))photoEditCurrentFileId=queue[0]?.id||photoEditQueue[0]?.id||'';
+  photoEditSelectionLabel='selected';
+  if(!photoEditSessionId)photoEditSessionId=makePhotoResizeGuid();
+  const notes=[`Added ${queue.length} image${queue.length===1?'':'s'}.`];
+  if(duplicateCount)notes.push(`Skipped ${duplicateCount} duplicate image${duplicateCount===1?'':'s'}.`);
+  if(overflowCount)notes.push(`${overflowCount} additional unique image${overflowCount===1?' was':'s were'} not added; Image Edit can list up to ${RESIZER_MAX_FILES} images.`);
   if(omitted)notes.push(`${omitted} unsupported, empty, or over-50-MB file${omitted===1?' was':'s were'} skipped.`);
-  if(supported.length>RESIZER_MAX_FILES)notes.push(`Only the first ${RESIZER_MAX_FILES} supported images are listed.`);
-  if(!photoEditQueue.length)setPhotoEditStatus('No supported images found. Choose supported image files up to 50 MB each.','error');
-  else setPhotoEditStatus(notes.join(' '));
+  if(restaged)notes.push('Previous prepared results were cleared.');
+  setPhotoEditStatus(notes.join(' '),overflowCount||omitted?'error':'success');
   syncPhotoEditControls();
 }
 async function uploadPhotoResizeQueueItems(selected,editor=false){
@@ -8224,8 +8273,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.070';
+const APP_VERSION='2.071';
 const VERSION_HISTORY=[
+  {version:'2.071',added:'Append images to Image Edit without replacing earlier selections; skip duplicate files.',removed:'Separate Select all and Clear selection buttons.',fixed:'Keep previously added Image Edit rows when choosing more images, ignore duplicate file selections, and use one button to toggle all selections.',tone:'green'},
   {version:'2.070',added:'Saved Browser queue items stay visible after downloading.',removed:'Successful queue items disappearing as soon as they are saved.',fixed:'Mark downloaded and duplicate-skipped entries, keep them until manually removed or cleared, and only retry unfinished or failed items.',tone:'green'},
   {version:'2.069',added:'Higher-resolution Image Edit live preview, up to 2,400px on the longest side.',removed:'The 1,200px preview limit.',fixed:'Show more image detail in the live preview while keeping preview memory capped; edited downloads still process the staged original image.',tone:'green'},
   {version:'2.068',added:'Persistent picker, image-click, and WebView crash diagnostics.',removed:'Separate output-folder settings for Resize and Image Edit.',fixed:'Both tools now save to the selected photos folder in Settings. The local diagnostics log records picker stages, image-preview milestones, JavaScript errors, and WebView2 process failures.',tone:'yellow'},

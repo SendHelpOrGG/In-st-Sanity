@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace InStSanity.Services.Api;
 
@@ -6,6 +8,7 @@ namespace InStSanity.Services.Api;
 public sealed class NativePickedFileStore
 {
 	static readonly TimeSpan Lifetime = TimeSpan.FromHours(24);
+	readonly byte[] _pathFingerprintKey = RandomNumberGenerator.GetBytes(32);
 	readonly ConcurrentDictionary<Guid, NativePickedFileRecord> _files = new();
 
 	public NativePickedFileDescriptor Register(NativeFileSelection selection)
@@ -31,7 +34,8 @@ public sealed class NativePickedFileStore
 			id.ToString("N"),
 			record.Name,
 			record.Size,
-			record.ContentType);
+			record.ContentType,
+			CreatePathFingerprint(record.Path));
 	}
 
 	public bool TryGet(Guid id, out NativePickedFileRecord record)
@@ -60,6 +64,16 @@ public sealed class NativePickedFileStore
 		return await File.ReadAllBytesAsync(file.Path, cancellationToken).ConfigureAwait(false);
 	}
 
+	// Match repeat selections in the WebView without exposing the selected file's path.
+	string CreatePathFingerprint(string path)
+	{
+		var canonicalPath = Path.GetFullPath(path)
+			.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+			.ToUpperInvariant();
+		var pathBytes = Encoding.UTF8.GetBytes(canonicalPath);
+		return Convert.ToHexString(HMACSHA256.HashData(_pathFingerprintKey, pathBytes));
+	}
+
 	void RemoveExpiredEntries()
 	{
 		var now = DateTimeOffset.UtcNow;
@@ -73,7 +87,12 @@ public sealed class NativePickedFileStore
 	}
 }
 
-public sealed record NativePickedFileDescriptor(string Id, string Name, long Size, string ContentType);
+public sealed record NativePickedFileDescriptor(
+	string Id,
+	string Name,
+	long Size,
+	string ContentType,
+	string PathFingerprint);
 
 public sealed record NativePickedFileRecord(
 	Guid Id,
