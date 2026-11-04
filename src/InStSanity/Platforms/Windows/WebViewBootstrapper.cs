@@ -202,7 +202,7 @@ internal static class WebViewBootstrapper
 	{
 		try
 		{
-			await core.AddScriptToExecuteOnDocumentCreatedAsync(MainAppDiagnosticsScript).ConfigureAwait(false);
+			await core.AddScriptToExecuteOnDocumentCreatedAsync(MainAppDiagnosticsScript);
 			AppDiagnostics.Write("webview.main.diagnostics", "Document-created click/error hooks registered.");
 		}
 		catch (Exception exception)
@@ -212,7 +212,7 @@ internal static class WebViewBootstrapper
 
 		try
 		{
-			await core.ExecuteScriptAsync(MainAppDiagnosticsScript).ConfigureAwait(false);
+			await core.ExecuteScriptAsync(MainAppDiagnosticsScript);
 		}
 		catch (Exception exception)
 		{
