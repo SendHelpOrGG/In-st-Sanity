@@ -858,6 +858,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 /* The version label is nudged left by two CSS points. */
 .app-version-button { transform:translateX(8pt); }
 
+/* Keep native Saved Posts video enlargement edge-to-edge without cropping the source frame. */
+#detailGrid .picture-art>video:fullscreen,#detailGrid .picture-art>video:-webkit-full-screen{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:100vw!important;max-height:100vh!important;object-fit:contain!important;object-position:center!important;background:#000!important;z-index:9999!important}
 /* Blank and loading photo/video slides use the current card surface and theme border. */
 .picture-tile { background:var(--t-card-bg,#141b22); border-color:var(--t-card-border,#3d5060); }
 .picture-art { background:var(--t-card-bg,#141b22); }
@@ -1473,7 +1475,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.076; open version history" title="Click to view what changed in each version">v.2.076</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.077; open version history" title="Click to view what changed in each version">v.2.077</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -4134,6 +4136,7 @@ let photoResizeUpscaleEnabled=true;
 let photoEditorActiveTab='resize';
 let momentCaptureObjectUrl='';
 let momentCaptureFile=null;
+let momentCaptureFrameNumber=0;
 let momentCaptureSaving=false;
 let nativeFilePickerBusy=false;
 function makePhotoResizeGuid(){try{if(window.crypto?.randomUUID)return window.crypto.randomUUID()}catch(_){}return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)})}
@@ -5843,21 +5846,20 @@ async function captureMomentFrame(){
   if(momentCaptureSaving)return;
   const video=document.getElementById('momentCaptureVideo'),canvas=document.getElementById('momentCaptureFramePreview');
   if(!video||!canvas||!momentCaptureFile||video.readyState<2||!video.videoWidth||!video.videoHeight){setMomentCaptureStatus('Wait for the video preview to load, then capture a frame.','error');return}
+  const nextFrameNumber=momentCaptureFrameNumber+1;
   try{
     video.pause();
     const scale=Math.min(1,8192/Math.max(video.videoWidth,video.videoHeight));
     const width=Math.max(1,Math.round(video.videoWidth*scale)),height=Math.max(1,Math.round(video.videoHeight*scale));
-    canvas.width=width;canvas.height=height;
+    canvas.width=width;canvas.height=height;canvas.hidden=true;
     const context=canvas.getContext('2d');if(!context)throw new Error('frame_canvas_unavailable');
-    context.drawImage(video,0,0,width,height);canvas.hidden=false;
+    context.drawImage(video,0,0,width,height);
     syncMomentCaptureControls();
     momentCaptureSaving=true;syncMomentCaptureControls();
     setMomentCaptureStatus('Encoding the captured frame…');
     const blob=await encodeMomentCaptureFrame(canvas);
     const dataUri=await momentCaptureBlobToDataUri(blob);
-    const millis=Math.max(0,Math.round((Number(video.currentTime)||0)*1000)).toString().padStart(9,'0');
-    const stamp=new Date().toISOString().replace(/[.:]/g,'-');
-    const filename=`${momentCaptureBaseName()}_frame_${millis}_${stamp}.jpg`;
+    const filename=`${momentCaptureBaseName()}_frame_${nextFrameNumber}.jpg`;
     const folder=getConfiguredDownloadFolder();
     const body={folder,noDuplicates:false,items:[{filename,shortcode:'moment-capture',photoIndex:0,isVideo:false,dataUri}]};
     let result=null;
@@ -5866,6 +5868,7 @@ async function captureMomentFrame(){
       if(result)break;
     }
     if(result?.ok&&Number(result.savedCount)>0){
+      momentCaptureFrameNumber=nextFrameNumber;
       const savedName=result.files?.find(file=>file?.ok)?.filename||filename;
       setMomentCaptureStatus(`Frame saved to the image folder: ${savedName}`,'success');
       toast('Captured video frame saved to the image folder');
@@ -8303,8 +8306,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.076';
+const APP_VERSION='2.077';
 const VERSION_HISTORY=[
+  {version:'2.077',added:'No new features.',removed:'The Moment capture frame preview and timestamp-heavy frame names.',fixed:'Keep captured stills hidden after saving, use short sequential video_frame_N.jpg names, and make Saved Posts native video enlargement fill the app viewport without cropping the source frame.',tone:'green'},
   {version:'2.076',added:'No new features.',removed:'The Choose images, Download, and Open folder actions from the Image Edit heading row.',fixed:'Move these three actions to the left side of the thumbnail queue toolbar while keeping Reset adjustments in the heading; add a small 8px gap between the photo queue and the live-preview panels.',tone:'green'},
   {version:'2.075',added:'No new features.',removed:'The separate Stop button in Moment capture.',fixed:'Resize and Image Edit selection changes now synchronize existing thumbnail checkboxes in animation-frame batches, keeping bulk select and clear actions responsive for long queues; use the video player controls to pause or scrub.',tone:'green'},
   {version:'2.074',added:'No new features.',removed:'The longer Image Edit label in the side panel.',fixed:'Rename only the side-panel navigation item to Edit; keep the page heading and in-page Image Edit tab unchanged.',tone:'green'},
