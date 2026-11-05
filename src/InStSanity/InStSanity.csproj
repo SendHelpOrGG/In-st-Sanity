@@ -17,8 +17,8 @@
 		<ApplicationTitle>In-st-Sanity</ApplicationTitle>
 		<ApplicationId>com.instsanity.app</ApplicationId>
 		<ApplicationIcon>Resources\AppIcon\appicon.ico</ApplicationIcon>
-		<ApplicationDisplayVersion>2.105</ApplicationDisplayVersion>
-		<ApplicationVersion>174</ApplicationVersion>
+		<ApplicationDisplayVersion>2.106</ApplicationDisplayVersion>
+		<ApplicationVersion>175</ApplicationVersion>
 
 		<!-- Unpackaged desktop app: run it straight from the build output (F5 / dotnet run), no MSIX required. -->
 		<WindowsPackageType>None</WindowsPackageType>
