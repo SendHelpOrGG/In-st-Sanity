@@ -665,7 +665,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-preview-panel>.hint{margin:8px 0 0;font-size:10px}
 .photo-adjustment-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0;max-height:min(82vh,900px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 6px 0 0;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--t-accent,#38bdf8) transparent;-webkit-overflow-scrolling:touch}
 .photo-adjustment-groups:focus-visible{outline:2px solid var(--t-accent,#38bdf8);outline-offset:2px}
-.photo-adjustment-group{min-width:0;padding:14px;border:1px solid var(--t-line,rgba(255,255,255,.12));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.2))}
+.photo-adjustment-group{min-width:0;padding:12px;border:1px solid var(--t-line,rgba(255,255,255,.12));border-radius:10px;background:var(--t-input-bg,rgba(15,23,42,.2))}
 .photo-adjustment-group h3{margin:0 0 12px;color:var(--t-ink,#f1f5f9);font-size:12px;font-weight:700}
 .photo-adjustment-control-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:13px}
 .photo-adjustment-look-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
@@ -1551,7 +1551,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.092; open version history" title="Click to view what changed in each version">v.2.092</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.093; open version history" title="Click to view what changed in each version">v.2.093</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8751,8 +8751,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.092';
+const APP_VERSION='2.093';
 const VERSION_HISTORY=[
+  {version:'2.093',added:'No new features.',removed:'Unequal inner padding between the Image Edit preview and adjustment groups.',fixed:'Use the same 12px content inset in the preview panel and adjustment groups.',tone:'green'},
   {version:'2.092',added:'No new features.',removed:'Moment capture card padding differing from Resize and Image Edit.',fixed:'Match its header and body padding to Resize and Image Edit: 17px 20px and 18px 20px, respectively.',tone:'green'},
   {version:'2.091',added:'No new features.',removed:'Uneven tab-to-panel gaps and heading-description spacing across Resize, Image Edit, and Moment capture.',fixed:'Set every tool tab-to-panel gap and heading-description clear glyph gap to 14px.',tone:'green'},
   {version:'2.090',added:'No new features.',removed:'The Preview photo label above the Image Edit photo strip.',fixed:'Remove the redundant label while retaining the preview photo strip and its controls.',tone:'green'},
