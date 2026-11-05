@@ -862,8 +862,8 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 /* The version label is nudged left by two CSS points. */
 .app-version-button { transform:translateX(8pt); }
 
-/* Keep native Saved Posts video enlargement edge-to-edge without cropping the source frame. */
-#detailGrid .picture-art>video:fullscreen,#detailGrid .picture-art>video:-webkit-full-screen{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:100vw!important;max-height:100vh!important;object-fit:contain!important;object-position:center!important;background:#000!important;z-index:9999!important}
+/* Keep native Saved Posts and Save via URL video enlargement edge-to-edge without cropping the source frame. */
+#detailGrid .picture-art>video:fullscreen,#detailGrid .picture-art>video:-webkit-full-screen,#saveUrlGrid .picture-art>video:fullscreen,#saveUrlGrid .picture-art>video:-webkit-full-screen{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:100vw!important;max-height:100vh!important;object-fit:contain!important;object-position:center!important;background:#000!important;z-index:9999!important}
 /* Blank and loading photo/video slides use the current card surface and theme border. */
 .picture-tile { background:var(--t-card-bg,#141b22); border-color:var(--t-card-border,#3d5060); }
 .picture-art { background:var(--t-card-bg,#141b22); }
@@ -1547,7 +1547,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.088; open version history" title="Click to view what changed in each version">v.2.088</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.089; open version history" title="Click to view what changed in each version">v.2.089</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8747,8 +8747,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.088';
+const APP_VERSION='2.089';
 const VERSION_HISTORY=[
+  {version:'2.089',added:'Full-screen video enlargement in Save via URL.',removed:'Save via URL video filling the app with a cropped frame.',fixed:'Apply the same viewport-sized, contained fullscreen styling in Save via URL as in Saved Posts.',tone:'green'},
   {version:'2.088',added:'The Moment capture folder shortcut beside the frame-capture actions.',removed:'The folder shortcut in the Moment capture header.',fixed:'Move Open folder into the action row immediately after Capture & save frame.',tone:'green'},
   {version:'2.087',added:'Independent default-on No duplicates toggles for Image Edit and Moment capture.',removed:'The Saving folder label.',fixed:'Rename it Default folder, persist duplicate preferences separately, and apply them to edited-image and captured-frame saves.',tone:'green'},
   {version:'2.086',added:'Open folder reuses an existing File Explorer window already showing the target directory.',removed:'Repeated Open folder clicks opening another Explorer window for the same path.',fixed:'Compare normalized absolute paths, restore and activate a matching Explorer window, and launch Explorer only when no matching folder is already open.',tone:'green'},
