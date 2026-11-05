@@ -1108,7 +1108,6 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <div class="setting-body moment-capture-body">
           <div class="moment-capture-actions">
             <div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="momentCaptureChooseVideoBtn" onclick="chooseMomentCaptureVideo()">Choose video…</button></div><input hidden class="native-file-picker-input" id="momentCaptureVideoInput" type="file" accept="video/*" aria-label="Choose a video for Moment capture" onchange="handleMomentCaptureVideoPicked(event)">
-            <button type="button" class="outline" id="momentCaptureStopBtn" onclick="stopMomentCaptureVideo()" disabled>Stop</button>
             <button type="button" class="primary" id="momentCaptureFrameBtn" onclick="captureMomentFrame()" disabled>Capture &amp; save frame</button>
           </div>
           <div class="moment-capture-stage">
@@ -1472,7 +1471,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.074; open version history" title="Click to view what changed in each version">v.2.074</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.075; open version history" title="Click to view what changed in each version">v.2.075</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -4110,6 +4109,9 @@ let photoResizePreviewWorkerBusy=false;
 let photoResizePreviewWorkerLatestRequest=null;
 let photoResizePreviewWorkerUnavailable=false;
 let photoResizePreviewObjectUrl='';
+const PHOTO_SELECTION_SYNC_BATCH_SIZE=128;
+const photoResizeSelectionTileSync={version:0};
+const photoEditSelectionTileSync={version:0};
 let photoResizeQueue=[];
 let photoResizeSessionId='';
 let photoResizeUploadedCount=0;
@@ -5108,24 +5110,47 @@ function updatePhotoResizeAvailableCount(selectedCount){
     ?`${queued} photos listed · first ${RESIZER_MAX_FILES} of ${photoResizeAvailableCount} supported · ${selectionText}`
     :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
 }
-function syncPhotoResizeSelectionTiles(){
-  const list=document.getElementById('resizerFileList');
+function syncPhotoSelectionTiles(queue,listId,syncState,getCurrentQueue,{syncStatuses=true}={}){
+  const list=document.getElementById(listId);
   if(!list)return;
   const checkboxes=list.getElementsByClassName('resizer-photo-select');
-  const statuses=list.getElementsByClassName('resizer-photo-thumb-status');
-  const limit=Math.min(photoResizeQueue.length,checkboxes.length);
-  for(let index=0;index<limit;index++){
-    const item=photoResizeQueue[index];
-    const selected=Boolean(item.selected);
-    if(checkboxes[index].checked!==selected)checkboxes[index].checked=selected;
-    const status=statuses[index];
-    if(status){
-      status.textContent=item.error?'!':item.uploaded?'✓':'';
-      status.classList.toggle('is-error',Boolean(item.error));
+  const statuses=syncStatuses?list.getElementsByClassName('resizer-photo-thumb-status'):null;
+  const limit=Math.min(queue.length,checkboxes.length);
+  const version=++syncState.version;
+  let index=0;
+  const syncBatch=()=>{
+    if(version!==syncState.version||queue!==getCurrentQueue()||list!==document.getElementById(listId))return;
+    const end=Math.min(limit,index+PHOTO_SELECTION_SYNC_BATCH_SIZE);
+    for(;index<end;index++){
+      const item=queue[index];
+      const checkbox=checkboxes[index];
+      if(checkbox&&checkbox.checked!==Boolean(item.selected))checkbox.checked=Boolean(item.selected);
+      if(statuses){
+        const status=statuses[index];
+        if(status){
+          const text=item.error?'!':item.uploaded?'✓':'';
+          if(status.textContent!==text)status.textContent=text;
+          const isError=status.classList.contains('is-error');
+          if(isError!==Boolean(item.error))status.classList.toggle('is-error',Boolean(item.error));
+        }
+      }
     }
-  }
+    if(index<limit){
+      if(typeof requestAnimationFrame==='function')requestAnimationFrame(syncBatch);
+      else if(typeof setTimeout==='function')setTimeout(syncBatch,0);
+      else syncBatch();
+    }
+  };
+  if(limit<=PHOTO_SELECTION_SYNC_BATCH_SIZE)syncBatch();
+  else if(typeof requestAnimationFrame==='function')requestAnimationFrame(syncBatch);
+  else if(typeof setTimeout==='function')setTimeout(syncBatch,0);
+  else syncBatch();
+}
+function syncPhotoResizeSelectionTiles(options={}){
+  syncPhotoSelectionTiles(photoResizeQueue,'resizerFileList',photoResizeSelectionTileSync,()=>photoResizeQueue,options);
 }
 function renderPhotoResizeFileList(selectedCount=photoResizeQueue.filter(item=>item.selected).length){
+  photoResizeSelectionTileSync.version++;
   renderPhotoFileStrip(photoResizeQueue,'resizerFileList',{
     selectAction:'togglePhotoResizeSelectedFromThumbnail',
     selectionAction:'setPhotoResizeSelected',
@@ -5135,24 +5160,11 @@ function renderPhotoResizeFileList(selectedCount=photoResizeQueue.filter(item=>i
   updatePhotoResizeAvailableCount(selectedCount);
   syncResizerPhotoScrollButtons();
 }
-function syncPhotoEditSelectionTiles(){
-  const list=document.getElementById('photoAdjustmentPhotoStrip');
-  if(!list)return;
-  const checkboxes=list.getElementsByClassName('resizer-photo-select');
-  const statuses=list.getElementsByClassName('resizer-photo-thumb-status');
-  const limit=Math.min(photoEditQueue.length,checkboxes.length);
-  for(let index=0;index<limit;index++){
-    const item=photoEditQueue[index];
-    const selected=Boolean(item.selected);
-    if(checkboxes[index].checked!==selected)checkboxes[index].checked=selected;
-    const status=statuses[index];
-    if(status){
-      status.textContent=item.error?'!':item.uploaded?'✓':'';
-      status.classList.toggle('is-error',Boolean(item.error));
-    }
-  }
+function syncPhotoEditSelectionTiles(options={}){
+  syncPhotoSelectionTiles(photoEditQueue,'photoAdjustmentPhotoStrip',photoEditSelectionTileSync,()=>photoEditQueue,options);
 }
 function renderPhotoAdjustmentPhotoStrip(){
+  photoEditSelectionTileSync.version++;
   renderPhotoFileStrip(photoEditQueue,'photoAdjustmentPhotoStrip',{
     currentId:photoEditCurrentFileId,
     selectAction:'selectPhotoEditPreview',
@@ -5762,18 +5774,16 @@ function syncMomentCaptureControls(){
   const ready=Boolean(momentCaptureFile&&video&&video.videoWidth>0&&video.videoHeight>0&&video.readyState>=2);
   const choose=document.getElementById('momentCaptureChooseVideoBtn');
   const picker=document.getElementById('momentCaptureVideoInput');
-  const stop=document.getElementById('momentCaptureStopBtn');
   const capture=document.getElementById('momentCaptureFrameBtn');
   if(choose)choose.disabled=momentCaptureSaving||nativeFilePickerBusy;
   if(picker)picker.disabled=momentCaptureSaving||nativeFilePickerBusy;
-  if(stop)stop.disabled=momentCaptureSaving||!momentCaptureFile||!video||video.paused||video.ended;
   if(capture)capture.disabled=momentCaptureSaving||!ready;
 }
 function bindMomentCaptureVideoEvents(){
   const video=document.getElementById('momentCaptureVideo');
   if(!video||video._momentCaptureEventsBound)return;
   video._momentCaptureEventsBound=true;
-  for(const name of ['loadedmetadata','loadeddata','canplay','play','pause','ended'])video.addEventListener(name,()=>syncMomentCaptureControls());
+  for(const name of ['loadedmetadata','loadeddata','canplay'])video.addEventListener(name,()=>syncMomentCaptureControls());
   video.addEventListener('loadedmetadata',()=>{if(momentCaptureFile)setMomentCaptureStatus(`Ready: ${momentCaptureFile.name} · ${video.videoWidth} × ${video.videoHeight}`)});
   video.addEventListener('error',()=>{if(momentCaptureFile)setMomentCaptureStatus('This video could not be previewed by the browser. Try an MP4 or WebM file.','error');syncMomentCaptureControls()});
 }
@@ -5800,14 +5810,6 @@ function handleMomentCaptureVideoPicked(selection){
     momentCaptureObjectUrl=source.startsWith('blob:')?source:'';
     video.src=source;video.hidden=false;video.load();setMomentCaptureStatus(`Loading ${file.name}…`);
   }catch(_){momentCaptureFile=null;video.hidden=true;if(empty)empty.hidden=false;setMomentCaptureStatus('This video could not be opened.','error')}
-  syncMomentCaptureControls();
-}
-function stopMomentCaptureVideo(){
-  const video=document.getElementById('momentCaptureVideo');
-  if(!video||!momentCaptureFile)return;
-  video.pause();
-  const seconds=Math.max(0,Number(video.currentTime)||0).toFixed(2);
-  setMomentCaptureStatus(`Playback stopped at ${seconds} seconds. Capture will use this frame.`);
   syncMomentCaptureControls();
 }
 function momentCaptureBlobToDataUri(blob){
@@ -8299,8 +8301,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.074';
+const APP_VERSION='2.075';
 const VERSION_HISTORY=[
+  {version:'2.075',added:'No new features.',removed:'The separate Stop button in Moment capture.',fixed:'Resize and Image Edit selection changes now synchronize existing thumbnail checkboxes in animation-frame batches, keeping bulk select and clear actions responsive for long queues; use the video player controls to pause or scrub.',tone:'green'},
   {version:'2.074',added:'No new features.',removed:'The longer Image Edit label in the side panel.',fixed:'Rename only the side-panel navigation item to Edit; keep the page heading and in-page Image Edit tab unchanged.',tone:'green'},
   {version:'2.073',added:'Consistent Resize and Image Edit queue controls.',removed:'Resize Start over and its separate selection-clear button; redundant Image Edit queue-count, selection-help, and output-folder text.',fixed:'Use one Select all/Clear selection toggle and a separate Clear images action for Resize; remove repeated Image Edit notes while keeping Settings as the save destination.',tone:'green'},
   {version:'2.072',added:'No new features.',removed:'Image Edit selection toggles rebuilding the entire photo strip and refreshing the preview.',fixed:'Update selection checkboxes and the selection summary in place, avoiding an unnecessary reload of up to 500 image tiles and the active preview.',tone:'green'},
