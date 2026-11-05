@@ -692,7 +692,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .photo-adjustment-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
 .photo-adjustment-footer .hint{margin:0}
 .photo-adjustment-reset{flex:0 0 auto}
-/* Resize and Image Edit share the same compact, horizontal thumbnail picker geometry and scroll behavior. */
+/* Resize, Image Edit, and Moment capture share the same compact horizontal thumbnail-picker geometry and scroll behavior. */
 .resizer-files-toolbar{flex-wrap:wrap}
 .resizer-files-toolbar>div{flex-wrap:wrap}
 .resizer-photo-picker-row{display:flex;align-items:center;gap:7px;min-width:0}
@@ -711,7 +711,6 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .resizer-photo-empty-note{flex:0 1 auto;min-width:0;max-width:100%;overflow:hidden;color:var(--t-muted,#94a3b8);font-size:10px;text-overflow:ellipsis;white-space:nowrap}
 .photo-adjustment-files-panel{margin-top:0}
 .moment-capture-body .moment-capture-files-panel{margin:0 0 14px}
-.moment-capture-video-list{height:45px;min-height:45px}
 .moment-capture-video-placeholder{gap:1px}
 .moment-capture-video-placeholder svg{display:block;width:14px;height:14px;opacity:.72}
 .moment-capture-video-placeholder span{font-size:8px;line-height:1}
@@ -1488,7 +1487,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.082; open version history" title="Click to view what changed in each version">v.2.082</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.083; open version history" title="Click to view what changed in each version">v.2.083</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8607,8 +8606,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.082';
+const APP_VERSION='2.083';
 const VERSION_HISTORY=[
+  {version:'2.083',added:'Moment capture’s video queue row now matches the compact Resize and Image Edit thumbnail rows.',removed:'The taller Moment-only 45px thumbnail strip.',fixed:'Remove the Moment-specific height override so Resize, Image Edit, and Moment capture all use the shared 39px row.',tone:'green'},
   {version:'2.082',added:'Browser queue photos use the slide index resolved from their actual media URL.',removed:'Different photos in one post being labeled and saved as ph1 when carousel tracking lagged.',fixed:'Before saving a queued photo, match its selected media URL to the resolved post, then update the queue row and filename to account_shortcode_phN.jpg using that slide’s real index.',tone:'green'},
   {version:'2.081',added:'Shorter photo and video thumbnail-strip rows in Resize, Image Edit, and Moment capture.',removed:'Extra vertical space around the thumbnail rows.',fixed:'All three subtabs now use 39px strip rows with zero vertical padding, so the 37px thumbnails and scroll controls fit without clipping.',tone:'green'},
   {version:'2.080',added:'A Saved Posts pages-bar action for sending all selected videos to Moment capture.',removed:'The need to open each post separately to move its selected videos into Moment capture.',fixed:'The icon-only control beside Download now gathers selected videos across Saved Posts, switches to Moment capture, and adds the videos to its queue.',tone:'green'},
