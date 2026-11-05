@@ -1535,7 +1535,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.085; open version history" title="Click to view what changed in each version">v.2.085</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.086; open version history" title="Click to view what changed in each version">v.2.086</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8719,8 +8719,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.085';
+const APP_VERSION='2.086';
 const VERSION_HISTORY=[
+  {version:'2.086',added:'Open folder reuses an existing File Explorer window already showing the target directory.',removed:'Repeated Open folder clicks opening another Explorer window for the same path.',fixed:'Compare normalized absolute paths, restore and activate a matching Explorer window, and launch Explorer only when no matching folder is already open.',tone:'green'},
   {version:'2.085',added:'Separate output-folder toggles for resized images, edited images, and Moment capture frames.',removed:'Image tools always saving to the shared Download location and repeatedly forcing a download-history folder rescan when toggling Separate video folder.',fixed:'Each image feature can save to and open its own configured folder while keeping the shared Download location as the default; cache successful history scans by folder and post set so toggles do not repeat the same scan.',tone:'green'},
   {version:'2.084',added:'Sequential per-post photo names in the Browser queue.',removed:'Browser queue photo names following the carousel slide index or repeating ph1.',fixed:'Assign each queued photo the next phN ordinal for its post, independently of the resolved slide index used to locate the selected media.',tone:'green'},
   {version:'2.083',added:'Moment capture’s video queue row now matches the compact Resize and Image Edit thumbnail rows.',removed:'The taller Moment-only 45px thumbnail strip.',fixed:'Remove the Moment-specific height override so Resize, Image Edit, and Moment capture all use the shared 39px row.',tone:'green'},
