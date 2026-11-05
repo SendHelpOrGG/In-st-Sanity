@@ -779,6 +779,7 @@ public partial class MainPage : ContentPage
 					item.Key,
 					item.Shortcode,
 					item.SlideIndex,
+					item.QueuePhotoIndex,
 					item.ContentCount,
 					item.IsVideo,
 					item.ThumbnailUrl,

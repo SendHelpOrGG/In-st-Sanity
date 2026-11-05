@@ -841,10 +841,12 @@ public sealed class SelectedMediaDownloadService : IDisposable
 		var shortcode = SafeShortcode(item.Shortcode);
 		if (item.IsBrowserQueue)
 		{
-			var slideNumber = Math.Max(0, item.ContentIndex ?? index) + 1;
+			var mediaNumber = item.IsVideo
+				? Math.Max(0, item.ContentIndex ?? index) + 1
+				: Math.Max(0, item.PhotoIndex ?? index) + 1;
 			return item.IsVideo
-				? $"{account}_{shortcode}_v{slideNumber}.mp4"
-				: $"{account}_{shortcode}_ph{slideNumber}.jpg";
+				? $"{account}_{shortcode}_v{mediaNumber}.mp4"
+				: $"{account}_{shortcode}_ph{mediaNumber}.jpg";
 		}
 
 		if (item.IsVideo)

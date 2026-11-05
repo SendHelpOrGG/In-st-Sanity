@@ -416,7 +416,10 @@ internal static class InstagramMediaOverlayScript
 	          }
 	          const info = document.createElement('div'); info.className = 'isg-info';
 	          const name = document.createElement('div'); name.className = 'isg-name'; name.textContent = item.filename || `${item.shortcode} · ${item.isVideo ? 'Video' : 'Photo'} ${Number(item.slideIndex) + 1}`;
-	          const meta = document.createElement('div'); meta.className = 'isg-meta'; meta.textContent = `${item.isVideo ? 'Video' : 'Photo'} · ${item.shortcode} · slide ${Number(item.slideIndex) + 1}`;
+	          const queuePhotoIndex = Number(item.queuePhotoIndex);
+	          const queueOrdinal = item.isVideo ? Number(item.slideIndex) + 1 : (Number.isInteger(queuePhotoIndex) && queuePhotoIndex >= 0 ? queuePhotoIndex + 1 : Number(item.slideIndex) + 1);
+	          const positionLabel = item.isVideo ? `slide ${queueOrdinal}` : `queued photo ${queueOrdinal}`;
+	          const meta = document.createElement('div'); meta.className = 'isg-meta'; meta.textContent = `${item.isVideo ? 'Video' : 'Photo'} · ${item.shortcode} · ${positionLabel}`;
 	          info.append(name, meta);
 	          if (item.isDownloaded === true) { const saved = document.createElement('div'); saved.className = 'isg-saved'; saved.textContent = item.wasSkipped === true ? 'Already saved' : 'Downloaded'; info.appendChild(saved); }
 	          if (item.error && item.isDownloaded !== true) { const failure = document.createElement('div'); failure.className = 'isg-error'; failure.textContent = safeText(item.error, 'Download failed'); info.appendChild(failure); }

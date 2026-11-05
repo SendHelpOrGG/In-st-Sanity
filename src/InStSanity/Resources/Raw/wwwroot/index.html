@@ -1487,7 +1487,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.083; open version history" title="Click to view what changed in each version">v.2.083</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.084; open version history" title="Click to view what changed in each version">v.2.084</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8606,8 +8606,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.083';
+const APP_VERSION='2.084';
 const VERSION_HISTORY=[
+  {version:'2.084',added:'Sequential per-post photo names in the Browser queue.',removed:'Browser queue photo names following the carousel slide index or repeating ph1.',fixed:'Assign each queued photo the next phN ordinal for its post, independently of the resolved slide index used to locate the selected media.',tone:'green'},
   {version:'2.083',added:'Moment capture’s video queue row now matches the compact Resize and Image Edit thumbnail rows.',removed:'The taller Moment-only 45px thumbnail strip.',fixed:'Remove the Moment-specific height override so Resize, Image Edit, and Moment capture all use the shared 39px row.',tone:'green'},
   {version:'2.082',added:'Browser queue photos use the slide index resolved from their actual media URL.',removed:'Different photos in one post being labeled and saved as ph1 when carousel tracking lagged.',fixed:'Before saving a queued photo, match its selected media URL to the resolved post, then update the queue row and filename to account_shortcode_phN.jpg using that slide’s real index.',tone:'green'},
   {version:'2.081',added:'Shorter photo and video thumbnail-strip rows in Resize, Image Edit, and Moment capture.',removed:'Extra vertical space around the thumbnail rows.',fixed:'All three subtabs now use 39px strip rows with zero vertical padding, so the 37px thumbnails and scroll controls fit without clipping.',tone:'green'},

@@ -29,7 +29,11 @@ public sealed record BrowserQueuedMedia(
 	string Filename,
 	string? Error = null,
 	bool IsDownloaded = false,
-	bool WasSkipped = false);
+	bool WasSkipped = false)
+{
+	/// <summary>Zero-based order among queued photos from this post, separate from the resolved carousel slide index.</summary>
+	public int QueuePhotoIndex { get; init; }
+}
 
 public sealed record BrowserMediaQueueSnapshot(
 	IReadOnlyList<BrowserQueuedMedia> Items,
@@ -328,7 +332,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 								{
 									rawUrl = resolvedPhoto.Value.Url;
 									var resolvedSlideIndex = resolvedPhoto.Value.SlideIndex;
-									var resolvedFilename = BuildQueueFilename(item.Account, item.Shortcode, item.IsVideo, resolvedSlideIndex);
+									var resolvedFilename = BuildQueueFilename(item.Account, item.Shortcode, false, item.QueuePhotoIndex);
 									if (item.SlideIndex != resolvedSlideIndex || !string.Equals(item.Filename, resolvedFilename, StringComparison.Ordinal))
 									{
 										item = item with { SlideIndex = resolvedSlideIndex, Filename = resolvedFilename };
@@ -368,7 +372,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 							var downloadItem = new SelectedMediaDownloadItem(
 								Filename: item.Filename,
 								Shortcode: item.Shortcode,
-								PhotoIndex: null,
+								PhotoIndex: item.IsVideo ? null : item.QueuePhotoIndex,
 								VideoIndex: null,
 								ContentIndex: item.SlideIndex,
 								IsVideo: item.IsVideo,
@@ -542,6 +546,15 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			}
 			else
 			{
+				if (!item.IsVideo)
+				{
+					var queuePhotoIndex = NextQueuedPhotoIndex(item.Shortcode);
+					item = item with
+					{
+						QueuePhotoIndex = queuePhotoIndex,
+						Filename = BuildQueueFilename(item.Account, item.Shortcode, false, queuePhotoIndex),
+					};
+				}
 				_items.Add(item);
 				_status = string.Empty;
 				_hasBeenOpened = true;
@@ -552,6 +565,13 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		if (changed) Publish();
 		return error.Length == 0;
 	}
+
+	int NextQueuedPhotoIndex(string shortcode) => _items
+		.Where(candidate => !candidate.IsVideo &&
+			string.Equals(candidate.Shortcode, shortcode, StringComparison.Ordinal))
+		.Select(candidate => candidate.QueuePhotoIndex)
+		.DefaultIfEmpty(-1)
+		.Max() + 1;
 
 	async Task<(string Url, int SlideIndex)?> ResolveQueuedPhotoUrlAsync(BrowserQueuedMedia item, CancellationToken cancellationToken)
 	{
@@ -659,12 +679,12 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			extension.Equals(".mpd", StringComparison.OrdinalIgnoreCase);
 	}
 
-	static string BuildQueueFilename(string account, string shortcode, bool isVideo, int slideIndex)
+	static string BuildQueueFilename(string account, string shortcode, bool isVideo, int mediaIndex)
 	{
 		var extension = isVideo ? ".mp4" : ".jpg";
 		return isVideo
-			? $"{account}_{shortcode}_v{slideIndex + 1}{extension}"
-			: $"{account}_{shortcode}_ph{slideIndex + 1}{extension}";
+			? $"{account}_{shortcode}_v{mediaIndex + 1}{extension}"
+			: $"{account}_{shortcode}_ph{mediaIndex + 1}{extension}";
 	}
 
 	static bool TryBuildQueueItem(
@@ -741,8 +761,8 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			? identityUri.AbsolutePath
 			: $"slide:{slideIndex}";
 		var key = $"{shortcode}|{type}|{mediaIdentity}";
-		// Keep queue identity URL-based even though saved filenames use concise phN/vN ordinals.
-		var filename = BuildQueueFilename(account, shortcode, isVideo, slideIndex);
+		// The slide index identifies the media; photo filenames get their per-post queue ordinal when added.
+		var filename = BuildQueueFilename(account, shortcode, isVideo, isVideo ? slideIndex : 0);
 		item = new BrowserQueuedMedia(key, shortcode, account, slideIndex, contentCount, isVideo, rawUrl, thumbnailUrl, filename, null);
 		error = string.Empty;
 		return true;
@@ -758,7 +778,12 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			var queuedItem = _items[queueIndex];
 			if (queuedItem.SlideIndex == item.SlideIndex &&
 				string.Equals(queuedItem.Filename, item.Filename, StringComparison.Ordinal)) return;
-			_items[queueIndex] = queuedItem with { SlideIndex = item.SlideIndex, Filename = item.Filename };
+			_items[queueIndex] = queuedItem with
+			{
+				SlideIndex = item.SlideIndex,
+				QueuePhotoIndex = item.QueuePhotoIndex,
+				Filename = item.Filename,
+			};
 			changed = true;
 		}
 		if (changed) Publish();
