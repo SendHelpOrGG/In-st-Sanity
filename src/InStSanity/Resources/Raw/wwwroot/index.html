@@ -1111,7 +1111,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
       <section class="settings-card moment-capture-card" aria-labelledby="momentCaptureHeading">
         <div class="settings-card-head moment-capture-card-head">
           <div><h2 id="momentCaptureHeading">Moment capture</h2><p>Choose a local video, play or scrub to the frame you want, then capture and save it to your image folder.</p></div>
-          <button type="button" class="icon-btn photo-adjustment-open-folder-btn moment-capture-open-folder-btn" id="momentCaptureOpenFolderBtn" onclick="openDownloadFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open saved images folder in File Explorer; right-click for the separate video folder" aria-label="Open saved images folder in File Explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button>
+          <button type="button" class="icon-btn photo-adjustment-open-folder-btn moment-capture-open-folder-btn" id="momentCaptureOpenFolderBtn" onclick="openMomentCaptureOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open the configured Moment capture images folder; right-click for the separate video folder" aria-label="Open the configured Moment capture images folder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button>
         </div>
         <div class="setting-body moment-capture-body">
           <div class="moment-capture-actions">
@@ -1437,7 +1437,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             <div class="settings-card-head-inner">
             <div class="settings-card-head-text">
               <h2>Saving folder</h2>
-              <p>Choose where photos, resized images, and edited image copies are saved. Videos may use their separate folder.</p>
+              <p>Photos, resized images, edited copies, and Moment capture frames use the Download location unless their own separate-folder option is enabled. Videos may also use a separate folder.</p>
             </div>
             <span class="settings-card-chevron" aria-hidden="true">▾</span>
           </div></div>
@@ -1453,7 +1453,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                 <label class="field-label" for="videoFolder">Video download location</label>
                 <div class="folder-row"><input class="text-input" id="videoFolder" value="~/Videos/Instagram" readonly><button type="button" class="outline" onclick="chooseVideoFolder()">Browse…</button></div>
               </div>
-              <p class="hint">When enabled, videos use the folder above; otherwise, videos and photos use the Download location.</p>
+              <p class="hint">When enabled, downloaded videos use the folder above; otherwise, they use the Download location.</p>
             </div>
             <div class="anim-group" style="margin-top:18px">
               <div class="background-actions" style="margin-bottom:6px">
@@ -1466,18 +1466,66 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
             <div class="settings-card-head-inner">
-                <div class="settings-card-head-text"><h2>Resized photos folder</h2><p>Resize outputs share the photos download location selected under Settings → Saving folder.</p></div>
+              <div class="settings-card-head-text"><h2>Resized images folder</h2><p>Resize outputs use the Download location unless a separate folder is enabled.</p></div>
               <span class="settings-card-chevron" aria-hidden="true">▾</span>
             </div>
           </div>
           <div class="setting-body">
-            <label class="field-label" for="resizerOutputFolder">Save resized images to</label>
-            <div class="folder-row"><input class="text-input" id="resizerOutputFolder" value="~/Pictures/Instagram" readonly></div>
+            <div class="anim-group" style="margin-top:0">
+              <div class="background-actions" style="margin-bottom:10px">
+                <button type="button" class="outline ui-toggle-btn" id="separateResizedImagesFolderBtn" aria-pressed="false" onclick="toggleSeparateResizedImagesFolder()">Separate resized images folder: Off</button>
+              </div>
+              <div id="separateResizedImagesFolderSettings" hidden>
+                <label class="field-label" for="resizerOutputFolder">Resized images location</label>
+                <div class="folder-row"><input class="text-input" id="resizerOutputFolder" value="~/Pictures/Instagram/Resized" readonly><button type="button" class="outline" onclick="chooseResizedImagesFolder()">Browse…</button></div>
+              </div>
+              <p class="hint">When enabled, resized images go to the folder above; otherwise, they use the Download location.</p>
+            </div>
             <div class="anim-group" style="margin-top:18px">
               <div class="background-actions" style="margin-bottom:6px">
                 <button type="button" class="outline ui-toggle-btn active" id="resizerNoDuplicatesBtn" aria-pressed="true" onclick="toggleResizerNoDuplicates()">No duplicates: On</button>
               </div>
               <p class="hint">Skip existing resized-photo filenames. When off, numbered suffixes are used. This setting is independent of downloaded-media duplicates.</p>
+            </div>
+          </div>
+        </div>
+        <div class="settings-card collapsed">
+          <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
+            <div class="settings-card-head-inner">
+              <div class="settings-card-head-text"><h2>Edited images folder</h2><p>Image Edit outputs use the Download location unless a separate folder is enabled.</p></div>
+              <span class="settings-card-chevron" aria-hidden="true">▾</span>
+            </div>
+          </div>
+          <div class="setting-body">
+            <div class="anim-group" style="margin-top:0">
+              <div class="background-actions" style="margin-bottom:10px">
+                <button type="button" class="outline ui-toggle-btn" id="separateEditedImagesFolderBtn" aria-pressed="false" onclick="toggleSeparateEditedImagesFolder()">Separate edited images folder: Off</button>
+              </div>
+              <div id="separateEditedImagesFolderSettings" hidden>
+                <label class="field-label" for="photoEditOutputFolder">Edited images location</label>
+                <div class="folder-row"><input class="text-input" id="photoEditOutputFolder" value="~/Pictures/Instagram/Edited" readonly><button type="button" class="outline" onclick="chooseEditedImagesFolder()">Browse…</button></div>
+              </div>
+              <p class="hint">When enabled, edited images go to the folder above; otherwise, they use the Download location.</p>
+            </div>
+          </div>
+        </div>
+        <div class="settings-card collapsed">
+          <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
+            <div class="settings-card-head-inner">
+              <div class="settings-card-head-text"><h2>Moment capture images folder</h2><p>Captured video frames use the Download location unless a separate folder is enabled.</p></div>
+              <span class="settings-card-chevron" aria-hidden="true">▾</span>
+            </div>
+          </div>
+          <div class="setting-body">
+            <div class="anim-group" style="margin-top:0">
+              <div class="background-actions" style="margin-bottom:10px">
+                <button type="button" class="outline ui-toggle-btn" id="separateMomentCaptureFolderBtn" aria-pressed="false" onclick="toggleSeparateMomentCaptureFolder()">Separate Moment capture images folder: Off</button>
+              </div>
+              <div id="separateMomentCaptureFolderSettings" hidden>
+                <label class="field-label" for="momentCaptureOutputFolder">Moment capture images location</label>
+                <div class="folder-row"><input class="text-input" id="momentCaptureOutputFolder" value="~/Pictures/Instagram/Moment capture" readonly><button type="button" class="outline" onclick="chooseMomentCaptureFolder()">Browse…</button></div>
+              </div>
+              <p class="hint">When enabled, captured frames go to the folder above; otherwise, they use the Download location.</p>
             </div>
           </div>
         </div>
@@ -1487,7 +1535,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.084; open version history" title="Click to view what changed in each version">v.2.084</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.085; open version history" title="Click to view what changed in each version">v.2.085</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -1712,7 +1760,8 @@ let downloadHistorySyncTimer=0;
 let downloadHistorySyncPromise=null;
 let downloadHistorySyncPending=false;
 let downloadHistoryForcePending=false;
-let downloadHistoryLastSyncKey='';
+// Remember successful folder/post scans so switching back does not re-enumerate the same folders.
+const downloadHistorySyncedKeys=new Set();
 function saveDownloadHistory(){try{localStorage.setItem(DOWNLOAD_HISTORY_KEY,JSON.stringify(downloadHistory))}catch(_){}}
 function getDownloadHistoryEntry(shortcode,create=false){const key=String(shortcode||'').trim().toLowerCase();if(!key)return null;let entry=downloadHistory[key];if(!entry&&create){entry={shortcode:String(shortcode),contentCount:0,photos:Object.create(null),videos:Object.create(null)};downloadHistory[key]=entry}if(entry){if(!entry.photos||typeof entry.photos!=='object')entry.photos=Object.create(null);if(!entry.videos||typeof entry.videos!=='object')entry.videos=Object.create(null);if(!entry.browserPhotos||typeof entry.browserPhotos!=='object')entry.browserPhotos=Object.create(null);if(!entry.browserVideos||typeof entry.browserVideos!=='object')entry.browserVideos=Object.create(null)}return entry||null}
 function getPostContentCountForHistory(post){if(!post)return null;const entry=getDownloadHistoryEntry(post.shortcode,false);const storedCount=Math.floor(Number(entry?.contentCount)||0);if(storedCount>0)return storedCount;const known=Boolean(post.summaryResolved||post.fullResolved||post.serverResolved||post.confirmedSingleMedia||Array.isArray(post.seedSpec)||(post.mediaLoaded&&Array.isArray(post.pictures)&&post.pictures.length>0&&!needsFullCarouselResolution(post)));if(!known)return null;const counts=getPostMediaCounts(post);const total=Math.floor(Number(counts.photoCount)||0)+Math.floor(Number(counts.videoCount)||0);return total>0?total:null}
@@ -1730,7 +1779,45 @@ function mergeDownloadHistorySnapshot(snapshot){const source=snapshot?.history;i
 function getDownloadHistoryFolders(){const folders=[getConfiguredDownloadFolder()];if(isSeparateVideoFolderEnabled())folders.push(getConfiguredVideoDownloadFolder());return[...new Set(folders.map(folder=>String(folder||'').trim()).filter(Boolean))]}
 function getDownloadHistorySyncKey(folders){const postKey=`${activeImportFileName||''}|${lastImportedJsonHash||''}|${posts.length}|${String(urlTabPost?.shortcode||'').toLowerCase()}`;return`${folders.join('|')}|${postKey}`}
 function scheduleDownloadHistorySync(force=false){if(!showDownloadHistory||(!posts.length&&!urlTabPost))return;if(downloadHistorySyncTimer)clearTimeout(downloadHistorySyncTimer);downloadHistorySyncTimer=setTimeout(()=>{downloadHistorySyncTimer=0;syncDownloadHistoryFromFolder(force)},250)}
-async function syncDownloadHistoryFromFolder(force=false){if(downloadHistorySyncPromise){downloadHistorySyncPending=true;if(force)downloadHistoryForcePending=true;return}if(!showDownloadHistory||(!posts.length&&!urlTabPost))return;const folders=getDownloadHistoryFolders();const syncKey=getDownloadHistorySyncKey(folders);if(!force&&syncKey===downloadHistoryLastSyncKey)return;const shortcodes=[...new Set([...posts.map(post=>String(post?.shortcode||'').trim()),String(urlTabPost?.shortcode||'').trim()].filter(Boolean))];if(!shortcodes.length)return;downloadHistoryLastSyncKey=syncKey;downloadHistorySyncPromise=(async()=>{let changed=false;for(const folder of folders){let result=null;for(const endpoint of getApiUrls('/api/download-history')){result=await fetchEndpointJson(endpoint,30000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder,shortcodes})});if(result)break}if(!result?.ok){if(changed){saveDownloadHistory();refreshDownloadHistoryUi(shortcodes)}if(downloadHistoryLastSyncKey===syncKey)downloadHistoryLastSyncKey='';return}if(mergeDownloadHistorySnapshot(result))changed=true}if(changed){saveDownloadHistory();refreshDownloadHistoryUi(shortcodes)}})();try{await downloadHistorySyncPromise}catch(_){if(downloadHistoryLastSyncKey===syncKey)downloadHistoryLastSyncKey=''}finally{downloadHistorySyncPromise=null;const shouldSyncAgain=downloadHistorySyncPending||downloadHistoryForcePending;const forceAgain=downloadHistoryForcePending;downloadHistorySyncPending=false;downloadHistoryForcePending=false;if(shouldSyncAgain)scheduleDownloadHistorySync(forceAgain)}}
+function rememberDownloadHistorySyncKey(syncKey){downloadHistorySyncedKeys.delete(syncKey);downloadHistorySyncedKeys.add(syncKey);if(downloadHistorySyncedKeys.size>24){const oldest=downloadHistorySyncedKeys.values().next().value;if(oldest!==undefined)downloadHistorySyncedKeys.delete(oldest)}}
+async function syncDownloadHistoryFromFolder(force=false){
+  if(downloadHistorySyncPromise){downloadHistorySyncPending=true;if(force)downloadHistoryForcePending=true;return}
+  if(!showDownloadHistory||(!posts.length&&!urlTabPost))return;
+  const folders=getDownloadHistoryFolders();
+  const syncKey=getDownloadHistorySyncKey(folders);
+  if(!force&&downloadHistorySyncedKeys.has(syncKey))return;
+  if(force)downloadHistorySyncedKeys.delete(syncKey);
+  const shortcodes=[...new Set([...posts.map(post=>String(post?.shortcode||'').trim()),String(urlTabPost?.shortcode||'').trim()].filter(Boolean))];
+  if(!shortcodes.length)return;
+  downloadHistorySyncPromise=(async()=>{
+    let changed=false;
+    for(const folder of folders){
+      let result=null;
+      for(const endpoint of getApiUrls('/api/download-history')){
+        result=await fetchEndpointJson(endpoint,30000,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder,shortcodes})});
+        if(result)break;
+      }
+      if(!result?.ok){
+        if(changed){saveDownloadHistory();refreshDownloadHistoryUi(shortcodes)}
+        return false;
+      }
+      if(mergeDownloadHistorySnapshot(result))changed=true;
+    }
+    if(changed){saveDownloadHistory();refreshDownloadHistoryUi(shortcodes)}
+    return true;
+  })();
+  try{
+    if(await downloadHistorySyncPromise)rememberDownloadHistorySyncKey(syncKey);
+  }catch(_){}
+  finally{
+    downloadHistorySyncPromise=null;
+    const shouldSyncAgain=downloadHistorySyncPending||downloadHistoryForcePending;
+    const forceAgain=downloadHistoryForcePending;
+    downloadHistorySyncPending=false;
+    downloadHistoryForcePending=false;
+    if(shouldSyncAgain)scheduleDownloadHistorySync(forceAgain);
+  }
+}
 function refreshDownloadHistoryUi(shortcodes){const wanted=new Set((Array.isArray(shortcodes)?shortcodes:[shortcodes]).map(value=>String(value||'').toLowerCase()).filter(Boolean));if(!wanted.size)return;const affected=[];posts.forEach((post,index)=>{if(wanted.has(String(post?.shortcode||'').toLowerCase()))affected.push(index)});if(affected.length){if(filter==='selected')render();else affected.forEach(index=>updateCardInDom(index))}if(currentPost>=0&&wanted.has(String(posts[currentPost]?.shortcode||'').toLowerCase()))renderDetail();if(urlTabPost&&wanted.has(String(urlTabPost.shortcode||'').toLowerCase()))renderSaveUrlTab()}
 function syncDownloadHistoryVisibility(){document.body.classList.toggle('download-status-hidden',!showDownloadHistory);document.querySelectorAll('[data-role="download-history-toggle"]').forEach(button=>{const label=showDownloadHistory?'Hide download history marks':'Show download history marks';button.innerHTML=showDownloadHistory?DOWNLOAD_HISTORY_ICON:DOWNLOAD_HISTORY_OFF_ICON;button.classList.toggle('active',showDownloadHistory);button.title=label;button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(showDownloadHistory))})}
 function toggleDownloadHistoryVisibility(){showDownloadHistory=!showDownloadHistory;setUiPref('showDownloadHistory',showDownloadHistory);syncDownloadHistoryVisibility();if(showDownloadHistory)scheduleDownloadHistorySync(true)}
@@ -4077,13 +4164,29 @@ async function useLastUploadedJson(){
 function refreshLastJsonUi(){const rec=lastJsonMeta||null;const count=Number(rec&&rec.postCount)||0;const isActive=Boolean(rec&&activeImportFileName&&rec.name===activeImportFileName);const ago=rec?jsonTimeAgo(rec.savedAt):'';const row=document.getElementById('jsonLastRow');const metaEl=document.getElementById('jsonLastMeta');const label=document.getElementById('jsonUseLastLabel');const useButton=document.getElementById('jsonUseLastBtn');if(row)row.hidden=!rec;if(metaEl)metaEl.textContent=rec?`${rec.name} · ${count} post${count===1?'':'s'} · ${jsonBytesLabel(rec.size)} · uploaded ${ago}`:'';if(label)label.textContent=isActive?'Reload posts':'Use last uploaded JSON';if(useButton)useButton.title=isActive?'Reload saved posts using the current Instagram session':'Load the JSON file uploaded last time';const or=document.getElementById('uploadJsonOr');const box=document.getElementById('uploadJsonRecent');const nm=document.getElementById('uploadJsonRecentName');const mm=document.getElementById('uploadJsonRecentMeta');const rb=document.getElementById('uploadJsonRecentBtn');if(or)or.hidden=!rec;if(box)box.hidden=!rec;if(nm)nm.textContent=rec?rec.name:'';if(mm)mm.textContent=rec?`${count} post${count===1?'':'s'} · ${jsonBytesLabel(rec.size)} · uploaded ${ago}`:'';if(rb)rb.textContent=isActive?'Reload':'Use it'}
 async function importPostsFromJson(event){const file=event.target.files?.[0];event.target.value='';if(!file)return;await processImportedJsonFile(file)}const SAVE_FOLDER_KEY='stillSane.downloadFolderV1';
 const VIDEO_FOLDER_KEY='stillSane.videoDownloadFolderV1';
+const RESIZED_IMAGES_FOLDER_KEY='stillSane.photoResizerOutputFolderV1';
+const EDITED_IMAGES_FOLDER_KEY='stillSane.photoEditOutputFolderV1';
+const MOMENT_CAPTURE_FOLDER_KEY='stillSane.momentCaptureOutputFolderV1';
 function persistDownloadFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(SAVE_FOLDER_KEY,path.trim())}catch(_){}}
+function persistPhotoOutputFolder(key,path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(key,path.trim())}catch(_){}}
+function getSavedPhotoOutputFolder(key,inputId,fallback){try{const saved=localStorage.getItem(key);if(saved&&saved.trim())return saved.trim()}catch(_){}const input=document.getElementById(inputId);return String(input?.value||fallback).trim()||fallback}
 function loadDownloadFolder(){const input=document.getElementById('saveFolder');if(!input)return;try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())input.value=saved}catch(_){}syncPhotoOutputFolderDisplays()}
 function getConfiguredDownloadFolder(){try{const saved=localStorage.getItem(SAVE_FOLDER_KEY);if(saved&&saved.trim())return saved.trim()}catch(_){}const input=document.getElementById('saveFolder');return String(input?.value||'~/Pictures/Instagram').trim()||'~/Pictures/Instagram'}
 window.getConfiguredDownloadFolder=getConfiguredDownloadFolder;
 function persistVideoFolder(path){if(typeof path!=='string'||!path.trim())return;try{localStorage.setItem(VIDEO_FOLDER_KEY,path.trim())}catch(_){}}
 function isSeparateVideoFolderEnabled(){return Boolean(getUiPref('separateVideoFolder',false))}
 function syncSeparateVideoFolderSettings(){const enabled=isSeparateVideoFolderEnabled();const button=document.getElementById('separateVideoFolderBtn');const settings=document.getElementById('separateVideoFolderSettings');if(button){button.textContent=`Separate video folder: ${enabled?'On':'Off'}`;button.classList.toggle('active',enabled);button.setAttribute('aria-pressed',String(enabled))}if(settings){settings.hidden=!enabled;settings.setAttribute('aria-hidden',String(!enabled))}}
+function isSeparateResizedImagesFolderEnabled(){return Boolean(getUiPref('separateResizedImagesFolder',false))}
+function isSeparateEditedImagesFolderEnabled(){return Boolean(getUiPref('separateEditedImagesFolder',false))}
+function isSeparateMomentCaptureFolderEnabled(){return Boolean(getUiPref('separateMomentCaptureFolder',false))}
+function syncSeparateOutputFolderToggle(prefKey,buttonId,settingsId,label){const enabled=Boolean(getUiPref(prefKey,false));const button=document.getElementById(buttonId);const settings=document.getElementById(settingsId);if(button){button.textContent=`${label}: ${enabled?'On':'Off'}`;button.classList.toggle('active',enabled);button.setAttribute('aria-pressed',String(enabled))}if(settings){settings.hidden=!enabled;settings.setAttribute('aria-hidden',String(!enabled))}}
+function toggleSeparateOutputFolder(prefKey,buttonId,settingsId,label){const enabled=!Boolean(getUiPref(prefKey,false));setUiPref(prefKey,enabled);syncSeparateOutputFolderToggle(prefKey,buttonId,settingsId,label);syncPhotoOutputFolderDisplays();toast(enabled?`${label} enabled`:`${label} disabled; using the Download location`)}
+function syncSeparateResizedImagesFolderSettings(){syncSeparateOutputFolderToggle('separateResizedImagesFolder','separateResizedImagesFolderBtn','separateResizedImagesFolderSettings','Separate resized images folder')}
+function syncSeparateEditedImagesFolderSettings(){syncSeparateOutputFolderToggle('separateEditedImagesFolder','separateEditedImagesFolderBtn','separateEditedImagesFolderSettings','Separate edited images folder')}
+function syncSeparateMomentCaptureFolderSettings(){syncSeparateOutputFolderToggle('separateMomentCaptureFolder','separateMomentCaptureFolderBtn','separateMomentCaptureFolderSettings','Separate Moment capture images folder')}
+function toggleSeparateResizedImagesFolder(){toggleSeparateOutputFolder('separateResizedImagesFolder','separateResizedImagesFolderBtn','separateResizedImagesFolderSettings','Separate resized images folder')}
+function toggleSeparateEditedImagesFolder(){toggleSeparateOutputFolder('separateEditedImagesFolder','separateEditedImagesFolderBtn','separateEditedImagesFolderSettings','Separate edited images folder')}
+function toggleSeparateMomentCaptureFolder(){toggleSeparateOutputFolder('separateMomentCaptureFolder','separateMomentCaptureFolderBtn','separateMomentCaptureFolderSettings','Separate Moment capture images folder')}
 function loadVideoFolderSettings(){const input=document.getElementById('videoFolder');if(input){try{const saved=localStorage.getItem(VIDEO_FOLDER_KEY);if(saved&&saved.trim())input.value=saved.trim()}catch(_){}}syncSeparateVideoFolderSettings()}
 function getSavedVideoDownloadFolder(){try{const saved=localStorage.getItem(VIDEO_FOLDER_KEY);if(saved&&saved.trim())return saved.trim()}catch(_){}return''}
 function getStoredVideoDownloadFolder(){const input=document.getElementById('videoFolder');const inputValue=String(input?.value||'').trim();const defaultValue=String(input?.defaultValue||'').trim();return(inputValue&&inputValue!==defaultValue?inputValue:'')||getSavedVideoDownloadFolder()||inputValue}
@@ -4091,9 +4194,13 @@ function getConfiguredVideoDownloadFolder(){if(!isSeparateVideoFolderEnabled())r
 function getBrowserQueueFolderPreferences(){const photoFolder=getConfiguredDownloadFolder();const separateVideoFolder=isSeparateVideoFolderEnabled();let videoFolder=photoFolder;if(separateVideoFolder){const input=document.getElementById('videoFolder');const inputValue=String(input?.value||'').trim();const defaultValue=String(input?.defaultValue||'').trim();videoFolder=(inputValue&&inputValue!==defaultValue?inputValue:'')||getSavedVideoDownloadFolder()}return{photoFolder,videoFolder,separateVideoFolder,settingsReady:true}}
 window.getConfiguredVideoDownloadFolder=getConfiguredVideoDownloadFolder;
 window.getBrowserQueueFolderPreferences=getBrowserQueueFolderPreferences;
-function toggleSeparateVideoFolder(){setUiPref('separateVideoFolder',!isSeparateVideoFolderEnabled());syncSeparateVideoFolderSettings();scheduleDownloadHistorySync(true);toast(isSeparateVideoFolderEnabled()?'Separate video folder enabled':'Videos will use the Download location')}
-async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);syncPhotoOutputFolderDisplays();scheduleDownloadHistorySync(true);toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
-async function chooseVideoFolder(){const input=document.getElementById('videoFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistVideoFolder(data.path);scheduleDownloadHistorySync(true);toast('Video download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
+function toggleSeparateVideoFolder(){setUiPref('separateVideoFolder',!isSeparateVideoFolderEnabled());syncSeparateVideoFolderSettings();scheduleDownloadHistorySync();toast(isSeparateVideoFolderEnabled()?'Separate video folder enabled':'Videos will use the Download location')}
+async function chooseFolder(){const input=document.getElementById('saveFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistDownloadFolder(data.path);syncPhotoOutputFolderDisplays();scheduleDownloadHistorySync();toast('Download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
+async function chooseVideoFolder(){const input=document.getElementById('videoFolder');if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistVideoFolder(data.path);scheduleDownloadHistorySync();toast('Video download folder updated');return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
+async function choosePhotoOutputFolder(inputId,key,label){const input=document.getElementById(inputId);if(!input)return;let data=null;for(const endpoint of getApiUrls('/api/browse-folder')){data=await fetchEndpointJson(endpoint,300000,{method:'POST'});if(data)break}if(data?.cancelled)return;if(data?.ok&&typeof data.path==='string'&&data.path.trim()){input.value=data.path;persistPhotoOutputFolder(key,data.path);syncPhotoOutputFolderDisplays();toast(`${label} folder updated`);return}toast(data?.error?'Could not open the folder picker':'Folder picker is available in the desktop app')}
+function chooseResizedImagesFolder(){return choosePhotoOutputFolder('resizerOutputFolder',RESIZED_IMAGES_FOLDER_KEY,'Resized images')}
+function chooseEditedImagesFolder(){return choosePhotoOutputFolder('photoEditOutputFolder',EDITED_IMAGES_FOLDER_KEY,'Edited images')}
+function chooseMomentCaptureFolder(){return choosePhotoOutputFolder('momentCaptureOutputFolder',MOMENT_CAPTURE_FOLDER_KEY,'Moment capture images')}
 const RESIZER_MAX_SIDE_KEY='stillSane.photoResizerMaxSideV1';
 const RESIZER_UPSCALE_KEY='stillSane.photoResizerUpscaleV1';
 const RESIZER_ALLOWED_EXTENSIONS=new Set(['.jpg','.jpeg','.png','.bmp','.tif','.tiff','.webp','.heic','.heif','.avif','.jxl']);
@@ -5027,10 +5134,11 @@ function applyPhotoResizePreviewAdjustments(pixels,width,height,settings,seedDat
   if(settings.halftone>0)photoPreviewHalftone(pixels,width,height,settings.halftone,settings.halftoneSize);
   if(settings.pixelate>0)photoPreviewPixelate(pixels,width,height,settings.pixelate);
 }
-function syncPhotoOutputFolderDisplays(){const folder=getConfiguredDownloadFolder();const resizerOutput=document.getElementById('resizerOutputFolder');if(resizerOutput)resizerOutput.value=folder}
+function syncPhotoOutputFolderDisplays(){const resizerOutput=document.getElementById('resizerOutputFolder');if(resizerOutput)resizerOutput.value=getSavedPhotoOutputFolder(RESIZED_IMAGES_FOLDER_KEY,'resizerOutputFolder','~/Pictures/Instagram/Resized');const photoEditOutput=document.getElementById('photoEditOutputFolder');if(photoEditOutput)photoEditOutput.value=getSavedPhotoOutputFolder(EDITED_IMAGES_FOLDER_KEY,'photoEditOutputFolder','~/Pictures/Instagram/Edited');const momentCaptureOutput=document.getElementById('momentCaptureOutputFolder');if(momentCaptureOutput)momentCaptureOutput.value=getSavedPhotoOutputFolder(MOMENT_CAPTURE_FOLDER_KEY,'momentCaptureOutputFolder','~/Pictures/Instagram/Moment capture')}
 function loadPhotoResizerSettings(){syncPhotoOutputFolderDisplays();const maxSide=document.getElementById('resizerMaxSide');if(maxSide){let saved=2048;try{const raw=Number(localStorage.getItem(RESIZER_MAX_SIDE_KEY));if(Number.isInteger(raw)&&raw>=64&&raw<=16384)saved=raw}catch(_){}maxSide.value=String(saved)}try{photoResizeUpscaleEnabled=localStorage.getItem(RESIZER_UPSCALE_KEY)!=='0'}catch(_){photoResizeUpscaleEnabled=true}renderPhotoResizeUpscaleToggle();syncResizerNoDuplicatesButton();loadPhotoResizeAdjustments();initPhotoResizePreviewZoom();syncPhotoResizeControls();syncPhotoEditControls()}
-function getConfiguredPhotoResizerOutputFolder(){return getConfiguredDownloadFolder()}
-function getConfiguredPhotoEditOutputFolder(){return getConfiguredDownloadFolder()}
+function getConfiguredPhotoResizerOutputFolder(){return isSeparateResizedImagesFolderEnabled()?getSavedPhotoOutputFolder(RESIZED_IMAGES_FOLDER_KEY,'resizerOutputFolder','~/Pictures/Instagram/Resized'):getConfiguredDownloadFolder()}
+function getConfiguredPhotoEditOutputFolder(){return isSeparateEditedImagesFolderEnabled()?getSavedPhotoOutputFolder(EDITED_IMAGES_FOLDER_KEY,'photoEditOutputFolder','~/Pictures/Instagram/Edited'):getConfiguredDownloadFolder()}
+function getConfiguredMomentCaptureOutputFolder(){return isSeparateMomentCaptureFolderEnabled()?getSavedPhotoOutputFolder(MOMENT_CAPTURE_FOLDER_KEY,'momentCaptureOutputFolder','~/Pictures/Instagram/Moment capture'):getConfiguredDownloadFolder()}
 function renderPhotoResizeUpscaleToggle(){const button=document.getElementById('resizerUpscaleToggleBtn');if(button){button.classList.toggle('active',photoResizeUpscaleEnabled);button.setAttribute('aria-pressed',String(photoResizeUpscaleEnabled));button.title=photoResizeUpscaleEnabled?'Upscaling smaller images: on. Click to turn off.':'Upscaling smaller images: off. Click to turn on.';button.disabled=photoResizeBusy}const hint=document.getElementById('resizerMaxSideHint');if(hint)hint.textContent=photoResizeUpscaleEnabled?'Larger images are reduced proportionally; smaller images are enlarged to this longest-side target.':'Larger images are reduced proportionally; smaller images are copied unchanged.'}
 function togglePhotoResizerUpscale(){if(photoResizeBusy)return;photoResizeUpscaleEnabled=!photoResizeUpscaleEnabled;try{localStorage.setItem(RESIZER_UPSCALE_KEY,photoResizeUpscaleEnabled?'1':'0')}catch(_){}renderPhotoResizeUpscaleToggle();setPhotoResizeStatus(photoResizeUpscaleEnabled?'Smaller images will be enlarged to the target size.':'Smaller images will be copied unchanged.',photoResizeUpscaleEnabled?'success':'')}
 function saveResizerMaxSide(value){const input=document.getElementById('resizerMaxSide');const n=Number(value);if(!Number.isInteger(n)||n<64||n>16384){if(input)input.value='2048';setPhotoResizeStatus('Enter a whole number from 64 to 16,384 pixels.','error');syncPhotoResizeControls();return}try{localStorage.setItem(RESIZER_MAX_SIDE_KEY,String(n))}catch(_){}setPhotoResizeStatus('Maximum longest side set to '+n.toLocaleString()+' pixels.');syncPhotoResizeControls()}
@@ -6159,7 +6267,7 @@ async function captureMomentFrame(){
     const blob=await encodeMomentCaptureFrame(canvas);
     const dataUri=await momentCaptureBlobToDataUri(blob);
     const filename=`${momentCaptureBaseName(activeItem)}_frame_${nextFrameNumber}.jpg`;
-    const folder=getConfiguredDownloadFolder();
+    const folder=getConfiguredMomentCaptureOutputFolder();
     const body={folder,noDuplicates:false,items:[{filename,shortcode:'moment-capture',photoIndex:0,isVideo:false,dataUri}]};
     let result=null;
     for(const endpoint of getApiUrls('/api/download-selected')){
@@ -6199,6 +6307,7 @@ function openVideoFolderFromContext(event){
 }
 async function openPhotoEditOutputFolder(){return openFolderPathInExplorer(getConfiguredPhotoEditOutputFolder(),'edited images')}
 async function openPhotoResizerOutputFolder(){return openFolderPathInExplorer(getConfiguredPhotoResizerOutputFolder(),'resized images')}
+async function openMomentCaptureOutputFolder(){return openFolderPathInExplorer(getConfiguredMomentCaptureOutputFolder(),'Moment capture images')}
 async function openDownloadFolder(){
   const folder=getConfiguredDownloadFolder();
   persistDownloadFolder(folder);
@@ -6538,6 +6647,10 @@ function applySavedUiPrefs(){
   syncNoDuplicatesButton();
   syncResizerNoDuplicatesButton();
   syncSeparateVideoFolderSettings();
+  syncSeparateResizedImagesFolderSettings();
+  syncSeparateEditedImagesFolderSettings();
+  syncSeparateMomentCaptureFolderSettings();
+  syncPhotoOutputFolderDisplays();
   try{
     const hidden=getUiPref('sidebarHidden',false);
     const app=document.querySelector('.app');
@@ -8606,8 +8719,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.084';
+const APP_VERSION='2.085';
 const VERSION_HISTORY=[
+  {version:'2.085',added:'Separate output-folder toggles for resized images, edited images, and Moment capture frames.',removed:'Image tools always saving to the shared Download location and repeatedly forcing a download-history folder rescan when toggling Separate video folder.',fixed:'Each image feature can save to and open its own configured folder while keeping the shared Download location as the default; cache successful history scans by folder and post set so toggles do not repeat the same scan.',tone:'green'},
   {version:'2.084',added:'Sequential per-post photo names in the Browser queue.',removed:'Browser queue photo names following the carousel slide index or repeating ph1.',fixed:'Assign each queued photo the next phN ordinal for its post, independently of the resolved slide index used to locate the selected media.',tone:'green'},
   {version:'2.083',added:'Moment capture’s video queue row now matches the compact Resize and Image Edit thumbnail rows.',removed:'The taller Moment-only 45px thumbnail strip.',fixed:'Remove the Moment-specific height override so Resize, Image Edit, and Moment capture all use the shared 39px row.',tone:'green'},
   {version:'2.082',added:'Browser queue photos use the slide index resolved from their actual media URL.',removed:'Different photos in one post being labeled and saved as ph1 when carousel tracking lagged.',fixed:'Before saving a queued photo, match its selected media URL to the resolved post, then update the queue row and filename to account_shortcode_phN.jpg using that slide’s real index.',tone:'green'},
