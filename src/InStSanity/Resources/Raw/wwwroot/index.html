@@ -721,7 +721,7 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .moment-capture-video-placeholder svg{display:block;width:14px;height:14px;opacity:.72}
 .moment-capture-video-placeholder span{font-size:8px;line-height:1}
 .photo-adjustment-files-panel .resizer-files-toolbar>.photo-adjustment-actions{margin-left:0;gap:8px;min-width:0}
-.photo-adjustment-files-panel .resizer-files-toolbar>.photo-adjustment-selection-actions{margin-left:auto}
+.photo-adjustment-files-panel .resizer-files-toolbar>.photo-adjustment-selection-actions{margin-left:auto;align-self:flex-end}
 
 @media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{height:min(74vh,700px);min-height:min(360px,74vh);max-height:min(74vh,700px)}.photo-adjustment-groups{max-height:none;overflow:visible;padding:0}}
 @media(max-width:760px){.resizer-adjustments-card .settings-card-head{align-items:flex-start;flex-direction:column}.photo-adjustment-header-actions{align-self:flex-end}}
@@ -1552,7 +1552,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.097; open version history" title="Click to view what changed in each version">v.2.097</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.098; open version history" title="Click to view what changed in each version">v.2.098</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8752,8 +8752,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.097';
+const APP_VERSION='2.098';
 const VERSION_HISTORY=[
+  {version:'2.098',added:'No new features.',removed:'The Select all and Clear images buttons sitting higher than the other Image Edit actions above the photo queue.',fixed:'Bottom-align Image Edit selection actions with its 37px main action row so every button has the same visible gap above the photo queue.',tone:'green'},
   {version:'2.097',added:'No new features.',removed:'Uneven Image Edit spacing between the photo queue, preview, and adjustment columns.',fixed:'Use 12px for the queue-to-layout gap, preview-to-controls gutter, and preview-heading gap, matching the existing panel insets and adjustment-group spacing.',tone:'green'},
   {version:'2.096',added:'No new features.',removed:'Uneven spacing before Moment capture preview and flush-left empty queue prompts.',fixed:'Match preview spacing to the 9px queue-toolbar gap and add 6px left inset to all three empty queue messages.',tone:'green'},
   {version:'2.095',added:'No new features.',removed:'Extra right-side padding beside the Image Edit adjustment groups.',fixed:'Remove the manual right gutter so adjustment cards use the full available content width; keep the thin scrollbar.',tone:'green'},
