@@ -1111,12 +1111,12 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
       <section class="settings-card moment-capture-card" aria-labelledby="momentCaptureHeading">
         <div class="settings-card-head moment-capture-card-head">
           <div><h2 id="momentCaptureHeading">Moment capture</h2><p>Choose a local video, play or scrub to the frame you want, then capture and save it to your image folder.</p></div>
-          <button type="button" class="icon-btn photo-adjustment-open-folder-btn moment-capture-open-folder-btn" id="momentCaptureOpenFolderBtn" onclick="openMomentCaptureOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open the configured Moment capture images folder; right-click for the separate video folder" aria-label="Open the configured Moment capture images folder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button>
         </div>
         <div class="setting-body moment-capture-body">
           <div class="moment-capture-actions">
             <div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="momentCaptureChooseVideoBtn" onclick="chooseMomentCaptureVideo()">Choose videos…</button></div><input hidden class="native-file-picker-input" id="momentCaptureVideoInput" type="file" accept="video/*" multiple aria-label="Choose videos for Moment capture" onchange="handleMomentCaptureVideoPicked(event)">
             <button type="button" class="primary" id="momentCaptureFrameBtn" onclick="captureMomentFrame()" disabled>Capture &amp; save frame</button>
+            <button type="button" class="icon-btn photo-adjustment-open-folder-btn moment-capture-open-folder-btn" id="momentCaptureOpenFolderBtn" onclick="openMomentCaptureOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open the configured Moment capture images folder; right-click for the separate video folder" aria-label="Open the configured Moment capture images folder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button>
           </div>
           <div class="resizer-files-panel moment-capture-files-panel" id="momentCaptureFilesPanel">
             <div class="resizer-files-toolbar"><span id="momentCaptureAvailableCount">Choose videos to capture</span><div><button type="button" class="outline" id="momentCaptureSelectionToggleBtn" onclick="toggleMomentCaptureVideoSelection()" aria-label="Select all Moment capture videos" title="Select all Moment capture videos" aria-pressed="false" disabled>Select all</button><button type="button" class="outline" id="momentCaptureClearVideosBtn" onclick="resetMomentCaptureQueue()" disabled>Clear videos</button></div></div>
@@ -1547,7 +1547,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.087; open version history" title="Click to view what changed in each version">v.2.087</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.088; open version history" title="Click to view what changed in each version">v.2.088</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8747,8 +8747,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.087';
+const APP_VERSION='2.088';
 const VERSION_HISTORY=[
+  {version:'2.088',added:'The Moment capture folder shortcut beside the frame-capture actions.',removed:'The folder shortcut in the Moment capture header.',fixed:'Move Open folder into the action row immediately after Capture & save frame.',tone:'green'},
   {version:'2.087',added:'Independent default-on No duplicates toggles for Image Edit and Moment capture.',removed:'The Saving folder label.',fixed:'Rename it Default folder, persist duplicate preferences separately, and apply them to edited-image and captured-frame saves.',tone:'green'},
   {version:'2.086',added:'Open folder reuses an existing File Explorer window already showing the target directory.',removed:'Repeated Open folder clicks opening another Explorer window for the same path.',fixed:'Compare normalized absolute paths, restore and activate a matching Explorer window, and launch Explorer only when no matching folder is already open.',tone:'green'},
   {version:'2.085',added:'Separate output-folder toggles for resized images, edited images, and Moment capture frames.',removed:'Image tools always saving to the shared Download location and repeatedly forcing a download-history folder rescan when toggling Separate video folder.',fixed:'Each image feature can save to and open its own configured folder while keeping the shared Download location as the default; cache successful history scans by folder and post set so toggles do not repeat the same scan.',tone:'green'},
