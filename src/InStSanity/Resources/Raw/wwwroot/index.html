@@ -910,7 +910,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
   <button class="nav active" id="libraryNav" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Saved Posts JSON</button>
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
   <button class="nav" id="browserNav" type="button" onclick="openInstagramBrowser()" title="Open Instagram in the in-app browser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Browser</button>
-  <button class="nav" id="resizerNav" type="button" onclick="showPage('resizer')" title="Open image editing tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="m4 17 5-5 3.2 3.2 2.2-2.2L20 18"/><path d="M17 2v4M15 4h4"/></svg>Edit</button>
+  <button class="nav" id="resizerNav" type="button" onclick="showPage('resizer')" title="Open image editing tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="m4 17 5-5 3.2 3.2 2.2-2.2L20 18"/><path d="M17 2v4M15 4h4"/></svg>Edit (beta)</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
   <div class="side-bottom"><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
 </aside>
@@ -1475,7 +1475,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.077; open version history" title="Click to view what changed in each version">v.2.077</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.078; open version history" title="Click to view what changed in each version">v.2.078</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8306,8 +8306,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.077';
+const APP_VERSION='2.078';
 const VERSION_HISTORY=[
+  {version:'2.078',added:'No new features.',removed:'The shorter Edit label in side-panel navigation.',fixed:'Rename the side-panel item to Edit (beta) while keeping the Image Edit page heading, breadcrumb, and in-page tab unchanged.',tone:'green'},
   {version:'2.077',added:'No new features.',removed:'The Moment capture frame preview and timestamp-heavy frame names.',fixed:'Keep captured stills hidden after saving, use short sequential video_frame_N.jpg names, and make Saved Posts native video enlargement fill the app viewport without cropping the source frame.',tone:'green'},
   {version:'2.076',added:'No new features.',removed:'The Choose images, Download, and Open folder actions from the Image Edit heading row.',fixed:'Move these three actions to the left side of the thumbnail queue toolbar while keeping Reset adjustments in the heading; add a small 8px gap between the photo queue and the live-preview panels.',tone:'green'},
   {version:'2.075',added:'No new features.',removed:'The separate Stop button in Moment capture.',fixed:'Resize and Image Edit selection changes now synchronize existing thumbnail checkboxes in animation-frame batches, keeping bulk select and clear actions responsive for long queues; use the video player controls to pause or scrub.',tone:'green'},
