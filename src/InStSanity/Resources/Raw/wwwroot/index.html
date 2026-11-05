@@ -709,9 +709,8 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .resizer-photo-thumb-status:empty{display:none}
 .resizer-photo-empty-note{flex:0 1 auto;min-width:0;max-width:100%;overflow:hidden;color:var(--t-muted,#94a3b8);font-size:10px;text-overflow:ellipsis;white-space:nowrap}
 .photo-adjustment-files-panel{margin-top:0}
+.photo-adjustment-files-panel .resizer-files-toolbar>div{margin-left:auto}
 .photo-adjustment-photo-picker{min-width:0;margin:0}
-.photo-edit-output-folder{max-width:560px;margin:12px 0 16px}
-.photo-edit-output-folder .field-label{display:block;margin-bottom:6px}
 @media(max-width:850px){.resizer-grid{grid-template-columns:minmax(0,1fr)}.resizer-adjustments-card{grid-column:1}.photo-editor-layout{grid-template-columns:minmax(0,1fr)}.photo-preview-canvas-wrap{height:min(74vh,700px);min-height:min(360px,74vh);max-height:min(74vh,700px)}.photo-adjustment-groups{max-height:none;overflow:visible;padding:0}}
 @media(max-width:760px){.resizer-adjustments-card .settings-card-head{align-items:flex-start;flex-direction:column}.photo-adjustment-actions{align-self:flex-end}}
 @media(max-width:600px){.photo-adjustment-footer{align-items:flex-start;flex-direction:column}}
@@ -967,9 +966,9 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 <section class="settings-card resizer-card resizer-picker-card">
         <div class="settings-card-head"><h2>Resize photos</h2><p>Choose photos for Resize. Click or check a thumbnail to toggle it in this panel’s selection.</p></div>
         <div class="setting-body">
-          <div class="resizer-pick-row"><div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="resizerChooseImagesBtn" onclick="chooseResizerImages()">Choose images…</button></div><input hidden class="native-file-picker-input" id="resizerImagesInput" type="file" accept="image/*" multiple aria-label="Choose images to resize" onchange="handleResizerImagesPicked(event)"><button type="button" class="primary" id="resizerResetBtn" onclick="resetResizerQueue()" disabled>Start over</button></div>
+          <div class="resizer-pick-row"><div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="resizerChooseImagesBtn" onclick="chooseResizerImages()">Choose images…</button></div><input hidden class="native-file-picker-input" id="resizerImagesInput" type="file" accept="image/*" multiple aria-label="Choose images to resize" onchange="handleResizerImagesPicked(event)"></div>
           <div class="resizer-files-panel" id="resizerFilePanel">
-            <div class="resizer-files-toolbar"><span id="resizerAvailableCount">Choose photos to resize</span><div><button type="button" class="outline" id="resizerSelectAllBtn" onclick="selectAllResizerFiles(true)">Select all</button><button type="button" class="outline" id="resizerClearSelectionBtn" onclick="selectAllResizerFiles(false)">Clear</button></div></div>
+            <div class="resizer-files-toolbar"><span id="resizerAvailableCount">Choose photos to resize</span><div><button type="button" class="outline" id="resizerSelectionToggleBtn" onclick="togglePhotoResizeSelection()" aria-label="Select all Resize images" title="Select all Resize images" aria-pressed="false" disabled>Select all</button><button type="button" class="outline" id="resizerClearImagesBtn" onclick="resetResizerQueue()" disabled>Clear images</button></div></div>
             <div class="resizer-photo-picker-row">
               <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="resizerPhotoScrollLeftBtn" onclick="scrollResizerPhotos(-1)" disabled title="Scroll photos left" aria-label="Scroll photos left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
               <div class="resizer-file-list" id="resizerFileList" role="group" aria-label="Photo thumbnails; check to include in Resize" onscroll="syncResizerPhotoScrollButtons()" onwheel="scrollResizerPhotosByWheel(event)"><span class="resizer-photo-empty-note">Choose images to resize.</span></div>
@@ -1008,7 +1007,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
         <div class="settings-card-head photo-adjustments-card-head"><div class="photo-adjustments-heading-copy"><h2 id="photoAdjustmentsHeading">Image adjustments <span class="photo-adjustment-summary" id="photoAdjustmentSummary">No changes</span></h2><p>Image Edit applies adjustments independently of Resize settings and saves separate copies; originals are never overwritten.</p></div><div class="photo-adjustment-actions"><div class="file-picker-control file-picker-control--native"><button type="button" class="primary" id="photoEditChooseImagesBtn" onclick="choosePhotoEditImages()">Choose images…</button></div><input hidden class="native-file-picker-input" id="photoEditImagesInput" type="file" accept="image/*" multiple aria-label="Choose images for Image Edit" onchange="handlePhotoEditImagesPicked(event)"><button type="button" class="primary photo-adjustment-download-btn" id="photoAdjustmentDownloadBtn" onclick="startPhotoEditDownload()" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></svg>Download</button><button type="button" class="icon-btn photo-adjustment-open-folder-btn" id="photoAdjustmentOpenFolderBtn" onclick="openPhotoEditOutputFolder()" oncontextmenu="return openVideoFolderFromContext(event)" title="Open the selected photos folder containing edited images" aria-label="Open the selected photos folder containing edited images"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.25a2 2 0 0 1 1.42.59L12 7.92a2 2 0 0 0 1.41.58h5.09A1.5 1.5 0 0 1 20 10v7.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 10h16"/></svg></button><button type="button" class="icon-btn photo-adjustment-reset" id="photoAdjustmentResetBtn" onclick="resetPhotoResizeAdjustments()" title="Reset adjustments" aria-label="Reset adjustments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2.3-5.6L20 12"/></svg></button></div></div>
         <div class="setting-body">
           <div class="resizer-files-panel photo-adjustment-files-panel" id="photoEditFilePanel">
-            <div class="resizer-files-toolbar"><span id="photoEditAvailableCount">Choose images to begin</span><div><button type="button" class="outline" id="photoEditSelectionToggleBtn" onclick="togglePhotoEditSelection()" aria-label="Select all Image Edit images" title="Select all Image Edit images" aria-pressed="false" disabled>Select all</button><button type="button" class="outline" id="photoEditClearImagesBtn" onclick="resetPhotoEditQueue()" disabled>Clear images</button></div></div>
+            <div class="resizer-files-toolbar"><div><button type="button" class="outline" id="photoEditSelectionToggleBtn" onclick="togglePhotoEditSelection()" aria-label="Select all Image Edit images" title="Select all Image Edit images" aria-pressed="false" disabled>Select all</button><button type="button" class="outline" id="photoEditClearImagesBtn" onclick="resetPhotoEditQueue()" disabled>Clear images</button></div></div>
             <div class="photo-adjustment-photo-picker">
               <span class="photo-adjustment-photo-label">Preview photo</span>
               <div class="resizer-photo-picker-row">
@@ -1016,13 +1015,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
                 <div class="resizer-file-list photo-adjustment-photo-strip" id="photoAdjustmentPhotoStrip" role="group" aria-label="Edit photos; choose a preview and check images to include in Download" onscroll="syncPhotoAdjustmentPhotoScrollButtons()" onwheel="scrollPhotoAdjustmentPhotosByWheel(event)"><span class="resizer-photo-empty-note">Choose images to preview and edit.</span></div>
                 <button type="button" class="icon-btn photo-adjustment-photo-scroll-btn" id="photoAdjustmentPhotoScrollRightBtn" onclick="scrollPhotoAdjustmentPhotos(1)" disabled title="Scroll preview photos right" aria-label="Scroll preview photos right"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
               </div>
-              <div class="hint" style="margin-top:7px">This Image Edit selection is independent of the Resize tab. Check photos to include them in Download; adjustments are applied to every checked photo.</div>
             </div>
-          </div>
-          <div class="photo-edit-output-folder">
-            <label class="field-label" for="photoEditOutputFolder">Save edited images to</label>
-            <div class="folder-row"><input class="text-input" id="photoEditOutputFolder" value="~/Pictures/Instagram" readonly></div>
-            <p class="hint">Uses the photos download location selected under Settings → Saving folder. Resize outputs use the same folder.</p>
           </div>
           <div class="photo-editor-layout">
             <div class="photo-preview-panel" id="photoResizePreviewPanel">
@@ -1479,7 +1472,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.072; open version history" title="Click to view what changed in each version">v.2.072</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.073; open version history" title="Click to view what changed in each version">v.2.073</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -4124,7 +4117,6 @@ let photoResizeBusy=false;
 let photoResizeConverting=false;
 let photoResizeCompleted=false;
 let photoResizeSelectionChangedDuringRun=false;
-let photoResizeSelectionLabel='';
 let photoResizeAvailableCount=0;
 let photoEditQueue=[];
 let photoEditSessionId='';
@@ -4133,8 +4125,6 @@ let photoEditBusy=false;
 let photoEditConverting=false;
 let photoEditCompleted=false;
 let photoEditSelectionChangedDuringRun=false;
-let photoEditSelectionLabel='';
-let photoEditAvailableCount=0;
 let photoEditTargetSignature='';
 let photoResizeUpscaleEnabled=true;
 let photoEditorActiveTab='resize';
@@ -5000,7 +4990,7 @@ function applyPhotoResizePreviewAdjustments(pixels,width,height,settings,seedDat
   if(settings.halftone>0)photoPreviewHalftone(pixels,width,height,settings.halftone,settings.halftoneSize);
   if(settings.pixelate>0)photoPreviewPixelate(pixels,width,height,settings.pixelate);
 }
-function syncPhotoOutputFolderDisplays(){const folder=getConfiguredDownloadFolder();const resizerOutput=document.getElementById('resizerOutputFolder');const editOutput=document.getElementById('photoEditOutputFolder');if(resizerOutput)resizerOutput.value=folder;if(editOutput)editOutput.value=folder}
+function syncPhotoOutputFolderDisplays(){const folder=getConfiguredDownloadFolder();const resizerOutput=document.getElementById('resizerOutputFolder');if(resizerOutput)resizerOutput.value=folder}
 function loadPhotoResizerSettings(){syncPhotoOutputFolderDisplays();const maxSide=document.getElementById('resizerMaxSide');if(maxSide){let saved=2048;try{const raw=Number(localStorage.getItem(RESIZER_MAX_SIDE_KEY));if(Number.isInteger(raw)&&raw>=64&&raw<=16384)saved=raw}catch(_){}maxSide.value=String(saved)}try{photoResizeUpscaleEnabled=localStorage.getItem(RESIZER_UPSCALE_KEY)!=='0'}catch(_){photoResizeUpscaleEnabled=true}renderPhotoResizeUpscaleToggle();syncResizerNoDuplicatesButton();loadPhotoResizeAdjustments();initPhotoResizePreviewZoom();syncPhotoResizeControls();syncPhotoEditControls()}
 function getConfiguredPhotoResizerOutputFolder(){return getConfiguredDownloadFolder()}
 function getConfiguredPhotoEditOutputFolder(){return getConfiguredDownloadFolder()}
@@ -5109,32 +5099,41 @@ function renderPhotoFileStrip(queue,listId,{currentId='',selectAction,selectionA
   list.innerHTML=markup||`<span class="resizer-photo-empty-note">${escapeHtml(emptyText||'Choose images to begin.')}</span>`;
   list.scrollLeft=markup?Math.min(previousScrollLeft,Math.max(0,list.scrollWidth-list.clientWidth)):0;
 }
-function renderPhotoResizeFileList(){
+function updatePhotoResizeAvailableCount(selectedCount){
+  const available=document.getElementById('resizerAvailableCount');
+  if(!available)return;
+  const queued=photoResizeQueue.length;
+  const selectionText=`${selectedCount} selected`;
+  available.textContent=queued===0?'Choose photos to resize':photoResizeAvailableCount>queued
+    ?`${queued} photos listed · first ${RESIZER_MAX_FILES} of ${photoResizeAvailableCount} supported · ${selectionText}`
+    :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
+}
+function syncPhotoResizeSelectionTiles(){
+  const list=document.getElementById('resizerFileList');
+  if(!list)return;
+  const checkboxes=list.getElementsByClassName('resizer-photo-select');
+  const statuses=list.getElementsByClassName('resizer-photo-thumb-status');
+  const limit=Math.min(photoResizeQueue.length,checkboxes.length);
+  for(let index=0;index<limit;index++){
+    const item=photoResizeQueue[index];
+    const selected=Boolean(item.selected);
+    if(checkboxes[index].checked!==selected)checkboxes[index].checked=selected;
+    const status=statuses[index];
+    if(status){
+      status.textContent=item.error?'!':item.uploaded?'✓':'';
+      status.classList.toggle('is-error',Boolean(item.error));
+    }
+  }
+}
+function renderPhotoResizeFileList(selectedCount=photoResizeQueue.filter(item=>item.selected).length){
   renderPhotoFileStrip(photoResizeQueue,'resizerFileList',{
     selectAction:'togglePhotoResizeSelectedFromThumbnail',
     selectionAction:'setPhotoResizeSelected',
     selectionLabel:'Resize',
     emptyText:'Choose images to resize.'
   });
-  const available=document.getElementById('resizerAvailableCount');
-  if(available){
-    const queued=photoResizeQueue.length;
-    const selected=photoResizeQueue.filter(item=>item.selected).length;
-    const selectionText=`${selected} selected`;
-    available.textContent=queued===0?'Choose photos to resize':photoResizeAvailableCount>queued
-      ?`${queued} photos listed · first ${RESIZER_MAX_FILES} of ${photoResizeAvailableCount} supported · ${selectionText}`
-      :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
-  }
+  updatePhotoResizeAvailableCount(selectedCount);
   syncResizerPhotoScrollButtons();
-}
-function updatePhotoEditAvailableCount(selectedCount){
-  const available=document.getElementById('photoEditAvailableCount');
-  if(!available)return;
-  const queued=photoEditQueue.length;
-  const selectionText=`${selectedCount} selected`;
-  available.textContent=queued===0?'Choose images to begin':photoEditAvailableCount>queued
-    ?`${queued} photos listed · first ${RESIZER_MAX_FILES} of ${photoEditAvailableCount} supported · ${selectionText}`
-    :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
 }
 function syncPhotoEditSelectionTiles(){
   const list=document.getElementById('photoAdjustmentPhotoStrip');
@@ -5153,7 +5152,7 @@ function syncPhotoEditSelectionTiles(){
     }
   }
 }
-function renderPhotoAdjustmentPhotoStrip(selectedCount=photoEditQueue.filter(item=>item.selected).length){
+function renderPhotoAdjustmentPhotoStrip(){
   renderPhotoFileStrip(photoEditQueue,'photoAdjustmentPhotoStrip',{
     currentId:photoEditCurrentFileId,
     selectAction:'selectPhotoEditPreview',
@@ -5161,7 +5160,6 @@ function renderPhotoAdjustmentPhotoStrip(selectedCount=photoEditQueue.filter(ite
     selectionLabel:'Edit download',
     emptyText:'Choose images to preview and edit.'
   });
-  updatePhotoEditAvailableCount(selectedCount);
   syncPhotoAdjustmentPhotoScrollButtons();
 }
 function syncPhotoStripScrollButtons(stripId,leftId,rightId){
@@ -5215,24 +5213,32 @@ function syncPhotoResizeControls({renderFiles=true}={}){
   const maxSideDown=document.getElementById('resizerMaxSideDownBtn');
   if(maxSideDown)maxSideDown.disabled=busy;
   const hasFiles=photoResizeQueue.length>0;
-  const selectAll=document.getElementById('resizerSelectAllBtn');
-  if(selectAll)selectAll.disabled=!hasFiles;
-  const clearSelection=document.getElementById('resizerClearSelectionBtn');
-  if(clearSelection)clearSelection.disabled=!hasFiles;
+  let selectedCount=0;
+  for(const item of photoResizeQueue)if(item.selected)selectedCount++;
+  const allSelected=hasFiles&&selectedCount===photoResizeQueue.length;
+  const selectionToggle=document.getElementById('resizerSelectionToggleBtn');
+  if(selectionToggle){
+    const label=allSelected?'Clear selection':'Select all';
+    selectionToggle.textContent=label;
+    selectionToggle.title=allSelected?'Clear the Resize selection':'Select all Resize images';
+    selectionToggle.setAttribute('aria-label',allSelected?'Clear Resize selection':'Select all Resize images');
+    selectionToggle.setAttribute('aria-pressed',String(allSelected));
+    selectionToggle.disabled=!hasFiles;
+  }
+  const clearImages=document.getElementById('resizerClearImagesBtn');
+  if(clearImages)clearImages.disabled=busy||!hasFiles;
   const start=document.getElementById('resizerStartBtn');
   if(start){
     const input=document.getElementById('resizerMaxSide');
     const max=Number(input?.value);
     const valid=Number.isInteger(max)&&max>=64&&max<=16384;
-    const hasSelection=photoResizeQueue.some(item=>item.selected);
-    start.disabled=busy||!hasSelection||!valid;
+    start.disabled=busy||selectedCount===0||!valid;
     start.textContent=busy?(photoResizeConverting?'Resizing…':'Uploading…'):'Resize';
   }
-  const reset=document.getElementById('resizerResetBtn');
-  if(reset)reset.disabled=busy||(!photoResizeSelectionLabel&&!photoResizeQueue.length&&!photoResizeUploadedCount&&!photoResizeCompleted);
   const panel=document.getElementById('resizerFilePanel');
   if(panel)panel.hidden=false;
-  if(renderFiles)renderPhotoResizeFileList();
+  if(renderFiles)renderPhotoResizeFileList(selectedCount);
+  else updatePhotoResizeAvailableCount(selectedCount);
 }
 function syncPhotoEditControls({renderFiles=true,refreshPreview=true}={}){
   const busy=photoEditBusy;
@@ -5262,8 +5268,7 @@ function syncPhotoEditControls({renderFiles=true,refreshPreview=true}={}){
   if(download)download.disabled=busy||selectedCount===0;
   const panel=document.getElementById('photoEditFilePanel');
   if(panel)panel.hidden=false;
-  if(renderFiles)renderPhotoAdjustmentPhotoStrip(selectedCount);
-  else updatePhotoEditAvailableCount(selectedCount);
+  if(renderFiles)renderPhotoAdjustmentPhotoStrip();
   if(refreshPreview)refreshPhotoResizePreview();
 }
 function resetPhotoResizeStaging(clearResults=true){
@@ -5304,16 +5309,23 @@ function setPhotoResizeSelected(index,selected){
   if(item.selected===next)return;
   const restaged=notePhotoResizeSelectionChange();
   item.selected=next;
-  syncPhotoResizeControls();
+  if(restaged)syncPhotoResizeSelectionTiles();
+  syncPhotoResizeControls({renderFiles:false});
   if(restaged)setPhotoResizeStatus('Selection updated. Press Resize to process the selected images.');
 }
 function selectAllResizerFiles(selected){
   const next=Boolean(selected);
   if(!photoResizeQueue.some(item=>item.selected!==next))return;
   const restaged=notePhotoResizeSelectionChange();
-  photoResizeQueue.forEach(item=>{item.selected=next});
-  syncPhotoResizeControls();
+  for(const item of photoResizeQueue)item.selected=next;
+  syncPhotoResizeSelectionTiles();
+  syncPhotoResizeControls({renderFiles:false});
   if(restaged)setPhotoResizeStatus('Selection updated. Press Resize to process the selected images.');
+}
+function togglePhotoResizeSelection(){
+  if(!photoResizeQueue.length)return;
+  const allSelected=photoResizeQueue.every(item=>item.selected);
+  selectAllResizerFiles(!allSelected);
 }
 function setPhotoEditSelected(index,selected){
   const item=photoEditQueue[index];
@@ -5427,7 +5439,6 @@ function handleResizerImagesPicked(selection){
   photoResizeAvailableCount=supported.length;
   photoResizeQueue=queue;
   const thumbnailStrip=document.getElementById('resizerFileList');if(thumbnailStrip)thumbnailStrip.scrollLeft=0;
-  photoResizeSelectionLabel=photoResizeQueue.length?'selected':'';
   photoResizeSessionId=photoResizeQueue.length?makePhotoResizeGuid():'';
   photoResizeUploadedCount=0;
   photoResizeConverting=false;
@@ -5471,7 +5482,6 @@ function handlePhotoEditImagesPicked(selection){
   const availableSlots=Math.max(0,RESIZER_MAX_FILES-photoEditQueue.length);
   const {queue}=createPhotoResizeQueueEntries(uniqueFiles,availableSlots);
   const overflowCount=uniqueFiles.length-queue.length;
-  photoEditAvailableCount+=uniqueFiles.length;
   if(!queue.length){
     const notes=[];
     if(duplicateCount)notes.push(`Skipped ${duplicateCount} duplicate image${duplicateCount===1?'':'s'}.`);
@@ -5486,7 +5496,6 @@ function handlePhotoEditImagesPicked(selection){
   queue.forEach((item,index)=>{item.order=existingCount+index});
   photoEditQueue.push(...queue);
   if(!photoEditQueue.some(item=>item.id===photoEditCurrentFileId))photoEditCurrentFileId=queue[0]?.id||photoEditQueue[0]?.id||'';
-  photoEditSelectionLabel='selected';
   if(!photoEditSessionId)photoEditSessionId=makePhotoResizeGuid();
   const notes=[`Added ${queue.length} image${queue.length===1?'':'s'}.`];
   if(duplicateCount)notes.push(`Skipped ${duplicateCount} duplicate image${duplicateCount===1?'':'s'}.`);
@@ -5715,7 +5724,6 @@ function resetResizerQueue(){
   photoResizeConverting=false;
   photoResizeCompleted=false;
   photoResizeSelectionChangedDuringRun=false;
-  photoResizeSelectionLabel='';
   photoResizeAvailableCount=0;
   const picker=document.getElementById('resizerImagesInput');
   if(picker)picker.value='';
@@ -5735,8 +5743,6 @@ function resetPhotoEditQueue(){
   photoEditConverting=false;
   photoEditCompleted=false;
   photoEditSelectionChangedDuringRun=false;
-  photoEditSelectionLabel='';
-  photoEditAvailableCount=0;
   photoEditTargetSignature='';
   resetPhotoEditPreviewState();
   const picker=document.getElementById('photoEditImagesInput');
@@ -8293,8 +8299,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.072';
+const APP_VERSION='2.073';
 const VERSION_HISTORY=[
+  {version:'2.073',added:'Consistent Resize and Image Edit queue controls.',removed:'Resize Start over and its separate selection-clear button; redundant Image Edit queue-count, selection-help, and output-folder text.',fixed:'Use one Select all/Clear selection toggle and a separate Clear images action for Resize; remove repeated Image Edit notes while keeping Settings as the save destination.',tone:'green'},
   {version:'2.072',added:'No new features.',removed:'Image Edit selection toggles rebuilding the entire photo strip and refreshing the preview.',fixed:'Update selection checkboxes and the selection summary in place, avoiding an unnecessary reload of up to 500 image tiles and the active preview.',tone:'green'},
   {version:'2.071',added:'Append images to Image Edit without replacing earlier selections; skip duplicate files.',removed:'Separate Select all and Clear selection buttons.',fixed:'Keep previously added Image Edit rows when choosing more images, ignore duplicate file selections, and use one button to toggle all selections.',tone:'green'},
   {version:'2.070',added:'Saved Browser queue items stay visible after downloading.',removed:'Successful queue items disappearing as soon as they are saved.',fixed:'Mark downloaded and duplicate-skipped entries, keep them until manually removed or cleared, and only retry unfinished or failed items.',tone:'green'},
