@@ -322,7 +322,23 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 							// Always resolve the post's selected slide and download its best image URL.
 							try
 							{
-								rawUrl = await ResolveQueuedPhotoUrlAsync(item, cancellation.Token).ConfigureAwait(false) ?? string.Empty;
+								// The WebView carousel index can lag; the resolved media URL identifies the actual post slide.
+								var resolvedPhoto = await ResolveQueuedPhotoUrlAsync(item, cancellation.Token).ConfigureAwait(false);
+								if (resolvedPhoto.HasValue)
+								{
+									rawUrl = resolvedPhoto.Value.Url;
+									var resolvedSlideIndex = resolvedPhoto.Value.SlideIndex;
+									var resolvedFilename = BuildQueueFilename(item.Account, item.Shortcode, item.IsVideo, resolvedSlideIndex);
+									if (item.SlideIndex != resolvedSlideIndex || !string.Equals(item.Filename, resolvedFilename, StringComparison.Ordinal))
+									{
+										item = item with { SlideIndex = resolvedSlideIndex, Filename = resolvedFilename };
+										UpdateResolvedQueueItem(item);
+									}
+								}
+								else
+								{
+									rawUrl = string.Empty;
+								}
 							}
 							catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
 							{
@@ -537,7 +553,7 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		return error.Length == 0;
 	}
 
-	async Task<string?> ResolveQueuedPhotoUrlAsync(BrowserQueuedMedia item, CancellationToken cancellationToken)
+	async Task<(string Url, int SlideIndex)?> ResolveQueuedPhotoUrlAsync(BrowserQueuedMedia item, CancellationToken cancellationToken)
 	{
 		var postUrl = $"https://www.instagram.com/p/{Uri.EscapeDataString(item.Shortcode)}/";
 		var post = await resolver.ResolveAsync(postUrl, cancellationToken).ConfigureAwait(false);
@@ -550,7 +566,8 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 		if (media.IsVideo || !IsFullSizeResolvedPhoto(media)) return null;
 
 		var imageUrl = media.ImgUrl;
-		return SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(imageUrl) ? imageUrl : null;
+		if (!SelectedMediaDownloadService.IsAllowedBrowserMediaUrl(imageUrl)) return null;
+		return (Url: imageUrl, SlideIndex: slideIndex);
 	}
 
 	static bool IsFullSizeResolvedPhoto(ResolvedMedia media) => media.HasFullSizeImage;
@@ -642,6 +659,14 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			extension.Equals(".mpd", StringComparison.OrdinalIgnoreCase);
 	}
 
+	static string BuildQueueFilename(string account, string shortcode, bool isVideo, int slideIndex)
+	{
+		var extension = isVideo ? ".mp4" : ".jpg";
+		return isVideo
+			? $"{account}_{shortcode}_v{slideIndex + 1}{extension}"
+			: $"{account}_{shortcode}_ph{slideIndex + 1}{extension}";
+	}
+
 	static bool TryBuildQueueItem(
 		JsonElement root,
 		out BrowserQueuedMedia? item,
@@ -717,13 +742,26 @@ public sealed class BrowserMediaQueueService(SelectedMediaDownloadService downlo
 			: $"slide:{slideIndex}";
 		var key = $"{shortcode}|{type}|{mediaIdentity}";
 		// Keep queue identity URL-based even though saved filenames use concise phN/vN ordinals.
-		var extension = isVideo ? ".mp4" : ".jpg";
-		var filename = isVideo
-			? $"{account}_{shortcode}_v{slideIndex + 1}{extension}"
-			: $"{account}_{shortcode}_ph{slideIndex + 1}{extension}";
+		var filename = BuildQueueFilename(account, shortcode, isVideo, slideIndex);
 		item = new BrowserQueuedMedia(key, shortcode, account, slideIndex, contentCount, isVideo, rawUrl, thumbnailUrl, filename, null);
 		error = string.Empty;
 		return true;
+	}
+
+	void UpdateResolvedQueueItem(BrowserQueuedMedia item)
+	{
+		var changed = false;
+		lock (_gate)
+		{
+			var queueIndex = _items.FindIndex(candidate => candidate.Key == item.Key);
+			if (queueIndex < 0) return;
+			var queuedItem = _items[queueIndex];
+			if (queuedItem.SlideIndex == item.SlideIndex &&
+				string.Equals(queuedItem.Filename, item.Filename, StringComparison.Ordinal)) return;
+			_items[queueIndex] = queuedItem with { SlideIndex = item.SlideIndex, Filename = item.Filename };
+			changed = true;
+		}
+		if (changed) Publish();
 	}
 
 	static string AccountFromPostUrl(string postUrl)
