@@ -906,7 +906,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
   <button class="nav active" id="libraryNav" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Saved Posts JSON</button>
   <button class="nav" id="saveUrlNav" onclick="showPage('save-url')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Save via URL</button>
   <button class="nav" id="browserNav" type="button" onclick="openInstagramBrowser()" title="Open Instagram in the in-app browser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Browser</button>
-  <button class="nav" id="resizerNav" type="button" onclick="showPage('resizer')" title="Open image editing tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="m4 17 5-5 3.2 3.2 2.2-2.2L20 18"/><path d="M17 2v4M15 4h4"/></svg>Image Edit</button>
+  <button class="nav" id="resizerNav" type="button" onclick="showPage('resizer')" title="Open image editing tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="m4 17 5-5 3.2 3.2 2.2-2.2L20 18"/><path d="M17 2v4M15 4h4"/></svg>Edit</button>
   <div class="sidebar-sticker-slot" id="sidebarStickerSlot" aria-hidden="true"></div>
   <div class="side-bottom"><button class="nav" id="settingsNav" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h9m4 0h3"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg>Settings</button></div>
 </aside>
@@ -1472,7 +1472,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.073; open version history" title="Click to view what changed in each version">v.2.073</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.074; open version history" title="Click to view what changed in each version">v.2.074</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8299,8 +8299,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.073';
+const APP_VERSION='2.074';
 const VERSION_HISTORY=[
+  {version:'2.074',added:'No new features.',removed:'The longer Image Edit label in the side panel.',fixed:'Rename only the side-panel navigation item to Edit; keep the page heading and in-page Image Edit tab unchanged.',tone:'green'},
   {version:'2.073',added:'Consistent Resize and Image Edit queue controls.',removed:'Resize Start over and its separate selection-clear button; redundant Image Edit queue-count, selection-help, and output-folder text.',fixed:'Use one Select all/Clear selection toggle and a separate Clear images action for Resize; remove repeated Image Edit notes while keeping Settings as the save destination.',tone:'green'},
   {version:'2.072',added:'No new features.',removed:'Image Edit selection toggles rebuilding the entire photo strip and refreshing the preview.',fixed:'Update selection checkboxes and the selection summary in place, avoiding an unnecessary reload of up to 500 image tiles and the active preview.',tone:'green'},
   {version:'2.071',added:'Append images to Image Edit without replacing earlier selections; skip duplicate files.',removed:'Separate Select all and Clear selection buttons.',fixed:'Keep previously added Image Edit rows when choosing more images, ignore duplicate file selections, and use one button to toggle all selections.',tone:'green'},
