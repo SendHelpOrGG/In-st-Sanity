@@ -1479,7 +1479,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.071; open version history" title="Click to view what changed in each version">v.2.071</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.072; open version history" title="Click to view what changed in each version">v.2.072</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -5127,7 +5127,33 @@ function renderPhotoResizeFileList(){
   }
   syncResizerPhotoScrollButtons();
 }
-function renderPhotoAdjustmentPhotoStrip(){
+function updatePhotoEditAvailableCount(selectedCount){
+  const available=document.getElementById('photoEditAvailableCount');
+  if(!available)return;
+  const queued=photoEditQueue.length;
+  const selectionText=`${selectedCount} selected`;
+  available.textContent=queued===0?'Choose images to begin':photoEditAvailableCount>queued
+    ?`${queued} photos listed · first ${RESIZER_MAX_FILES} of ${photoEditAvailableCount} supported · ${selectionText}`
+    :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
+}
+function syncPhotoEditSelectionTiles(){
+  const list=document.getElementById('photoAdjustmentPhotoStrip');
+  if(!list)return;
+  const checkboxes=list.getElementsByClassName('resizer-photo-select');
+  const statuses=list.getElementsByClassName('resizer-photo-thumb-status');
+  const limit=Math.min(photoEditQueue.length,checkboxes.length);
+  for(let index=0;index<limit;index++){
+    const item=photoEditQueue[index];
+    const selected=Boolean(item.selected);
+    if(checkboxes[index].checked!==selected)checkboxes[index].checked=selected;
+    const status=statuses[index];
+    if(status){
+      status.textContent=item.error?'!':item.uploaded?'✓':'';
+      status.classList.toggle('is-error',Boolean(item.error));
+    }
+  }
+}
+function renderPhotoAdjustmentPhotoStrip(selectedCount=photoEditQueue.filter(item=>item.selected).length){
   renderPhotoFileStrip(photoEditQueue,'photoAdjustmentPhotoStrip',{
     currentId:photoEditCurrentFileId,
     selectAction:'selectPhotoEditPreview',
@@ -5135,15 +5161,7 @@ function renderPhotoAdjustmentPhotoStrip(){
     selectionLabel:'Edit download',
     emptyText:'Choose images to preview and edit.'
   });
-  const available=document.getElementById('photoEditAvailableCount');
-  if(available){
-    const queued=photoEditQueue.length;
-    const selected=photoEditQueue.filter(item=>item.selected).length;
-    const selectionText=`${selected} selected`;
-    available.textContent=queued===0?'Choose images to begin':photoEditAvailableCount>queued
-      ?`${queued} photos listed · first ${RESIZER_MAX_FILES} of ${photoEditAvailableCount} supported · ${selectionText}`
-      :`${queued} photo${queued===1?'':'s'} · ${selectionText}`;
-  }
+  updatePhotoEditAvailableCount(selectedCount);
   syncPhotoAdjustmentPhotoScrollButtons();
 }
 function syncPhotoStripScrollButtons(stripId,leftId,rightId){
@@ -5226,9 +5244,11 @@ function syncPhotoEditControls({renderFiles=true,refreshPreview=true}={}){
   const picker=document.getElementById('photoEditImagesInput');
   if(picker)picker.disabled=busy||nativeFilePickerBusy;
   const hasFiles=photoEditQueue.length>0;
+  let selectedCount=0;
+  for(const item of photoEditQueue)if(item.selected)selectedCount++;
+  const allSelected=hasFiles&&selectedCount===photoEditQueue.length;
   const selectionToggle=document.getElementById('photoEditSelectionToggleBtn');
   if(selectionToggle){
-    const allSelected=hasFiles&&photoEditQueue.every(item=>item.selected);
     const label=allSelected?'Clear selection':'Select all';
     selectionToggle.textContent=label;
     selectionToggle.title=allSelected?'Clear the Image Edit selection':'Select all Image Edit images';
@@ -5239,13 +5259,11 @@ function syncPhotoEditControls({renderFiles=true,refreshPreview=true}={}){
   const clearImages=document.getElementById('photoEditClearImagesBtn');
   if(clearImages)clearImages.disabled=busy||!hasFiles;
   const download=document.getElementById('photoAdjustmentDownloadBtn');
-  if(download){
-    const hasDownloadTarget=photoEditQueue.some(item=>item.selected);
-    download.disabled=busy||!hasDownloadTarget;
-  }
+  if(download)download.disabled=busy||selectedCount===0;
   const panel=document.getElementById('photoEditFilePanel');
   if(panel)panel.hidden=false;
-  if(renderFiles)renderPhotoAdjustmentPhotoStrip();
+  if(renderFiles)renderPhotoAdjustmentPhotoStrip(selectedCount);
+  else updatePhotoEditAvailableCount(selectedCount);
   if(refreshPreview)refreshPhotoResizePreview();
 }
 function resetPhotoResizeStaging(clearResults=true){
@@ -5304,15 +5322,17 @@ function setPhotoEditSelected(index,selected){
   if(item.selected===next)return;
   const restaged=notePhotoEditSelectionChange();
   item.selected=next;
-  syncPhotoEditControls();
+  if(restaged)syncPhotoEditSelectionTiles();
+  syncPhotoEditControls({renderFiles:false,refreshPreview:false});
   if(restaged)setPhotoEditStatus('Edit selection updated. Press Download to process the selected images.');
 }
 function selectAllPhotoEditFiles(selected){
   const next=Boolean(selected);
   if(!photoEditQueue.some(item=>item.selected!==next))return;
   const restaged=notePhotoEditSelectionChange();
-  photoEditQueue.forEach(item=>{item.selected=next});
-  syncPhotoEditControls();
+  for(const item of photoEditQueue)item.selected=next;
+  syncPhotoEditSelectionTiles();
+  syncPhotoEditControls({renderFiles:false,refreshPreview:false});
   if(restaged)setPhotoEditStatus('Edit selection updated. Press Download to process the selected images.');
 }
 function togglePhotoEditSelection(){
@@ -8273,8 +8293,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.071';
+const APP_VERSION='2.072';
 const VERSION_HISTORY=[
+  {version:'2.072',added:'No new features.',removed:'Image Edit selection toggles rebuilding the entire photo strip and refreshing the preview.',fixed:'Update selection checkboxes and the selection summary in place, avoiding an unnecessary reload of up to 500 image tiles and the active preview.',tone:'green'},
   {version:'2.071',added:'Append images to Image Edit without replacing earlier selections; skip duplicate files.',removed:'Separate Select all and Clear selection buttons.',fixed:'Keep previously added Image Edit rows when choosing more images, ignore duplicate file selections, and use one button to toggle all selections.',tone:'green'},
   {version:'2.070',added:'Saved Browser queue items stay visible after downloading.',removed:'Successful queue items disappearing as soon as they are saved.',fixed:'Mark downloaded and duplicate-skipped entries, keep them until manually removed or cleared, and only retry unfinished or failed items.',tone:'green'},
   {version:'2.069',added:'Higher-resolution Image Edit live preview, up to 2,400px on the longest side.',removed:'The 1,200px preview limit.',fixed:'Show more image detail in the live preview while keeping preview memory capped; edited downloads still process the staged original image.',tone:'green'},
