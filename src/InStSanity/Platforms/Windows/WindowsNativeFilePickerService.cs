@@ -110,7 +110,7 @@ public sealed class WindowsNativeFilePickerService : INativeFilePickerService
 		"video" => new(
 			global::Windows.Storage.Pickers.PickerLocationId.VideosLibrary,
 			VideoExtensions,
-			AllowMultiple: false),
+			AllowMultiple: true),
 		"background" => new(
 			global::Windows.Storage.Pickers.PickerLocationId.PicturesLibrary,
 			BackgroundExtensions,
