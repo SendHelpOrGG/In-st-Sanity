@@ -714,9 +714,9 @@ body.theme-swapping,body.theme-swapping *,body.theme-swapping *::before,body.the
 .resizer-photo-thumb-status{position:absolute;right:1px;bottom:1px;z-index:2;display:grid;place-items:center;min-width:13px;height:13px;padding:0 2px;border-radius:999px;background:rgba(15,23,42,.88);color:#6ee7b7;font-size:9px;font-weight:800}
 .resizer-photo-thumb-status.is-error{color:#fca5a5}
 .resizer-photo-thumb-status:empty{display:none}
-.resizer-photo-empty-note{flex:0 1 auto;min-width:0;max-width:100%;overflow:hidden;color:var(--t-muted,#94a3b8);font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.resizer-photo-empty-note{flex:0 1 auto;min-width:0;max-width:100%;overflow:hidden;padding-left:6px;box-sizing:border-box;color:var(--t-muted,#94a3b8);font-size:10px;text-overflow:ellipsis;white-space:nowrap}
 .photo-adjustment-files-panel{margin-top:0}
-.moment-capture-body .moment-capture-files-panel{margin:0 0 14px}
+.moment-capture-body .moment-capture-files-panel{margin:0 0 9px}
 .moment-capture-video-placeholder{gap:1px}
 .moment-capture-video-placeholder svg{display:block;width:14px;height:14px;opacity:.72}
 .moment-capture-video-placeholder span{font-size:8px;line-height:1}
@@ -1552,7 +1552,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
 </main>
 </div>
 </div>
-<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.095; open version history" title="Click to view what changed in each version">v.2.095</button>
+<button class="app-version-button" id="appVersionButton" type="button" onclick="showVersionHistory()" aria-label="Version 2.096; open version history" title="Click to view what changed in each version">v.2.096</button>
 <div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
@@ -8752,8 +8752,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.095';
+const APP_VERSION='2.096';
 const VERSION_HISTORY=[
+  {version:'2.096',added:'No new features.',removed:'Uneven spacing before Moment capture preview and flush-left empty queue prompts.',fixed:'Match preview spacing to the 9px queue-toolbar gap and add 6px left inset to all three empty queue messages.',tone:'green'},
   {version:'2.095',added:'No new features.',removed:'Extra right-side padding beside the Image Edit adjustment groups.',fixed:'Remove the manual right gutter so adjustment cards use the full available content width; keep the thin scrollbar.',tone:'green'},
   {version:'2.094',added:'No new features.',removed:'The Resize configuration card sitting 14px lower than Resize photos.',fixed:'Remove the per-card top margin in the Resize and Image Edit grids; the shared tab margin and grid gap now control vertical spacing.',tone:'green'},
   {version:'2.093',added:'No new features.',removed:'Unequal inner padding between the Image Edit preview and adjustment groups.',fixed:'Use the same 12px content inset in the preview panel and adjustment groups.',tone:'green'},
