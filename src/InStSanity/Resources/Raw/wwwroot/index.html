@@ -1144,13 +1144,14 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
   <section class="content settings" id="settingsPage">
     <div class="heading-row"><div><div class="eyebrow">Preferences</div><h1>Settings</h1></div></div>
     <div class="settings-tabs" role="tablist" aria-label="Settings categories">
-      <button class="settings-tab active" role="tab" aria-selected="true" aria-controls="settings-private" onclick="showSettingsTab('private',this)">Private settings</button>
-      <button class="settings-tab" role="tab" aria-selected="false" aria-controls="settings-ui" onclick="showSettingsTab('ui',this)">UI Settings</button>
-      <button class="settings-tab" role="tab" aria-selected="false" aria-controls="settings-sound" onclick="showSettingsTab('sound',this)">Sound</button>
+      <button class="settings-tab active" role="tab" aria-selected="true" aria-controls="settings-privacy" onclick="showSettingsTab('privacy',this)">Privacy</button>
+      <button class="settings-tab" role="tab" aria-selected="false" aria-controls="settings-ui" onclick="showSettingsTab('ui',this)">UI</button>
+      <button class="settings-tab" role="tab" aria-selected="false" aria-controls="settings-sound" onclick="showSettingsTab('sound',this)">Sounds</button>
       <button class="settings-tab" role="tab" aria-selected="false" aria-controls="settings-saving" onclick="showSettingsTab('saving',this)">Saving</button>
+      <button class="settings-tab" role="tab" aria-selected="false" aria-controls="settings-reset" onclick="showSettingsTab('reset',this)">Reset</button>
     </div>
     <div class="settings-layout">
-      <div class="settings-tab-panel active" id="settings-private" role="tabpanel">
+      <div class="settings-tab-panel active" id="settings-privacy" role="tabpanel">
         <div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
             <div class="settings-card-head-inner">
@@ -1546,6 +1547,9 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
             </div>
           </div>
         </div>
+        </div>
+      </div>
+      <div class="settings-tab-panel" id="settings-reset" role="tabpanel">
         <div class="settings-card collapsed">
           <div class="settings-card-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleUiSettingsPanel(this.closest('.settings-card'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUiSettingsPanel(this.closest('.settings-card'))}">
             <div class="settings-card-head-inner">
@@ -1559,7 +1563,13 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
               <p class="hint">Clears: theme, background opacity, click sound/volume, video &amp; source toggles, download history marks, separate folder toggles, resizer settings, all folder paths, imported posts, download history.</p>
               <p class="hint">Keeps: custom background image/GIF, Instagram login session.</p>
             </div>
-          </div><div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="version-history-overlay" id="versionHistoryModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="versionHistoryTitle" onclick="if(event.target===this)closeVersionHistory()">
   <section class="version-history-modal">
     <header class="version-history-head"><div><span class="eyebrow">Release notes</span><h2 id="versionHistoryTitle">Version history</h2></div><button class="icon-btn" type="button" aria-label="Close version history" onclick="closeVersionHistory()">×</button></header>
     <div class="version-history-list" id="versionHistoryList"></div>
@@ -8831,9 +8841,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.107';
+const APP_VERSION='2.108';
 const VERSION_HISTORY=[
-  {version:'2.107',added:'Reset all app settings button — restores theme, toggles, audio, folder paths, and clears imported data to factory defaults.',addedDetails:'New "Reset all app settings" button in Settings → Default folder panel. Defaults: theme Default, background opacity 30% (keeps custom background image/GIF), click sound ON thin-tick at 13%, show videos ON, source badges OFF, download history marks ON, all folder paths cleared, separate folder toggles OFF, resizer max side 1000px with upscale ON, clears imported posts and download history.',tone:'green'},
+  {version:'2.108',added:'Reset tab and renamed settings categories — Reset all app settings now has its own tab at the end of the settings row. Renamed: Private settings → Privacy, UI Settings → UI, Sound → Sounds.',addedDetails:'Reset tab location: Settings → Reset (last tab). Defaults: theme Default, background opacity 30% (keeps custom background image/GIF), click sound ON thin-tick at 13%, show videos ON, source badges OFF, download history marks ON, all folder paths cleared, separate folder toggles OFF, resizer max side 1000px with upscale ON, clears imported posts and download history.',tone:'green'},
 {version:'2.106',added:'No new features.',removed:'Per-post video toggle state shared a single global flag — toggling inside one post affected all posts, and reopening a post reset the toggle to the main page state.',fixed:'Make detail-view video toggle state per-post (post.detailHideVideos), defaulting to the main page toggle; each post now remembers its own on/off choice independently.',tone:'green'},{version:'2.105',added:'No new features.',removed:'The download progress toast text in the library footer not vertically centered inside the 37px-high box.',fixed:'Vertically center the download progress toast text inside the 37px-high container using flexbox alignment.',tone:'green'},
 {version:'2.102',added:'No new features.',removed:'The duplicate-skip pop-up still rendering taller than needed on v2.101 even after switching from fixed height to compact padding.',fixed:'Shrink the Skipped N (duplicates) notice further — smaller font (12px), tighter line-height (1.2), and reduced padding (2px 8px) — so it sits close to the text and never looms over the close button.',tone:'green'},
 {version:'2.100',added:'No new features.',removed:'The collection videos toggle overriding the videos toggle inside an open post, and the tall low-contrast duplicate-skip pop-up overlapping its close button.',fixed:'Per-post and save-url video toggles default to the main page videos on/off setting but stay independent within each view; duplicate-skip notice shortened to Skipped N (duplicates) with a theme-aware background and compact padding that stays clear of the close button.',tone:'green'},
