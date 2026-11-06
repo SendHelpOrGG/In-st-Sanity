@@ -1,5 +1,8 @@
+using System.Text.Json;
+using System.Threading;
 using InStSanity.Platforms.Windows;
 using InStSanity.Services.Browser;
+using InStSanity.Services.Downloads;
 using InStSanity.Services.Instagram;
 using InStSanity.ViewModels;
 using Microsoft.Maui.ApplicationModel;
@@ -9,94 +12,258 @@ namespace InStSanity;
 public partial class MainPage : ContentPage
 {
 	const string InstagramHomeUrl = "https://www.instagram.com/";
+	const long BrowserFolderOpenDuplicateWindowMs = 750;
+	static readonly JsonSerializerOptions QueueJsonOptions = new(JsonSerializerDefaults.Web);
 
 	readonly InstagramBrowserWindowService _browserWindow;
+	readonly BrowserMediaQueueService _browserMediaQueue;
 	readonly InstagramHttp _instagramHttp;
+	readonly InstagramResolver _instagramResolver;
 	WebView? _instagramBrowserView;
 	string? _currentInstagramUrl;
+	InstagramBrowserRegion? _instagramBrowserRegion;
+	long _lastStickerCursorForwardedAtMs;
+	long _lastBrowserFolderOpenRequestAtMs;
+	string _lastBrowserFolderOpenAction = string.Empty;
+	bool _hasBrowserFolderOpenRequest;
+	string _cachedBrowserOverlayThemeJson = "null";
+	DateTime _browserOverlayThemeCachedAtUtc = DateTime.MinValue;
 
 	// Last confirmed identity: the page probe can miss it on pages without the profile
 	// markup and the account API can be unavailable, so keep the name instead of flapping.
 	const string AccountUsernameKey = "ig_account_username";
 	const string AccountFullNameKey = "ig_account_full_name";
 	const string AccountPicKey = "ig_account_pic";
+	const int StartupNavigationTimeoutSeconds = 15;
+	const int StartupUiTimeoutSeconds = 15;
+	const string StartupProbeScript = "(()=>{const body=document.body;const app=document.querySelector('.app');const grid=document.getElementById('postGrid');const boot=document.getElementById('lsBoot');const started=window.__instSanityAppStarted===true;const blocked=!!body?.classList.contains('app-startup-blocked');return JSON.stringify({ready:!!(app&&grid&&started&&!boot&&!blocked&&grid.innerHTML.trim()),hasApp:!!app,hasGrid:!!grid,started,boot:!!boot,blocked,hasStartHook:typeof window.startAppAfterLoadingScreen==='function',url:String(location.href||''),error:String(window.__instSanityStartupError||'')})})()";
+	const string StartupRecoveryScript = "(()=>{try{document.getElementById('lsBoot')?.remove();document.body?.classList.remove('app-startup-blocked');if(!window.__instSanityAppStarted&&typeof window.startAppAfterLoadingScreen==='function')window.startAppAfterLoadingScreen();return 'recovery-requested'}catch(e){return String(e&&e.message||e)}})()";
+	int _startupMonitorGeneration;
+	volatile bool _mainWebAppNavigationCompleted;
 	string _knownAccountUsername = string.Empty;
 	string _knownAccountFullName = string.Empty;
 	string _knownAccountPic = string.Empty;
 
-	public MainPage(MainPageViewModel viewModel, InstagramBrowserWindowService browserWindow, InstagramHttp instagramHttp)
+	public MainPage(
+		MainPageViewModel viewModel,
+		InstagramBrowserWindowService browserWindow,
+		BrowserMediaQueueService browserMediaQueue,
+		InstagramHttp instagramHttp,
+		InstagramResolver instagramResolver)
 	{
 		InitializeComponent();
 
 		BindingContext = viewModel;
 		_browserWindow = browserWindow;
+		_browserMediaQueue = browserMediaQueue;
 		_instagramHttp = instagramHttp;
+		_instagramResolver = instagramResolver;
 		browserWindow.OpenRequested += OnInstagramBrowserOpenRequested;
 		browserWindow.NavigateRequested += OnInstagramBrowserNavigateRequested;
 		browserWindow.CommandRequested += OnInstagramBrowserCommandRequested;
 		browserWindow.RegionRequested += OnInstagramBrowserRegionRequested;
 		browserWindow.CookieSyncHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(SyncInstagramCookiesAsync);
+		browserWindow.SessionRefreshHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(RefreshInstagramAccountAsync);
+		browserWindow.LogoutHandler = () => MainThread.InvokeOnMainThreadAsync<bool>(LogoutInstagramAsync);
+		browserMediaQueue.StateChanged += OnBrowserMediaQueueStateChanged;
+		browserMediaQueue.ItemCompleted += OnBrowserQueueItemCompleted;
 
 		// Links opened by the app UI belong in the system browser (Windows only; the
 		// guard keeps the platform-specific intent explicit).
 #if WINDOWS
 		WebViewBootstrapper.Attach(WebAppView);
-#endif
 
-		_ = InitializeInstagramSessionAsync();
+		// Restore the last-known account immediately without creating WebView2. The
+		// Instagram browser is warmed only after the loading-screen animation completes.
+		RestoreKnownAccount();
+#endif
+		StartStartupNavigationWatchdog();
 	}
 
-	/// <summary>
-	/// The WebView2 profile keeps the Instagram sign-in between runs, so restore the
-	/// account surfaces at startup and warm the Instagram page: the browser tab opens
-	/// straight onto the main page and the top bar and Settings know the signed-in user
-	/// without waiting for a navigation to trigger a probe.
-	/// </summary>
-	async Task InitializeInstagramSessionAsync()
+	async void OnWebAppNavigated(object? sender, WebNavigatedEventArgs e)
 	{
-#if WINDOWS
-		try
+		var generation = Interlocked.Increment(ref _startupMonitorGeneration);
+		_mainWebAppNavigationCompleted = true;
+		System.Diagnostics.Debug.WriteLine(
+			$"[In-st-Sanity] main WebView navigated result={e.Result} source={GetWebAppUrlForDiagnostics()}");
+
+		if (e.Result != WebNavigationResult.Success)
 		{
-			RestoreKnownAccount();
-
-			// Give the window a beat to lay out before the WebView2 control initialises.
-			await Task.Delay(250);
-			EnsureInstagramBrowserView();
-			if (_instagramBrowserView is null)
-			{
-				return;
-			}
-
-			if (_currentInstagramUrl is null)
-			{
-				NavigateInstagramBrowser(new Uri(InstagramHomeUrl));
-			}
-
-			await RefreshInstagramAccountAsync();
-		}
-		catch
-		{
-			// Best-effort: the URL watcher re-probes the account periodically.
-		}
-#endif
-	}
-
-	void OnWebAppNavigated(object? sender, WebNavigatedEventArgs e)
-	{
-		if (e.Result == WebNavigationResult.Success)
-		{
-			StartupOverlay.IsVisible = false;
+			ShowStartupFailure(
+				$"Could not load the app UI from {GetWebAppUrlForDiagnostics()} ({e.Result}).\n" +
+				"Check the startup log, then retry.");
 			return;
 		}
 
-		// The web host is not reachable: keep the overlay up and say so, instead of
-		// leaving the user with a blank window.
+		// Let the HTML loading animation show after the document arrives, but verify the
+		// host returned this app rather than a successful HTTP error/empty document.
+		StartupOverlay.IsVisible = false;
+		var snapshot = await ReadWebAppStartupSnapshotAsync();
+		if (generation != Volatile.Read(ref _startupMonitorGeneration)) return;
+		if (snapshot is { HasApp: false })
+		{
+			ShowStartupFailure(
+				$"The local page responded, but the app shell was missing.\n{DescribeStartupSnapshot(snapshot)}");
+			return;
+		}
+
+		if (snapshot?.Ready != true)
+		{
+			_ = WatchForAppStartupAsync(generation);
+		}
+	}
+
+	void StartStartupNavigationWatchdog()
+	{
+		var generation = Interlocked.Increment(ref _startupMonitorGeneration);
+		_mainWebAppNavigationCompleted = false;
+		_ = WatchForNavigationAsync(generation);
+	}
+
+	async Task WatchForNavigationAsync(int generation)
+	{
+		await Task.Delay(TimeSpan.FromSeconds(StartupNavigationTimeoutSeconds));
+		if (generation != Volatile.Read(ref _startupMonitorGeneration) || _mainWebAppNavigationCompleted) return;
+		await MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			if (generation != Volatile.Read(ref _startupMonitorGeneration) || _mainWebAppNavigationCompleted) return;
+			ShowStartupFailure(
+				$"The app page did not respond after {StartupNavigationTimeoutSeconds} seconds.\n" +
+				$"URL: {GetWebAppUrlForDiagnostics()}\n" +
+				"Check the [In-st-Sanity] host line in Visual Studio Output, then retry.");
+		});
+	}
+
+	async Task WatchForAppStartupAsync(int generation)
+	{
+		await Task.Delay(TimeSpan.FromSeconds(StartupUiTimeoutSeconds));
+		if (generation != Volatile.Read(ref _startupMonitorGeneration)) return;
+
+		var snapshot = await ReadWebAppStartupSnapshotAsync();
+		if (snapshot?.Ready == true || generation != Volatile.Read(ref _startupMonitorGeneration)) return;
+
+		// If the local document loaded but its boot animation stalled, dismiss only that
+		// animation and invoke the app's normal post-animation entry point as a failsafe.
+		if (snapshot is { HasApp: true, HasStartHook: true })
+		{
+			try
+			{
+				await MainThread.InvokeOnMainThreadAsync<string>(() => WebAppView.EvaluateJavaScriptAsync(StartupRecoveryScript));
+				await Task.Delay(TimeSpan.FromSeconds(1));
+				snapshot = await ReadWebAppStartupSnapshotAsync();
+			}
+			catch (Exception exception)
+			{
+				System.Diagnostics.Debug.WriteLine(
+					$"[In-st-Sanity] startup recovery failed: {exception.GetType().Name}: {exception.Message}");
+			}
+		}
+
+		if (snapshot?.Ready == true || generation != Volatile.Read(ref _startupMonitorGeneration)) return;
+		await MainThread.InvokeOnMainThreadAsync(() =>
+		{
+			if (generation == Volatile.Read(ref _startupMonitorGeneration))
+			{
+				ShowStartupFailure(
+					$"The app page opened, but its UI did not finish starting.\n{DescribeStartupSnapshot(snapshot)}");
+			}
+		});
+	}
+
+	async Task<WebAppStartupSnapshot?> ReadWebAppStartupSnapshotAsync()
+	{
+		try
+		{
+			var raw = await MainThread.InvokeOnMainThreadAsync<string>(
+				() => WebAppView.EvaluateJavaScriptAsync(StartupProbeScript));
+			var json = raw.Trim();
+			if (json.StartsWith('"'))
+			{
+				json = JsonSerializer.Deserialize<string>(json) ?? json;
+			}
+			else if (json.StartsWith("{\\\"", StringComparison.Ordinal))
+			{
+				// Some MAUI WebView handlers remove a returned JS string's outer quotes
+				// but leave escaped property quotes, e.g. {\\"ready\\":true}.
+				json = JsonSerializer.Deserialize<string>($"\"{json}\"") ?? json;
+			}
+
+			using var document = JsonDocument.Parse(json);
+			var root = document.RootElement;
+			return new WebAppStartupSnapshot(
+				GetStartupBoolean(root, "ready"),
+				GetStartupBoolean(root, "hasApp"),
+				GetStartupBoolean(root, "hasGrid"),
+				GetStartupBoolean(root, "started"),
+				GetStartupBoolean(root, "boot"),
+				GetStartupBoolean(root, "blocked"),
+				GetStartupBoolean(root, "hasStartHook"),
+				GetStartupString(root, "url"),
+				GetStartupString(root, "error"));
+		}
+		catch (Exception exception)
+		{
+			System.Diagnostics.Debug.WriteLine(
+				$"[In-st-Sanity] startup probe failed: {exception.GetType().Name}: {exception.Message}");
+			return null;
+		}
+	}
+
+	static bool GetStartupBoolean(JsonElement root, string name) =>
+		root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.True;
+
+	static string GetStartupString(JsonElement root, string name) =>
+		root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+			? value.GetString() ?? string.Empty
+			: string.Empty;
+
+	static string DescribeStartupSnapshot(WebAppStartupSnapshot? snapshot) => snapshot is null
+		? "The WebView could not inspect the app page. Check the WebView2 error lines in Visual Studio Output."
+		: $"app={snapshot.HasApp}, grid={snapshot.HasGrid}, started={snapshot.Started}, " +
+		  $"boot={snapshot.BootOverlay}, blocked={snapshot.StartupBlocked}, startHook={snapshot.HasStartHook}, " +
+		  $"url={snapshot.Url}" +
+		  (string.IsNullOrWhiteSpace(snapshot.Error) ? string.Empty : $", startupError={snapshot.Error}");
+
+	string GetWebAppUrlForDiagnostics() => WebAppView.Source is UrlWebViewSource source
+		? source.Url ?? "(URL not set)"
+		: "(no URL source)";
+
+	void ShowStartupFailure(string message)
+	{
+		System.Diagnostics.Debug.WriteLine($"[In-st-Sanity] startup: {message.Replace('\r', ' ').Replace('\n', ' ')}");
+		StartupOverlay.IsVisible = true;
 		StartupSpinner.IsRunning = false;
 		StartupSpinner.IsVisible = false;
-		StartupMessage.Text =
-			$"Could not load the app UI from {WebAppView.Source}.\n" +
-			"Check the log for the host URL and try again.";
+		StartupRetryButton.IsVisible = true;
+		StartupMessage.Text = message;
 	}
+
+	void OnStartupRetryClicked(object? sender, EventArgs e)
+	{
+		StartStartupNavigationWatchdog();
+		StartupOverlay.IsVisible = true;
+		StartupMessage.Text = "Retrying the local app page…";
+		StartupSpinner.IsVisible = true;
+		StartupSpinner.IsRunning = true;
+		StartupRetryButton.IsVisible = false;
+
+		try { WebAppView.Reload(); }
+		catch (Exception exception)
+		{
+			ShowStartupFailure($"Could not retry the app page: {exception.Message}");
+		}
+	}
+
+	sealed record WebAppStartupSnapshot(
+		bool Ready,
+		bool HasApp,
+		bool HasGrid,
+		bool Started,
+		bool BootOverlay,
+		bool StartupBlocked,
+		bool HasStartHook,
+		string Url,
+		string Error);
 
 	void OnInstagramBrowserOpenRequested(object? sender, string requestedUrl)
 	{
@@ -126,6 +293,7 @@ public partial class MainPage : ContentPage
 		}
 
 		UpdateBrowserState();
+		_ = SyncBrowserQueueToPageAsync(refreshTheme: true);
 	}
 
 	void OnInstagramBrowserNavigateRequested(object? sender, string url)
@@ -140,6 +308,7 @@ public partial class MainPage : ContentPage
 		InstagramBrowserOverlay.IsVisible = true;
 		NavigateInstagramBrowser(uri);
 		UpdateBrowserState();
+		_ = SyncBrowserQueueToPageAsync(refreshTheme: true);
 	}
 
 	void OnInstagramBrowserCommandRequested(object? sender, string command)
@@ -172,10 +341,16 @@ public partial class MainPage : ContentPage
 				EnsureInstagramBrowserView();
 				InstagramBrowserOverlay.IsVisible = true;
 				UpdateBrowserState();
+				_ = SyncBrowserQueueToPageAsync(refreshTheme: true);
 				break;
 
 			case "hide":
 				CloseInstagramBrowser();
+				break;
+
+			case "media-overlay-on":
+			case "media-overlay-off":
+				_ = SyncBrowserQueueToPageAsync();
 				break;
 
 			case "logout":
@@ -188,6 +363,7 @@ public partial class MainPage : ContentPage
 	{
 		// Dock the native page over the themed viewport of the Browser tab. The region
 		// arrives in window-relative device-independent pixels, matching MAUI layout.
+		_instagramBrowserRegion = region;
 		InstagramBrowserOverlay.Margin = new Thickness(region.Left, region.Top, 0, 0);
 		InstagramBrowserOverlay.WidthRequest = Math.Max(1, region.Width);
 		InstagramBrowserOverlay.HeightRequest = Math.Max(1, region.Height);
@@ -211,7 +387,7 @@ public partial class MainPage : ContentPage
 		_instagramBrowserView = browserView;
 
 #if WINDOWS
-		WebViewBootstrapper.AttachInstagramBrowser(browserView);
+		WebViewBootstrapper.AttachInstagramBrowser(browserView, OnBrowserOverlayMessage);
 		// Instagram navigates with history.pushState, which never raises Navigated;
 		// without this the address bar would freeze on the URL the browser opened with.
 		_ = WebViewBootstrapper.TrackSourceChangesAsync(browserView, url =>
@@ -329,6 +505,7 @@ public partial class MainPage : ContentPage
 
 		UpdateBrowserState();
 		_ = RefreshInstagramAccountAsync();
+		_ = SyncBrowserQueueToPageAsync(refreshTheme: true);
 	}
 
 	void UpdateBrowserState()
@@ -340,28 +517,437 @@ public partial class MainPage : ContentPage
 			_instagramBrowserView?.CanGoForward == true);
 	}
 
-	async Task RefreshInstagramAccountAsync()
+	void OnBrowserMediaQueueStateChanged(BrowserMediaQueueSnapshot snapshot)
+	{
+		MainThread.BeginInvokeOnMainThread(() => _ = SyncBrowserQueueToPageAsync());
+	}
+
+	void OnBrowserQueueItemCompleted(BrowserQueueItemCompleted completed)
+	{
+		MainThread.BeginInvokeOnMainThread(() => _ = RecordBrowserQueueDownloadHistoryAsync(completed));
+	}
+
+	void OnBrowserOverlayMessage(string source, string message)
+	{
+		if (GetOverlayMessageAction(message) == "cursor-position")
+		{
+			if (IsTrustedInstagramBrowserSource(source) && TryReadBrowserCursorPosition(message, out var x, out var y))
+			{
+				MainThread.BeginInvokeOnMainThread(() => ForwardBrowserCursorToSticker(x, y));
+			}
+			return;
+		}
+
+		MainThread.BeginInvokeOnMainThread(() => ProcessBrowserOverlayMessage(source, message));
+	}
+
+	static string GetOverlayMessageAction(string message)
+	{
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			return document.RootElement.TryGetProperty("action", out var action) && action.ValueKind == JsonValueKind.String
+				? action.GetString() ?? string.Empty
+				: string.Empty;
+		}
+		catch (JsonException)
+		{
+			return string.Empty;
+		}
+	}
+
+	static string? GetOverlayRequestId(string message)
+	{
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			var root = document.RootElement;
+			if (root.ValueKind != JsonValueKind.Object ||
+				!root.TryGetProperty("requestId", out var requestId) ||
+				requestId.ValueKind != JsonValueKind.String)
+			{
+				return null;
+			}
+
+			var value = requestId.GetString();
+			return !string.IsNullOrWhiteSpace(value) && value.Length <= 80 ? value : null;
+		}
+		catch (JsonException)
+		{
+			return null;
+		}
+	}
+
+	static bool IsTrustedInstagramBrowserSource(string? source)
+	{
+		if (!Uri.TryCreate(source, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
+			uri.Port != 443 || uri.UserInfo.Length != 0)
+		{
+			return false;
+		}
+
+		var host = uri.IdnHost;
+		return host.Equals("www.instagram.com", StringComparison.OrdinalIgnoreCase) ||
+			host.Equals("instagram.com", StringComparison.OrdinalIgnoreCase);
+	}
+
+	static bool TryReadBrowserCursorPosition(string message, out double x, out double y)
+	{
+		x = 0;
+		y = 0;
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			var root = document.RootElement;
+			return root.ValueKind == JsonValueKind.Object &&
+				root.TryGetProperty("v", out var version) && version.ValueKind == JsonValueKind.Number &&
+				version.TryGetInt32(out var versionNumber) && versionNumber == 1 &&
+				root.TryGetProperty("x", out var xValue) && xValue.ValueKind == JsonValueKind.Number && xValue.TryGetDouble(out x) && double.IsFinite(x) &&
+				root.TryGetProperty("y", out var yValue) && yValue.ValueKind == JsonValueKind.Number && yValue.TryGetDouble(out y) && double.IsFinite(y);
+		}
+		catch (JsonException)
+		{
+			return false;
+		}
+	}
+
+	void ForwardBrowserCursorToSticker(double cursorX, double cursorY)
+	{
+		var region = _instagramBrowserRegion;
+		if (!InstagramBrowserOverlay.IsVisible || region is null ||
+			!double.IsFinite(region.Left) || !double.IsFinite(region.Top) ||
+			!double.IsFinite(region.Width) || !double.IsFinite(region.Height) || region.Width <= 0 || region.Height <= 0 ||
+			cursorX < -2 || cursorY < -2 || cursorX > region.Width + 2 || cursorY > region.Height + 2)
+		{
+			return;
+		}
+
+		var now = Environment.TickCount64;
+		if (now - _lastStickerCursorForwardedAtMs < 30) return;
+		_lastStickerCursorForwardedAtMs = now;
+		var appX = region.Left + Math.Clamp(cursorX, 0, region.Width);
+		var appY = region.Top + Math.Clamp(cursorY, 0, region.Height);
+		_ = UpdateStickerCursorInWebAppAsync(appX, appY);
+	}
+
+	async Task UpdateStickerCursorInWebAppAsync(double x, double y)
+	{
+		try
+		{
+			var coordinates = JsonSerializer.Serialize(new[] { x, y });
+			var script = $"(()=>{{const p={coordinates};window.updateStickerEyesFromExternalCursor?.(p[0],p[1]);return true}})()";
+			await WebAppView.EvaluateJavaScriptAsync(script);
+		}
+		catch
+		{
+			// The main app WebView may be navigating or closing; the next pointer move retries.
+		}
+	}
+
+	void ProcessBrowserOverlayMessage(string source, string message)
+	{
+		var overlayAction = GetOverlayMessageAction(message);
+		if (overlayAction is "open-download-folder" or "open-video-folder")
+		{
+			if (IsTrustedInstagramBrowserSource(source) && TryAcceptBrowserFolderOpenAction(overlayAction))
+			{
+				if (overlayAction == "open-video-folder") _ = OpenVideoFolderFromBrowserAsync();
+				else _ = OpenDownloadFolderFromBrowserAsync();
+			}
+			return;
+		}
+
+		var command = _browserMediaQueue.HandleOverlayMessage(source, message);
+		switch (command.Action)
+		{
+			case BrowserMediaOverlayAction.Ready:
+				_ = SyncBrowserQueueToPageAsync();
+				break;
+			case BrowserMediaOverlayAction.StartDownload:
+				_ = StartBrowserQueueDownloadAsync();
+				break;
+			case BrowserMediaOverlayAction.Rejected:
+			{
+				var errorRequestId = overlayAction == "toggle-media" ? GetOverlayRequestId(message) : null;
+				_ = SyncBrowserQueueToPageAsync(command.Error, errorRequestId: errorRequestId);
+				break;
+			}
+		}
+	}
+
+	bool TryAcceptBrowserFolderOpenAction(string action)
+	{
+		var now = Environment.TickCount64;
+		if (_hasBrowserFolderOpenRequest &&
+			now - _lastBrowserFolderOpenRequestAtMs < BrowserFolderOpenDuplicateWindowMs)
+		{
+			System.Diagnostics.Debug.WriteLine(
+				$"[In-st-Sanity] suppressed duplicate Browser folder-open action={action} previous={_lastBrowserFolderOpenAction}");
+			return false;
+		}
+
+		_lastBrowserFolderOpenAction = action;
+		_lastBrowserFolderOpenRequestAtMs = now;
+		_hasBrowserFolderOpenRequest = true;
+		return true;
+	}
+
+	async Task OpenDownloadFolderFromBrowserAsync()
+	{
+		try
+		{
+			await WebAppView.EvaluateJavaScriptAsync("window.openDownloadFolder?.()");
+		}
+		catch
+		{
+			// The main app WebView can be navigating while the native Browser is open.
+		}
+	}
+
+	async Task OpenVideoFolderFromBrowserAsync()
+	{
+		try
+		{
+			await WebAppView.EvaluateJavaScriptAsync("window.openConfiguredVideoFolder?.()");
+		}
+		catch
+		{
+			// The main app WebView can be navigating while the native Browser is open.
+		}
+	}
+
+	async Task StartBrowserQueueDownloadAsync()
+	{
+#if WINDOWS
+		try
+		{
+			var core = await WebViewBootstrapper.WaitForCoreWebView2Async(WebAppView, TimeSpan.FromSeconds(5));
+			if (core is null)
+			{
+				await SyncBrowserQueueToPageAsync("bridge_unavailable");
+				return;
+			}
+			var raw = await WebViewBootstrapper.ExecOnUiAsync(core,
+				"(()=>{try{const folders=window.getBrowserQueueFolderPreferences?.();if(!folders)return '{}';return JSON.stringify({photoFolder:String(folders.photoFolder||''),videoFolder:String(folders.videoFolder||''),separateVideoFolder:folders.separateVideoFolder===true,settingsReady:folders.settingsReady===true,noDuplicates:window.isNoDuplicatesEnabled?.()!==false})}catch(e){return '{}'}})()");
+			var json = WebViewBootstrapper.TryUnwrapScriptJson(raw);
+			using var preferences = JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json);
+			var root = preferences.RootElement;
+			var settingsReady = root.TryGetProperty("settingsReady", out var settingsReadyValue) && settingsReadyValue.ValueKind == JsonValueKind.True;
+			if (!settingsReady)
+			{
+				await SyncBrowserQueueToPageAsync("download_folders_unavailable");
+				return;
+			}
+			var photoFolder = TryGetPreferenceString(root, "photoFolder") ?? "~/Pictures/Instagram";
+			var separateVideoFolder = root.TryGetProperty("separateVideoFolder", out var separateValue) && separateValue.ValueKind == JsonValueKind.True;
+			var videoFolder = separateVideoFolder ? TryGetPreferenceString(root, "videoFolder")?.Trim() : photoFolder;
+			if (separateVideoFolder && string.IsNullOrWhiteSpace(videoFolder))
+			{
+				await SyncBrowserQueueToPageAsync("video_folder_unavailable");
+				return;
+			}
+			var noDuplicates = !root.TryGetProperty("noDuplicates", out var duplicateValue) || duplicateValue.ValueKind != JsonValueKind.False;
+			// The Saved Posts resolver endpoint refreshes the native WebView session before
+			// resolving. The Browser queue calls the resolver directly, so sync it here too.
+			await _browserWindow.EnsureSessionCookiesAsync(force: true);
+			await Task.Run(() => _browserMediaQueue.DownloadAsync(photoFolder, videoFolder, noDuplicates));
+		}
+		catch
+		{
+			// Keep the selected media queued so a later retry can recover from a bridge error.
+			await SyncBrowserQueueToPageAsync("bridge_unavailable");
+		}
+#else
+		await Task.CompletedTask;
+#endif
+	}
+
+	async Task SyncBrowserQueueToPageAsync(string? error = null, bool refreshTheme = false, string? errorRequestId = null)
+	{
+#if WINDOWS
+		var view = _instagramBrowserView;
+		if (view is null) return;
+		try
+		{
+			var core = await WebViewBootstrapper.WaitForCoreWebView2Async(view, TimeSpan.FromSeconds(2));
+			if (core is null) return;
+			var snapshot = _browserMediaQueue.GetSnapshot();
+			var pageSnapshot = new
+			{
+				items = snapshot.Items.Select(item => new
+				{
+					item.Key,
+					item.Shortcode,
+					item.SlideIndex,
+					item.QueuePhotoIndex,
+					item.ContentCount,
+					item.IsVideo,
+					item.ThumbnailUrl,
+					item.Filename,
+					item.Error,
+					item.IsDownloaded,
+					item.WasSkipped,
+				}),
+				isDownloading = snapshot.IsDownloading,
+				currentIndex = snapshot.CurrentIndex,
+				total = snapshot.Total,
+				status = snapshot.Status,
+				hasBeenOpened = snapshot.HasBeenOpened,
+				mediaOverlayEnabled = _browserWindow.GetState().MediaOverlayEnabled,
+			};
+			var snapshotJson = JsonSerializer.Serialize(pageSnapshot, QueueJsonOptions);
+			var errorJson = JsonSerializer.Serialize(error, QueueJsonOptions);
+			var errorRequestIdJson = JsonSerializer.Serialize(errorRequestId, QueueJsonOptions);
+			var themeJson = await GetBrowserOverlayThemeJsonAsync(refreshTheme);
+			var script = $"window.__instSanityReceiveQueueState?.({snapshotJson},{errorJson},{themeJson},{errorRequestIdJson})";
+			await WebViewBootstrapper.ExecOnUiAsync(core, script);
+		}
+		catch
+		{
+			// The WebView can navigate or close while a queue update is being delivered.
+		}
+#endif
+	}
+
+	async Task<string> GetBrowserOverlayThemeJsonAsync(bool forceRefresh = false)
+	{
+#if WINDOWS
+		if (!forceRefresh && DateTime.UtcNow - _browserOverlayThemeCachedAtUtc < TimeSpan.FromSeconds(10))
+		{
+			return _cachedBrowserOverlayThemeJson;
+		}
+		try
+		{
+			var core = await WebViewBootstrapper.WaitForCoreWebView2Async(WebAppView, TimeSpan.FromSeconds(2));
+			if (core is null)
+			{
+				_cachedBrowserOverlayThemeJson = "null";
+				_browserOverlayThemeCachedAtUtc = DateTime.UtcNow;
+				return _cachedBrowserOverlayThemeJson;
+			}
+			var raw = await WebViewBootstrapper.ExecOnUiAsync(core,
+				"(()=>{const s=getComputedStyle(document.body),v=(n,f)=>s.getPropertyValue(n).trim()||f;return JSON.stringify({panel:v('--t-sidebar-bg','rgba(17,24,32,.97)'),border:v('--t-line','#ffffff30'),ink:v('--t-ink','#f8fafc'),muted:v('--t-muted','#9fb1c1'),accent:v('--t-accent','#99f6e4'),accent2:v('--t-accent2','#2dd4bf'),buttonBg:v('--t-btn-bg','linear-gradient(135deg,#99f6e4,#2dd4bf)'),buttonInk:v('--t-btn-ink','#091318')})})()");
+			var json = WebViewBootstrapper.TryUnwrapScriptJson(raw);
+			if (string.IsNullOrWhiteSpace(json))
+			{
+				_cachedBrowserOverlayThemeJson = "null";
+				_browserOverlayThemeCachedAtUtc = DateTime.UtcNow;
+				return _cachedBrowserOverlayThemeJson;
+			}
+			using var document = JsonDocument.Parse(json);
+			_cachedBrowserOverlayThemeJson = document.RootElement.GetRawText();
+			_browserOverlayThemeCachedAtUtc = DateTime.UtcNow;
+			return _cachedBrowserOverlayThemeJson;
+		}
+		catch
+		{
+			_cachedBrowserOverlayThemeJson = "null";
+			_browserOverlayThemeCachedAtUtc = DateTime.UtcNow;
+			return _cachedBrowserOverlayThemeJson;
+		}
+#else
+		return "null";
+#endif
+	}
+
+	async Task RecordBrowserQueueDownloadHistoryAsync(BrowserQueueItemCompleted completed)
+	{
+#if WINDOWS
+		try
+		{
+			var core = await WebViewBootstrapper.WaitForCoreWebView2Async(WebAppView, TimeSpan.FromSeconds(5));
+			if (core is null) return;
+			var item = completed.Item;
+			var result = completed.Result;
+			var historyItem = new
+			{
+				shortcode = item.Shortcode,
+				contentIndex = item.SlideIndex,
+				photoIndex = (int?)null,
+				videoIndex = (int?)null,
+				contentCount = item.ContentCount,
+				filename = result.Filename,
+				browserQueue = true,
+			};
+			var file = new
+			{
+				ok = result.Ok,
+				skipped = result.Skipped,
+				downloadedAtUtc = result.DownloadedAtUtc,
+				filename = result.Filename,
+			};
+			string script;
+			if (item.IsVideo)
+			{
+				var videoRecord = new
+				{
+					shortcode = item.Shortcode,
+					contentIndex = item.SlideIndex,
+					videoIndex = (int?)null,
+					contentCount = item.ContentCount,
+					downloadedAtUtc = result.DownloadedAtUtc,
+					filename = result.Filename,
+					browserQueue = true,
+				};
+				script = $"window.__recordVideoDownloadHistory?.({JsonSerializer.Serialize(videoRecord, QueueJsonOptions)})";
+			}
+			else
+			{
+				script = $"window.__recordPhotoDownloadHistory?.({JsonSerializer.Serialize(historyItem, QueueJsonOptions)},{JsonSerializer.Serialize(file, QueueJsonOptions)})";
+			}
+			await WebViewBootstrapper.ExecOnUiAsync(core, script);
+		}
+		catch
+		{
+			// Saving a history mark is best-effort and never changes the download result.
+		}
+#endif
+	}
+
+	static string? TryGetPreferenceString(JsonElement root, string name) =>
+		root.ValueKind == JsonValueKind.Object && root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+			? value.GetString()
+			: null;
+
+	async Task<bool> RefreshInstagramAccountAsync()
 	{
 #if WINDOWS
 		if (_instagramBrowserView is null)
 		{
-			return;
+			EnsureInstagramBrowserView();
+			if (_currentInstagramUrl is null)
+			{
+				NavigateInstagramBrowser(new Uri(InstagramHomeUrl));
+			}
+		}
+
+		if (_instagramBrowserView is null)
+		{
+			return false;
 		}
 
 		var snapshot = await WebViewBootstrapper.ProbeAccountAsync(_instagramBrowserView);
 		if (snapshot is null)
 		{
-			return;
+			return false;
 		}
 
 		var loggedIn = snapshot.LoggedIn;
 		var username = snapshot.Username;
 		var fullName = snapshot.FullName;
 		var profilePicUrl = snapshot.ProfilePicUrl;
+		var cookiesSynced = true;
 		if (loggedIn)
 		{
-			await SyncInstagramCookiesAsync();
-			if (username.Length == 0 || profilePicUrl.Length == 0)
+			cookiesSynced = await SyncInstagramCookiesAsync();
+			if (!cookiesSynced)
+			{
+				// Never let the resolver keep using a previous account's cookies after a
+				// transition if the current WebView profile could not be copied.
+				_instagramHttp.ClearInstagramCookies();
+			}
+
+			if (cookiesSynced && (username.Length == 0 || profilePicUrl.Length == 0))
 			{
 				// The page probe can miss the identity as Instagram's markup and its
 				// script guards move; the account API over the synced session is reliable.
@@ -418,7 +1004,24 @@ public partial class MainPage : ContentPage
 			ClearKnownAccount();
 		}
 
+		var previousAccount = _browserWindow.GetState();
+		var identityChanged = previousAccount.LoggedIn != loggedIn ||
+			(loggedIn && !string.Equals(previousAccount.Username, username, StringComparison.OrdinalIgnoreCase));
+		if (previousAccount.LoggedIn &&
+			(!loggedIn || !string.Equals(previousAccount.Username, username, StringComparison.OrdinalIgnoreCase)))
+		{
+			_browserMediaQueue.ResetForLogout();
+		}
+		if (identityChanged)
+		{
+			_instagramResolver.ClearCache();
+		}
+
 		_browserWindow.SetAccount(loggedIn, username, fullName, profilePicUrl);
+		return !loggedIn || cookiesSynced;
+#else
+		await Task.CompletedTask;
+		return false;
 #endif
 	}
 
@@ -475,26 +1078,32 @@ public partial class MainPage : ContentPage
 		}
 	}
 
-	async Task LogoutInstagramAsync()
+	async Task<bool> LogoutInstagramAsync()
 	{
 #if WINDOWS
 		// The WebView2 profile persists across runs, so an old Instagram session may exist
 		// before any browser page was opened in this one. Create the view if needed, then
-		// clear the cookies.
+		// clear the cookies before acknowledging logout to the web layer.
 		EnsureInstagramBrowserView();
 		if (_instagramBrowserView is null)
 		{
-			return;
+			return false;
 		}
 
+		_browserMediaQueue.ResetForLogout();
 		await WebViewBootstrapper.ClearInstagramSessionAsync(_instagramBrowserView);
 		_knownAccountUsername = string.Empty;
 		_knownAccountFullName = string.Empty;
 		_knownAccountPic = string.Empty;
 		ClearKnownAccount();
 		_instagramHttp.ClearInstagramCookies();
+		_instagramResolver.ClearCache();
 		_browserWindow.SetAccount(false, string.Empty, string.Empty, string.Empty);
 		UpdateBrowserState();
+		return true;
+#else
+		await Task.CompletedTask;
+		return false;
 #endif
 	}
 

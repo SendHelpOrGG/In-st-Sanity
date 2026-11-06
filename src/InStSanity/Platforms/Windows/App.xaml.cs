@@ -18,14 +18,22 @@ public partial class App : MauiWinUIApplication
 	/// </summary>
 	public App()
 	{
+		AppDiagnostics.Initialize();
 		this.InitializeComponent();
+		UnhandledException += OnWinUiUnhandledException;
 
 		// Claim the single-instance mutex before any window, WebView or socket is created.
 		SingleInstance.Acquire();
 	}
 
+	void OnWinUiUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs args)
+	{
+		AppDiagnostics.WriteException("winui.unhandled", args.Exception);
+	}
+
 	protected override void OnLaunched(LaunchActivatedEventArgs args)
 	{
+		AppDiagnostics.Write("winui.launch", "launch activation received");
 		if (!SingleInstance.IsPrimaryInstance)
 		{
 			// Another instance owns the loopback port and the WebView2 profile. Exit

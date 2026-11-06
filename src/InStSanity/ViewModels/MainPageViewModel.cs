@@ -9,7 +9,7 @@ public sealed class MainPageViewModel : BaseViewModel
 {
 	public MainPageViewModel(LoopbackHost webHost)
 	{
-		Title = "In-st-Sanity";
+		Title = string.Empty;
 
 		// The host is started before this view model is resolved, so the port is final.
 		AppUrl = webHost.Url;
