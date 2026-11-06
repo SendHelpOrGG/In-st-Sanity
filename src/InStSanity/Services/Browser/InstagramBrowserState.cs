@@ -9,7 +9,8 @@ public sealed record InstagramBrowserState(
 	bool LoggedIn,
 	string Username,
 	string FullName,
-	string ProfilePicUrl);
+	string ProfilePicUrl,
+	bool MediaOverlayEnabled = true);
 
 /// <summary>Window-relative dock rectangle (device-independent pixels) for the themed Browser page viewport.</summary>
 public sealed record InstagramBrowserRegion(double Left, double Top, double Width, double Height);

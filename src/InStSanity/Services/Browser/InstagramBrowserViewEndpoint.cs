@@ -5,8 +5,8 @@ namespace InStSanity.Services.Browser;
 
 /// <summary>
 /// <c>POST /api/browser-view</c> — drives the native Instagram browser docked under the
-/// themed Browser page: viewport region updates, address-bar navigation, history,
-/// reload, show, and hide.
+/// themed Browser page: viewport region updates, address-bar navigation, media-overlay
+/// toggle, history, reload, show, and hide.
 /// </summary>
 public sealed class InstagramBrowserViewEndpoint(InstagramBrowserWindowService browserWindow) : IApiEndpoint
 {
@@ -78,6 +78,18 @@ public sealed class InstagramBrowserViewEndpoint(InstagramBrowserWindowService b
 				}
 
 				delivered = browserWindow.RequestNavigate(uri.AbsoluteUri);
+				break;
+			}
+
+			case "media-overlay":
+			{
+				if (!body.TryGetProperty("enabled", out var enabledElement) ||
+					enabledElement.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+				{
+					return Task.FromResult(HttpResponseInfo.Error("invalid_request", 400));
+				}
+
+				delivered = browserWindow.RequestMediaOverlayEnabled(enabledElement.GetBoolean());
 				break;
 			}
 

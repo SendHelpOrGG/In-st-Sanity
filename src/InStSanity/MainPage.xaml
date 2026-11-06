@@ -3,19 +3,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="InStSanity.MainPage"
              Shell.NavBarIsVisible="False"
-             Title="In[st]Sanity">
+             Title="">
 
     <!-- Root grid so the startup overlay and the native Instagram browser can stack above
          the WebView that hosts the ported web app. -->
-    <Grid>
+    <Grid RowDefinitions="*" ColumnDefinitions="*">
         <!-- The ported web app is served by LoopbackHost; MainPageViewModel provides the URL. -->
         <WebView x:Name="WebAppView"
+                 Grid.Row="0" Grid.Column="0"
+                 HorizontalOptions="FillAndExpand"
+                 VerticalOptions="FillAndExpand"
                  Source="{Binding AppUrl}"
                  Navigated="OnWebAppNavigated" />
 
         <!-- First-launch overlay: kept until the WebView reports a successful navigation,
              so the user never sees a blank window while the loopback host comes up. -->
         <Border x:Name="StartupOverlay"
+                Grid.Row="0" Grid.Column="0"
                 ZIndex="30"
                 BackgroundColor="{AppThemeBinding Light=White, Dark=#0B0F14}"
                 Padding="24"
@@ -32,13 +36,19 @@
                 <ActivityIndicator x:Name="StartupSpinner"
                                    IsRunning="True"
                                    Color="{AppThemeBinding Light=#0B0F14, Dark=#F1F5F9}" />
+                <Button x:Name="StartupRetryButton"
+                        Text="Retry app load"
+                        IsVisible="False"
+                        Clicked="OnStartupRetryClicked"
+                        HorizontalOptions="Center" />
             </VerticalStackLayout>
         </Border>
 
-        <!-- The browser WebView is created on first open, not during app startup.
+        <!-- The browser WebView is warmed after the loading-screen animation ends.
              It docks over the themed viewport of the web layer's Browser page (the
              region is pushed via POST /api/browser-view), instead of covering the app. -->
         <Grid x:Name="InstagramBrowserOverlay"
+              Grid.Row="0" Grid.Column="0"
               IsVisible="False"
               ZIndex="20"
               BackgroundColor="Transparent"

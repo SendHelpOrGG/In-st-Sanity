@@ -1,7 +1,10 @@
 using System.Net;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using InStSanity.Services.Api;
 using InStSanity.Services.Browser;
+using InStSanity.Services.Instagram;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Web.WebView2.Core;
 
@@ -11,6 +14,245 @@ namespace InStSanity.Platforms.Windows;
 internal static class WebViewBootstrapper
 {
 	static readonly ConditionalWeakTable<object, object> Hooked = new();
+	static readonly SemaphoreSlim BrowserOverlayDiagnosticWriteGate = new(1, 1);
+	const long BrowserOverlayDiagnosticMaxBytes = 2 * 1024 * 1024;
+	sealed record VideoDownloadHistoryContext(string Shortcode, string Account, int? ContentIndex, int? VideoIndex, int? ContentCount);
+
+	static readonly string MainAppDiagnosticsScript = """
+		(()=>{
+			if(window.__instSanityDiagnosticsInstalled)return;
+			window.__instSanityDiagnosticsInstalled=true;
+			const clean=(value,max=240)=>String(value??'').replace(/[\r\n\t]+/g,' ').slice(0,max);
+			const photoAreaSelector='#photoResizePreviewCanvasWrap,#resizerFileList,#photoAdjustmentPhotoStrip,#photoEditFilePanel,#resizerFilePanel,.moment-capture-stage';
+			const targetDetails=target=>{
+				if(!target)return null;
+				const media=target.closest?.('img,video,canvas')||null;
+				const area=target.closest?.(photoAreaSelector)||null;
+				const source=String(media?.currentSrc||media?.src||'');
+				let sourceKind='none';
+				if(source.startsWith('blob:'))sourceKind='blob';
+			else if(source.startsWith('data:'))sourceKind='data';
+			else if(source.includes('/api/picked-file'))sourceKind='native-picked-file';
+			else if(source.includes('/api/image')||source.includes('/api/download-photo'))sourceKind='app-media-proxy';
+			else if(source){try{sourceKind=new URL(source,location.href).host}catch{sourceKind='other'}}
+				const canvas=document.getElementById('photoResizePreviewCanvas');
+				const original=document.getElementById('photoResizePreviewOriginalCanvas');
+				const naturalWidth=Number(media?.naturalWidth||media?.videoWidth||media?.width)||null;
+				const naturalHeight=Number(media?.naturalHeight||media?.videoHeight||media?.height)||null;
+				const usedHeap=Number(window.performance?.memory?.usedJSHeapSize);
+				return{
+					targetTag:clean(target.tagName||'').toLowerCase(),
+					targetId:clean(target.id),
+					targetClass:clean(typeof target.className==='string'?target.className:''),
+					areaId:clean(area?.id),
+					areaClass:clean(typeof area?.className==='string'?area.className:''),
+					mediaTag:clean(media?.tagName||'').toLowerCase(),
+					mediaId:clean(media?.id),
+					mediaClass:clean(typeof media?.className==='string'?media.className:''),
+					sourceKind,
+					mediaComplete:media instanceof HTMLImageElement?media.complete:null,
+					mediaNaturalWidth:naturalWidth,
+					mediaNaturalHeight:naturalHeight,
+					canvasWidth:Number(canvas?.width)||0,
+					canvasHeight:Number(canvas?.height)||0,
+					originalCanvasWidth:Number(original?.width)||0,
+					originalCanvasHeight:Number(original?.height)||0,
+					activeEditorTab:document.querySelector('.photo-editor-tab.active')?.id||'',
+					devicePixelRatio:Number(window.devicePixelRatio)||1,
+					jsHeapUsedBytes:Number.isFinite(usedHeap)&&usedHeap>0?usedHeap:null,
+					documentVisibility:document.visibilityState
+				};
+			};
+			const send=(event,details)=>{
+				try{window.chrome?.webview?.postMessage({action:'instsanity-diagnostic',event,details})}catch{}
+			};
+			window.__instSanityLogDiagnostic=(event,details={})=>send(clean(event,100),details||{});
+			const interactionDetails=target=>{
+				const details=targetDetails(target);
+				if(!details)return null;
+				const hasMedia=Boolean(details.mediaTag);
+				const hasPhotoArea=Boolean(details.areaId||details.areaClass);
+				return hasMedia||hasPhotoArea?details:null;
+			};
+			document.addEventListener('pointerdown',event=>{
+				const target=event.target instanceof Element?event.target:null;
+				const details=interactionDetails(target);
+				if(details)send('photo.pointerdown',details);
+			},true);
+			document.addEventListener('click',event=>{
+				const target=event.target instanceof Element?event.target:null;
+				const details=interactionDetails(target);
+				if(details)send('photo.click',details);
+				const button=target?.closest?.('button');
+				if(button&&['resizerChooseImagesBtn','photoEditChooseImagesBtn','momentCaptureChooseVideoBtn'].includes(button.id)){
+					send('picker.button.click',{buttonId:button.id,activeEditorTab:document.querySelector('.photo-editor-tab.active')?.id||''});
+				}
+			},true);
+			window.addEventListener('error',event=>{
+				const target=event.target instanceof Element?event.target:null;
+				let sourceHost='';
+				try{sourceHost=event.filename?new URL(event.filename,location.href).host:''}catch{}
+				send('javascript.error',{
+					message:clean(event.message,1200),
+					sourceHost,
+					line:Number(event.lineno)||0,
+					column:Number(event.colno)||0,
+					target:targetDetails(target)
+				});
+			},true);
+			window.addEventListener('unhandledrejection',event=>{
+				const reason=event.reason;
+				send('javascript.unhandledrejection',{
+					name:clean(reason?.name||typeof reason),
+					message:clean(reason?.message||reason,1200),
+					stack:clean(reason?.stack,2400)
+				});
+			});
+			window.addEventListener('beforeunload',()=>send('document.beforeunload',{activeEditorTab:document.querySelector('.photo-editor-tab.active')?.id||''}));
+			send('diagnostics.installed',{readyState:document.readyState,pathname:location.pathname});
+		})();
+		""";
+
+	static string BrowserOverlayDiagnosticLogPath
+	{
+		get
+		{
+			var localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+			if (string.IsNullOrWhiteSpace(localData)) localData = Path.GetTempPath();
+			return Path.Combine(localData, "InStSanity", "Logs", "instagram-browser-hover.log");
+		}
+	}
+
+	static void LogInstagramBrowserOverlay(string message)
+	{
+		message = message.Replace('\r', ' ').Replace('\n', ' ');
+		if (message.Length > 6_000) message = message[..6_000] + "…";
+		var line = $"[{DateTimeOffset.Now:O}] [InstagramBrowserOverlay] {message}";
+		System.Diagnostics.Debug.WriteLine(line);
+		_ = AppendInstagramBrowserOverlayLogAsync(line);
+	}
+
+	static async Task AppendInstagramBrowserOverlayLogAsync(string line)
+	{
+		await BrowserOverlayDiagnosticWriteGate.WaitAsync().ConfigureAwait(false);
+		try
+		{
+			var path = BrowserOverlayDiagnosticLogPath;
+			var directory = Path.GetDirectoryName(path);
+			if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
+			if (File.Exists(path) && new FileInfo(path).Length + line.Length > BrowserOverlayDiagnosticMaxBytes)
+			{
+				await File.WriteAllTextAsync(path,
+					$"[{DateTimeOffset.Now:O}] [InstagramBrowserOverlay] Previous diagnostics were rotated at 2 MB.{Environment.NewLine}",
+					System.Text.Encoding.UTF8).ConfigureAwait(false);
+			}
+			await File.AppendAllTextAsync(path, line + Environment.NewLine, System.Text.Encoding.UTF8).ConfigureAwait(false);
+		}
+		catch (Exception exception)
+		{
+			System.Diagnostics.Debug.WriteLine($"[InstagramBrowserOverlay] Could not write diagnostics log ({exception.GetType().Name}).");
+		}
+		finally
+		{
+			BrowserOverlayDiagnosticWriteGate.Release();
+		}
+	}
+
+	static string GetOverlayMessageAction(string message)
+	{
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			return document.RootElement.TryGetProperty("action", out var action) && action.ValueKind == JsonValueKind.String
+				? action.GetString() ?? "empty"
+				: "missing";
+		}
+		catch
+		{
+			return "invalid-json";
+		}
+	}
+
+	static string GetOverlayDebugSummary(string message)
+	{
+		try
+		{
+			using var document = JsonDocument.Parse(message);
+			var root = document.RootElement;
+			var eventName = root.TryGetProperty("event", out var eventValue) && eventValue.ValueKind == JsonValueKind.String
+				? eventValue.GetString() ?? "unknown"
+				: "unknown";
+			return $"JS event={eventName} payload={root.GetRawText()}";
+		}
+		catch
+		{
+			return "JS diagnostic payload=invalid-json";
+		}
+	}
+
+	static string GetSourceHost(string? source) =>
+		Uri.TryCreate(source, UriKind.Absolute, out var uri) ? uri.Host : "unknown";
+
+	static string GetSafeWebViewSource(string? source) =>
+		Uri.TryCreate(source, UriKind.Absolute, out var uri)
+			? $"{uri.Scheme}://{uri.Host}:{uri.Port}{(uri.IsLoopback ? uri.AbsolutePath : string.Empty)}"
+			: "unknown";
+
+	static async Task InstallMainAppDiagnosticsScriptAsync(CoreWebView2 core)
+	{
+		try
+		{
+			await core.AddScriptToExecuteOnDocumentCreatedAsync(MainAppDiagnosticsScript);
+			AppDiagnostics.Write("webview.main.diagnostics", "Document-created click/error hooks registered.");
+		}
+		catch (Exception exception)
+		{
+			AppDiagnostics.WriteException("webview.main.diagnostics-registration-failed", exception);
+		}
+
+		try
+		{
+			await core.ExecuteScriptAsync(MainAppDiagnosticsScript);
+		}
+		catch (Exception exception)
+		{
+			AppDiagnostics.WriteException("webview.main.diagnostics-current-document-failed", exception,
+				$"source={GetSafeWebViewSource(core.Source)}");
+		}
+	}
+
+	static void HandleMainAppDiagnosticMessage(CoreWebView2WebMessageReceivedEventArgs args)
+	{
+		if (!Uri.TryCreate(args.Source, UriKind.Absolute, out var source) || !source.IsLoopback)
+		{
+			return;
+		}
+
+		try
+		{
+			var json = args.WebMessageAsJson;
+			if (json.Length > 12 * 1024) return;
+			using var document = JsonDocument.Parse(json);
+			var root = document.RootElement;
+			if (root.ValueKind != JsonValueKind.Object ||
+				!root.TryGetProperty("action", out var action) ||
+				action.ValueKind != JsonValueKind.String ||
+				action.GetString() != "instsanity-diagnostic")
+			{
+				return;
+			}
+
+			var eventName = root.TryGetProperty("event", out var eventValue) && eventValue.ValueKind == JsonValueKind.String
+				? eventValue.GetString() ?? "unknown"
+				: "unknown";
+			var details = root.TryGetProperty("details", out var detailsValue) ? detailsValue.GetRawText() : "{}";
+			AppDiagnostics.Write("webview.main.js", $"event={eventName}; source={GetSafeWebViewSource(args.Source)}; details={details}");
+		}
+		catch (Exception exception)
+		{
+			AppDiagnostics.WriteException("webview.main.message-failed", exception);
+		}
+	}
 
 	// Same-origin call Instagram's own web app makes; the x-ig-app-id header is the
 	// public one every browser session uses. Page scripts cannot see HttpOnly cookies,
@@ -30,25 +272,28 @@ internal static class WebViewBootstrapper
 	/// <summary>Routes links opened by the app UI to the user's system browser.</summary>
 	public static void Attach(WebView webView) => Attach(webView, isInstagramBrowser: false);
 
-	/// <summary>Keeps Instagram/Meta popups inside the native Instagram browser.</summary>
-	public static void AttachInstagramBrowser(WebView webView) => Attach(webView, isInstagramBrowser: true);
+	/// <summary>Keeps Instagram/Meta popups inside the native Instagram browser and installs its media-queue bridge.</summary>
+	public static void AttachInstagramBrowser(WebView webView, Action<string, string> onOverlayMessage) =>
+		Attach(webView, isInstagramBrowser: true, onOverlayMessage);
 
-	static void Attach(WebView webView, bool isInstagramBrowser)
+	static void Attach(WebView webView, bool isInstagramBrowser, Action<string, string>? onOverlayMessage = null)
 	{
 		// The handler (and with it CoreWebView2) appears after the page is first laid out.
-		webView.HandlerChanged += (_, _) => TryHook(webView, isInstagramBrowser);
-		TryHook(webView, isInstagramBrowser);
+		webView.HandlerChanged += (_, _) => TryHook(webView, isInstagramBrowser, onOverlayMessage);
+		TryHook(webView, isInstagramBrowser, onOverlayMessage);
 	}
 
-	static void TryHook(WebView webView, bool isInstagramBrowser)
+	static void TryHook(WebView webView, bool isInstagramBrowser, Action<string, string>? onOverlayMessage)
 	{
 		if (webView.Handler?.PlatformView is not Microsoft.UI.Xaml.Controls.WebView2 platformView)
 		{
+			if (isInstagramBrowser) LogInstagramBrowserOverlay("WebView2 handler is not ready; waiting for HandlerChanged.");
 			return;
 		}
 
 		if (Hooked.TryGetValue(platformView, out _))
 		{
+			if (isInstagramBrowser) LogInstagramBrowserOverlay("WebView2 platform view was already hooked; skipping duplicate hookup.");
 			return;
 		}
 
@@ -56,22 +301,412 @@ internal static class WebViewBootstrapper
 
 		if (platformView.CoreWebView2 is not null)
 		{
-			Configure(platformView.CoreWebView2, isInstagramBrowser);
+			if (isInstagramBrowser) LogInstagramBrowserOverlay("CoreWebView2 already initialized; configuring Instagram browser.");
+			Configure(platformView.CoreWebView2, isInstagramBrowser, onOverlayMessage);
 		}
 		else
 		{
+			if (isInstagramBrowser) LogInstagramBrowserOverlay("CoreWebView2 not initialized; waiting for CoreWebView2Initialized.");
 			platformView.CoreWebView2Initialized += (sender, _) =>
 			{
 				if (sender.CoreWebView2 is not null)
 				{
-					Configure(sender.CoreWebView2, isInstagramBrowser);
+					if (isInstagramBrowser) LogInstagramBrowserOverlay("CoreWebView2Initialized fired; configuring Instagram browser.");
+					Configure(sender.CoreWebView2, isInstagramBrowser, onOverlayMessage);
+				}
+				else if (isInstagramBrowser)
+				{
+					LogInstagramBrowserOverlay("CoreWebView2Initialized fired without a CoreWebView2 instance.");
 				}
 			};
 		}
 	}
 
-	static void Configure(CoreWebView2 core, bool isInstagramBrowser)
+	static bool IsVideoDownload(CoreWebView2DownloadStartingEventArgs args)
 	{
+		try
+		{
+			var operation = args.DownloadOperation;
+			if (operation.MimeType?.StartsWith("video/", StringComparison.OrdinalIgnoreCase) == true)
+			{
+				return true;
+			}
+
+			var uri = operation.Uri;
+			if (Uri.TryCreate(uri, UriKind.Absolute, out var absoluteUri) && IsVideoExtension(Path.GetExtension(absoluteUri.AbsolutePath)))
+			{
+				return true;
+			}
+
+			return IsVideoExtension(Path.GetExtension(operation.ResultFilePath));
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
+	static bool IsVideoExtension(string? extension) => extension?.ToLowerInvariant() is ".mp4" or ".m4v" or ".mov" or ".webm" or ".avi" or ".mkv" or ".3gp" or ".mpeg" or ".mpg";
+
+	static async Task ConfigureVideoDownloadAsync(CoreWebView2 core, CoreWebView2DownloadStartingEventArgs args)
+	{
+		var deferral = args.GetDeferral();
+		try
+		{
+			// Capture which carousel video started the native menu download before
+			// applying the user's folder and account_shortcode_vN filename preferences.
+			var historyContext = await TryGetVideoDownloadHistoryContextAsync(core, args.DownloadOperation.Uri).ConfigureAwait(false);
+
+			try { args.Handled = true; } catch { }
+			try
+			{
+				var result = await core.ExecuteScriptAsync("(()=>{try{return JSON.stringify({folder:String(window.getConfiguredVideoDownloadFolder?.()||window.getConfiguredDownloadFolder?.()||''),noDuplicates:window.isNoDuplicatesEnabled?.()===true})}catch(e){return '{}'}})()");
+				var preferencesJson = JsonSerializer.Deserialize<string>(result);
+				using var preferences = JsonDocument.Parse(string.IsNullOrWhiteSpace(preferencesJson) ? "{}" : preferencesJson);
+				var root = preferences.RootElement;
+				var requestedFolder = root.TryGetProperty("folder", out var folderValue) && folderValue.ValueKind == JsonValueKind.String
+					? folderValue.GetString()
+					: null;
+				var noDuplicates = root.TryGetProperty("noDuplicates", out var noDuplicatesValue) && noDuplicatesValue.ValueKind == JsonValueKind.True;
+				if (string.IsNullOrWhiteSpace(requestedFolder))
+				{
+					throw new InvalidOperationException("The Settings download folder is unavailable.");
+				}
+
+				var folder = DownloadSelectedEndpoint.ResolveFolder(requestedFolder);
+				Directory.CreateDirectory(folder);
+				var fileName = BuildVideoDownloadFileName(historyContext, args.DownloadOperation);
+				var legacyVideoStem = historyContext is null
+					? null
+					: $"{SafeVideoShortcode(historyContext.Shortcode)}_v{Math.Max(0, historyContext.VideoIndex ?? historyContext.ContentIndex ?? 0) + 1}";
+				if (noDuplicates && historyContext is not null && FindExistingVideoPath(folder, fileName, legacyVideoStem) is { } existingPath)
+				{
+					try { args.Cancel = true; } catch { }
+					if (historyContext is not null)
+					{
+						var downloadedAtUtc = DateTimeOffset.UtcNow;
+						try { downloadedAtUtc = new DateTimeOffset(File.GetLastWriteTimeUtc(existingPath), TimeSpan.Zero); } catch { }
+						var historyRecord = new
+						{
+							shortcode = historyContext.Shortcode,
+							contentIndex = historyContext.ContentIndex,
+							videoIndex = historyContext.VideoIndex,
+							contentCount = historyContext.ContentCount,
+							downloadedAtUtc,
+							filename = Path.GetFileName(existingPath),
+						};
+						var recordJson = JsonSerializer.Serialize(historyRecord);
+						try { await core.ExecuteScriptAsync($"window.__recordVideoDownloadHistory?.({recordJson})"); } catch { }
+					}
+					var notice = JsonSerializer.Serialize($"Video already exists: {Path.GetFileName(existingPath)} (duplicate skipped)");
+					try { await core.ExecuteScriptAsync($"window.toast?.({notice})"); } catch { }
+					return;
+				}
+				args.ResultFilePath = GetUniqueDownloadPath(folder, fileName);
+			}
+			catch
+			{
+				// Never let WebView2 silently fall back to its own Downloads folder.
+				try { args.Cancel = true; } catch { }
+				try { await core.ExecuteScriptAsync("window.toast?.('Video download canceled: could not use the folder selected in Settings')"); } catch { }
+				return;
+			}
+
+			if (historyContext is not null)
+			{
+				var operation = args.DownloadOperation;
+				operation.StateChanged += (_, _) =>
+				{
+					if (operation.State != CoreWebView2DownloadState.Completed)
+					{
+						return;
+					}
+
+					try
+					{
+						var resultPath = operation.ResultFilePath;
+						var downloadedAtUtc = DateTimeOffset.UtcNow;
+						try
+						{
+							if (File.Exists(resultPath))
+							{
+								downloadedAtUtc = new DateTimeOffset(File.GetLastWriteTimeUtc(resultPath), TimeSpan.Zero);
+							}
+						}
+						catch
+						{
+							// Keep the completion time if the filesystem timestamp is unavailable.
+						}
+						var historyRecord = new
+						{
+							shortcode = historyContext.Shortcode,
+							contentIndex = historyContext.ContentIndex,
+							videoIndex = historyContext.VideoIndex,
+							contentCount = historyContext.ContentCount,
+							downloadedAtUtc,
+							filename = Path.GetFileName(resultPath),
+						};
+						var recordJson = JsonSerializer.Serialize(historyRecord);
+						_ = core.ExecuteScriptAsync($"window.__recordVideoDownloadHistory?.({recordJson})");
+					}
+					catch
+					{
+						// History is best effort and must not interfere with the native download.
+					}
+				};
+			}
+
+			try { await core.ExecuteScriptAsync("window.showVideoDownloadNotice?.()"); } catch { }
+		}
+		finally
+		{
+			deferral.Complete();
+		}
+	}
+
+	static string BuildVideoDownloadFileName(VideoDownloadHistoryContext? historyContext, CoreWebView2DownloadOperation operation)
+	{
+		var extension = GetVideoDownloadExtension(operation);
+		if (historyContext is not null)
+		{
+			var videoNumber = Math.Max(0, historyContext.VideoIndex ?? historyContext.ContentIndex ?? 0) + 1;
+			return $"{SafeVideoAccount(historyContext.Account)}_{SafeVideoShortcode(historyContext.Shortcode)}_v{videoNumber}{extension}";
+		}
+
+		var requestedName = Path.GetFileName(operation.ResultFilePath);
+		var requestedStem = Path.GetFileNameWithoutExtension(requestedName);
+		if (string.IsNullOrWhiteSpace(requestedStem) || requestedStem.Equals("image", StringComparison.OrdinalIgnoreCase))
+		{
+			return "video" + extension;
+		}
+
+		return Path.GetFileNameWithoutExtension(requestedName) + extension;
+	}
+
+	static string GetVideoDownloadExtension(CoreWebView2DownloadOperation operation)
+	{
+		var mimeType = operation.MimeType?.Split(';', 2)[0].Trim().ToLowerInvariant();
+		var mimeExtension = mimeType switch
+		{
+			"video/mp4" or "video/m4v" => ".mp4",
+			"video/quicktime" => ".mov",
+			"video/webm" => ".webm",
+			"video/x-msvideo" => ".avi",
+			"video/x-matroska" => ".mkv",
+			"video/3gpp" => ".3gp",
+			"video/mpeg" => ".mpeg",
+			_ => string.Empty,
+		};
+		if (mimeExtension.Length > 0) return mimeExtension;
+
+		var resultExtension = Path.GetExtension(operation.ResultFilePath);
+		if (IsVideoExtension(resultExtension)) return resultExtension.ToLowerInvariant();
+		if (Uri.TryCreate(operation.Uri, UriKind.Absolute, out var uriExtension) && IsVideoExtension(Path.GetExtension(uriExtension.AbsolutePath)))
+		{
+			return Path.GetExtension(uriExtension.AbsolutePath).ToLowerInvariant();
+		}
+		return ".mp4";
+	}
+
+	static string SafeVideoAccount(string? account)
+	{
+		var source = string.IsNullOrWhiteSpace(account) ? "instagram" : account.Trim().TrimStart('@');
+		var safe = new string(source.Select(character => char.IsLetterOrDigit(character) || character is '_' or '-' or '.' ? character : '_').ToArray())
+			.Trim(' ', '.');
+		return safe.Length == 0 ? "instagram" : safe.Length > 80 ? safe[..80].TrimEnd(' ', '.') : safe;
+	}
+
+	static string SafeVideoShortcode(string? shortcode)
+	{
+		var source = string.IsNullOrWhiteSpace(shortcode) ? "instagram" : shortcode.Trim();
+		var safe = new string(source.Select(character => char.IsLetterOrDigit(character) || character is '_' or '-' or '.' ? character : '_').ToArray());
+		return string.IsNullOrWhiteSpace(safe) ? "instagram" : safe;
+	}
+
+	static string? FindExistingVideoPath(string folder, string requestedName, string? legacyStem = null)
+	{
+		var expectedStem = Path.GetFileNameWithoutExtension(requestedName);
+		if (string.IsNullOrWhiteSpace(expectedStem)) return null;
+		foreach (var path in Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly))
+		{
+			if (!IsVideoExtension(Path.GetExtension(path))) continue;
+			var stem = Path.GetFileNameWithoutExtension(path);
+			var suffixStart = stem.LastIndexOf(" (", StringComparison.Ordinal);
+			if (suffixStart > 0 && stem.EndsWith(')') &&
+				int.TryParse(stem.AsSpan(suffixStart + 2, stem.Length - suffixStart - 3), out _))
+			{
+				stem = stem[..suffixStart];
+			}
+			if (stem.Equals(expectedStem, StringComparison.OrdinalIgnoreCase) ||
+				(!string.IsNullOrWhiteSpace(legacyStem) && stem.Equals(legacyStem, StringComparison.OrdinalIgnoreCase))) return path;
+		}
+		return null;
+	}
+
+	static async Task<VideoDownloadHistoryContext?> TryGetVideoDownloadHistoryContextAsync(CoreWebView2 core, string sourceUrl)
+	{
+		try
+		{
+			var sourceJson = JsonSerializer.Serialize(sourceUrl);
+			var result = await core.ExecuteScriptAsync($"window.__getVideoDownloadHistoryContext?.({sourceJson})||null");
+			using var document = JsonDocument.Parse(result);
+			var root = document.RootElement;
+			if (root.ValueKind != JsonValueKind.Object ||
+				!root.TryGetProperty("shortcode", out var shortcodeValue) || shortcodeValue.ValueKind != JsonValueKind.String)
+			{
+				return null;
+			}
+
+			var account = root.TryGetProperty("account", out var accountValue) && accountValue.ValueKind == JsonValueKind.String
+				? SafeVideoAccount(accountValue.GetString())
+				: "instagram";
+			int? contentIndex = root.TryGetProperty("contentIndex", out var contentIndexValue) &&
+				contentIndexValue.ValueKind == JsonValueKind.Number && contentIndexValue.TryGetInt32(out var parsedContentIndex) && parsedContentIndex >= 0
+				? parsedContentIndex
+				: null;
+			int? videoIndex = root.TryGetProperty("videoIndex", out var videoIndexValue) &&
+				videoIndexValue.ValueKind == JsonValueKind.Number && videoIndexValue.TryGetInt32(out var parsedVideoIndex) && parsedVideoIndex >= 0
+				? parsedVideoIndex
+				: null;
+			if (contentIndex is null && videoIndex is null)
+			{
+				return null;
+			}
+
+			int? contentCount = root.TryGetProperty("contentCount", out var countValue) &&
+				countValue.ValueKind == JsonValueKind.Number && countValue.TryGetInt32(out var parsedCount) && parsedCount > 0
+				? parsedCount
+				: null;
+			return new VideoDownloadHistoryContext(shortcodeValue.GetString()!, account, contentIndex, videoIndex, contentCount);
+		}
+		catch
+		{
+			return null;
+		}
+	}
+
+	static string GetUniqueDownloadPath(string folder, string requestedName)
+	{
+		var fileName = Path.GetFileName(requestedName);
+		if (string.IsNullOrWhiteSpace(fileName)) fileName = "video.mp4";
+		var extension = Path.GetExtension(fileName);
+		var stem = Path.GetFileNameWithoutExtension(fileName);
+		if (string.IsNullOrWhiteSpace(stem)) stem = "video";
+		var candidate = Path.Combine(folder, fileName);
+		for (var suffix = 2; File.Exists(candidate); suffix++)
+		{
+			candidate = Path.Combine(folder, $"{stem} ({suffix}){extension}");
+		}
+		return candidate;
+	}
+
+	static async Task InstallInstagramOverlayScriptAsync(CoreWebView2 core)
+	{
+		try
+		{
+			await core.AddScriptToExecuteOnDocumentCreatedAsync(InstagramMediaOverlayScript.Source);
+			LogInstagramBrowserOverlay("Document-created overlay script registered.");
+		}
+		catch (Exception exception)
+		{
+			LogInstagramBrowserOverlay($"Document-created script registration failed error={exception.GetType().Name}: {exception.Message}");
+		}
+
+		await InstallInstagramOverlayForCurrentDocumentAsync(core).ConfigureAwait(false);
+	}
+
+	static async Task InstallInstagramOverlayForCurrentDocumentAsync(CoreWebView2 core)
+	{
+		try
+		{
+			// Registration can race the first navigation. Run the idempotent installer
+			// when it exists; otherwise inject the full source into the current document.
+			var script = "if (typeof window.__instSanityMediaOverlayInstall === 'function') " +
+				"window.__instSanityMediaOverlayInstall(); else " +
+				InstagramMediaOverlayScript.Source;
+			await core.ExecuteScriptAsync(script);
+			var status = await core.ExecuteScriptAsync(
+				"JSON.stringify({installer:typeof window.__instSanityMediaOverlayInstall==='function',installed:window.__instSanityMediaOverlayInstalled===true,bridgeAvailable:typeof window.chrome?.webview?.postMessage==='function'})");
+			LogInstagramBrowserOverlay($"Current-document overlay evaluation completed sourceHost={GetSourceHost(core.Source)} status={status}");
+		}
+		catch (Exception exception)
+		{
+			LogInstagramBrowserOverlay($"Current-document overlay evaluation failed sourceHost={GetSourceHost(core.Source)} error={exception.GetType().Name}: {exception.Message}");
+		}
+	}
+
+	static void Configure(CoreWebView2 core, bool isInstagramBrowser, Action<string, string>? onOverlayMessage)
+	{
+		core.ProcessFailed += (_, args) =>
+		{
+			AppDiagnostics.Write("webview2.process-failed",
+				$"view={(isInstagramBrowser ? "instagram-browser" : "main-app")}; kind={args.ProcessFailedKind}; " +
+				$"reason={args.Reason}; exitCode={args.ExitCode}; process={args.ProcessDescription}; " +
+				$"source={GetSafeWebViewSource(core.Source)}");
+		};
+
+		if (isInstagramBrowser && onOverlayMessage is not null)
+		{
+			core.Settings.IsWebMessageEnabled = true;
+			LogInstagramBrowserOverlay("WebView2 diagnostic hooks attached; writing to %LOCALAPPDATA%/InStSanity/Logs/instagram-browser-hover.log.");
+			core.WebMessageReceived += (_, args) =>
+			{
+				try
+				{
+					var json = args.WebMessageAsJson;
+					var action = GetOverlayMessageAction(json);
+					if (action == "overlay-debug")
+					{
+						LogInstagramBrowserOverlay($"{GetOverlayDebugSummary(json)} sourceHost={GetSourceHost(args.Source)}");
+						return;
+					}
+					// Pointer samples are frequent; forward them without per-move log entries.
+					if (action == "cursor-position")
+					{
+						onOverlayMessage(args.Source, json);
+						return;
+					}
+					LogInstagramBrowserOverlay($"WebMessageReceived action={action} sourceHost={GetSourceHost(args.Source)}");
+					onOverlayMessage(args.Source, json);
+				}
+				catch (Exception exception)
+				{
+					LogInstagramBrowserOverlay($"WebMessageReceived handler failed error={exception.GetType().Name}: {exception.Message}");
+				}
+			};
+			core.NavigationCompleted += (sender, args) =>
+			{
+				LogInstagramBrowserOverlay($"NavigationCompleted success={args.IsSuccess} sourceHost={GetSourceHost(core.Source)}");
+				_ = InstallInstagramOverlayForCurrentDocumentAsync(core);
+			};
+			_ = InstallInstagramOverlayScriptAsync(core);
+		}
+		else
+		{
+			core.Settings.IsWebMessageEnabled = true;
+			core.WebMessageReceived += (_, args) => HandleMainAppDiagnosticMessage(args);
+			core.NavigationStarting += (_, args) =>
+				AppDiagnostics.Write("webview.main.navigation-starting",
+					$"userInitiated={args.IsUserInitiated}; redirected={args.IsRedirected}; source={GetSafeWebViewSource(args.Uri)}");
+			core.NavigationCompleted += (_, args) =>
+				AppDiagnostics.Write("webview.main.navigation-completed",
+					$"success={args.IsSuccess}; http={args.HttpStatusCode}; error={args.WebErrorStatus}; source={GetSafeWebViewSource(core.Source)}");
+			AppDiagnostics.Write("webview.main.configured", $"source={GetSafeWebViewSource(core.Source)}");
+			_ = InstallMainAppDiagnosticsScriptAsync(core);
+		}
+
+		core.DownloadStarting += (_sender, args) =>
+		{
+			if (!isInstagramBrowser && IsVideoDownload(args))
+			{
+				_ = ConfigureVideoDownloadAsync(core, args);
+				return;
+			}
+
+			// Other WebView downloads remain blocked; photos use /api/download-selected.
+			try { args.Cancel = true; } catch { }
+		};
+
 		core.NewWindowRequested += (sender, args) =>
 		{
 			args.Handled = true;
@@ -92,13 +727,21 @@ internal static class WebViewBootstrapper
 		};
 
 #if DEBUG
-		// Right-click → Inspect is useful while developing the port.
+		// Keep DevTools available to the debugger; the page menu is filtered below.
 		core.Settings.AreDevToolsEnabled = true;
-		core.Settings.AreDefaultContextMenusEnabled = true;
 #else
 		core.Settings.AreDevToolsEnabled = false;
-		core.Settings.AreDefaultContextMenusEnabled = isInstagramBrowser;
 #endif
+		// Preserve the intentional native HTML-video menu, but suppress all other
+		// browser menus such as Back, Refresh, Save as, Print, and Inspect.
+		core.Settings.AreDefaultContextMenusEnabled = true;
+		core.ContextMenuRequested += (_, args) =>
+		{
+			if (args.ContextMenuTarget.Kind != CoreWebView2ContextMenuTargetKind.Video)
+			{
+				args.Handled = true;
+			}
+		};
 	}
 
 	/// <summary>
@@ -169,7 +812,7 @@ internal static class WebViewBootstrapper
 					inner = TryUnwrapScriptJson(await ExecOnUiAsync(core, "window.__igAccountProbeResult||''"));
 				}
 
-				if (!string.IsNullOrEmpty(inner))
+				if (inner is not null && InstagramHttp.HasJsonValuePrefix(inner))
 				{
 					using var payload = JsonDocument.Parse(inner);
 					if (payload.RootElement.TryGetProperty("u", out var u)) username = u.GetString() ?? string.Empty;
@@ -329,7 +972,7 @@ internal static class WebViewBootstrapper
 	/// <summary>Unwraps the JSON string ExecuteScriptAsync returns for script results that are strings.</summary>
 	internal static string? TryUnwrapScriptJson(string? result)
 	{
-		if (string.IsNullOrEmpty(result) || result == "null")
+		if (string.IsNullOrEmpty(result) || result == "null" || !InstagramHttp.HasJsonValuePrefix(result))
 		{
 			return null;
 		}

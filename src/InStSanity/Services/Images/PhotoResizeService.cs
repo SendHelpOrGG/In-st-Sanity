@@ -1,0 +1,732 @@
+using System.Collections.Concurrent;
+using System.Text.Json;
+using InStSanity.Services.Instagram;
+using Microsoft.Extensions.Logging;
+
+namespace InStSanity.Services.Images;
+
+/// <summary>Stages user-selected photos and writes resized copies to the configured output folder.</summary>
+public sealed class PhotoResizeService
+{
+	const int MaxFileBytes = 50 * 1024 * 1024;
+	const int MaxFileCount = 500;
+	const long MaxSessionBytes = 1024L * 1024 * 1024;
+	const int MinMaxSide = 64;
+	const int MaxMaxSide = 16_384;
+	static readonly TimeSpan StagingLifetime = TimeSpan.FromHours(24);
+	static readonly ConcurrentDictionary<Guid, SemaphoreSlim> SessionLocks = new();
+	static readonly HashSet<string> SupportedExtensions = new(StringComparer.OrdinalIgnoreCase)
+	{
+		".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp", ".heic", ".heif", ".avif", ".jxl",
+	};
+	static readonly HashSet<string> ReservedNames = new(StringComparer.OrdinalIgnoreCase)
+	{
+		"CON", "PRN", "AUX", "NUL",
+		"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+		"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+	};
+	static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+	readonly string _stagingRoot;
+	readonly ILogger<PhotoResizeService> _logger;
+
+	public PhotoResizeService(ILogger<PhotoResizeService> logger)
+	{
+		_logger = logger;
+		var localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+		_stagingRoot = Path.Combine(
+			string.IsNullOrWhiteSpace(localData) ? Path.GetTempPath() : localData,
+			"InStSanity",
+			"PhotoResizeUploads");
+		CleanupExpiredSessions();
+	}
+
+	public async Task<PhotoResizeUploadResult> UploadFileAsync(
+		Guid sessionId,
+		Guid fileId,
+		int order,
+		string? requestedFileName,
+		byte[] payload,
+		CancellationToken cancellationToken)
+	{
+		if (sessionId == Guid.Empty || fileId == Guid.Empty || order < 0 || order >= MaxFileCount)
+		{
+			return PhotoResizeUploadResult.Failure("invalid_upload");
+		}
+
+		if (payload.Length == 0 || payload.Length > MaxFileBytes)
+		{
+			return PhotoResizeUploadResult.Failure(payload.Length == 0 ? "empty_file" : "file_too_large");
+		}
+
+		var fileName = SanitizeFileName(requestedFileName);
+		if (fileName is null)
+		{
+			return PhotoResizeUploadResult.Failure("unsupported_image_type");
+		}
+
+		var gate = SessionLocks.GetOrAdd(sessionId, static _ => new SemaphoreSlim(1, 1));
+		await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+		try
+		{
+			var sessionDirectory = GetSessionDirectory(sessionId);
+			Directory.CreateDirectory(sessionDirectory);
+			var metadataPath = GetMetadataPath(sessionDirectory, fileId);
+			var payloadPath = GetPayloadPath(sessionDirectory, fileId);
+			if (File.Exists(metadataPath) && File.Exists(payloadPath))
+			{
+				var alreadyUploaded = await ReadStagedFileAsync(metadataPath, cancellationToken).ConfigureAwait(false);
+				if (alreadyUploaded is not null)
+				{
+					var stagedFiles = await ReadStagedFilesAsync(sessionDirectory, cancellationToken).ConfigureAwait(false);
+					return new PhotoResizeUploadResult(
+						true,
+						null,
+						alreadyUploaded.FileName,
+						stagedFiles.Count,
+						stagedFiles.Sum(item => item.ByteCount));
+				}
+
+				TryDelete(payloadPath);
+				TryDelete(metadataPath);
+			}
+
+			var existingFiles = await ReadStagedFilesAsync(sessionDirectory, cancellationToken).ConfigureAwait(false);
+			if (existingFiles.Count >= MaxFileCount)
+			{
+				return PhotoResizeUploadResult.Failure("too_many_files", existingFiles.Count);
+			}
+
+			var existingBytes = existingFiles.Sum(item => item.ByteCount);
+			if (existingBytes + payload.LongLength > MaxSessionBytes)
+			{
+				return PhotoResizeUploadResult.Failure("upload_limit_reached", existingFiles.Count, existingBytes);
+			}
+
+			var temporaryPath = Path.Combine(sessionDirectory, $"{fileId:N}.uploading");
+			try
+			{
+				await using (var output = new FileStream(
+					temporaryPath,
+					FileMode.CreateNew,
+					FileAccess.Write,
+					FileShare.None,
+					bufferSize: 64 * 1024,
+					options: FileOptions.Asynchronous))
+				{
+					await output.WriteAsync(payload.AsMemory(), cancellationToken).ConfigureAwait(false);
+					await output.FlushAsync(cancellationToken).ConfigureAwait(false);
+				}
+
+				File.Move(temporaryPath, payloadPath);
+				var stagedFile = new StagedPhoto(fileId, fileName, order, payload.LongLength);
+				await File.WriteAllBytesAsync(
+					metadataPath,
+					JsonSerializer.SerializeToUtf8Bytes(stagedFile, JsonOptions),
+					cancellationToken).ConfigureAwait(false);
+
+				return new PhotoResizeUploadResult(
+					true,
+					null,
+					fileName,
+					existingFiles.Count + 1,
+					existingBytes + payload.LongLength);
+			}
+			catch
+			{
+				TryDelete(temporaryPath);
+				TryDelete(payloadPath);
+				TryDelete(metadataPath);
+				throw;
+			}
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			throw;
+		}
+		catch (Exception exception) when (
+			exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or
+			System.Security.SecurityException)
+		{
+			_logger.LogWarning(exception, "Could not stage a photo for resizing");
+			return PhotoResizeUploadResult.Failure("upload_failed");
+		}
+		finally
+		{
+			gate.Release();
+		}
+	}
+
+	public async Task<PhotoResizeConversionResult> ConvertAsync(
+		Guid sessionId,
+		int maxSide,
+		bool upscale,
+		bool noDuplicates,
+		bool applyAdjustmentsToBatch,
+		string? requestedOutputFolder,
+		string outputMode,
+		PhotoImageAdjustments? requestedAdjustments,
+		CancellationToken cancellationToken)
+	{
+		if (sessionId == Guid.Empty)
+		{
+			return PhotoResizeConversionResult.Failure("invalid_session");
+		}
+
+		if (maxSide is < MinMaxSide or > MaxMaxSide)
+		{
+			return PhotoResizeConversionResult.Failure("invalid_max_side");
+		}
+
+		var outputSuffix = outputMode switch
+		{
+			"resize" => "_resized",
+			"edit" => "_edited",
+			_ => string.Empty,
+		};
+		if (outputSuffix.Length == 0)
+		{
+			return PhotoResizeConversionResult.Failure("invalid_output_mode");
+		}
+
+		var adjustments = requestedAdjustments ?? new PhotoImageAdjustments();
+		var gate = SessionLocks.GetOrAdd(sessionId, static _ => new SemaphoreSlim(1, 1));
+		await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+		try
+		{
+			var sessionDirectory = GetSessionDirectory(sessionId);
+			var stagedFiles = await ReadStagedFilesAsync(sessionDirectory, cancellationToken).ConfigureAwait(false);
+			if (stagedFiles.Count == 0)
+			{
+				return PhotoResizeConversionResult.Failure("no_uploaded_files");
+			}
+
+			string outputFolder;
+			try
+			{
+				outputFolder = ResolveFolder(requestedOutputFolder);
+				Directory.CreateDirectory(outputFolder);
+			}
+			catch (Exception exception) when (
+				exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or
+				InvalidOperationException or System.Security.SecurityException)
+			{
+				_logger.LogWarning(exception, "Could not prepare the resized-photo destination folder");
+				return PhotoResizeConversionResult.Failure("output_folder_unavailable");
+			}
+
+			var results = new List<PhotoResizeFileResult>(stagedFiles.Count);
+			foreach (var stagedFile in stagedFiles)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				var fileAdjustments = applyAdjustmentsToBatch || stagedFile.FileId == stagedFiles[0].FileId
+					? adjustments
+					: new PhotoImageAdjustments();
+				if (noDuplicates && !fileAdjustments.HasEdits)
+				{
+					var possibleOutputName = BuildOutputFileName(
+						stagedFile.FileName,
+						Path.GetExtension(stagedFile.FileName),
+						outputSuffix);
+					var existingPath = FindExistingResizedFilePath(outputFolder, possibleOutputName);
+					if (existingPath is not null)
+					{
+						results.Add(PhotoResizeFileResult.Skipped(stagedFile.FileName, Path.GetFileName(existingPath)));
+						continue;
+					}
+				}
+
+				var payloadPath = GetPayloadPath(sessionDirectory, stagedFile.FileId);
+				try
+				{
+					var payload = await File.ReadAllBytesAsync(payloadPath, cancellationToken).ConfigureAwait(false);
+					var resized = await ImageResizer.TryResizeToMaxSideAsync(
+						payload,
+						maxSide,
+						Path.GetExtension(stagedFile.FileName),
+						upscale,
+						fileAdjustments).ConfigureAwait(false);
+					if (resized is null)
+					{
+						results.Add(PhotoResizeFileResult.Failed(stagedFile.FileName, "image_decode_failed"));
+						continue;
+					}
+
+					var outputName = BuildOutputFileName(stagedFile.FileName, resized.Value.Extension, outputSuffix);
+					if (noDuplicates)
+					{
+						var existingPath = FindExistingResizedFilePath(outputFolder, outputName);
+						if (existingPath is not null)
+						{
+							results.Add(PhotoResizeFileResult.Skipped(
+								stagedFile.FileName,
+								Path.GetFileName(existingPath)));
+							continue;
+						}
+					}
+
+					var writeResult = await WriteUniqueFileAsync(
+						outputFolder,
+						outputName,
+						resized.Value.Bytes,
+						noDuplicates,
+						cancellationToken).ConfigureAwait(false);
+					if (writeResult.Skipped)
+					{
+						results.Add(PhotoResizeFileResult.Skipped(stagedFile.FileName, writeResult.FileName));
+						continue;
+					}
+
+					results.Add(new PhotoResizeFileResult(
+						stagedFile.FileName,
+						writeResult.FileName,
+						resized.Value.WasResized ? "resized" : resized.Value.WasEdited ? "edited" : "unchanged",
+						null,
+						resized.Value.WasEdited));
+				}
+				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+				{
+					throw;
+				}
+				catch (PhotoImageTooLargeException exception)
+				{
+					_logger.LogInformation(exception, "Could not safely apply adjustments to {FileName}", stagedFile.FileName);
+					results.Add(PhotoResizeFileResult.Failed(stagedFile.FileName, "image_too_large"));
+				}
+				catch (Exception exception) when (
+					exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or
+					System.Security.SecurityException or InvalidOperationException)
+				{
+					_logger.LogWarning(exception, "Could not resize {FileName}", stagedFile.FileName);
+					results.Add(PhotoResizeFileResult.Failed(stagedFile.FileName, "resize_failed"));
+				}
+			}
+
+			var resizedCount = results.Count(item => item.Status == "resized");
+			var editedCount = results.Count(item => item.Status == "edited");
+			var unchangedCount = results.Count(item => item.Status == "unchanged");
+			var skippedCount = results.Count(item => item.Status == "skipped");
+			var failedCount = results.Count(item => item.Status == "failed");
+			TryDeleteDirectory(sessionDirectory);
+			return new PhotoResizeConversionResult(
+				true,
+				null,
+				results.Count,
+				resizedCount,
+				editedCount,
+				unchangedCount,
+				skippedCount,
+				failedCount,
+				results);
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			throw;
+		}
+		finally
+		{
+			gate.Release();
+		}
+	}
+
+	public async Task CancelSessionAsync(Guid sessionId, CancellationToken cancellationToken)
+	{
+		if (sessionId == Guid.Empty)
+		{
+			return;
+		}
+
+		var gate = SessionLocks.GetOrAdd(sessionId, static _ => new SemaphoreSlim(1, 1));
+		await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+		try
+		{
+			TryDeleteDirectory(GetSessionDirectory(sessionId));
+		}
+		finally
+		{
+			gate.Release();
+		}
+	}
+
+	static string? SanitizeFileName(string? requestedFileName)
+	{
+		if (string.IsNullOrWhiteSpace(requestedFileName))
+		{
+			return null;
+		}
+
+		var leaf = requestedFileName.Trim().Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+		if (string.IsNullOrWhiteSpace(leaf))
+		{
+			return null;
+		}
+
+		var extension = Path.GetExtension(leaf).ToLowerInvariant();
+		if (!SupportedExtensions.Contains(extension))
+		{
+			return null;
+		}
+
+		var stem = leaf[..^Path.GetExtension(leaf).Length];
+		var invalidCharacters = Path.GetInvalidFileNameChars();
+		var safeStem = new string(stem
+			.Select(character => char.IsControl(character) || invalidCharacters.Contains(character) ? '_' : character)
+			.ToArray())
+			.Trim(' ', '.');
+		if (safeStem.Length > 120)
+		{
+			safeStem = safeStem[..120].TrimEnd(' ', '.');
+		}
+
+		if (safeStem.Length == 0 || safeStem is "." or "..")
+		{
+			return null;
+		}
+
+		if (ReservedNames.Contains(safeStem))
+		{
+			safeStem = "_" + safeStem;
+		}
+
+		return safeStem + extension;
+	}
+
+	static string BuildOutputFileName(string originalFileName, string extension, string outputSuffix)
+	{
+		if (!SupportedExtensions.Contains(extension))
+		{
+			extension = ".jpg";
+		}
+
+		var originalStem = Path.GetFileNameWithoutExtension(originalFileName);
+		var duplicateSuffix = string.Empty;
+		var duplicateSuffixStart = originalStem.LastIndexOf(" (", StringComparison.Ordinal);
+		if (duplicateSuffixStart > 0 && originalStem.EndsWith(')') &&
+			int.TryParse(originalStem.AsSpan(duplicateSuffixStart + 2, originalStem.Length - duplicateSuffixStart - 3), out var duplicateNumber) &&
+			duplicateNumber > 1)
+		{
+			duplicateSuffix = originalStem[duplicateSuffixStart..];
+			originalStem = originalStem[..duplicateSuffixStart];
+		}
+
+		if (originalStem.EndsWith("_resized", StringComparison.OrdinalIgnoreCase))
+		{
+			originalStem = originalStem[..^"_resized".Length];
+		}
+		else if (originalStem.EndsWith("_edited", StringComparison.OrdinalIgnoreCase))
+		{
+			originalStem = originalStem[..^"_edited".Length];
+		}
+
+		var outputStem = BuildAccountAwarePhotoStem(originalStem);
+		var invalidCharacters = Path.GetInvalidFileNameChars();
+		var safeStem = new string(outputStem
+			.Select(character => char.IsControl(character) || invalidCharacters.Contains(character) ? '_' : character)
+			.ToArray())
+			.Trim(' ', '.');
+		var maximumStemLength = Math.Max(1, 120 - outputSuffix.Length - duplicateSuffix.Length);
+		if (safeStem.Length > maximumStemLength)
+		{
+			var photoMarkerStart = safeStem.LastIndexOf("_ph", StringComparison.OrdinalIgnoreCase);
+			if (photoMarkerStart > 0 &&
+				int.TryParse(safeStem.AsSpan(photoMarkerStart + 3), out var photoOrdinal) && photoOrdinal > 0)
+			{
+				var photoOrdinalSuffix = safeStem[photoMarkerStart..];
+				var prefixLength = Math.Max(1, maximumStemLength - photoOrdinalSuffix.Length);
+				var safePrefix = safeStem[..prefixLength].TrimEnd(' ', '.', '_', '-');
+				safeStem = (safePrefix.Length == 0 ? "photo" : safePrefix) + photoOrdinalSuffix;
+			}
+			else
+			{
+				safeStem = safeStem[..maximumStemLength].TrimEnd(' ', '.');
+			}
+		}
+
+		if (safeStem.Length == 0 || safeStem is "." or "..")
+		{
+			safeStem = "resized_photo";
+		}
+
+		if (ReservedNames.Contains(safeStem))
+		{
+			safeStem = "_" + safeStem;
+		}
+
+		return safeStem + outputSuffix + duplicateSuffix + extension.ToLowerInvariant();
+	}
+
+	static string BuildAccountAwarePhotoStem(string stem)
+	{
+		if (TryReadNumberedSuffix(stem, "_ph", out var accountAndShortcode, out var photoNumber))
+		{
+			return accountAndShortcode.IndexOf('_') >= 0
+				? $"{accountAndShortcode}_ph{photoNumber}"
+				: $"instagram_{accountAndShortcode}_ph{photoNumber}";
+		}
+
+		if (TryReadNumberedSuffix(stem, "_photo_", out var legacyShortcode, out photoNumber))
+		{
+			return $"instagram_{legacyShortcode}_ph{photoNumber}";
+		}
+
+		// Do not guess account or shortcode boundaries for legacy or local filenames.
+		return stem;
+	}
+
+	static bool TryReadNumberedSuffix(string stem, string marker, out string prefix, out int number)
+	{
+		prefix = string.Empty;
+		number = 0;
+		var markerStart = stem.LastIndexOf(marker, StringComparison.OrdinalIgnoreCase);
+		if (markerStart <= 0 || !int.TryParse(stem.AsSpan(markerStart + marker.Length), out number) || number <= 0)
+		{
+			return false;
+		}
+
+		prefix = stem[..markerStart];
+		return prefix.Length > 0;
+	}
+
+	static string? FindExistingResizedFilePath(string folder, string filename)
+	{
+		var stem = Path.GetFileNameWithoutExtension(filename);
+		foreach (var extension in SupportedExtensions)
+		{
+			var path = Path.Combine(folder, stem + extension);
+			if (File.Exists(path))
+			{
+				return path;
+			}
+		}
+
+		return null;
+	}
+
+	static async Task<(string FileName, bool Skipped)> WriteUniqueFileAsync(
+		string folder,
+		string filename,
+		byte[] payload,
+		bool noDuplicates,
+		CancellationToken cancellationToken)
+	{
+		var extension = Path.GetExtension(filename);
+		var stem = Path.GetFileNameWithoutExtension(filename);
+		for (var suffix = 1; suffix <= 1000; suffix++)
+		{
+			var candidate = suffix == 1 ? filename : $"{stem} ({suffix}){extension}";
+			var path = Path.Combine(folder, candidate);
+			FileStream output;
+			try
+			{
+				output = new FileStream(
+					path,
+					FileMode.CreateNew,
+					FileAccess.Write,
+					FileShare.None,
+					bufferSize: 64 * 1024,
+					options: FileOptions.Asynchronous);
+			}
+			catch (IOException) when (File.Exists(path))
+			{
+				if (noDuplicates)
+				{
+					return (candidate, true);
+				}
+
+				continue;
+			}
+
+			try
+			{
+				await using (output)
+				{
+					await output.WriteAsync(payload.AsMemory(), cancellationToken).ConfigureAwait(false);
+					await output.FlushAsync(cancellationToken).ConfigureAwait(false);
+				}
+				return (candidate, false);
+			}
+			catch
+			{
+				TryDelete(path);
+				throw;
+			}
+		}
+
+		throw new IOException("Too many resized-file name collisions.");
+	}
+
+	static async Task<List<StagedPhoto>> ReadStagedFilesAsync(
+		string sessionDirectory,
+		CancellationToken cancellationToken)
+	{
+		var result = new List<StagedPhoto>();
+		if (!Directory.Exists(sessionDirectory))
+		{
+			return result;
+		}
+
+		foreach (var metadataPath in Directory.EnumerateFiles(sessionDirectory, "*.json"))
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			var staged = await ReadStagedFileAsync(metadataPath, cancellationToken).ConfigureAwait(false);
+			if (staged is not null && File.Exists(GetPayloadPath(sessionDirectory, staged.FileId)))
+			{
+				result.Add(staged);
+			}
+		}
+
+		return result.OrderBy(item => item.Order).ThenBy(item => item.FileId).ToList();
+	}
+
+	static async Task<StagedPhoto?> ReadStagedFileAsync(string metadataPath, CancellationToken cancellationToken)
+	{
+		try
+		{
+			var bytes = await File.ReadAllBytesAsync(metadataPath, cancellationToken).ConfigureAwait(false);
+			return JsonSerializer.Deserialize<StagedPhoto>(bytes, JsonOptions);
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			throw;
+		}
+		catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
+		{
+			return null;
+		}
+	}
+
+	string GetSessionDirectory(Guid sessionId) => Path.Combine(_stagingRoot, sessionId.ToString("N"));
+	static string GetPayloadPath(string sessionDirectory, Guid fileId) => Path.Combine(sessionDirectory, $"{fileId:N}.payload");
+	static string GetMetadataPath(string sessionDirectory, Guid fileId) => Path.Combine(sessionDirectory, $"{fileId:N}.json");
+
+	static string ResolveFolder(string? requestedFolder)
+	{
+		var folder = string.IsNullOrWhiteSpace(requestedFolder)
+			? "~/Pictures/Instagram"
+			: Environment.ExpandEnvironmentVariables(requestedFolder.Trim());
+		var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+		if (folder == "~")
+		{
+			folder = home;
+		}
+		else if (folder.StartsWith("~/", StringComparison.Ordinal) || folder.StartsWith("~\\", StringComparison.Ordinal))
+		{
+			if (home.Length == 0)
+			{
+				throw new InvalidOperationException("The user profile folder is unavailable.");
+			}
+
+			var relative = folder[2..].TrimStart('/', '\\')
+				.Replace('/', Path.DirectorySeparatorChar)
+				.Replace('\\', Path.DirectorySeparatorChar);
+			folder = Path.Combine(home, relative);
+		}
+		else if (!Path.IsPathRooted(folder))
+		{
+			if (home.Length == 0)
+			{
+				throw new InvalidOperationException("The user profile folder is unavailable.");
+			}
+
+			folder = Path.Combine(home, folder);
+		}
+
+		return Path.GetFullPath(folder);
+	}
+
+	void CleanupExpiredSessions()
+	{
+		try
+		{
+			if (!Directory.Exists(_stagingRoot))
+			{
+				return;
+			}
+
+			var cutoff = DateTime.UtcNow - StagingLifetime;
+			foreach (var sessionDirectory in Directory.EnumerateDirectories(_stagingRoot))
+			{
+				if (Directory.GetLastWriteTimeUtc(sessionDirectory) < cutoff)
+				{
+					TryDeleteDirectory(sessionDirectory);
+				}
+			}
+		}
+		catch (Exception exception) when (
+			exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+		{
+			_logger.LogDebug(exception, "Could not clean old resize staging folders");
+		}
+	}
+
+	static void TryDeleteDirectory(string path)
+	{
+		try
+		{
+			if (Directory.Exists(path))
+			{
+				Directory.Delete(path, recursive: true);
+			}
+		}
+		catch (Exception exception) when (
+			exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+		{
+			// Staging cleanup is best-effort; old sessions are pruned when the app starts.
+		}
+	}
+
+	static void TryDelete(string path)
+	{
+		try
+		{
+			if (File.Exists(path))
+			{
+				File.Delete(path);
+			}
+		}
+		catch (Exception exception) when (
+			exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+		{
+			// Partial upload cleanup is best-effort.
+		}
+	}
+
+}
+
+public sealed record StagedPhoto(Guid FileId, string FileName, int Order, long ByteCount);
+
+public sealed record PhotoResizeUploadResult(
+	bool Ok,
+	string? Error,
+	string? FileName,
+	int UploadedCount,
+	long UploadedBytes)
+{
+	public static PhotoResizeUploadResult Failure(string error, int uploadedCount = 0, long uploadedBytes = 0) =>
+		new(false, error, null, uploadedCount, uploadedBytes);
+}
+
+public sealed record PhotoResizeFileResult(string FileName, string? OutputName, string Status, string? Error, bool Edited = false)
+{
+	public static PhotoResizeFileResult Failed(string fileName, string error) =>
+		new(fileName, null, "failed", error);
+
+	public static PhotoResizeFileResult Skipped(string fileName, string existingName) =>
+		new(fileName, existingName, "skipped", null);
+}
+
+public sealed record PhotoResizeConversionResult(
+	bool Ok,
+	string? Error,
+	int RequestedCount,
+	int ResizedCount,
+	int EditedCount,
+	int UnchangedCount,
+	int SkippedCount,
+	int FailedCount,
+	IReadOnlyList<PhotoResizeFileResult> Files)
+{
+	public static PhotoResizeConversionResult Failure(string error) =>
+		new(false, error, 0, 0, 0, 0, 0, 0, Array.Empty<PhotoResizeFileResult>());
+}
