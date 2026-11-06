@@ -74,12 +74,35 @@ jobs:
 
       - name: Run smoke test
         shell: pwsh
-        run: pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe -IncludeUi
+        run: |
+          pwsh -File tools/smoke-test.ps1 -Exe artifacts/InStSanity-win-x64/InStSanity.exe -IncludeUi *>&1 | Tee-Object -FilePath smoke-test-console.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload smoke test log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: smoke-test-log
-          path: smoke-test.log
+          path: |
+            smoke-test.log
+            smoke-test-console.log
           if-no-files-found: ignore
+
+      - name: Surface smoke test output
+        if: always()
+        shell: pwsh
+        run: |
+          $paths = @('smoke-test-console.log', 'smoke-test.log') | Where-Object { Test-Path -LiteralPath $_ }
+          if (-not $paths) {
+            Write-Output '::warning title=smoke-test-output::No smoke-test log files were created.'
+            exit 0
+          }
+          $transcript = ''
+          foreach ($path in $paths) {
+            $transcript += "===== $path =====`n"
+            $transcript += Get-Content -LiteralPath $path -Raw
+            $transcript += "`n"
+          }
+          if ($transcript.Length -gt 6000) { $transcript = $transcript.Substring($transcript.Length - 6000) }
+          $transcript = $transcript.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A').Replace('::', '%3A%3A')
+          Write-Output "::notice title=Smoke test console transcript::$transcript"

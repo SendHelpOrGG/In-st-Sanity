@@ -1,0 +1,1389 @@
+namespace InStSanity.Services.Browser;
+
+/// <summary>Injected into the native Instagram WebView2 to add media-select controls and the themed session queue.</summary>
+internal static class InstagramMediaOverlayScript
+{
+	internal const string Source = """
+	(() => {
+	  const diagnosticPrefix = '[InStSanity:InstagramOverlay]';
+	  function debugLog(event, details = {}) {
+	    const record = { at: new Date().toISOString(), event, ...details };
+	    try { console.info(`${diagnosticPrefix} ${JSON.stringify(record)}`); } catch (_) { }
+	    try {
+	      const bridge = window.chrome?.webview;
+	      if (typeof bridge?.postMessage === 'function') bridge.postMessage({ v: 1, action: 'overlay-debug', ...record });
+	    } catch (_) { }
+	  }
+	  function routeKind() {
+	    const pathname = String(location.pathname || '/');
+	    if (pathname === '/') return 'home-feed';
+	    if (/^\/(?:[A-Za-z0-9._]{1,30}\/)?(?:p|reel|reels|tv)\/[A-Za-z0-9_-]{1,64}\/?$/i.test(pathname)) return 'opened-post';
+	    if (/^\/[^/]+\/?$/.test(pathname) && !/^\/(?:explore|accounts|direct|stories|reel|reels|tv|p|about|legal|challenge|developer)\/?$/i.test(pathname)) return 'profile';
+	    return 'other';
+	  }
+
+	  if (window !== window.top) return;
+	  if (!/^https:\/\/(?:www\.)?instagram\.com$/i.test(location.origin)) return;
+	  debugLog('script-entered', { origin: location.origin, route: routeKind() });
+	  if (window.__instSanityMediaOverlayInstall) {
+	    debugLog('script-already-present', { installed: window.__instSanityMediaOverlayInstalled === true });
+	    return;
+	  }
+
+	  const postPattern = /^\/(?:[A-Za-z0-9._]{1,30}\/)?(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/i;
+	  const state = { items: [], isDownloading: false, currentIndex: 0, total: 0, status: '', theme: {}, hasBeenOpened: false, mediaOverlayEnabled: true };
+	  let queuePanelEverOpened = false;
+	  const slideByRoot = new WeakMap();
+	  let activeMedia = null;
+	  let activeCandidate = null;
+	  let buttonAnchorShortcode = '';
+	  let buttonAnchorRootId = 0;
+	  let buttonAnchorSlideIndex = null;
+	  let lastObservedRoute = location.pathname;
+	  let routePollTimer = 0;
+	  let lastPositionLogAt = 0;
+	  let routeEpoch = 0;
+	  let nextDiagnosticRootId = 1;
+	  const inspectionLogKeys = new WeakMap();
+	  let postPermalinkCache = [];
+	  let postPermalinkCacheAt = 0;
+	  const scrollOffsets = new WeakMap();
+	  const horizontalScrollLogged = new WeakSet();
+	  const diagnosticRootIds = new WeakMap();
+	  const candidateRootIds = new WeakMap();
+	  const diagnosticPostTokens = new Map();
+	  let nextDiagnosticPostToken = 1;
+	  let hideTimer = 0;
+	  let mutationRefreshTimer = 0;
+	  let selectButton = null;
+	  let tray = null;
+	  let trayCollapsed = false;
+	  let lastFolderOpenRequestAt = -Infinity;
+	  let lastQueueActionAt = -Infinity;
+	  let suppressFolderClickUntil = 0;
+	  let lastPointer = null;
+	  let lastMoveInspectionAt = 0;
+	  let pendingStickerCursor = null;
+	  let stickerCursorFrame = 0;
+	  let lastStickerCursorSentAt = -Infinity;
+	  let toggleRequestSequence = 0;
+	  const pendingToggleRequests = new Map();
+
+	  const css = `
+	    #inst-sanity-select{position:fixed;z-index:2147483646;display:none;align-items:center;justify-content:center;gap:6px;min-width:76px;box-sizing:border-box;border:1px solid var(--isg-border,#ffffff55);border-radius:999px;padding:7px 10px;appearance:none;-webkit-appearance:none;background:transparent!important;background-image:none!important;color:var(--isg-button-ink,#091318);font:650 11px/1.1 "Segoe UI",sans-serif;box-shadow:0 5px 22px #0008;cursor:pointer;white-space:nowrap;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+	    #inst-sanity-select::before,#inst-sanity-tray::before,#inst-sanity-notice::before,.isg-action::before,.isg-item::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--isg-surface,var(--isg-panel,rgba(17,24,32,.97)));opacity:.8;pointer-events:none}
+	    #inst-sanity-select::before{opacity:.8!important}
+	    #inst-sanity-select:hover{filter:brightness(1.08);transform:translateY(-1px)}
+	    #inst-sanity-select[data-selected="true"]{--isg-surface:var(--isg-panel,#151b23);color:var(--isg-ink,#f8fafc);border-color:var(--isg-accent,#99f6e4)}
+	    #inst-sanity-tray{position:fixed;z-index:2147483645;right:12px;bottom:12px;width:min(320px,calc(100vw - 24px));max-height:min(360px,calc(100vh - 24px));display:none;flex-direction:column;overflow:hidden;border:1px solid var(--isg-border,#ffffff30);border-radius:14px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:11px/1.4 "Segoe UI",sans-serif;box-shadow:0 14px 42px #0009;isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+	    #inst-sanity-tray[data-open="true"]{display:flex}
+	    #inst-sanity-tray *{box-sizing:border-box}
+	    .isg-head{display:flex;align-items:center;gap:6px;padding:8px 10px 7px;border-bottom:1px solid var(--isg-border,#ffffff22)}
+	    .isg-title{flex:1;min-width:0;font-size:12px;font-weight:700;letter-spacing:.1px}
+	    .isg-count{display:inline-flex;align-items:center;justify-content:flex-start;flex:0 0 auto;min-width:0;padding:0;box-sizing:border-box;border:0;border-radius:0;background:none;color:var(--isg-muted,#9fb1c1);font-weight:650;font-size:10px;line-height:1.2;white-space:nowrap;font-variant-numeric:tabular-nums}
+	    .isg-actions{display:flex;gap:4px;align-items:center}
+	    .isg-icon-action{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;padding:0;box-sizing:border-box}
+	    .isg-icon-action svg{display:block;width:16px;height:16px}
+	    .isg-collapse svg{transition:transform .15s ease}
+	    #inst-sanity-tray[data-collapsed="true"] .isg-collapse svg{transform:rotate(180deg)}
+	    #inst-sanity-tray[data-collapsed="true"] .isg-items,#inst-sanity-tray[data-collapsed="true"] .isg-footer{display:none}
+	    .isg-action{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;box-sizing:border-box;border:1px solid var(--isg-border,#ffffff30);border-radius:7px;padding:0 2px;background:transparent;--isg-surface:var(--isg-button-bg,linear-gradient(135deg,#99f6e4,#2dd4bf));color:var(--isg-button-ink,#091318);font:650 10px/1.2 "Segoe UI",sans-serif;cursor:pointer;white-space:nowrap;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+	    .isg-action:disabled{opacity:.5;cursor:default}
+	    .isg-action-secondary{--isg-surface:var(--isg-panel,#151b23);color:var(--isg-ink,#f8fafc)}
+	    .isg-items{display:flex;flex-direction:column;gap:7px;padding:7px 9px;overflow:auto;min-height:0}
+	    .isg-group{display:flex;flex-direction:column;gap:4px;min-width:0}
+	    .isg-group-heading{padding:0 2px 3px;border-bottom:1px solid var(--isg-border,#ffffff22);color:var(--isg-muted,#9fb1c1);font-size:9px;font-weight:750;letter-spacing:.45px;text-transform:uppercase}
+	    .isg-group-items{display:flex;flex-direction:column;gap:5px}
+	    .isg-item{position:relative;isolation:isolate;display:flex;align-items:center;gap:8px;min-height:44px;padding:5px;border:1px solid var(--isg-border,#ffffff20);border-radius:9px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+	    .isg-thumb{width:34px;height:34px;flex:0 0 34px;border-radius:6px;object-fit:cover;background:rgba(255,255,255,.08)}
+	    .isg-thumb-fallback{display:grid;place-items:center;color:var(--isg-accent2,var(--isg-accent,#99f6e4));font-size:9px;font-weight:800;letter-spacing:.25px}
+	    .isg-info{min-width:0;flex:1}
+	    .isg-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:650}
+	    .isg-meta{margin-top:1px;color:var(--isg-muted,#9fb1c1);font-size:9px}
+	    .isg-error{margin-top:1px;color:#ff9a9a;font-size:9px}
+	    .isg-saved{margin-top:1px;color:var(--isg-accent2,var(--isg-accent,#99f6e4));font-size:9px;font-weight:700}
+	    .isg-item.isg-complete{border-style:dashed}
+	    .isg-row-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto;margin-left:auto}
+	    .isg-row-action{flex:0 0 32px!important;width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;max-width:32px!important;max-height:32px!important;padding:0!important;box-sizing:border-box!important}
+	    .isg-row-action svg{display:block;width:16px;height:16px}
+	    .isg-empty{padding:6px 3px 8px;color:var(--isg-muted,#9fb1c1);font-size:10px}
+	    .isg-footer{padding:6px 10px 8px;color:var(--isg-muted,#9fb1c1);font-size:9px}
+	    #inst-sanity-notice{position:fixed;z-index:2147483647;left:50%;bottom:18px;max-width:min(460px,calc(100vw - 32px));transform:translate(-50%,12px);opacity:0;pointer-events:none;border:1px solid var(--isg-border,#ffffff30);border-radius:9px;padding:8px 11px;background:transparent;--isg-surface:var(--isg-panel,rgba(17,24,32,.97));color:var(--isg-ink,#f8fafc);font:600 11px/1.4 "Segoe UI",sans-serif;box-shadow:0 7px 28px #0008;transition:opacity .18s,transform .18s;isolation:isolate;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+	    #inst-sanity-notice[data-show="true"]{opacity:1;transform:translate(-50%,0)}
+	    @media(max-width:540px){#inst-sanity-tray{right:8px;bottom:8px;width:min(320px,calc(100vw - 16px));max-height:min(360px,calc(100vh - 16px))}#inst-sanity-select{padding:7px 10px;font-size:11px}}
+	  `;
+
+	  function requestFolderOpen(action) {
+	    const now = performance.now();
+	    if (now - lastFolderOpenRequestAt < 750) {
+	      debugLog('duplicate-folder-open-suppressed', { action });
+	      return false;
+	    }
+	    lastFolderOpenRequestAt = now;
+	    return postMessage(action);
+	  }
+
+	  function postMessage(action, payload = {}) {
+	    try {
+	      const bridge = window.chrome?.webview;
+	      if (typeof bridge?.postMessage !== 'function') {
+	        debugLog('bridge-unavailable', { action });
+	        if (action !== 'overlay-ready') showNotice('The In-st-Sanity queue connection is unavailable.');
+	        return false;
+	      }
+	      bridge.postMessage({ v: 1, action, ...payload });
+	      debugLog('bridge-message-sent', { action });
+	      return true;
+	    } catch (error) {
+	      debugLog('bridge-post-failed', { action, errorName: String(error?.name || 'Error') });
+	      if (action !== 'overlay-ready') showNotice('The In-st-Sanity queue connection is unavailable.');
+	      return false;
+	    }
+	  }
+
+	  function mediaPathIdentity(value) {
+	    const raw = String(value || '');
+	    try { return new URL(raw, location.href).pathname || raw; } catch (_) { return raw; }
+	  }
+	  function itemKey(item) {
+	    if (typeof item.key === 'string' && item.key) return item.key;
+	    const type = item.mediaType || (item.isVideo ? 'video' : 'photo');
+	    const identity = item.rawUrl ? mediaPathIdentity(item.rawUrl) : `slide:${Math.max(0, Number(item.slideIndex) || 0)}`;
+	    return `${item.shortcode}|${type}|${identity}`;
+	  }
+	  function rememberToggleRequest(requestId, candidate) {
+	    pendingToggleRequests.set(requestId, {
+	      shortcode: String(candidate.shortcode || ''),
+	      mediaType: candidate.mediaType || (candidate.isVideo ? 'video' : 'photo'),
+	      slideIndex: Number(candidate.slideIndex),
+	    });
+	    while (pendingToggleRequests.size > 32) {
+	      pendingToggleRequests.delete(pendingToggleRequests.keys().next().value);
+	    }
+	  }
+	  function queuedSelectionMatchesAttempt(item, attempt) {
+	    if (!item || !attempt) return false;
+	    const mediaType = item.mediaType || (item.isVideo === true ? 'video' : 'photo');
+	    return String(item.shortcode || '') === attempt.shortcode &&
+	      mediaType === attempt.mediaType && Number(item.slideIndex) === attempt.slideIndex;
+	  }
+	  function showQueueError(error, errorRequestId) {
+	    if (!error) return;
+	    const requestId = String(errorRequestId || '');
+	    const attempt = requestId ? pendingToggleRequests.get(requestId) : null;
+	    if (requestId) pendingToggleRequests.delete(requestId);
+	    const mediaValidationError = /^invalid_media_(?:shortcode|post_url|type|raw_url|stream_url|slide_index)$/.test(String(error));
+	    if (mediaValidationError && attempt && state.items.some(item => queuedSelectionMatchesAttempt(item, attempt))) {
+	      debugLog('queued-media-validation-error-suppressed', {
+	        error: String(error),
+	        requestId,
+	        itemCount: state.items.length,
+	      });
+	      return;
+	    }
+	    showNotice(errorMessage(error));
+	  }
+	  function safeText(value, fallback = '') { return String(value ?? fallback).slice(0, 180); }
+	  function safeUrlSummary(value) {
+	    if (typeof value !== 'string' || !value) return { present: false };
+	    try {
+	      const url = new URL(value, location.href);
+	      const postMatch = url.pathname.match(postPattern);
+	      return { present: true, protocol: url.protocol, host: url.host, route: postMatch ? postMatch[0].split('/')[1] : 'other', shortcodeLength: postMatch?.[1]?.length || 0, length: value.length };
+	    } catch (_) { return { present: true, parseable: false, length: value.length }; }
+	  }
+	  function clearTimer() { if (hideTimer) clearTimeout(hideTimer); hideTimer = 0; }
+	  function clearActiveSelector() {
+	    clearTimer();
+	    if (selectButton) selectButton.style.display = 'none';
+	    activeMedia = null;
+	    activeCandidate = null;
+	    buttonAnchorShortcode = '';
+	    buttonAnchorRootId = 0;
+	    buttonAnchorSlideIndex = null;
+	  }
+	  function setMediaOverlayEnabled(enabled, reason = 'state-sync') {
+	    const next = enabled === true;
+	    const changed = state.mediaOverlayEnabled !== next;
+	    state.mediaOverlayEnabled = next;
+	    if (changed || !next) clearTimer();
+	    if (!next) {
+	      clearActiveSelector();
+	      if (tray) tray.dataset.open = 'false';
+	    } else if (tray) {
+	      tray.dataset.open = String(queuePanelEverOpened);
+	    }
+	    if (changed) debugLog('media-overlay-enabled-changed', { enabled: next, reason });
+	  }
+
+	  function ensureUi() {
+	    if (!document.getElementById('inst-sanity-overlay-style')) {
+	      const style = document.createElement('style');
+	      style.id = 'inst-sanity-overlay-style';
+	      style.textContent = css;
+	      (document.head || document.documentElement).appendChild(style);
+	    }
+
+	    selectButton = document.getElementById('inst-sanity-select');
+	    if (!selectButton) {
+	      selectButton = document.createElement('button');
+	      selectButton.id = 'inst-sanity-select';
+	      selectButton.type = 'button';
+	      selectButton.setAttribute('aria-label', 'Add media to the download queue');
+	      selectButton.addEventListener('pointerdown', event => event.stopPropagation());
+	      selectButton.addEventListener('click', event => {
+	        event.preventDefault(); event.stopPropagation(); clearTimer();
+	        debugLog('queue-toggle-click', {
+	          candidatePresent: !!activeCandidate,
+	          mediaType: activeCandidate?.mediaType || '',
+	          shortcodeLength: String(activeCandidate?.shortcode || '').length,
+	          postUrlMatchesShortcode: !!activeCandidate && parseShortcode(activeCandidate.postUrl) === activeCandidate.shortcode,
+	          postUrl: safeUrlSummary(activeCandidate?.postUrl),
+	          mediaUrl: safeUrlSummary(activeCandidate?.rawUrl),
+	          slideIndex: activeCandidate?.slideIndex ?? null,
+	        });
+	        if (!activeCandidate) return;
+	        const candidate = { ...activeCandidate };
+	        const requestId = `${Date.now().toString(36)}-${(++toggleRequestSequence).toString(36)}`;
+	        rememberToggleRequest(requestId, candidate);
+	        if (!postMessage('toggle-media', { ...candidate, requestId })) pendingToggleRequests.delete(requestId);
+	      });
+	      document.documentElement.appendChild(selectButton);
+	    }
+
+	    tray = document.getElementById('inst-sanity-tray');
+	    if (!tray) {
+	      tray = document.createElement('section');
+	      tray.id = 'inst-sanity-tray';
+	      tray.setAttribute('role', 'region');
+	      tray.setAttribute('aria-label', 'In-st-Sanity media download queue');
+	      tray.innerHTML = '<div class="isg-head"><div class="isg-title">Download queue</div><span class="isg-count" aria-live="polite" aria-atomic="true">0 items</span><div class="isg-actions"><button class="isg-action isg-icon-action isg-start" type="button" title="Save queued media" aria-label="Save queued media"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M5 17v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-clear" type="button" title="Clear download queue" aria-label="Clear download queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-open-folder" type="button" title="Open download folder" aria-label="Open download folder"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="M3.5 9h17"/></svg></button><button class="isg-action isg-action-secondary isg-icon-action isg-collapse" type="button" title="Collapse download queue" aria-label="Collapse download queue" aria-expanded="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div></div><div class="isg-items"></div><div class="isg-footer"></div>';
+	      tray.dataset.collapsed = String(trayCollapsed);
+	      tray.querySelector('.isg-start').addEventListener('click', () => {
+	        const now = performance.now();
+	        if (now - lastQueueActionAt < 750) {
+	          debugLog('duplicate-queue-action-suppressed', { action: state.isDownloading ? 'cancel-download' : 'start-download' });
+	          return;
+	        }
+	        lastQueueActionAt = now;
+	        if (state.isDownloading) postMessage('cancel-download');
+	        else postMessage('start-download');
+	      });
+	      tray.querySelector('.isg-clear').addEventListener('click', () => postMessage('clear-queue'));
+	      const openFolderButton = tray.querySelector('.isg-open-folder');
+	      openFolderButton.title = 'Left-click: open images folder · right-click: open separate video folder';
+	      openFolderButton.setAttribute('aria-label', 'Open images folder; right-click to open the separate video folder');
+	      openFolderButton.addEventListener('pointerdown', event => {
+	        if (event.button !== 0) suppressFolderClickUntil = performance.now() + 750;
+	      });
+	      openFolderButton.addEventListener('click', event => {
+	        event.preventDefault(); event.stopPropagation();
+	        if (event.button !== 0 || performance.now() < suppressFolderClickUntil) return;
+	        requestFolderOpen('open-download-folder');
+	      });
+	      openFolderButton.addEventListener('contextmenu', event => {
+	        event.preventDefault(); event.stopPropagation();
+	        suppressFolderClickUntil = performance.now() + 750;
+	        requestFolderOpen('open-video-folder');
+	      });
+	      const collapseButton = tray.querySelector('.isg-collapse');
+	      collapseButton.addEventListener('click', event => {
+	        event.preventDefault(); event.stopPropagation();
+	        trayCollapsed = !trayCollapsed;
+	        tray.dataset.collapsed = String(trayCollapsed);
+	        const expanded = !trayCollapsed;
+	        collapseButton.setAttribute('aria-expanded', String(expanded));
+	        collapseButton.setAttribute('aria-label', expanded ? 'Collapse download queue' : 'Expand download queue');
+	        collapseButton.title = expanded ? 'Collapse download queue' : 'Expand download queue';
+	      });
+	      tray.addEventListener('pointerdown', event => event.stopPropagation());
+	      document.documentElement.appendChild(tray);
+	    }
+	  }
+
+	  function applyTheme(theme) {
+	    if (!theme || typeof theme !== 'object') return;
+	    const root = document.documentElement;
+	    const values = {
+	      '--isg-panel': theme.panel,
+	      '--isg-border': theme.border,
+	      '--isg-ink': theme.ink,
+	      '--isg-muted': theme.muted,
+	      '--isg-accent': theme.accent,
+	      '--isg-accent2': theme.accent2,
+	      '--isg-button-bg': theme.buttonBg,
+	      '--isg-button-ink': theme.buttonInk,
+	    };
+	    for (const [name, value] of Object.entries(values)) {
+	      if (typeof value === 'string' && value.length < 600) root.style.setProperty(name, value);
+	    }
+	  }
+
+	  function showNotice(message) {
+	    ensureUi();
+	    let notice = document.getElementById('inst-sanity-notice');
+	    if (!notice) {
+	      notice = document.createElement('div');
+	      notice.id = 'inst-sanity-notice';
+	      notice.setAttribute('role', 'status');
+	      document.documentElement.appendChild(notice);
+	    }
+	    notice.textContent = safeText(message, '');
+	    notice.dataset.show = 'true';
+	    clearTimeout(notice.__hideTimer);
+	    notice.__hideTimer = setTimeout(() => { notice.dataset.show = 'false'; }, 2600);
+	  }
+
+	  function navigateToQueuedMedia(item) {
+	    const shortcode = String(item?.shortcode || '');
+	    if (!/^[A-Za-z0-9_-]{1,64}$/.test(shortcode)) { showNotice('This queued media link is unavailable.'); return; }
+	    const slideIndex = Math.max(0, Math.min(100, Math.floor(Number(item?.slideIndex) || 0)));
+	    try {
+	      const url = new URL(`/p/${encodeURIComponent(shortcode)}/`, location.origin);
+	      if (slideIndex > 0 || Number(item?.contentCount) > 1) url.searchParams.set('img_index', String(slideIndex + 1));
+	      location.assign(url.href);
+	    } catch (_) { showNotice('This queued media link is unavailable.'); }
+	  }
+
+	  function renderState(snapshot, error, errorRequestId = null) {
+	    ensureUi();
+	    if (snapshot && typeof snapshot === 'object') {
+	      state.items = Array.isArray(snapshot.items) ? snapshot.items : [];
+	      state.isDownloading = snapshot.isDownloading === true;
+	      state.currentIndex = Number(snapshot.currentIndex) || 0;
+	      state.total = Number(snapshot.total) || 0;
+	      state.status = safeText(snapshot.status, '');
+	      state.hasBeenOpened = snapshot.hasBeenOpened === true;
+	    }
+	    if (snapshot?.theme) { state.theme = snapshot.theme; applyTheme(snapshot.theme); }
+
+	    const selected = new Set(state.items.map(itemKey));
+	    if (activeCandidate && selectButton) {
+	      const key = itemKey(activeCandidate);
+	      const isSelected = selected.has(key);
+	      selectButton.dataset.selected = String(isSelected);
+	      selectButton.textContent = isSelected ? '✓ Queued' : '+ Add';
+	    }
+
+	    const hasItems = state.items.length > 0;
+	    const hasPendingItems = state.items.some(item => item.isDownloaded !== true);
+	    const hasSavedItems = state.items.some(item => item.isDownloaded === true);
+	    queuePanelEverOpened = state.hasBeenOpened || hasItems || state.isDownloading;
+	    tray.dataset.open = String(state.mediaOverlayEnabled && queuePanelEverOpened);
+	    const itemCount = state.items.length;
+	    tray.querySelector('.isg-count').textContent = itemCount + (itemCount === 1 ? ' item' : ' items');
+	    const start = tray.querySelector('.isg-start');
+	    const hasFailedItems = state.items.some(item => item.isDownloaded !== true && item.error);
+	    const startLabel = state.isDownloading
+	      ? 'Cancel queue download'
+	      : hasFailedItems ? 'Retry failed queue items'
+	      : hasPendingItems ? 'Save queued media'
+	      : hasSavedItems ? 'All queued media saved' : 'Save queued media';
+	    const startIcon = state.isDownloading
+	      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10H7z" fill="currentColor" stroke="none"/></svg>'
+	      : hasFailedItems
+	        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>'
+	        : hasSavedItems && !hasPendingItems
+	          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>'
+	          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M5 17v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2"/></svg>';
+	    start.innerHTML = startIcon;
+	    start.title = startLabel;
+	    start.setAttribute('aria-label', startLabel);
+	    start.disabled = !state.isDownloading && !hasPendingItems;
+	    const clear = tray.querySelector('.isg-clear');
+	    clear.disabled = state.isDownloading || !hasItems;
+
+	    const list = tray.querySelector('.isg-items');
+	    list.replaceChildren();
+	    if (!hasItems && state.isDownloading) {
+	      const empty = document.createElement('div'); empty.className = 'isg-empty'; empty.textContent = 'Finishing the current download…'; list.appendChild(empty);
+	    } else if (!hasItems) {
+	      const empty = document.createElement('div'); empty.className = 'isg-empty'; empty.textContent = 'Hover over a post photo or video and add it to the queue.'; list.appendChild(empty);
+	    } else {
+	      const photoItems = state.items.filter(item => item.isVideo !== true);
+	      const videoItems = state.items.filter(item => item.isVideo === true);
+	      for (const [label, items] of [['Photos', photoItems], ['Videos', videoItems]]) {
+	        if (!items.length) continue;
+	        const group = document.createElement('section'); group.className = 'isg-group';
+	        const heading = document.createElement('div'); heading.className = 'isg-group-heading'; heading.textContent = `${label} (${items.length})`;
+	        const rows = document.createElement('div'); rows.className = 'isg-group-items';
+	        for (const item of items) {
+	          const row = document.createElement('div'); row.className = item.isDownloaded === true ? 'isg-item isg-complete' : 'isg-item';
+	          if (item.thumbnailUrl) {
+	            const image = document.createElement('img'); image.className = 'isg-thumb'; image.alt = ''; image.loading = 'lazy'; image.src = item.thumbnailUrl; row.appendChild(image);
+	          } else {
+	            const fallback = document.createElement('div'); fallback.className = 'isg-thumb isg-thumb-fallback'; fallback.textContent = item.isVideo ? 'VIDEO' : 'PHOTO'; row.appendChild(fallback);
+	          }
+	          const info = document.createElement('div'); info.className = 'isg-info';
+	          const name = document.createElement('div'); name.className = 'isg-name'; name.textContent = item.filename || `${item.shortcode} · ${item.isVideo ? 'Video' : 'Photo'} ${Number(item.slideIndex) + 1}`;
+	          const queuePhotoIndex = Number(item.queuePhotoIndex);
+	          const queueOrdinal = item.isVideo ? Number(item.slideIndex) + 1 : (Number.isInteger(queuePhotoIndex) && queuePhotoIndex >= 0 ? queuePhotoIndex + 1 : Number(item.slideIndex) + 1);
+	          const positionLabel = item.isVideo ? `slide ${queueOrdinal}` : `queued photo ${queueOrdinal}`;
+	          const meta = document.createElement('div'); meta.className = 'isg-meta'; meta.textContent = `${item.isVideo ? 'Video' : 'Photo'} · ${item.shortcode} · ${positionLabel}`;
+	          info.append(name, meta);
+	          if (item.isDownloaded === true) { const saved = document.createElement('div'); saved.className = 'isg-saved'; saved.textContent = item.wasSkipped === true ? 'Already saved' : 'Downloaded'; info.appendChild(saved); }
+	          if (item.error && item.isDownloaded !== true) { const failure = document.createElement('div'); failure.className = 'isg-error'; failure.textContent = safeText(item.error, 'Download failed'); info.appendChild(failure); }
+	          const actions = document.createElement('div'); actions.className = 'isg-row-actions';
+	          const openButton = document.createElement('button'); openButton.type = 'button'; openButton.className = 'isg-action isg-action-secondary isg-icon-action isg-row-action'; openButton.title = 'Open this photo or video'; openButton.setAttribute('aria-label', `Open ${item.isVideo ? 'video' : 'photo'} ${Number(item.slideIndex) + 1} from ${safeText(item.shortcode, 'queued post')}`); openButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6M19 5l-9 9"/><path d="M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+	          openButton.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); navigateToQueuedMedia(item); });
+	          const removeButton = document.createElement('button'); removeButton.type = 'button'; removeButton.className = 'isg-action isg-action-secondary isg-icon-action isg-row-action'; removeButton.title = 'Remove this media from the queue'; removeButton.setAttribute('aria-label', `Remove ${item.isVideo ? 'video' : 'photo'} ${Number(item.slideIndex) + 1} of post ${safeText(item.shortcode, 'queued post')} from the queue`); removeButton.disabled = state.isDownloading; removeButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg>';
+	          removeButton.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); if (!state.isDownloading) postMessage('remove-media', { key: item.key }); });
+	          actions.append(openButton, removeButton);
+	          row.append(info, actions); rows.appendChild(row);
+	        }
+	        group.append(heading, rows); list.appendChild(group);
+	      }
+	    }
+	    tray.querySelector('.isg-footer').textContent = state.isDownloading
+	      ? state.status || 'Downloading in order…'
+	      : hasItems ? state.status || 'Photos and videos are saved in the folders selected in Settings.' : '';
+
+	    if (error) showQueueError(error, errorRequestId);
+	  }
+
+	  function errorMessage(code) {
+	    if (String(code).startsWith('invalid_media_')) return 'That media item could not be selected.';
+	    return ({
+	      queue_full: 'The queue is full. Save or clear items before adding more.',
+	      queue_busy: 'Wait for the current queue download to finish.',
+	      queue_empty: 'Add at least one photo or video first.',
+	      queue_complete: 'Everything in this queue is already downloaded. Remove or clear items before saving another batch.',
+	      queue_item_unavailable: 'That item is no longer in the queue.',
+	      invalid_media: 'That media item could not be selected.',
+	      untrusted_source: 'Media selection is only available on Instagram pages.',
+	      bridge_unavailable: 'Could not reach the download service. Your selections are still queued.',
+	      download_folders_unavailable: 'Could not read the download locations in Settings. Your selections are still queued.',
+	      video_folder_unavailable: 'Separate video folder is enabled, but no folder is saved in Settings. Choose a video folder and retry.'
+	    })[String(code)] || 'Could not update the media queue.';
+	  }
+
+	  function parseShortcode(url) {
+	    const value = String(url || '');
+	    if (!value) return '';
+	    try {
+	      const parsed = new URL(value, location.href);
+	      const match = parsed.pathname.match(postPattern);
+	      return match ? match[1] : '';
+	    } catch (_) { return ''; }
+	  }
+
+	  function hasPostPermalink(element) {
+	    if (!element) return false;
+	    try {
+	      if (element.matches?.('a[href]') && parseShortcode(element.href)) return true;
+	      return Array.from(element.querySelectorAll?.('a[href]') || []).some(link => !!parseShortcode(link.href));
+	    } catch (_) { return false; }
+	  }
+
+	  function topmostVisibleDialog() {
+	    try {
+	      const dialogs = Array.from(document.querySelectorAll('[role="dialog"]'));
+	      for (let index = dialogs.length - 1; index >= 0; index--) {
+	        const dialog = dialogs[index];
+	        const style = getComputedStyle(dialog);
+	        const rect = dialog.getBoundingClientRect();
+	        if (dialog.getAttribute('aria-hidden') === 'true' || style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || Number(style.opacity || 1) <= 0.05) continue;
+	        if (rect.width <= 0 || rect.height <= 0 || rect.bottom <= 0 || rect.right <= 0 || rect.top >= innerHeight || rect.left >= innerWidth) continue;
+	        return dialog;
+	      }
+	    } catch (_) { }
+	    return null;
+	  }
+
+	  function isOverlayAllowedTarget(target) {
+	    const visibleDialog = topmostVisibleDialog();
+	    if (visibleDialog) return target instanceof Element && visibleDialog.contains(target);
+	    const pathname = String(location.pathname || '/');
+	    return pathname === '/' || postPattern.test(pathname);
+	  }
+
+	  function postRootFor(element) {
+	    if (!(element instanceof Element)) return document.body;
+	    const article = element.closest('article,[role="article"]');
+	    if (article) return article;
+	    const dialog = element.closest('[role="dialog"]');
+	    const main = element.closest('main');
+	    const boundary = dialog || main || document.body;
+
+	    // Some Instagram feed layouts no longer use <article>. Find the nearest
+	    // ancestor that owns a post permalink rather than treating the whole <main>
+	    // feed (or an entire post dialog) as one post.
+	    for (let ancestor = element.parentElement; ancestor && ancestor !== boundary && ancestor !== document.body; ancestor = ancestor.parentElement) {
+	      if (!ancestor.matches('a[href]') && hasPostPermalink(ancestor)) return ancestor;
+	    }
+	    return boundary;
+	  }
+
+	  // Feed cards may lose their article role. Match a media element to the nearest
+	  // canonical post link by screen geometry instead of taking the first feed link.
+	  function matchingPostPermalinks(root, shortcode = '') {
+	    const links = [];
+	    try {
+	      if (root instanceof Element && root.matches('a[href]')) links.push(root);
+	      links.push(...Array.from(root?.querySelectorAll?.('a[href]') || []));
+	    } catch (_) { }
+	    const seen = new Set();
+	    return links.flatMap(link => {
+	      if (seen.has(link)) return [];
+	      seen.add(link);
+	      const code = parseShortcode(link.href || link.getAttribute?.('href'));
+	      return code && (!shortcode || code === shortcode) ? [{ link, shortcode: code }] : [];
+	    });
+	  }
+
+	  function allDocumentPostPermalinks() {
+	    const now = Date.now();
+	    if (now - postPermalinkCacheAt > 250) {
+	      postPermalinkCache = matchingPostPermalinks(document);
+	      postPermalinkCacheAt = now;
+	    }
+	    return postPermalinkCache;
+	  }
+
+	  function postLinkDistance(media, link) {
+	    try {
+	      const mediaRect = media.getBoundingClientRect();
+	      const linkRect = link.getBoundingClientRect();
+	      if (![mediaRect.left, mediaRect.top, mediaRect.right, mediaRect.bottom, linkRect.left, linkRect.top, linkRect.right, linkRect.bottom].every(Number.isFinite)) return Infinity;
+	      const dx = Math.max(0, mediaRect.left - linkRect.right, linkRect.left - mediaRect.right);
+	      const dy = Math.max(0, mediaRect.top - linkRect.bottom, linkRect.top - mediaRect.bottom);
+	      return Math.hypot(dx, dy);
+	    } catch (_) { return Infinity; }
+	  }
+
+	  function findRelatedPostPermalink(media, root, shortcode = '') {
+	    const localLinks = matchingPostPermalinks(root, shortcode);
+	    const localLinkCount = matchingPostPermalinks(root).length;
+	    const broadRoot = root === document.body || String(root?.tagName || '').toUpperCase() === 'MAIN' || localLinkCount > 12;
+	    let candidates = localLinks;
+	    let scope = 'post-root';
+	    let documentLinkCount = localLinkCount;
+	    if (broadRoot || !candidates.length) {
+	      const allGlobalLinks = allDocumentPostPermalinks();
+	      const globalLinks = shortcode ? allGlobalLinks.filter(entry => entry.shortcode === shortcode) : allGlobalLinks;
+	      documentLinkCount = allGlobalLinks.length;
+	      if (globalLinks.length) {
+	        candidates = globalLinks;
+	        scope = 'document';
+	      }
+	    }
+	    const ranked = candidates
+	      .map(entry => ({ ...entry, distance: postLinkDistance(media, entry.link) }))
+	      .sort((left, right) => left.distance - right.distance);
+	    const best = ranked[0] || null;
+	    const mediaRect = media.getBoundingClientRect();
+	    const maxDistance = Math.max(480, Math.min(800, Math.max(mediaRect.width, mediaRect.height) * 1.1));
+	    const selected = best && ((!broadRoot && localLinks.length > 0) || best.distance <= maxDistance)
+	      ? best
+	      : null;
+	    return {
+	      ...selected,
+	      scope: selected ? scope : 'none',
+	      localLinkCount,
+	      documentLinkCount,
+	      nearestDistance: Number.isFinite(best?.distance) ? Math.round(best.distance) : null,
+	    };
+	  }
+
+	  function resolvePostIdentity(media, root, expectedShortcode = '', diagnostics = null) {
+	    const pageShortcode = parseShortcode(location.pathname);
+	    const nearby = media.closest('a[href]');
+	    const directShortcode = nearby && parseShortcode(nearby.href);
+	    const related = findRelatedPostPermalink(media, root, expectedShortcode || pageShortcode || directShortcode || '');
+	    const shortcode = expectedShortcode || pageShortcode || directShortcode || related.shortcode || '';
+	    const relatedUrl = related.link && related.shortcode === shortcode ? related.link.href : '';
+	    const postUrl = directShortcode === shortcode ? nearby.href : relatedUrl ||
+	      (pageShortcode === shortcode ? location.origin + location.pathname : '');
+	    if (diagnostics) {
+	      Object.assign(diagnostics, {
+	        postIdentitySource: expectedShortcode ? 'expected' : pageShortcode ? 'page-route' : directShortcode ? 'media-link' : related.shortcode ? related.scope : 'none',
+	        postRootPermalinkCount: related.localLinkCount,
+	        documentPermalinkCount: related.documentLinkCount,
+	        nearestPermalinkDistance: related.nearestDistance,
+	      });
+	    }
+	    return { shortcode, postUrl };
+	  }
+
+	  function findPostShortcode(media, root) {
+	    return resolvePostIdentity(media, root).shortcode;
+	  }
+
+	  function findPostPermalink(media, root, shortcode) {
+	    return resolvePostIdentity(media, root, shortcode).postUrl;
+	  }
+
+	  function mediaVisibility(element) {
+	    const rect = element.getBoundingClientRect();
+	    const geometry = {
+	      width: Math.round(rect.width), height: Math.round(rect.height),
+	      left: Math.round(rect.left), top: Math.round(rect.top),
+	      right: Math.round(rect.right), bottom: Math.round(rect.bottom),
+	    };
+	    if (rect.width < 90 || rect.height < 90) return { reason: 'below-hover-size', geometry };
+	    if (rect.bottom <= 0 || rect.right <= 0 || rect.top >= innerHeight || rect.left >= innerWidth) return { reason: 'outside-viewport', geometry };
+	    const style = getComputedStyle(element);
+	    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity || 1) <= 0.05) {
+	      return { reason: 'hidden-by-style', geometry, display: style.display, visibility: style.visibility, opacity: style.opacity };
+	    }
+	    return { reason: 'visible', geometry };
+	  }
+
+	  function trustedMediaUrl(value) {
+	    const raw = String(value || '').trim();
+	    if (!raw || raw.length > 4096) return '';
+	    try {
+	      const url = new URL(raw, location.href);
+	      if (url.protocol !== 'https:' || url.username || url.password || (url.port && url.port !== '443') || /\.(?:m3u8|mpd)$/i.test(url.pathname)) return '';
+	      const host = url.hostname.toLowerCase().replace(/\.$/, '');
+	      const allowedHost = host === 'instagram.com' || host.endsWith('.instagram.com') ||
+	        host === 'fbcdn.net' || host.endsWith('.fbcdn.net') ||
+	        host === 'cdninstagram.com' || host.endsWith('.cdninstagram.com');
+	      return allowedHost ? url.href : '';
+	    } catch (_) { return ''; }
+	  }
+
+	  function mediaUrl(element, isVideo) {
+	    const sources = [];
+	    const addSource = value => { if (typeof value === 'string' && value.trim()) sources.push(value); };
+	    addSource(element.currentSrc);
+	    addSource(element.getAttribute?.('src'));
+	    addSource(element.src);
+	    if (isVideo) {
+	      for (const attribute of ['data-video-url', 'data-raw-video', 'data-src']) addSource(element.getAttribute?.(attribute));
+	      let sourceElements = [];
+	      try { sourceElements = Array.from(element.querySelectorAll('source[src],source[data-src]')); } catch (_) { }
+	      for (const source of sourceElements) {
+	        addSource(source.getAttribute?.('src'));
+	        addSource(source.getAttribute?.('data-src'));
+	        addSource(source.src);
+	      }
+	    }
+	    for (const source of sources) {
+	      const safe = trustedMediaUrl(source);
+	      if (safe) return safe;
+	    }
+	    return '';
+	  }
+
+	  function carouselInfo(root) {
+	    const labels = Array.from(root.querySelectorAll('button[aria-label], [role="button"][aria-label]'))
+	      .map(button => ({ button, match: String(button.getAttribute('aria-label') || '').match(/(?:go to|slide)\s*(?:slide\s*)?(\d+)/i) }))
+	      .filter(value => value.match);
+	    const count = labels.reduce((maximum, value) => Math.max(maximum, Number(value.match[1]) || 0), 0) || null;
+	    const active = labels.find(value => { const current = value.button.getAttribute('aria-current'); return (current && current !== 'false') || value.button.getAttribute('aria-pressed') === 'true' || value.button.getAttribute('aria-selected') === 'true' || value.button.dataset.active === 'true'; });
+	    return { count, activeIndex: active ? Math.max(0, Number(active.match[1]) - 1) : null };
+	  }
+
+	  function slideTrackingKey(root, shortcode) {
+	    const view = parseShortcode(location.pathname) === shortcode ? 'opened-route'
+	      : root?.closest?.('[role="dialog"]') ? 'opened-dialog' : 'inline';
+	    return `${view}|${shortcode}`;
+	  }
+
+	  function slideMapFor(root) {
+	    let map = slideByRoot.get(root);
+	    if (!map) { map = new Map(); slideByRoot.set(root, map); }
+	    return map;
+	  }
+
+	  function currentSlideIndex(root, shortcode, carousel) {
+	    const tracked = slideByRoot.get(root)?.get(slideTrackingKey(root, shortcode));
+	    if (Number.isInteger(tracked)) return tracked;
+	    return Number.isInteger(carousel.activeIndex) ? carousel.activeIndex : 0;
+	  }
+
+	  function trackSlide(root, shortcode, index) {
+	    slideMapFor(root).set(slideTrackingKey(root, shortcode), index);
+	  }
+
+	  function slideInfo(root, shortcode) {
+	    const carousel = carouselInfo(root);
+	    let index = currentSlideIndex(root, shortcode, carousel);
+	    if (!Number.isFinite(index) || index < 0) index = 0;
+	    if (carousel.count) index = Math.min(index, carousel.count - 1);
+	    return { slideIndex: index, contentCount: carousel.count };
+	  }
+
+	  function accountFromInstagramUrl(value, allowPostRoute = false) {
+	    try {
+	      const url = new URL(String(value || ''), location.href);
+	      if (url.origin !== location.origin) return '';
+	      const parts = url.pathname.split('/').filter(Boolean);
+	      if (!parts.length) return '';
+	      const reserved = /^(?:p|reel|reels|tv|explore|accounts|direct|stories|about|legal|challenge|developer)$/i;
+	      if (allowPostRoute && parts.length >= 2 && /^(?:p|reel|reels|tv)$/i.test(parts[1]) && !reserved.test(parts[0])) return parts[0];
+	      if (parts.length === 1 && !reserved.test(parts[0])) return parts[0];
+	      return '';
+	    } catch (_) { return ''; }
+	  }
+
+	  function accountForPost(root, postUrl) {
+	    const routeAccount = accountFromInstagramUrl(postUrl, true);
+	    if (routeAccount) return routeAccount;
+	    let links = [];
+	    try { links = Array.from(root?.querySelectorAll?.('a[href]') || []); } catch (_) { }
+	    for (const link of links) {
+	      const account = accountFromInstagramUrl(link.href || link.getAttribute?.('href'));
+	      if (account) return account;
+	    }
+	    return accountFromInstagramUrl(location.pathname);
+	  }
+
+	  function candidateFor(media, diagnostics = null) {
+	    const reject = (reason, details = {}) => { if (diagnostics) Object.assign(diagnostics, details, { reason }); return null; };
+	    try {
+	      if (!media) return reject('missing-media');
+	      const tag = String(media.tagName || '').toUpperCase();
+	      const isVideo = tag === 'VIDEO';
+	      if (!isVideo && tag !== 'IMG') return reject('not-photo-or-video');
+	      const visibility = mediaVisibility(media);
+	      if (diagnostics) Object.assign(diagnostics, {
+	        geometry: visibility.geometry || null,
+	        intrinsicWidth: isVideo ? Number(media.videoWidth) || 0 : Number(media.naturalWidth) || 0,
+	        intrinsicHeight: isVideo ? Number(media.videoHeight) || 0 : Number(media.naturalHeight) || 0,
+	        decorativeAltMatch: !isVideo && /profile|avatar|logo|icon/i.test(media.alt || ''),
+	      });
+	      if (visibility.reason !== 'visible') return reject(visibility.reason || 'not-visible', visibility);
+	      if (!isVideo && (media.naturalWidth < 160 || media.naturalHeight < 160)) return reject('image-too-small');
+	      if (!isVideo && /profile|avatar|logo|icon/i.test(media.alt || '')) return reject('decorative-image');
+	      if (isVideo && media.closest('#inst-sanity-tray')) return reject('queue-video');
+	      const rawUrl = mediaUrl(media, isVideo);
+	      if (!rawUrl && !isVideo) return reject('photo-source-unavailable');
+	      if (rawUrl && (!/^https:\/\//i.test(rawUrl) || /\.m3u8(?:$|\?)/i.test(rawUrl))) return reject('unsupported-source');
+
+	      const root = postRootFor(media);
+	      const postIdentity = resolvePostIdentity(media, root, '', diagnostics);
+	      const shortcode = postIdentity.shortcode;
+	      if (!shortcode) return reject('post-shortcode-missing', { geometry: visibility.geometry });
+	      const postUrl = postIdentity.postUrl;
+	      if (!postUrl) return reject('post-permalink-missing', { geometry: visibility.geometry });
+	      const { slideIndex, contentCount } = slideInfo(root, shortcode);
+	      const thumbnailUrl = isVideo ? (media.poster || '') : (media.currentSrc || media.src || '');
+	      const postRootId = diagnosticRootId(root);
+	      const postToken = diagnosticPostToken(shortcode);
+	      if (diagnostics) Object.assign(diagnostics, { postRootId, postToken });
+	      const candidate = {
+	        shortcode,
+	        account: accountForPost(root, postUrl),
+	        postUrl,
+	        mediaType: isVideo ? 'video' : 'photo',
+	        slideIndex,
+	        contentCount,
+	        rawUrl,
+	        thumbnailUrl: /^https:\/\//i.test(thumbnailUrl) ? thumbnailUrl : '',
+	      };
+	      candidateRootIds.set(candidate, postRootId);
+	      return candidate;
+	    } catch (_) { return reject('candidate-exception'); }
+	  }
+
+	  function diagnosticRootId(root) {
+	    if (!(root instanceof Element)) return 0;
+	    let id = diagnosticRootIds.get(root);
+	    if (!id) { id = nextDiagnosticRootId++; diagnosticRootIds.set(root, id); }
+	    return id;
+	  }
+
+	  function diagnosticPostToken(shortcode) {
+	    const key = String(shortcode || '');
+	    if (!key) return 0;
+	    let token = diagnosticPostTokens.get(key);
+	    if (!token) { token = nextDiagnosticPostToken++; diagnosticPostTokens.set(key, token); }
+	    return token;
+	  }
+
+	  function rememberScrollPositions(element) {
+	    for (let ancestor = element; ancestor instanceof Element; ancestor = ancestor.parentElement) {
+	      scrollOffsets.set(ancestor, { left: Number(ancestor.scrollLeft) || 0, top: Number(ancestor.scrollTop) || 0 });
+	    }
+	  }
+
+	  function measureSelectButtonWidth() {
+	    if (!selectButton) return 76;
+	    const originalDisplay = selectButton.style.display;
+	    const originalVisibility = selectButton.style.visibility;
+	    const wasDisplayNone = getComputedStyle(selectButton).display === 'none';
+	    if (wasDisplayNone) {
+	      selectButton.style.visibility = 'hidden';
+	      selectButton.style.display = 'inline-flex';
+	    }
+	    const width = selectButton.getBoundingClientRect().width || selectButton.offsetWidth || 76;
+	    if (wasDisplayNone) {
+	      selectButton.style.display = originalDisplay;
+	      selectButton.style.visibility = originalVisibility;
+	    }
+	    return width;
+	  }
+
+	  function positionButton(media, candidate, forcePosition = false, reason = 'candidate') {
+	    if (!state.mediaOverlayEnabled || !selectButton || !media || !candidate) return;
+	    const candidateRootId = candidateRootIds.get(candidate) || 0;
+	    const samePostAnchor = buttonAnchorShortcode === candidate.shortcode && buttonAnchorRootId === candidateRootId;
+	    const hasSamePostAnchor = samePostAnchor && selectButton.style.left && selectButton.style.top;
+	    if (forcePosition || !hasSamePostAnchor) {
+	      const rect = media.getBoundingClientRect();
+	      const width = measureSelectButtonWidth();
+	      const left = Math.max(8, Math.min(innerWidth - width - 8, rect.right - width - 10));
+	      const top = Math.max(8, Math.min(innerHeight - 42, rect.top + 10));
+	      const previousRootId = buttonAnchorRootId;
+	      const anchorChanged = buttonAnchorShortcode !== candidate.shortcode || previousRootId !== candidateRootId;
+	      const positionChanged = selectButton.style.left !== `${left}px` || selectButton.style.top !== `${top}px`;
+	      selectButton.style.left = `${left}px`;
+	      selectButton.style.top = `${top}px`;
+	      buttonAnchorShortcode = candidate.shortcode;
+	      buttonAnchorRootId = candidateRootId;
+	      const now = Date.now();
+	      if (anchorChanged || positionChanged) {
+	        if (reason !== 'scroll' || now - lastPositionLogAt >= 900) {
+	          lastPositionLogAt = now;
+	          debugLog('selector-positioned', {
+	            reason,
+	            shortcodeLength: String(candidate.shortcode || '').length,
+	            postToken: diagnosticPostToken(candidate.shortcode),
+	            postRootId: candidateRootId,
+	            previousPostRootId: previousRootId,
+	            mediaType: candidate.mediaType,
+	            slideIndex: candidate.slideIndex,
+	            left: Math.round(left),
+	            top: Math.round(top),
+	          });
+	        }
+	      }
+	    }
+	    buttonAnchorRootId = candidateRootId;
+	    buttonAnchorSlideIndex = Number.isInteger(candidate.slideIndex) ? candidate.slideIndex : null;
+	    selectButton.style.display = 'inline-flex';
+	    const key = itemKey(candidate);
+	    const isSelected = state.items.some(item => itemKey(item) === key);
+	    selectButton.dataset.selected = String(isSelected);
+	    selectButton.textContent = isSelected ? '✓ Queued' : '+ Add';
+	    activeCandidate = candidate;
+	  }
+
+	  // Some non-interactive Instagram spans sit above a photo. Permit only that
+	  // nearby frame hit; media bounds/clips still apply and controls stay excluded.
+	  function isRelatedMediaFrameTarget(media, eventTarget) {
+	    if (!(media instanceof Element) || !(eventTarget instanceof Element) || eventTarget === media) return false;
+	    const control = eventTarget.closest('button,input,select,textarea,[role="button"],[role="menuitem"],[contenteditable="true"]');
+	    if (control && control !== media && !media.contains(control)) return false;
+	    let depth = 0;
+	    for (let ancestor = eventTarget; ancestor && ancestor !== document.body && depth < 7; ancestor = ancestor.parentElement, depth++) {
+	      if (!ancestor.contains(media)) continue;
+	      return (ancestor.querySelectorAll('img,video') || []).length <= 2;
+	    }
+	    return false;
+	  }
+
+	  function mediaContainsPoint(media, point, hitStack = null, eventTarget = null, diagnostics = null) {
+	    const reject = (reason, details = {}) => { if (diagnostics) Object.assign(diagnostics, details, { reason }); return false; };
+	    if (!(media instanceof Element) || !point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return reject('invalid-media-or-point');
+	    try {
+	      const rect = media.getBoundingClientRect();
+	      const geometry = { width: Math.round(rect.width), height: Math.round(rect.height), left: Math.round(rect.left), top: Math.round(rect.top), right: Math.round(rect.right), bottom: Math.round(rect.bottom) };
+	      if (point.x < rect.left || point.x > rect.right || point.y < rect.top || point.y > rect.bottom) return reject('outside-media-bounds', { geometry });
+	      // WebView2's hit stack is authoritative when it includes this media. Instagram's
+	      // transformed carousel ancestors can report stale/oversized clip rectangles.
+	      const hits = Array.isArray(hitStack) ? hitStack : pointHitStack(point);
+	      const hitInMedia = hits.some(hit => hit instanceof Element && (hit === media || media.contains(hit)));
+
+	      let visibleOpacity = 1;
+	      for (let ancestor = media; ancestor; ancestor = ancestor.parentElement) {
+	        const style = getComputedStyle(ancestor);
+	        if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return reject('hidden-by-ancestor', { geometry });
+	        const opacity = Number(style.opacity);
+	        if (Number.isFinite(opacity)) visibleOpacity *= opacity;
+	        if (visibleOpacity <= 0.05) return reject('transparent-ancestor', { geometry });
+
+	        if (ancestor === media || style.display === 'inline' || style.display === 'contents') continue;
+	        const clipsX = ['hidden', 'clip', 'scroll', 'auto', 'overlay'].includes(style.overflowX);
+	        const clipsY = ['hidden', 'clip', 'scroll', 'auto', 'overlay'].includes(style.overflowY);
+	        if (!clipsX && !clipsY) continue;
+	        const clipRect = ancestor.getBoundingClientRect();
+	        const scaleX = ancestor.offsetWidth > 0 ? clipRect.width / ancestor.offsetWidth : 1;
+	        const scaleY = ancestor.offsetHeight > 0 ? clipRect.height / ancestor.offsetHeight : 1;
+	        const clipLeft = clipRect.left + (ancestor.clientLeft || 0) * scaleX;
+	        const clipTop = clipRect.top + (ancestor.clientTop || 0) * scaleY;
+	        const clipRight = clipLeft + (ancestor.clientWidth || 0) * scaleX;
+	        const clipBottom = clipTop + (ancestor.clientHeight || 0) * scaleY;
+	        if (clipsX && (point.x < clipLeft || point.x > clipRight)) {
+	          if (!hitInMedia) return reject('outside-horizontal-clip', { geometry });
+	          if (diagnostics) diagnostics.clipBoundsDisagreedWithHitStack = true;
+	        }
+	        if (clipsY && (point.y < clipTop || point.y > clipBottom)) {
+	          if (!hitInMedia) return reject('outside-vertical-clip', { geometry });
+	          if (diagnostics) diagnostics.clipBoundsDisagreedWithHitStack = true;
+	        }
+	      }
+
+	      const eventTargetsMedia = eventTarget instanceof Element && (eventTarget === media || media.contains(eventTarget) || eventTarget.contains(media));
+	      const relatedFrameTarget = isRelatedMediaFrameTarget(media, eventTarget);
+	      if (hits.length === 0 || hitInMedia || eventTargetsMedia || relatedFrameTarget) {
+	        if (diagnostics && relatedFrameTarget && !hitInMedia && !eventTargetsMedia) diagnostics.relatedMediaFrameHit = true;
+	        return true;
+	      }
+	      return reject('hit-stack-miss', {
+	        geometry,
+	        topHitTags: hits.slice(0, 4).map(hit => String(hit?.tagName || 'unknown').toLowerCase()),
+	        eventTargetTag: String(eventTarget?.tagName || 'none').toLowerCase(),
+	      });
+	    } catch (_) { return reject('hit-test-exception'); }
+	  }
+
+	  function pointHitStack(point) {
+	    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return [];
+	    try {
+	      if (typeof document.elementsFromPoint === 'function') {
+	        const hits = document.elementsFromPoint(point.x, point.y);
+	        if (hits?.length) return Array.from(hits);
+	      }
+	    } catch (_) { }
+	    try {
+	      const hit = document.elementFromPoint(point.x, point.y);
+	      return hit ? [hit] : [];
+	    } catch (_) { return []; }
+	  }
+
+	  function inspectMediaTarget(target, point = null, reason = 'pointer') {
+	    if (!(target instanceof Element) || target.closest('#inst-sanity-tray,#inst-sanity-select')) {
+	      return { media: null, candidate: null };
+	    }
+
+	    if (!isOverlayAllowedTarget(target)) return { media: null, candidate: null };
+
+	    let media = null;
+	    let candidate = null;
+	    let candidateDiagnosticsForLog = null;
+	    const hits = pointHitStack(point);
+	    const seen = new Set();
+	    let mediaChecks = 0;
+	    let hitTestRejected = 0;
+	    let candidateRejected = 0;
+	    const hitTestRejectReasons = {};
+	    const hitTestRejectExamples = [];
+	    const candidateRejectReasons = {};
+	    const candidateRejectDetails = [];
+	    const directMedia = target.closest('img,video');
+	    const tryMedia = possibleMedia => {
+	      if (!possibleMedia || seen.has(possibleMedia) || possibleMedia.closest('#inst-sanity-tray,#inst-sanity-select')) return false;
+	      seen.add(possibleMedia);
+	      mediaChecks++;
+	      const eventTarget = target instanceof Element ? target : null;
+	      const hitDiagnostics = {};
+	      if (!mediaContainsPoint(possibleMedia, point, hits, eventTarget, hitDiagnostics)) {
+	        hitTestRejected++;
+	        const rejection = hitDiagnostics.reason || 'unknown';
+	        hitTestRejectReasons[rejection] = (hitTestRejectReasons[rejection] || 0) + 1;
+	        if (hitTestRejectExamples.length < 3) hitTestRejectExamples.push({ mediaTag: String(possibleMedia.tagName || 'unknown').toLowerCase(), ...hitDiagnostics });
+	        return false;
+	      }
+	      const candidateDiagnostics = {};
+	      const found = candidateFor(possibleMedia, candidateDiagnostics);
+	      if (!found) {
+	        candidateRejected++;
+	        const rejection = candidateDiagnostics.reason || 'unknown';
+	        candidateRejectReasons[rejection] = (candidateRejectReasons[rejection] || 0) + 1;
+	        if (candidateRejectDetails.length < 3) candidateRejectDetails.push({ mediaTag: String(possibleMedia.tagName || 'unknown').toLowerCase(), ...candidateDiagnostics });
+	        return false;
+	      }
+	      media = possibleMedia;
+	      candidate = found;
+	      candidateDiagnosticsForLog = candidateDiagnostics;
+	      return true;
+	    };
+
+	    if (directMedia) tryMedia(directMedia);
+
+	    if (!candidate) {
+	      for (const hit of hits) {
+	        if (tryMedia(hit?.closest?.('img,video'))) break;
+	      }
+	    }
+
+	    const targetMedia = target.querySelectorAll('img,video');
+	    if (!candidate && targetMedia.length <= 32) {
+	      for (const descendant of targetMedia) {
+	        if (tryMedia(descendant)) break;
+	      }
+	    }
+
+	    const scope = target.closest('article,[role="article"]') ||
+	      hits.map(hit => hit?.closest?.('article,[role="article"]')).find(Boolean) ||
+	      postRootFor(directMedia || target);
+	    const scopedMedia = scope?.querySelectorAll?.('img,video') || [];
+	    if (!candidate && scope !== document.body && scopedMedia.length <= 48) {
+	      for (const scoped of scopedMedia) {
+	        if (tryMedia(scoped)) break;
+	      }
+	    }
+
+	    const result = candidate ? 'candidate-found' : mediaChecks === 0 ? 'no-media-found' :
+	      candidateRejected ? 'candidate-rejected' : hitTestRejected ? 'pointer-hit-rejected' : 'no-eligible-media';
+	    const rootId = diagnosticRootId(scope);
+	    const rejectionSignature = `${Object.keys(hitTestRejectReasons).sort().join(',')}|${Object.keys(candidateRejectReasons).sort().join(',')}`;
+	    const inspectionIdentity = candidate ? itemKey(candidate) : `${result}|${rejectionSignature}`;
+	    const signature = `${routeEpoch}|${rootId}|${reason}|${inspectionIdentity}`;
+	    const targetRect = (() => {
+	      try {
+	        const rect = target.getBoundingClientRect();
+	        return { left: Math.round(rect.left), top: Math.round(rect.top), width: Math.round(rect.width), height: Math.round(rect.height) };
+	      } catch (_) { return null; }
+	    })();
+	    const visualViewport = window.visualViewport ? {
+	      offsetLeft: Math.round(window.visualViewport.offsetLeft || 0),
+	      offsetTop: Math.round(window.visualViewport.offsetTop || 0),
+	      width: Math.round(window.visualViewport.width || 0),
+	      height: Math.round(window.visualViewport.height || 0),
+	      scale: Number(window.visualViewport.scale) || 1,
+	    } : null;
+	    let loggedSignatures = scope instanceof Element ? inspectionLogKeys.get(scope) : null;
+	    if (!loggedSignatures) {
+	      loggedSignatures = new Set();
+	      if (scope instanceof Element) inspectionLogKeys.set(scope, loggedSignatures);
+	    }
+	    if (!loggedSignatures.has(signature)) {
+	      if (loggedSignatures.size >= 128) loggedSignatures.clear();
+	      loggedSignatures.add(signature);
+	      debugLog('media-inspection', {
+	        route: routeKind(),
+	        reason,
+	        pointer: point && Number.isFinite(point.x) && Number.isFinite(point.y)
+	          ? { x: Math.round(point.x), y: Math.round(point.y) }
+	          : null,
+	        viewport: { width: Math.round(innerWidth), height: Math.round(innerHeight) },
+	        visualViewport,
+	        pageScroll: { x: Math.round(window.scrollX || 0), y: Math.round(window.scrollY || 0) },
+	        targetRect,
+	        hitStackTags: hits.slice(0, 6).map(hit => String(hit?.tagName || 'unknown').toLowerCase()),
+	        activeSelector: {
+	          visible: !!selectButton && selectButton.style.display !== 'none',
+	          postToken: activeCandidate ? diagnosticPostToken(activeCandidate.shortcode) : 0,
+	          postRootId: activeCandidate ? candidateRootIds.get(activeCandidate) || 0 : 0,
+	        },
+	        rootId,
+	        rootTag: String(scope?.tagName || 'unknown').toLowerCase(),
+	        rootRole: safeText(scope?.getAttribute?.('role') || ''),
+	        targetTag: String(target.tagName || 'unknown').toLowerCase(),
+	        result,
+	        mediaChecks,
+	        hitTestRejected,
+	        hitTestRejectReasons,
+	        hitTestRejectExamples,
+	        candidateRejected,
+	        candidateRejectReasons,
+	        candidateRejectDetails,
+	        hitStackCount: hits.length,
+	        targetMediaCount: targetMedia.length,
+	        scopedMediaCount: scopedMedia.length,
+	        candidate: candidate ? {
+	          mediaType: candidate.mediaType,
+	          slideIndex: candidate.slideIndex,
+	          shortcodeLength: String(candidate.shortcode || '').length,
+	          postToken: candidateDiagnosticsForLog?.postToken ?? 0,
+	          postRootId: candidateDiagnosticsForLog?.postRootId ?? 0,
+	          postIdentitySource: candidateDiagnosticsForLog?.postIdentitySource || 'unknown',
+	          postRootPermalinkCount: candidateDiagnosticsForLog?.postRootPermalinkCount ?? 0,
+	          documentPermalinkCount: candidateDiagnosticsForLog?.documentPermalinkCount ?? 0,
+	          nearestPermalinkDistance: candidateDiagnosticsForLog?.nearestPermalinkDistance ?? null,
+	          clipBoundsDisagreedWithHitStack: candidateDiagnosticsForLog?.clipBoundsDisagreedWithHitStack === true,
+	          postUrlMatchesShortcode: parseShortcode(candidate.postUrl) === candidate.shortcode,
+	          sourceAvailable: !!candidate.rawUrl,
+	        } : null,
+	      });
+	    }
+
+	    return { media: candidate ? media : null, candidate };
+	  }
+
+	  function activateInspectedCandidate(inspection, forcePosition = false, reason = 'candidate') {
+	    if (!state.mediaOverlayEnabled || !inspection?.media || !inspection.candidate || !isOverlayAllowedTarget(inspection.media)) return false;
+	    const previous = activeCandidate;
+	    const next = inspection.candidate;
+	    const nextRootId = candidateRootIds.get(next) || 0;
+	    const previousRootId = previous ? candidateRootIds.get(previous) || 0 : 0;
+	    const samePost = !!previous && previous.shortcode === next.shortcode && previousRootId === nextRootId;
+	    const slideChanged = samePost && (previous.slideIndex !== next.slideIndex || itemKey(previous) !== itemKey(next));
+	    const anchorWasAvailable = buttonAnchorShortcode === next.shortcode && buttonAnchorRootId === nextRootId && !!selectButton?.style.left && !!selectButton?.style.top;
+	    const previousAnchorSlideIndex = buttonAnchorSlideIndex;
+	    const selectorWasVisible = selectButton?.style.display !== 'none';
+	    const anchorSlideChanged = anchorWasAvailable && Number.isInteger(previousAnchorSlideIndex) && previousAnchorSlideIndex !== next.slideIndex;
+	    clearTimer();
+	    activeMedia = inspection.media;
+	    activeCandidate = next;
+	    rememberScrollPositions(activeMedia);
+	    positionButton(activeMedia, activeCandidate, forcePosition, reason);
+	    if ((slideChanged || anchorSlideChanged) && anchorWasAvailable && !forcePosition) {
+	      debugLog('selector-anchor-preserved', {
+	        mediaType: next.mediaType,
+	        shortcodeLength: String(next.shortcode || '').length,
+	        fromSlideIndex: Number.isInteger(previousAnchorSlideIndex) ? previousAnchorSlideIndex : previous?.slideIndex ?? null,
+	        toSlideIndex: next.slideIndex,
+	        selectorWasVisible,
+	        left: selectButton?.style.left || '',
+	        top: selectButton?.style.top || '',
+	      });
+	    }
+	    return true;
+	  }
+
+	  function hideSelectSoon() {
+	    clearTimer();
+	    hideTimer = setTimeout(() => {
+	      if (selectButton && !selectButton.matches(':hover')) {
+	        selectButton.style.display = 'none'; activeMedia = null; activeCandidate = null;
+	      }
+	    }, 220);
+	  }
+
+	  function onPointerOver(event) {
+	    lastPointer = { x: event.clientX, y: event.clientY };
+	    if (!state.mediaOverlayEnabled) return;
+	    if (event.target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) {
+	      clearTimer();
+	      if (!isOverlayAllowedTarget(activeMedia)) clearActiveSelector();
+	      return;
+	    }
+	    if (!isOverlayAllowedTarget(event.target)) { clearActiveSelector(); return; }
+	    const inspection = inspectMediaTarget(event.target, lastPointer, 'pointerover');
+	    if (!activateInspectedCandidate(inspection) && activeMedia && !selectButton?.matches(':hover')) hideSelectSoon();
+	  }
+
+	  function relayStickerCursorToMainApp(event) {
+	    const bridge = window.chrome?.webview;
+	    if (typeof bridge?.postMessage !== 'function' || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) return;
+	    pendingStickerCursor = { x: event.clientX, y: event.clientY };
+	    if (stickerCursorFrame) return;
+	    stickerCursorFrame = window.requestAnimationFrame(() => {
+	      stickerCursorFrame = 0;
+	      const point = pendingStickerCursor;
+	      pendingStickerCursor = null;
+	      const now = performance.now();
+	      if (!point || now - lastStickerCursorSentAt < 30) return;
+	      lastStickerCursorSentAt = now;
+	      try { bridge.postMessage({ v: 1, action: 'cursor-position', x: point.x, y: point.y }); } catch (_) { }
+	    });
+	  }
+
+	  function onPointerMove(event) {
+	    lastPointer = { x: event.clientX, y: event.clientY };
+	    relayStickerCursorToMainApp(event);
+	    if (!state.mediaOverlayEnabled) return;
+	    if (event.target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) {
+	      if (!isOverlayAllowedTarget(activeMedia)) clearActiveSelector();
+	      return;
+	    }
+	    if (!isOverlayAllowedTarget(event.target)) { clearActiveSelector(); return; }
+	    const now = Date.now();
+	    if (now - lastMoveInspectionAt < 100) return;
+	    lastMoveInspectionAt = now;
+	    const inspection = inspectMediaTarget(event.target, lastPointer, 'pointermove');
+	    if (inspection.media && (inspection.media !== activeMedia || !activeCandidate ||
+	        itemKey(inspection.candidate) !== itemKey(activeCandidate) || inspection.candidate.slideIndex !== activeCandidate.slideIndex)) {
+	      activateInspectedCandidate(inspection);
+	    } else if (!inspection.media && activeMedia && !selectButton?.matches(':hover')) hideSelectSoon();
+	  }
+
+	  function onPointerOut(event) {
+	    if (!state.mediaOverlayEnabled) return;
+	    if (event.target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) return;
+	    if (!isOverlayAllowedTarget(event.target) && !isOverlayAllowedTarget(activeMedia)) { clearActiveSelector(); return; }
+	    if (activeMedia && (event.target === activeMedia || activeMedia.contains(event.target))) {
+	      const next = event.relatedTarget;
+	      if (next && (activeMedia.contains(next) || next === selectButton || selectButton?.contains(next))) return;
+	      hideSelectSoon();
+	    }
+	  }
+
+	  function updatePosition(reason = 'layout') {
+	    if (!state.mediaOverlayEnabled || selectButton?.style.display === 'none') return;
+	    if (!isOverlayAllowedTarget(activeMedia)) { clearActiveSelector(); return; }
+	    if (!activeMedia || !activeCandidate || !document.contains(activeMedia)) {
+	      refreshMediaUnderPointer(true, reason);
+	      return;
+	    }
+	    if (lastPointer && !selectButton?.matches(':hover') && !mediaContainsPoint(activeMedia, lastPointer)) {
+	      refreshMediaUnderPointer(true, reason);
+	      return;
+	    }
+	    const candidate = candidateFor(activeMedia);
+	    if (candidate) {
+	      activeCandidate = candidate;
+	      rememberScrollPositions(activeMedia);
+	      positionButton(activeMedia, candidate, true, reason);
+	    } else hideSelectSoon();
+	  }
+
+	  function onDocumentScroll(event) {
+	    if (!state.mediaOverlayEnabled) return;
+	    if (selectButton?.style.display !== 'none' && !isOverlayAllowedTarget(activeMedia)) clearActiveSelector();
+	    const target = event?.target;
+	    if (target instanceof Element) {
+	      const current = { left: Number(target.scrollLeft) || 0, top: Number(target.scrollTop) || 0 };
+	      const previous = scrollOffsets.get(target);
+	      scrollOffsets.set(target, current);
+	      const deltaLeft = previous ? current.left - previous.left : 0;
+	      const deltaTop = previous ? current.top - previous.top : 0;
+	      if (previous && Math.abs(deltaLeft) > 0.5 && Math.abs(deltaTop) < 0.5 &&
+	          activeMedia && target.contains(activeMedia) && selectButton?.style.display !== 'none') {
+	        if (!horizontalScrollLogged.has(target)) {
+	          horizontalScrollLogged.add(target);
+	          debugLog('horizontal-scroll-anchor-held', {
+	            containerId: diagnosticRootId(target),
+	            containerTag: String(target.tagName || 'unknown').toLowerCase(),
+	            deltaLeft: Math.round(deltaLeft),
+	            shortcodeLength: String(activeCandidate?.shortcode || '').length,
+	            slideIndex: activeCandidate?.slideIndex ?? null,
+	          });
+	        }
+	        return;
+	      }
+	    }
+	    const selectorVisible = !!selectButton && selectButton.style.display !== 'none';
+	    if (!selectorVisible) {
+	      buttonAnchorShortcode = '';
+	      buttonAnchorRootId = 0;
+	      buttonAnchorSlideIndex = null;
+	    }
+	    if (!selectorVisible || !activeMedia || !activeCandidate) {
+	      refreshMediaUnderPointer(true, 'scroll');
+	      return;
+	    }
+	    updatePosition('scroll');
+	  }
+
+	  function refreshAfterRouteChange() {
+	    if (location.pathname !== lastObservedRoute) {
+	      lastObservedRoute = location.pathname;
+	      postPermalinkCacheAt = 0;
+	      routeEpoch++;
+	      debugLog('route-changed', { route: routeKind() });
+	    }
+	    if (selectButton?.style.display === 'none') {
+	      buttonAnchorShortcode = '';
+	      buttonAnchorRootId = 0;
+	      buttonAnchorSlideIndex = null;
+	    }
+	    refreshMediaUnderPointer(true, 'route-change');
+	  }
+
+	  function refreshMediaUnderPointer(forcePosition = false, reason = 'refresh') {
+	    if (!state.mediaOverlayEnabled) return;
+	    if (activeMedia && (!document.contains(activeMedia) || !isOverlayAllowedTarget(activeMedia))) clearActiveSelector();
+	    if (!lastPointer) return;
+	    const target = document.elementFromPoint(lastPointer.x, lastPointer.y);
+	    if (target?.closest?.('#inst-sanity-tray,#inst-sanity-select')) {
+	      if (!isOverlayAllowedTarget(activeMedia)) clearActiveSelector();
+	      return;
+	    }
+	    if (!isOverlayAllowedTarget(target)) { clearActiveSelector(); return; }
+	    const inspection = inspectMediaTarget(target, lastPointer, reason);
+	    if (!activateInspectedCandidate(inspection, forcePosition, reason) && activeMedia && !selectButton?.matches(':hover')) {
+	      hideSelectSoon();
+	    }
+	  }
+
+	  function updateCarouselIndex(event) {
+	    if (!state.mediaOverlayEnabled) return;
+	    const control = event.target?.closest?.('button,[role="button"]');
+	    if (!control) return;
+	    const label = String(control.getAttribute('aria-label') || '').toLowerCase();
+	    const root = postRootFor(control);
+	    const shortcode = parseShortcode(location.pathname) || findPostShortcode(control, root);
+	    if (!shortcode) return;
+	    const exact = label.match(/(?:go to|slide)\s*(?:slide\s*)?(\d+)/i);
+	    if (exact) { trackSlide(root, shortcode, Math.max(0, Number(exact[1]) - 1)); return; }
+	    const current = currentSlideIndex(root, shortcode, carouselInfo(root));
+	    if (/next|forward/.test(label)) trackSlide(root, shortcode, Math.min(100, current + 1));
+	    else if (/previous|prev|back/.test(label)) trackSlide(root, shortcode, Math.max(0, current - 1));
+	  }
+
+	  function receiveQueueState(snapshot, error, theme, errorRequestId = null) {
+	    debugLog('queue-state-received', {
+	      itemCount: Array.isArray(snapshot?.items) ? snapshot.items.length : null,
+	      isDownloading: snapshot?.isDownloading === true,
+	      error: error ? String(error).slice(0, 80) : null,
+	    });
+	    const wasDownloading = state.isDownloading;
+	    if (snapshot && theme) snapshot = { ...snapshot, theme };
+	    if (typeof snapshot?.mediaOverlayEnabled === 'boolean') setMediaOverlayEnabled(snapshot.mediaOverlayEnabled, 'native-state-sync');
+	    renderState(snapshot, error, errorRequestId);
+	    if (!state.isDownloading && !state.items.length && state.status && (wasDownloading || /saved|cancelled/i.test(state.status))) showNotice(state.status);
+	  }
+	  function install() {
+	    if (window.__instSanityMediaOverlayInstalled) {
+	      debugLog('install-already-complete');
+	      postMessage('overlay-ready');
+	      return;
+	    }
+	    if (!document.documentElement) {
+	      debugLog('install-waiting-for-dom', { readyState: document.readyState || 'unknown' });
+	      if (!install.waitingForDom) {
+	        install.waitingForDom = true;
+	        document.addEventListener('DOMContentLoaded', () => {
+	          debugLog('dom-content-loaded');
+	          install.waitingForDom = false;
+	          install();
+	        }, { once: true });
+	      }
+	      return;
+	    }
+	    debugLog('install-start', { readyState: document.readyState || 'unknown' });
+	    ensureUi();
+	    window.__instSanityMediaOverlayInstalled = true;
+	    window.__instSanityReceiveQueueState = receiveQueueState;
+	    document.addEventListener('pointerover', onPointerOver, true);
+	    document.addEventListener('pointermove', onPointerMove, { capture: true, passive: true });
+	    document.addEventListener('pointerout', onPointerOut, true);
+	    document.addEventListener('mouseover', onPointerOver, true);
+	    document.addEventListener('mousemove', onPointerMove, { capture: true, passive: true });
+	    document.addEventListener('mouseout', onPointerOut, true);
+	    document.addEventListener('load', event => {
+	      if (event.target?.matches?.('img,video')) refreshMediaUnderPointer(false, 'media-load');
+	    }, true);
+	    document.addEventListener('loadedmetadata', event => {
+	      if (event.target?.tagName === 'VIDEO') refreshMediaUnderPointer(false, 'video-metadata');
+	    }, true);
+	    document.addEventListener('click', updateCarouselIndex, true);
+	    document.addEventListener('scroll', onDocumentScroll, true);
+	    window.addEventListener('scroll', onDocumentScroll, { passive: true });
+	    window.addEventListener('resize', () => {
+	      if (selectButton?.style.display === 'none') {
+	        buttonAnchorShortcode = '';
+	        buttonAnchorRootId = 0;
+	        buttonAnchorSlideIndex = null;
+	      }
+	      updatePosition('resize');
+	    }, { passive: true });
+	    window.addEventListener('popstate', refreshAfterRouteChange);
+	    if (!routePollTimer) {
+	      routePollTimer = window.setInterval(() => {
+	        if (location.pathname === lastObservedRoute) return;
+	        refreshAfterRouteChange();
+	      }, 400);
+	    }
+	    const observer = new MutationObserver(() => {
+	      if (mutationRefreshTimer) return;
+	      mutationRefreshTimer = setTimeout(() => {
+	        mutationRefreshTimer = 0;
+	        if (!document.getElementById('inst-sanity-select')) { debugLog('overlay-ui-removed-reinstalling'); window.__instSanityMediaOverlayInstalled = false; install(); return; }
+	        refreshMediaUnderPointer(false, 'mutation');
+	      }, 80);
+	    });
+	    observer.observe(document.documentElement, {
+	      childList: true, subtree: true, attributes: true,
+	      attributeFilter: ['src', 'alt', 'aria-label', 'aria-current', 'aria-pressed', 'aria-selected', 'data-active']
+	    });
+	    debugLog('install-complete', {
+	      buttonPresent: !!document.getElementById('inst-sanity-select'),
+	      trayPresent: !!document.getElementById('inst-sanity-tray'),
+	      stylePresent: !!document.getElementById('inst-sanity-overlay-style'),
+	      bridgeAvailable: typeof window.chrome?.webview?.postMessage === 'function',
+	      listeners: ['pointerover', 'pointermove', 'pointerout', 'mouseover', 'mousemove', 'mouseout', 'load', 'loadedmetadata'],
+	    });
+	    postMessage('overlay-ready');
+	  }
+	  window.__instSanityMediaOverlayInstall = install;
+	  install();
+	})();
+	""";
+}

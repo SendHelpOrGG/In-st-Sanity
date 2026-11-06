@@ -37,6 +37,8 @@ public sealed class LoopbackHost : IAsyncDisposable
 	static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
 	static readonly TimeSpan FolderPickerTimeout = TimeSpan.FromMinutes(5);
 	static readonly TimeSpan SelectedDownloadTimeout = TimeSpan.FromMinutes(5);
+	static readonly TimeSpan ResizeUploadTimeout = TimeSpan.FromMinutes(5);
+	static readonly TimeSpan ResizeConversionTimeout = TimeSpan.FromMinutes(30);
 	static readonly byte[] HeadTerminator = { 13, 10, 13, 10 };
 
 	readonly IReadOnlyDictionary<string, IApiEndpoint> _endpoints;
@@ -266,13 +268,27 @@ public sealed class LoopbackHost : IAsyncDisposable
 				}
 
 				// Native dialogs and media downloads can outlive the short static/API timeout.
-				if (request.Path.Equals("/api/browse-folder", StringComparison.OrdinalIgnoreCase))
+				if (request.Path.Equals("/api/browse-folder", StringComparison.OrdinalIgnoreCase) ||
+					request.Path.Equals("/api/pick-native-files", StringComparison.OrdinalIgnoreCase))
 				{
 					timeout.CancelAfter(FolderPickerTimeout);
+				}
+				else if (request.Path.Equals("/api/picked-file", StringComparison.OrdinalIgnoreCase))
+				{
+					timeout.CancelAfter(ResizeUploadTimeout);
 				}
 				else if (request.Path.Equals("/api/download-selected", StringComparison.OrdinalIgnoreCase))
 				{
 					timeout.CancelAfter(SelectedDownloadTimeout);
+				}
+				else if (request.Path.Equals("/api/resize-upload", StringComparison.OrdinalIgnoreCase) ||
+					request.Path.Equals("/api/resize-native-upload", StringComparison.OrdinalIgnoreCase))
+				{
+					timeout.CancelAfter(ResizeUploadTimeout);
+				}
+				else if (request.Path.Equals("/api/resize-convert", StringComparison.OrdinalIgnoreCase))
+				{
+					timeout.CancelAfter(ResizeConversionTimeout);
 				}
 
 				var response = await RouteAsync(request, token).ConfigureAwait(false);
