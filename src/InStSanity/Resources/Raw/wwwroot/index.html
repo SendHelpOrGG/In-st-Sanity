@@ -1558,7 +1558,7 @@ body[data-theme="v15"] #dyiLinkWrap a { color:var(--t-accent2,#a8ffd1)!important
     <div class="version-history-list" id="versionHistoryList"></div>
   </section>
 </div>
-<button type="button" class="app-version-button" id="appVersionButton" onclick="showVersionHistory()" aria-label="Version 2.108; open version history">v.2.108</button>
+<button type="button" class="app-version-button" id="appVersionButton" onclick="showVersionHistory()" aria-label="Version 2.109; open version history">v.2.109</button>
 <div class="leaving-overlay" id="leavingPromptOverlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="leavingPromptTitle">
   <section class="leaving-dialog">
     <h2 id="leavingPromptTitle"><span class="brand-name leaving-title-brand" id="leavingPromptTitleText" data-text="Leaving already?"><span class="brand-part-sanity">Leaving already?</span></span></h2>
@@ -8824,8 +8824,9 @@ function initializeSavedTheme(){
     setAppTheme('default',true);
   }
 }
-const APP_VERSION='2.108';
+const APP_VERSION='2.109';
 const VERSION_HISTORY=[
+  {version:'2.109',added:'Select all fixes and button style consistency.',addedDetails:'Fixed Select all inside a post selecting videos when the videos toggle is off (detail view video toggle state is now per-post). Renamed Select all photos → Select all in Saved posts and Save via URL post windows. Swapped Show/hide source and Show/hide download history marks toggle order in Saved posts. Matched Save via URL video toggle style to all other show/hide video toggles.',tone:'green'},
   {version:'2.108',added:'Full reset button — red confirmation button in settings tabs row at far right. Renamed: Private settings → Privacy, UI Settings → UI, Sound → Sounds.',addedDetails:'Full reset button: Settings tabs row, far right, with confirmation dialog. Defaults: theme Default, background opacity 30% (keeps custom background image/GIF), click sound ON thin-tick at 13%, show videos ON, source badges OFF, download history marks ON, all folder paths cleared, separate folder toggles OFF, resizer max side 1000px with upscale ON, clears imported posts and download history.',tone:'green'},
 {version:'2.106',added:'No new features.',removed:'Per-post video toggle state shared a single global flag — toggling inside one post affected all posts, and reopening a post reset the toggle to the main page state.',fixed:'Make detail-view video toggle state per-post (post.detailHideVideos), defaulting to the main page toggle; each post now remembers its own on/off choice independently.',tone:'green'},{version:'2.105',added:'No new features.',removed:'The download progress toast text in the library footer not vertically centered inside the 37px-high box.',fixed:'Vertically center the download progress toast text inside the 37px-high container using flexbox alignment.',tone:'green'},
 {version:'2.102',added:'No new features.',removed:'The duplicate-skip pop-up still rendering taller than needed on v2.101 even after switching from fixed height to compact padding.',fixed:'Shrink the Skipped N (duplicates) notice further — smaller font (12px), tighter line-height (1.2), and reduced padding (2px 8px) — so it sits close to the text and never looms over the close button.',tone:'green'},
